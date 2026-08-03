@@ -18,8 +18,10 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "format": "prettier --write .",
-    "db:up": "docker compose -f docker/compose.dev.yml up -d",
-    "db:down": "docker compose -f docker/compose.dev.yml down",
+    "db:up": "docker compose --env-file .env -f docker/compose.dev.yml up -d",
+    "db:down": "docker compose --env-file .env -f docker/compose.dev.yml down",
+    "db:logs": "docker compose --env-file .env -f docker/compose.dev.yml logs -f",
+    "db:reset": "docker compose --env-file .env -f docker/compose.dev.yml down -v && docker compose --env-file .env -f docker/compose.dev.yml up -d",
     "payload": "payload",
     "prepare": "husky"
   },

@@ -1,0 +1,104 @@
+# =============================================================================
+# aslihangyd.com — GELİŞTİRME ortamı altyapı servisleri
+#
+# Bu dosya YALNIZCA veritabanı ve önbelleği ayağa kaldırır.
+# Next.js/Payload uygulaması host üzerinde `pnpm dev` ile çalışır — böylece
+# container katmanı RAM tüketmez ve yeniden derleme hızlı olur.
+#
+# Kullanım (depo kökünden):
+#   pnpm db:up      → servisleri başlat
+#   pnpm db:logs    → günlükleri izle
+#   pnpm db:down    → servisleri durdur (veri korunur)
+#   pnpm db:reset   → servisleri durdur ve VERİYİ SİL, sıfırdan başlat
+#
+# -----------------------------------------------------------------------------
+# ⚠️  GÜVENLİK — PORT BAĞLAMA
+#
+# Tüm portlar bilinçli olarak 127.0.0.1'e bağlanmıştır.
+#
+# Docker, port yayınlarken iptables kurallarını DOĞRUDAN değiştirir ve UFW
+# kurallarını ATLAR. "5432:5432" veya "0.0.0.0:5432:5432" yazılırsa, UFW'de
+# 5432 kapalı görünmesine rağmen veritabanı tüm internete açılır.
+#
+# Bu satırlardaki "127.0.0.1:" önekini KALDIRMAYIN.
+# Uzaktan erişim gerekiyorsa SSH tüneli kullanın (bkz. README.md).
+# -----------------------------------------------------------------------------
+
+name: aslihangyd-dev
+
+services:
+  postgres:
+    image: postgis/postgis:17-3.5
+    container_name: aslihangyd-postgres-dev
+    restart: unless-stopped
+
+    # ⚠️ Sadece yerel arayüz — yukarıdaki güvenlik notunu okuyun.
+    ports:
+      - '127.0.0.1:5432:5432'
+
+    # Şifreler burada değil, depo kökündeki .env dosyasında tutulur.
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?POSTGRES_USER .env dosyasinda tanimli olmali}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?POSTGRES_PASSWORD .env dosyasinda tanimli olmali}
+      POSTGRES_DB: ${POSTGRES_DB:?POSTGRES_DB .env dosyasinda tanimli olmali}
+      # Türkçe sıralama ve karakter desteği için.
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8'
+
+    # 2 vCPU / ~3.2 GB makineye göre ölçeklendi.
+    command:
+      - postgres
+      - -c
+      - shared_buffers=128MB
+      - -c
+      - max_connections=50
+
+    mem_limit: 400m
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+  redis:
+    image: redis:7-alpine
+    container_name: aslihangyd-redis-dev
+    restart: unless-stopped
+
+    # ⚠️ Sadece yerel arayüz — yukarıdaki güvenlik notunu okuyun.
+    ports:
+      - '127.0.0.1:6379:6379'
+
+    # Bellek tavanına ulaşınca en az kullanılan anahtarları at (önbellek davranışı).
+    command:
+      - redis-server
+      - --maxmemory
+      - 80mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --save
+      - ''
+      - --appendonly
+      - 'no'
+
+    mem_limit: 100m
+
+    volumes:
+      - redisdata:/data
+
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+
+volumes:
+  pgdata:
+    name: aslihangyd-pgdata-dev
+  redisdata:
+    name: aslihangyd-redisdata-dev
