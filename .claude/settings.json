@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "deny": [
+      "Bash(sudo rm*)",
+      "Bash(rm -rf /*)",
+      "Read(./.env)",
+      "Read(./.env.*)",
+      "Bash(git push --force*)",
+      "Bash(docker compose down -v*)"
+    ]
+  }
+}
