@@ -147,6 +147,12 @@ main'e doğrudan push YOK — PR üzerinden
 ## Her fazın sonunda
 pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
 
+## Teknik borç (kapatılacak)
+- [ ] **Faz 1.4'te KALDIR:** `vitest.config.ts` içindeki `passWithNoTests: true`.
+      Faz 1.1'de hiç test yokken vitest'in exit 1 döndürmesini engellemek için
+      geçici olarak eklendi. EİDS testleri yazılınca silinmeli — yoksa
+      testlerin hiç çalışmaması sessizce gizlenir.
+
 ## Faz durumu
 - [ ] Faz 1  — MVP (iskelet, veri modeli, EİDS, KVKK, temel sayfalar, CI/CD)
 - [ ] Faz 2  — Harita, hesaplayıcılar, ticari dikey
