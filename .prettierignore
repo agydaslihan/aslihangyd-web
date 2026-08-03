@@ -1,0 +1,15 @@
+node_modules
+.next
+dist
+build
+coverage
+pnpm-lock.yaml
+
+# Payload tarafından üretilen dosyalar
+src/payload-types.ts
+src/migrations
+src/app/(payload)/admin/importMap.js
+
+# Şartname ve dokümantasyon — elle yazıldı, biçimlendirici dokunmaz
+CLAUDE.md
+docs/
