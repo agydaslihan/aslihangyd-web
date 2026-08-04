@@ -524,10 +524,37 @@ export interface Mahalleler {
   sanalTurUrl?: string | null;
   yatirimSkoru?: {
     /**
-     * Faz 4 skorlama motoru tarafından yazılır.
+     * Bileşenlerden otomatik hesaplanır. Yeterli bileşen verisi yoksa boş kalır.
      */
     toplam?: number | null;
+    /**
+     * Skorun yanında "[tarih] itibarıyla" olarak gösterilir.
+     */
     hesaplanmaTarihi?: string | null;
+    /**
+     * Ağırlık %25. Çorlu ortalamasına göre göreli performans.
+     */
+    fiyatTrendi?: number | null;
+    /**
+     * Ağırlık %20. DÜŞÜK çarpan YÜKSEK puan alır.
+     */
+    kiraCarpaniPuani?: number | null;
+    /**
+     * Ağırlık %15.
+     */
+    sanayiYakinligi?: number | null;
+    /**
+     * Ağırlık %15.
+     */
+    ulasim?: number | null;
+    /**
+     * Ağırlık %15.
+     */
+    sosyalDonati?: number | null;
+    /**
+     * Ağırlık %10. ÇOK yeni arz DÜŞÜK puan alır.
+     */
+    arzBaskisi?: number | null;
   };
   updatedAt: string;
   createdAt: string;
@@ -1033,6 +1060,12 @@ export interface MahallelerSelect<T extends boolean = true> {
     | {
         toplam?: T;
         hesaplanmaTarihi?: T;
+        fiyatTrendi?: T;
+        kiraCarpaniPuani?: T;
+        sanayiYakinligi?: T;
+        ulasim?: T;
+        sosyalDonati?: T;
+        arzBaskisi?: T;
       };
   updatedAt?: T;
   createdAt?: T;

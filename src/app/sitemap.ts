@@ -43,6 +43,13 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // 404 döner; site haritasına koymak arama motoruna ölü bağlantı vermek
     // olurdu. Endeks yayına alındığında buraya eklenecek.
     { url: mutlakAdres('/endeks-metodolojisi'), changeFrequency: 'yearly', priority: 0.4 },
+    // Metodoloji sayfaları skorun/endeksin güvenilirliğinin kanıtıdır;
+    // indekslenmeleri hem SEO hem itibar açısından değerli.
+    {
+      url: mutlakAdres('/yatirim-skoru-metodolojisi'),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
     { url: mutlakAdres('/hakkimizda'), changeFrequency: 'monthly', priority: 0.5 },
     { url: mutlakAdres('/iletisim'), changeFrequency: 'monthly', priority: 0.6 },
   ]

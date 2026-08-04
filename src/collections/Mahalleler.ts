@@ -2,6 +2,8 @@ import type { CollectionConfig } from 'payload'
 
 import { yalnizcaPanel, yayimlananlariHerkesOkur } from '@/lib/erisim'
 
+import { yatirimSkoruHesapla } from '@/lib/skorlama/yatirimSkoru'
+
 import { seoAlanlari, slugAlani, veriEksikAlani } from './ortakAlanlar'
 
 /**
@@ -29,6 +31,36 @@ export const Mahalleler: CollectionConfig = {
     useAsTitle: 'ad',
     defaultColumns: ['ad', 'yayinda', 'veriEksik', 'updatedAt'],
     description: 'Mahalle mini-portalları. Her mahalle sayfası ayrı bir SEO varlığıdır.',
+  },
+
+  hooks: {
+    beforeChange: [
+      ({ data, originalDoc }) => {
+        const kayit = { ...(originalDoc ?? {}), ...data } as Record<string, unknown>
+        const skor = (kayit.yatirimSkoru ?? {}) as Record<string, unknown>
+
+        const sayi = (deger: unknown) => (typeof deger === 'number' ? deger : null)
+
+        const sonuc = yatirimSkoruHesapla({
+          fiyatTrendi: sayi(skor.fiyatTrendi),
+          kiraCarpani: sayi(skor.kiraCarpaniPuani),
+          sanayiYakinligi: sayi(skor.sanayiYakinligi),
+          ulasim: sayi(skor.ulasim),
+          sosyalDonati: sayi(skor.sosyalDonati),
+          arzBaskisi: sayi(skor.arzBaskisi),
+        })
+
+        // ⚠️ Yeterli bileşen verisi yoksa `toplam` BOŞ bırakılır.
+        // Yarım veriyle puan yazmak, o puanı değersizleştirir.
+        return {
+          ...data,
+          yatirimSkoru: {
+            ...skor,
+            toplam: sonuc.durum === 'hesaplandi' ? sonuc.veri.toplam : null,
+          },
+        }
+      },
+    ],
   },
 
   fields: [
@@ -271,7 +303,11 @@ export const Mahalleler: CollectionConfig = {
         {
           label: 'Yatırım skoru',
           description:
-            "Faz 4'te otomatik hesaplanacak. Metodoloji /yatirim-skoru-metodolojisi sayfasında yayınlanır.",
+            'Altı bileşen 0-100 arası puanlanır; toplam skor ağırlıklı ortalamadır ve ' +
+            'kaydettiğinde otomatik hesaplanır. Metodoloji ' +
+            '/yatirim-skoru-metodolojisi sayfasında yayınlanır. ' +
+            '⚠️ Bileşenlerin en az %70 ağırlığı doldurulmadan skor GÖSTERİLMEZ — ' +
+            'yarım veriyle puan vermek, puanı değersizleştirir.',
           fields: [
             {
               name: 'yatirimSkoru',
@@ -284,16 +320,95 @@ export const Mahalleler: CollectionConfig = {
                   label: 'Toplam skor (0-100)',
                   min: 0,
                   max: 100,
+                  index: true,
                   admin: {
                     readOnly: true,
-                    description: 'Faz 4 skorlama motoru tarafından yazılır.',
+                    description:
+                      'Bileşenlerden otomatik hesaplanır. Yeterli bileşen verisi yoksa boş kalır.',
                   },
                 },
                 {
                   name: 'hesaplanmaTarihi',
                   type: 'date',
                   label: 'Hesaplanma tarihi',
-                  admin: { readOnly: true },
+                  admin: {
+                    date: { pickerAppearance: 'dayOnly', displayFormat: 'd MMMM yyyy' },
+                    description: 'Skorun yanında "[tarih] itibarıyla" olarak gösterilir.',
+                  },
+                },
+
+                // ── Bileşen puanları ──
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'fiyatTrendi',
+                      type: 'number',
+                      label: 'Fiyat artış trendi',
+                      min: 0,
+                      max: 100,
+                      admin: {
+                        width: '50%',
+                        description: 'Ağırlık %25. Çorlu ortalamasına göre göreli performans.',
+                      },
+                    },
+                    {
+                      name: 'kiraCarpaniPuani',
+                      type: 'number',
+                      label: 'Kira çarpanı puanı',
+                      min: 0,
+                      max: 100,
+                      admin: {
+                        width: '50%',
+                        description: 'Ağırlık %20. DÜŞÜK çarpan YÜKSEK puan alır.',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'sanayiYakinligi',
+                      type: 'number',
+                      label: 'Sanayi / istihdam yakınlığı',
+                      min: 0,
+                      max: 100,
+                      admin: { width: '50%', description: 'Ağırlık %15.' },
+                    },
+                    {
+                      name: 'ulasim',
+                      type: 'number',
+                      label: 'Ulaşım erişilebilirliği',
+                      min: 0,
+                      max: 100,
+                      admin: { width: '50%', description: 'Ağırlık %15.' },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'sosyalDonati',
+                      type: 'number',
+                      label: 'Sosyal donatı',
+                      min: 0,
+                      max: 100,
+                      admin: { width: '50%', description: 'Ağırlık %15.' },
+                    },
+                    {
+                      name: 'arzBaskisi',
+                      type: 'number',
+                      label: 'Arz baskısı',
+                      min: 0,
+                      max: 100,
+                      admin: {
+                        width: '50%',
+                        description: 'Ağırlık %10. ÇOK yeni arz DÜŞÜK puan alır.',
+                      },
+                    },
+                  ],
                 },
               ],
             },
