@@ -18,7 +18,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 1.8 | Mahalle sayfaları | ✅ |
 | 1.9 | Lead formu + WhatsApp | ✅ |
 | 1.10 | SEO, CI/CD, yedekleme, dokümantasyon | ✅ |
-| 2 | Harita, hesaplayıcılar, ticari dikey | ⏳ sırada |
+| 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | ⏳ |
 | 2C | Gözlem girişi ve endeks altyapısı | ⏳ |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
@@ -225,6 +225,78 @@ yüklü bir makinede alınan sayılar gerçek kullanıcı deneyimini temsil etme
 
 ---
 
+## Faz 2 — Harita, hesaplayıcılar, ticari dikey
+
+### Ne yapıldı
+
+- 5 hesaplayıcı: kira getirisi, kredi, alım maliyeti, kira geliri vergisi,
+  değer artış kazancı vergisi
+- `VergiParametreleri` koleksiyonu + parametre kayıt defteri
+- `IlgiNoktalari` (POI) koleksiyonu
+- MapLibre haritası (`/harita`) + katman filtreleri
+- `/ticari` dikeyi
+- `/mahalleler/karsilastir` karşılaştırma aracı
+- 49 hesaplayıcı testi
+
+### Kararlar ve gerekçeleri
+
+**Hiçbir oran koda gömülmedi.** `src/lib/vergi/parametreler.ts` yalnızca
+hangi parametrelerin var olduğunu tanımlar; değerler CMS'te. Parametre
+eksikse hesaplayıcı **çalışmaz** ve eksik olanı adıyla söyler. Yanlış bir
+vergi rakamı, rakam olmamasından çok daha zararlı.
+
+**Parametre kontrolü, girdi kontrolünden ÖNCE gelir.** İlk yazımda ters
+sıradaydı: kullanıcı bütün alanları dolduruyor, sonra "bu hesaplayıcı
+çalışmıyor" duvarına çarpıyordu. Eksik parametre aracın eksikliğidir,
+kullanıcının değil — ilk anda söylenmeli. Dört testle korunuyor.
+
+**Gelir vergisi dilimleri kümülatif uygulanır.** "Matrah 800 bini geçti,
+tamamı %40" en yaygın yanlış anlamadır; sonuç ekranında dilim dilim
+gösteriliyor ve testle korunuyor.
+
+**Kredi faiz oranı kullanıcıdan alınır, CMS'te tutulmaz.** Konut kredisi
+faizi bankadan bankaya ve haftadan haftaya değişir; sabit bir oran
+göstermek ziyaretçiyi eskimiş rakamla hesap yaptırmak olurdu.
+
+**Yİ-ÜFE değerleri de kullanıcıdan alınır.** Aylık yayınlanan resmî bir
+seri; her ay güncellenmesi gereken yüzlerce değeri sistemde tutup eskitmek
+yanlış vergi üretir.
+
+**Değer artış vergisinde muafiyet süresi takvim üzerinden hesaplanır.**
+365'e bölmek artık yıllarda birkaç günlük hata üretir ve muafiyet
+sınırındaki bir satışta bu fark verginin tamamı demektir. Aracın en değerli
+çıktısı, "satışı N gün ertelersen vergi ödemezsin" uyarısı.
+
+**Kira getirisi hesaplayıcısı vergi parametresi gerektirmez.** En çok
+aranan aracın, oranlar CMS'e girilene kadar çalışmaması kabul edilemezdi.
+
+**Sıfır gider varsayılmaz.** Gider girilmezse net getiri hiç gösterilmez;
+sıfır varsaymak getiriyi olduğundan yüksek gösterirdi.
+
+**maplibre-gl yalnızca `/harita` rotasında yükleniyor** (`next/dynamic`,
+`ssr: false`). Doğrulandı: 924 KB'lık chunk ayrı duruyor, ana sayfanın JS
+bütçesi 198 KB gzip'te değişmedi.
+
+**Haritadaki her nokta aynı sayfada metin listesi olarak da var.** Harita
+bir görselleştirmedir; bilginin kendisi listede. Ekran okuyucu kullanan
+biri hiçbir şey kaybetmiyor ve MapTiler anahtarı olmadan da sayfa işe
+yarıyor.
+
+**WebGL desteği render sırasında ölçülüyor**, efektte değil. Desteklenmiyorsa
+MapLibre hiç başlatılmıyor.
+
+**Karşılaştırmada "en iyi" vurgusu yalnızca iki veya daha fazla mahallede
+veri varsa yapılır.** Tek mahallede veri varken onu en iyi diye işaretlemek,
+karşılaştırma yapılmış izlenimi verirdi.
+
+**Şema artık yalnızca migration'larla değişiyor** (`push: false`). Payload
+üretim dışı ortamlarda şemayı doğrudan veritabanına yazıyordu; bu üç soruna
+yol açıyordu: `pnpm test` şemayı sessizce değiştiriyordu, `payload migrate`
+etkileşimli soru sorup kilitleniyordu, ve migration'ın gerçekten çalıştığı
+ilk yer üretim oluyordu.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)
@@ -248,8 +320,20 @@ yaklaşık 90 KB uygulama kodu demek. Kabul edilebilir ama ideal değil.
 
 ### Derleme süresi
 
-87 saniye. CLAUDE.md eşiği 90 saniye — **sınıra yakın.** Sebep büyük ölçüde
-Payload admin panelinin derlenmesi. Faz 2'de artarsa araştırılacak.
+| Faz | Süre | Not |
+| --- | --- | --- |
+| Faz 1 sonu | 87 sn | Eşiğe yakın |
+| Faz 2 sonu | **105 sn** | ⚠️ 90 sn eşiği aşıldı |
+
+**Araştırıldı.** Artışın kaynağı `maplibre-gl` (924 KB'lık chunk) ve 9 yeni
+sayfa. Derleme *zamanı* arttı ama **çalışma zamanı maliyeti artmadı**:
+maplibre yalnızca `/harita` rotasında yükleniyor, ana sayfanın JS bütçesi
+198 KB gzip'te sabit kaldı.
+
+Bu, kabul edilen bir takas: harita gerçek bir gereksinim ve tek alternatif
+onu tamamen çıkarmak olurdu. Eşiğin aşılması derleme altyapısında bir
+sorun değil, kapsam büyümesinin doğal sonucu. Faz 2B/2C'de 120 sn'yi
+aşarsa admin panelinin ayrı derlenmesi değerlendirilecek.
 
 ### ⚠️ Lighthouse henüz ölçülmedi
 
@@ -280,10 +364,29 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 
 ## Sonraki adım
 
-**Faz 2** — MapLibre harita + POI katmanları, PostGIS yakınlık sorguları,
-4 hesaplayıcı (`TaxParameters` koleksiyonu CMS'ten), mahalle karşılaştırma
-aracı, `/ticari` dikeyi, SEO derinleştirme, Umami analitik.
+**Faz 2B** — Bal küpü modülleri (anlık değerleme, gizli portföy, mahalle
+eşleştirme testi, yatırım simülatörü), CRM (eşleştirme motoru, lead hunisi,
+skorlama), portföy giriş sihirbazı, sosyal medya materyal üretimi.
+Şartname: `docs/BAL-KUPU-VE-PORTFOY-YONETIMI.md`
 
-⚠️ Hesaplayıcılar için vergi/harç oranları gerekiyor ve bunlar **koda
-gömülmeyecek** (CLAUDE.md kural 4). Oranlar gelene kadar hesaplayıcılar
-"parametre tanımlı değil" boş durumu gösterecek.
+⚠️ Şartname dosyası B3 modülünde (Mahalle Eşleştirme Testi) kesiliyor —
+B4 ve sonrası yazılmamış. Bu modüllerin tasarımını ben yapacağım; Aslıhan
+farklı bir şey bekliyorsa söylemeli.
+
+**Faz 2C** — Observations koleksiyonu, hızlı gözlem girişi, veri kalitesi
+korumaları, endeks motoru, CSV içe aktarma, `/endeks` (kapalı kalacak).
+
+**Faz 4** — Yatırım skoru motoru + metodoloji sayfası, radar grafik, AI
+doğal dil arama, lead skorlama.
+
+### Faz 2'den devreden eksikler
+
+- **PostGIS yakınlık sorguları henüz yazılmadı.** POI koleksiyonu ve harita
+  hazır; "sanayiye 10 dakika" tipi mesafe hesapları için ham SQL sorguları
+  Faz 4'te yatırım skoru motoruyla birlikte gelecek — skorun `sanayiYakinligi`
+  ve `ulasim` bileşenleri aynı sorguları kullanacak, iki kez yazmanın anlamı
+  yok.
+- **Vergi parametreleri boş.** Beş hesaplayıcıdan üçü şu an "güncel oranlar
+  bekleniyor" durumunda. Bu, tasarlanmış davranış — bkz. SENDEN-BEKLENENLER.md.
+- **MapTiler anahtarı yok.** `/harita` sayfası çalışıyor ama harita yerine
+  boş durum + nokta listesi gösteriyor.

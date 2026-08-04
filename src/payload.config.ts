@@ -8,11 +8,13 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { Ilanlar } from '@/collections/Ilanlar'
+import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
 import { Kullanicilar } from '@/collections/Kullanicilar'
 import { Mahalleler } from '@/collections/Mahalleler'
 import { Medya } from '@/collections/Medya'
 import { Sayfalar } from '@/collections/Sayfalar'
 import { Talepler } from '@/collections/Talepler'
+import { VergiParametreleri } from '@/collections/VergiParametreleri'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -34,7 +36,16 @@ export default buildConfig({
     },
   },
 
-  collections: [Ilanlar, Mahalleler, Talepler, Sayfalar, Medya, Kullanicilar],
+  collections: [
+    Ilanlar,
+    Mahalleler,
+    IlgiNoktalari,
+    Talepler,
+    VergiParametreleri,
+    Sayfalar,
+    Medya,
+    Kullanicilar,
+  ],
 
   globals: [KurumsalBilgiler],
 
@@ -55,5 +66,23 @@ export default buildConfig({
       connectionString: process.env.DATABASE_URI ?? '',
     },
     migrationDir: path.resolve(dirname, 'migrations'),
+
+    /**
+     * ⚠️ Şemayı YALNIZCA migration'lar değiştirir.
+     *
+     * Payload, üretim dışı ortamlarda varsayılan olarak şemayı doğrudan
+     * veritabanına "push" eder. Bu, üç somut soruna yol açıyordu:
+     *
+     * 1. `pnpm test` çalıştırmak veritabanı şemasını sessizce değiştiriyordu.
+     * 2. Push ile migration'lar birbirine karışınca `payload migrate`
+     *    etkileşimli bir soru sorup CI'da kilitleniyordu.
+     * 3. Geliştirme ile üretim şeması ayrışabiliyordu — migration'ın
+     *    gerçekten çalıştığı ilk yer üretim oluyordu.
+     *
+     * Kapalı olması, üretimde çalışacak migration'ın geliştirmede de aynen
+     * çalışmasını garanti eder. Şema değişikliği akışı:
+     *   pnpm payload migrate:create <ad> && pnpm payload migrate
+     */
+    push: false,
   }),
 })

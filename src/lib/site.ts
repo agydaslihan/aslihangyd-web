@@ -35,9 +35,9 @@ export interface GezinmeOgesi {
 export const ANA_GEZINME: readonly GezinmeOgesi[] = [
   { ad: 'Portföy', adres: '/portfoy', hazir: true },
   { ad: 'Mahalleler', adres: '/mahalleler', hazir: true },
-  { ad: 'Harita', adres: '/harita', hazir: false },
-  { ad: 'Ticari', adres: '/ticari', hazir: false },
-  { ad: 'Araçlar', adres: '/araclar', hazir: false },
+  { ad: 'Harita', adres: '/harita', hazir: true },
+  { ad: 'Ticari', adres: '/ticari', hazir: true },
+  { ad: 'Araçlar', adres: '/araclar', hazir: true },
   { ad: 'Hakkımızda', adres: '/hakkimizda', hazir: true },
   { ad: 'İletişim', adres: '/iletisim', hazir: true },
 ]
