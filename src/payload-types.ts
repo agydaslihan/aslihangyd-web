@@ -72,6 +72,7 @@ export interface Config {
     'ilgi-noktalari': IlgiNoktalari;
     talepler: Talepler;
     degerlemeler: Degerlemeler;
+    gozlemler: Gozlemler;
     'vergi-parametreleri': VergiParametreleri;
     sayfalar: Sayfalar;
     medya: Medya;
@@ -88,6 +89,7 @@ export interface Config {
     'ilgi-noktalari': IlgiNoktalariSelect<false> | IlgiNoktalariSelect<true>;
     talepler: TaleplerSelect<false> | TaleplerSelect<true>;
     degerlemeler: DegerlemelerSelect<false> | DegerlemelerSelect<true>;
+    gozlemler: GozlemlerSelect<false> | GozlemlerSelect<true>;
     'vergi-parametreleri': VergiParametreleriSelect<false> | VergiParametreleriSelect<true>;
     sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
     medya: MedyaSelect<false> | MedyaSelect<true>;
@@ -104,10 +106,12 @@ export interface Config {
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
     'degerleme-ayarlari': DegerlemeAyarlari;
+    'endeks-ayarlari': EndeksAyarlari;
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
+    'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
   };
   locale: null;
   widgets: {
@@ -655,6 +659,49 @@ export interface Degerlemeler {
   createdAt: string;
 }
 /**
+ * Endeksin ham verisi. Tek tek kayıtlar asla yayınlanmaz — yalnızca toplulaştırılmış göstergeler yayınlanır. Haftalık hedef: 30 gözlem.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gozlemler".
+ */
+export interface Gozlemler {
+  id: number;
+  mahalle: number | Mahalleler;
+  tip: 'satilik' | 'kiralik';
+  odaTipi: '1+1' | '2+1' | '3+1' | '4+1';
+  m2: number;
+  /**
+   * Kiralıkta aylık kira bedeli.
+   */
+  fiyat: number;
+  /**
+   * Otomatik hesaplanır. Beklediğinizden çok farklıysa m² veya fiyatı yanlış girmiş olabilirsiniz.
+   */
+  m2Fiyati?: number | null;
+  gozlemTarihi: string;
+  /**
+   * ⚠️ İstenen fiyat ile gerçekleşen fiyat AYRI serilerde hesaplanır. Karıştırmak endeksi sistematik olarak şişirir.
+   */
+  kaynak: 'portal_ilan' | 'kendi_islem' | 'meslektas' | 'resmi';
+  binaYasi?: number | null;
+  kat?: string | null;
+  /**
+   * Geriye dönük girilen kayıtları "Düşük" işaretleyin. Grafikte kesikli çizgiyle gösterilir ve gerçek gözlemle karıştırılmaz.
+   */
+  guvenSeviyesi?: ('yuksek' | 'orta' | 'dusuk') | null;
+  /**
+   * Aykırı bir değer girdiyseniz sebebini yazın — altı ay sonra siz de hatırlamayacaksınız.
+   */
+  notlar?: string | null;
+  /**
+   * Endeks hesabı bu alanı kullanır (YYYY-AA).
+   */
+  ay?: string | null;
+  ozet?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Hesaplayıcıların kullandığı oran ve tutarlar. Bir parametre girilmemişse ilgili hesaplayıcı çalışmaz ve ziyaretçiye eksik olanı söyler — yanlış rakam üretmez.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -805,6 +852,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'degerlemeler';
         value: number | Degerlemeler;
+      } | null)
+    | ({
+        relationTo: 'gozlemler';
+        value: number | Gozlemler;
       } | null)
     | ({
         relationTo: 'vergi-parametreleri';
@@ -1059,6 +1110,28 @@ export interface DegerlemelerSelect<T extends boolean = true> {
   kvkkOnay?: T;
   kvkkOnayTarihi?: T;
   saklamaBitis?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gozlemler_select".
+ */
+export interface GozlemlerSelect<T extends boolean = true> {
+  mahalle?: T;
+  tip?: T;
+  odaTipi?: T;
+  m2?: T;
+  fiyat?: T;
+  m2Fiyati?: T;
+  gozlemTarihi?: T;
+  kaynak?: T;
+  binaYasi?: T;
+  kat?: T;
+  guvenSeviyesi?: T;
+  notlar?: T;
+  ay?: T;
+  ozet?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1325,6 +1398,47 @@ export interface DegerlemeAyarlari {
   createdAt?: string | null;
 }
 /**
+ * Çorlu Konut Endeksi sepet ağırlıkları ve yayın durumu. Ağırlıklar yılda bir kez, Ocak ayında güncellenir.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "endeks-ayarlari".
+ */
+export interface EndeksAyarlari {
+  id: number;
+  /**
+   * ⚠️ Bu kutuyu işaretlemek TEK BAŞINA yeterli değildir. Sistem ayrıca veri koşullarını kontrol eder (en az 6 ay, 500 gözlem, %70 ağırlık kapsamı, metodoloji sayfası yayında). Koşullar sağlanmazsa sayfa 404 döner. Bu kontrol koda gömülüdür ve "bir ay erken açalım" cazibesine karşı durur.
+   */
+  yayinda?: boolean | null;
+  /**
+   * Endeks, metodolojisi yayınlanmadan yayına alınamaz. Yöntemi açıklamak hem güven hem koruma sağlar: "yöntemimiz açık, isteyen kontrol edebilir".
+   */
+  metodolojiYayinda?: boolean | null;
+  /**
+   * Her katman (mahalle × oda tipi) için ağırlık. Ağırlıklar KONUT STOKUNU temsil etmeli, gözlem sayınızı değil. Toplamı 1,00 olmalı. Başlangıçta saha bilginizle tahmin edin; TÜİK bina sayımı varsa iyileştirin.
+   */
+  sepetAgirliklari?:
+    | {
+        mahalle: number | Mahalleler;
+        odaTipi: '1+1' | '2+1' | '3+1' | '4+1';
+        /**
+         * Örn: 0,14
+         */
+        agirlik: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Ağırlıkları en son hangi yıl gözden geçirdiniz?
+   */
+  agirlikGuncellemeYili?: number | null;
+  /**
+   * Üç ayda bir TCMB Tekirdağ konut fiyat endeksiyle karşılaştırın. Sapma %5'i geçerse veriyi gözden geçirin. Sonucu buraya not edin — kendinizi denetlemenin en ucuz yolu budur.
+   */
+  tcmbKarsilastirmaNotu?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kurumsal-bilgiler_select".
  */
@@ -1381,6 +1495,27 @@ export interface DegerlemeAyarlariSelect<T extends boolean = true> {
         id?: T;
       };
   notlar?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "endeks-ayarlari_select".
+ */
+export interface EndeksAyarlariSelect<T extends boolean = true> {
+  yayinda?: T;
+  metodolojiYayinda?: T;
+  sepetAgirliklari?:
+    | T
+    | {
+        mahalle?: T;
+        odaTipi?: T;
+        agirlik?: T;
+        id?: T;
+      };
+  agirlikGuncellemeYili?: T;
+  tcmbKarsilastirmaNotu?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

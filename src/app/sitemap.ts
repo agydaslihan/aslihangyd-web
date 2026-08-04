@@ -39,6 +39,10 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'monthly' as const,
       priority: 0.7,
     })),
+    // ⚠️ /endeks BİLİNÇLİ OLARAK YOK. Sayfa, veri koşulları sağlanana kadar
+    // 404 döner; site haritasına koymak arama motoruna ölü bağlantı vermek
+    // olurdu. Endeks yayına alındığında buraya eklenecek.
+    { url: mutlakAdres('/endeks-metodolojisi'), changeFrequency: 'yearly', priority: 0.4 },
     { url: mutlakAdres('/hakkimizda'), changeFrequency: 'monthly', priority: 0.5 },
     { url: mutlakAdres('/iletisim'), changeFrequency: 'monthly', priority: 0.6 },
   ]

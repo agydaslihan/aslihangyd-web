@@ -174,7 +174,35 @@ Yaptıklarım: B1 (Anlık Değerleme), B2 (Gizli Portföy), lead skorlama.
 yazmana gerek yok, bir cümle yeter — tasarımı ben yaparım. Liste
 `docs/ILERLEME.md` içinde "Faz 2B'de YAPILMAYANLAR" başlığı altında.
 
-### 5. Marka rengi ve tipografi onayın var mı?
+### 5. Endeks sepet ağırlıkları — senin saha bilgin gerekiyor
+
+**Şu anki durum:** Endeks motoru hazır ve test edildi, ama sepet ağırlıkları
+boş. Ağırlık olmadan endeks hesaplanamaz.
+
+**Neden ben doldurmadım:** Ağırlıklar **konut stokunu** temsil etmeli, bizim
+gözlem sayımızı değil. "Muhittin 3+1 → 0,14" gibi bir rakam ancak o mahallede
+kaç konut olduğunu bilen biri tarafından yazılabilir.
+
+**Nereye:** Payload admin → Endeks Ayarları → Sepet ağırlıkları
+Her katman (mahalle × oda tipi) için bir ağırlık; toplamı **1,00** olmalı.
+
+Başlangıçta saha bilginle tahmin et; TÜİK bina sayımı veya belediye verisi
+bulursan iyileştirirsin. **Ağırlıklar yılda bir kez, Ocak ayında güncellenir**
+— ay ay değişirse endeks anlamını kaybeder.
+
+### 6. Gözlem toplamaya bugün başla
+
+Endeks sayfası şu koşullar sağlanana kadar **404 dönüyor** (kod seviyesinde):
+en az 6 ay veri, 500 gözlem, ağırlığın %70'ini kapsayan katmanlarda her ay
+8 gözlem, metodoloji sayfası yayında.
+
+**Nereye:** Payload admin → Gözlemler
+**Haftalık hedef:** 30 gözlem (satılık ~20, kiralık ~10) — yaklaşık 30-40 dakika
+
+Elinde Excel/Sheets varsa CSV içe aktarma yazabilirim — **sütun düzenini
+bana gönder**, tahmin edip iki kez yazmak istemiyorum.
+
+### 7. Marka rengi ve tipografi onayın var mı?
 
 **Şu anki durum:** Kendi seçtiğim paletle ilerledim — sıcak kağıt zemini,
 derin lacivert, veri vurguları için pirinç sarısı. Emlak sitelerinin
