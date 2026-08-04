@@ -9,16 +9,25 @@ export default defineConfig({
   test: {
     environment: 'node',
     include: ['src/**/*.{test,spec}.{ts,tsx}'],
-    // ⚠️ TEKNİK BORÇ — FAZ 1.4'TE KALDIRILACAK.
-    // Faz 1.1'de henüz hiç test yoktu ve vitest boş çalıştırmada exit 1
-    // döndürüp "her faz sonunda pnpm test temiz" kapısını boşuna kırıyordu.
-    // Faz 1.4'te EİDS testleri (src/lib/eids) yazılınca bu satır SİLİNMELİ;
-    // aksi halde testlerin yanlışlıkla hiç çalışmaması sessizce gizlenir.
-    passWithNoTests: true,
+    setupFiles: ['./vitest.setup.ts'],
+
+    // Entegrasyon testleri Payload'ı ve veritabanını ayağa kaldırır; ilk
+    // derleme birkaç saniye sürebilir.
+    testTimeout: 30_000,
+    hookTimeout: 60_000,
+
+    // Entegrasyon testleri aynı veritabanını paylaşır — paralel çalışırlarsa
+    // birbirlerinin kayıtlarını görürler. Tek süreçte sırayla koşarlar.
+    fileParallelism: false,
+
+    // Not: `passWithNoTests` bilinçli olarak YOK. EİDS testleri yazıldığı için
+    // (Faz 1.4) teknik borç kapatıldı. Bu bayrağı geri eklemeyin — testlerin
+    // hiç çalışmaması sessizce gizlenir.
   },
   resolve: {
     alias: {
       '@': path.resolve(dirname, './src'),
+      '@payload-config': path.resolve(dirname, './src/payload.config.ts'),
     },
   },
 })

@@ -34,7 +34,8 @@
     "next": "16.2.12",
     "payload": "3.87.0",
     "react": "19.2.8",
-    "react-dom": "19.2.8"
+    "react-dom": "19.2.8",
+    "sharp": "^0.34.4"
   },
   "devDependencies": {
     "@tailwindcss/postcss": "4.3.3",

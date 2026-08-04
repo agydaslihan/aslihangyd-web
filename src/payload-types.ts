@@ -67,6 +67,11 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    ilanlar: Ilanlar;
+    mahalleler: Mahalleler;
+    talepler: Talepler;
+    sayfalar: Sayfalar;
+    medya: Medya;
     kullanicilar: Kullanicilar;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -75,6 +80,11 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    ilanlar: IlanlarSelect<false> | IlanlarSelect<true>;
+    mahalleler: MahallelerSelect<false> | MahallelerSelect<true>;
+    talepler: TaleplerSelect<false> | TaleplerSelect<true>;
+    sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
+    medya: MedyaSelect<false> | MedyaSelect<true>;
     kullanicilar: KullanicilarSelect<false> | KullanicilarSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -85,8 +95,12 @@ export interface Config {
     defaultIDType: number;
   };
   fallbackLocale: null;
-  globals: {};
-  globalsSelect: {};
+  globals: {
+    'kurumsal-bilgiler': KurumsalBilgiler;
+  };
+  globalsSelect: {
+    'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
+  };
   locale: null;
   widgets: {
     collections: CollectionsWidget;
@@ -116,12 +130,178 @@ export interface KullanicilarAuthOperations {
   };
 }
 /**
+ * Portföydeki taşınmazlar. Bir ilan yayına alınabilmesi için EİDS yetkisinin geçerli olması zorunludur.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilanlar".
+ */
+export interface Ilanlar {
+  id: number;
+  /**
+   * "Yayında" veya "Rezerve" seçebilmek için EİDS sekmesindeki tüm koşullar sağlanmalıdır.
+   */
+  durum: 'taslak' | 'yayinda' | 'rezerve' | 'satildi' | 'yetki_bitti';
+  /**
+   * Sayfanın adres satırındaki adı. Boş bırakırsan başlıktan otomatik üretilir. Yayına girdikten sonra değiştirmek eski adresi 404 yapar.
+   */
+  slug: string;
+  danisman?: (number | null) | Kullanicilar;
+  oneCikan?: boolean | null;
+  /**
+   * İşaretliyse ilanın adresi, fotoğrafları ve detayları herkese gösterilmez; yalnızca mahalle, kategori, m² aralığı ve fiyat bandı görünür. (Faz 2B modülü)
+   */
+  gizliPortfoy?: boolean | null;
+  /**
+   * Örn: "Muhittin Mahallesi'nde 3+1, 135 m², asansörlü". Rakam ve mahalle adı geçsin — arama motorunda fark eder.
+   */
+  baslik: string;
+  tip: 'satilik' | 'kiralik';
+  kategori: 'konut' | 'isyeri' | 'arsa' | 'depo' | 'fabrika';
+  /**
+   * Liste kartlarında ve paylaşımlarda görünen 1-2 cümle. Boş bırakılırsa açıklamanın başı kullanılır.
+   */
+  ozet?: string | null;
+  aciklama?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Boş bırakılırsa sayfa başlığı kullanılır. En fazla 70 karakter.
+   */
+  seoBaslik?: string | null;
+  /**
+   * Google sonuçlarında başlığın altında görünen metin. En fazla 170 karakter.
+   */
+  seoAciklama?: string | null;
+  /**
+   * WhatsApp ve sosyal medyada paylaşıldığında görünecek görsel. Önerilen: 1200×630 piksel.
+   */
+  seoGorsel?: (number | null) | Medya;
+  il: string;
+  ilce: string;
+  mahalle: number | Mahalleler;
+  /**
+   * Yalnızca yönetim panelinde görünür, siteye çıkmaz. Randevu ve dosya takibi için.
+   */
+  adres?: string | null;
+  /**
+   * Haritadaki konum. Gizli portföyde tam nokta yerine mahalle merkezi gösterilir.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  konum?: [number, number] | null;
+  /**
+   * Tapu bilgisi. Yayın için zorunludur (EİDS).
+   */
+  ada?: string | null;
+  /**
+   * Tapu bilgisi. Yayın için zorunludur (EİDS).
+   */
+  parsel?: string | null;
+  tapuDurumu?: ('kat_mulkiyeti' | 'kat_irtifaki' | 'arsa_tapulu' | 'hisseli' | 'mustakil') | null;
+  /**
+   * Mülk sahibi e-Devlet → "EİDS Taşınmaz İlanı Yetkilendirme İşlemleri" üzerinden işletmeyi yetkilendirir. Yalnızca "Yetkili" durumunda ilan yayınlanabilir.
+   */
+  eidsDurum?: ('yetkili' | 'suresi_doldu' | 'yetkisiz' | 'tapusuz' | 'yabanci_malik') | null;
+  /**
+   * İlan sayfasında "Doğrulanmış İlan" rozetiyle birlikte ziyaretçiye gösterilir.
+   */
+  tasinmazNo?: string | null;
+  eidsYetkiBaslangic?: string | null;
+  /**
+   * Yetki en az 3 ay verilir. Süre dolduğunda ilan otomatik olarak yayından kaldırılır.
+   */
+  eidsYetkiBitis?: string | null;
+  /**
+   * Kiralık ilanlarda aylık kira bedelidir.
+   */
+  fiyat?: number | null;
+  paraBirimi?: ('TRY' | 'USD' | 'EUR') | null;
+  /**
+   * Satılık ilanlarda yatırım göstergelerini bu alan besler. Bilmiyorsan BOŞ BIRAK — tahmini rakam yazma, göstergeler boş durumda kalsın.
+   */
+  tahminiKira?: number | null;
+  aidat?: number | null;
+  pazarlikPayi?: boolean | null;
+  /**
+   * fiyat ÷ (kira × 12)
+   */
+  kiraCarpani?: number | null;
+  brutGetiri?: number | null;
+  amortismanYili?: number | null;
+  brutM2?: number | null;
+  netM2?: number | null;
+  odaSayisi?: ('1+0' | '1+1' | '2+1' | '3+1' | '4+1' | '5+1') | null;
+  banyoSayisi?: number | null;
+  /**
+   * Örn: 3, Zemin, Bahçe katı
+   */
+  bulunduguKat?: string | null;
+  toplamKat?: number | null;
+  binaYasi?: number | null;
+  isinma?: ('dogalgaz_kombi' | 'merkezi' | 'merkezi_pay_olcer' | 'yerden_isitma' | 'klima' | 'soba' | 'yok') | null;
+  kullanimDurumu?: ('bos' | 'kiracili' | 'mulk_sahibi') | null;
+  esyali?: boolean | null;
+  krediyeUygun?: boolean | null;
+  asansor?: boolean | null;
+  /**
+   * Örn: "Otoparklı", "Site içerisinde", "Güneybatı cephe"
+   */
+  ozellikler?:
+    | {
+        metin: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * İlk fotoğraf kapak olarak kullanılır.
+   */
+  gorseller?:
+    | {
+        gorsel: number | Medya;
+        id?: string | null;
+      }[]
+    | null;
+  katPlani?: (number | null) | Medya;
+  /**
+   * Bunny Stream video kimliği. Boşsa video bölümü hiç gösterilmez.
+   */
+  droneVideoId?: string | null;
+  /**
+   * Tam adres (https://...). Boşsa tur bölümü gösterilmez.
+   */
+  sanalTurUrl?: string | null;
+  yetkilendirmeSozlesmesi?: (number | null) | Medya;
+  gostermeBelgesi?: (number | null) | Medya;
+  belgeNotu?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kullanicilar".
  */
 export interface Kullanicilar {
   id: number;
   adSoyad: string;
+  /**
+   * Rol ayrımı Faz 2B'de (CRM) yetkilendirmeye bağlanacak. Şu an bilgi amaçlıdır.
+   */
+  rol: 'yonetici' | 'danisman';
+  telefon?: string | null;
+  fotograf?: (number | null) | Medya;
   updatedAt: string;
   createdAt: string;
   email: string;
@@ -140,6 +320,299 @@ export interface Kullanicilar {
     | null;
   password?: string | null;
   collection: 'kullanicilar';
+}
+/**
+ * Site görselleri. Video yüklenmez — videolar CDN üzerinden yayınlanır.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "medya".
+ */
+export interface Medya {
+  id: number;
+  /**
+   * Görselde ne olduğunu bir cümleyle yaz. Ekran okuyucu kullananlar ve görsel yüklenmediğinde herkes bunu görür. Örn: "Muhittin Mahallesi'nde 3+1 dairenin salonu".
+   */
+  alt: string;
+  /**
+   * Görsel size ait değilse kaynağını yazın. Boş bırakılırsa kendi çekimimiz sayılır.
+   */
+  kaynak?: string | null;
+  updatedAt: string;
+  createdAt: string;
+  url?: string | null;
+  thumbnailURL?: string | null;
+  filename?: string | null;
+  mimeType?: string | null;
+  filesize?: number | null;
+  width?: number | null;
+  height?: number | null;
+  focalX?: number | null;
+  focalY?: number | null;
+  sizes?: {
+    kucuk?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    orta?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    buyuk?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+    paylasim?: {
+      url?: string | null;
+      width?: number | null;
+      height?: number | null;
+      mimeType?: string | null;
+      filesize?: number | null;
+      filename?: string | null;
+    };
+  };
+}
+/**
+ * Mahalle mini-portalları. Her mahalle sayfası ayrı bir SEO varlığıdır.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mahalleler".
+ */
+export interface Mahalleler {
+  id: number;
+  /**
+   * İçerik metni hazır olmadan yayına alma. 800 kelimeden kısa sayfalar arama motorunda "zayıf içerik" sayılır ve tüm siteyi aşağı çeker.
+   */
+  yayinda?: boolean | null;
+  /**
+   * Sayfanın adres satırındaki adı. Boş bırakırsan başlıktan otomatik üretilir. Yayına girdikten sonra değiştirmek eski adresi 404 yapar.
+   */
+  slug: string;
+  /**
+   * İşaretliyse bu kaydın rakamları henüz girilmemiştir. Arayüzde boş durum gösterilir, uydurma sayı yazılmaz.
+   */
+  veriEksik?: boolean | null;
+  /**
+   * Küçük sayı önce gösterilir.
+   */
+  siraNo?: number | null;
+  /**
+   * "Mahallesi" eki olmadan. Örn: Muhittin
+   */
+  ad: string;
+  /**
+   * Mahalle listesinde ve kartlarda görünen 1-2 cümle.
+   */
+  ozet?: string | null;
+  /**
+   * Mahalleyi tanımlayan 3-6 madde. Örn: "OSB'ye 10 dakika", "Yoğun öğrenci nüfusu"
+   */
+  oneCikanOzellikler?:
+    | {
+        metin: string;
+        id?: string | null;
+      }[]
+    | null;
+  kapakGorseli?: (number | null) | Medya;
+  /**
+   * Boş bırakılırsa sayfa başlığı kullanılır. En fazla 70 karakter.
+   */
+  seoBaslik?: string | null;
+  /**
+   * Google sonuçlarında başlığın altında görünen metin. En fazla 170 karakter.
+   */
+  seoAciklama?: string | null;
+  /**
+   * WhatsApp ve sosyal medyada paylaşıldığında görünecek görsel. Önerilen: 1200×630 piksel.
+   */
+  seoGorsel?: (number | null) | Medya;
+  icerik?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Google'da "Sorular ve cevaplar" bloğu olarak görünebilir (FAQPage yapılandırılmış verisi).
+   */
+  sikSorulanlar?:
+    | {
+        soru: string;
+        cevap: string;
+        id?: string | null;
+      }[]
+    | null;
+  ortalamaM2Satis?: number | null;
+  ortalamaKira?: number | null;
+  /**
+   * Kaç yıllık kira, satış fiyatına eşit.
+   */
+  kiraCarpani?: number | null;
+  degisim12Ay?: number | null;
+  /**
+   * Resmî kaynaktan (TÜİK/belediye) teyit edilmeden girme.
+   */
+  nufus?: number | null;
+  /**
+   * Bu rakamlar kaç gözleme dayanıyor? Sitede her rakamın yanında gösterilir. n bilinmiyorsa rakamlar da yayınlanmamalıdır.
+   */
+  gozlemSayisi?: number | null;
+  verilerinTarihi?: string | null;
+  /**
+   * Örn: "Kendi gözlem kayıtlarımız", "TÜİK". Sitede kaynak açıkça belirtilir.
+   */
+  veriKaynagi?: string | null;
+  /**
+   * Haritanın odaklanacağı nokta.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  merkez?: [number, number] | null;
+  /**
+   * geojson.io üzerinde çizip GeoJSON çıktısını buraya yapıştırabilirsin. Boşsa haritada sınır çizgisi gösterilmez, sadece merkez noktası kullanılır.
+   */
+  sinir?:
+    | {
+        [k: string]: unknown;
+      }
+    | unknown[]
+    | string
+    | number
+    | boolean
+    | null;
+  /**
+   * Bunny Stream video kimliği. Boşsa hero bölümü görsele düşer.
+   */
+  droneVideoId?: string | null;
+  /**
+   * Video yüklenene kadar gösterilir. Sayfanın en büyük görseli budur — LCP'yi belirler.
+   */
+  droneVideoPosteri?: (number | null) | Medya;
+  sanalTurUrl?: string | null;
+  yatirimSkoru?: {
+    /**
+     * Faz 4 skorlama motoru tarafından yazılır.
+     */
+    toplam?: number | null;
+    hesaplanmaTarihi?: string | null;
+  };
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Siteden gelen talepler. Kişisel veri içerir — dışarı aktarırken KVKK yükümlülüklerini gözetin.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talepler".
+ */
+export interface Talepler {
+  id: number;
+  durum: 'yeni' | 'arandi' | 'randevu' | 'teklif' | 'kazanildi' | 'kaybedildi';
+  /**
+   * Faz 2B lead skorlama motoru tarafından yazılır.
+   */
+  skor?: number | null;
+  sonTemas?: string | null;
+  adSoyad: string;
+  tip: 'alici' | 'satici' | 'kiraci' | 'ticari' | 'degerleme' | 'genel';
+  telefon?: string | null;
+  eposta?: string | null;
+  mesaj?: string | null;
+  ilgiliIlan?: (number | null) | Ilanlar;
+  ilgiliMahalle?: (number | null) | Mahalleler;
+  butceMin?: number | null;
+  butceMax?: number | null;
+  kaynak?: ('organik' | 'dogrudan' | 'whatsapp' | 'instagram' | 'google_ads' | 'tavsiye' | 'diger') | null;
+  gonderildigiSayfa?: string | null;
+  kvkkOnay: boolean;
+  kvkkOnayTarihi?: string | null;
+  /**
+   * Bu tarihten sonra kayıt otomatik silinir. KVKK: veri, amaç için gerekli süreden fazla saklanamaz.
+   */
+  saklamaBitis?: string | null;
+  /**
+   * Ayrı bir onaydır. İşaretli değilse bu kişiye bülten/kampanya gönderilemez.
+   */
+  pazarlamaOnayi?: boolean | null;
+  notlar?:
+    | {
+        tarih?: string | null;
+        metin: string;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Kurumsal ve hukuki metin sayfaları.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sayfalar".
+ */
+export interface Sayfalar {
+  id: number;
+  yayinda?: boolean | null;
+  /**
+   * Sayfanın adres satırındaki adı. Boş bırakırsan başlıktan otomatik üretilir. Yayına girdikten sonra değiştirmek eski adresi 404 yapar.
+   */
+  slug: string;
+  /**
+   * İşaretliyse sayfanın üstünde son güncelleme tarihi gösterilir ve arama motoruna öne çıkarılmaması bildirilir.
+   */
+  hukukiMetin?: boolean | null;
+  baslik: string;
+  ozet?: string | null;
+  icerik?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Boş bırakılırsa sayfa başlığı kullanılır. En fazla 70 karakter.
+   */
+  seoBaslik?: string | null;
+  /**
+   * Google sonuçlarında başlığın altında görünen metin. En fazla 170 karakter.
+   */
+  seoAciklama?: string | null;
+  /**
+   * WhatsApp ve sosyal medyada paylaşıldığında görünecek görsel. Önerilen: 1200×630 piksel.
+   */
+  seoGorsel?: (number | null) | Medya;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -164,10 +637,31 @@ export interface PayloadKv {
  */
 export interface PayloadLockedDocument {
   id: number;
-  document?: {
-    relationTo: 'kullanicilar';
-    value: number | Kullanicilar;
-  } | null;
+  document?:
+    | ({
+        relationTo: 'ilanlar';
+        value: number | Ilanlar;
+      } | null)
+    | ({
+        relationTo: 'mahalleler';
+        value: number | Mahalleler;
+      } | null)
+    | ({
+        relationTo: 'talepler';
+        value: number | Talepler;
+      } | null)
+    | ({
+        relationTo: 'sayfalar';
+        value: number | Sayfalar;
+      } | null)
+    | ({
+        relationTo: 'medya';
+        value: number | Medya;
+      } | null)
+    | ({
+        relationTo: 'kullanicilar';
+        value: number | Kullanicilar;
+      } | null);
   globalSlug?: string | null;
   user: {
     relationTo: 'kullanicilar';
@@ -212,10 +706,248 @@ export interface PayloadMigration {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilanlar_select".
+ */
+export interface IlanlarSelect<T extends boolean = true> {
+  durum?: T;
+  slug?: T;
+  danisman?: T;
+  oneCikan?: T;
+  gizliPortfoy?: T;
+  baslik?: T;
+  tip?: T;
+  kategori?: T;
+  ozet?: T;
+  aciklama?: T;
+  seoBaslik?: T;
+  seoAciklama?: T;
+  seoGorsel?: T;
+  il?: T;
+  ilce?: T;
+  mahalle?: T;
+  adres?: T;
+  konum?: T;
+  ada?: T;
+  parsel?: T;
+  tapuDurumu?: T;
+  eidsDurum?: T;
+  tasinmazNo?: T;
+  eidsYetkiBaslangic?: T;
+  eidsYetkiBitis?: T;
+  fiyat?: T;
+  paraBirimi?: T;
+  tahminiKira?: T;
+  aidat?: T;
+  pazarlikPayi?: T;
+  kiraCarpani?: T;
+  brutGetiri?: T;
+  amortismanYili?: T;
+  brutM2?: T;
+  netM2?: T;
+  odaSayisi?: T;
+  banyoSayisi?: T;
+  bulunduguKat?: T;
+  toplamKat?: T;
+  binaYasi?: T;
+  isinma?: T;
+  kullanimDurumu?: T;
+  esyali?: T;
+  krediyeUygun?: T;
+  asansor?: T;
+  ozellikler?:
+    | T
+    | {
+        metin?: T;
+        id?: T;
+      };
+  gorseller?:
+    | T
+    | {
+        gorsel?: T;
+        id?: T;
+      };
+  katPlani?: T;
+  droneVideoId?: T;
+  sanalTurUrl?: T;
+  yetkilendirmeSozlesmesi?: T;
+  gostermeBelgesi?: T;
+  belgeNotu?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "mahalleler_select".
+ */
+export interface MahallelerSelect<T extends boolean = true> {
+  yayinda?: T;
+  slug?: T;
+  veriEksik?: T;
+  siraNo?: T;
+  ad?: T;
+  ozet?: T;
+  oneCikanOzellikler?:
+    | T
+    | {
+        metin?: T;
+        id?: T;
+      };
+  kapakGorseli?: T;
+  seoBaslik?: T;
+  seoAciklama?: T;
+  seoGorsel?: T;
+  icerik?: T;
+  sikSorulanlar?:
+    | T
+    | {
+        soru?: T;
+        cevap?: T;
+        id?: T;
+      };
+  ortalamaM2Satis?: T;
+  ortalamaKira?: T;
+  kiraCarpani?: T;
+  degisim12Ay?: T;
+  nufus?: T;
+  gozlemSayisi?: T;
+  verilerinTarihi?: T;
+  veriKaynagi?: T;
+  merkez?: T;
+  sinir?: T;
+  droneVideoId?: T;
+  droneVideoPosteri?: T;
+  sanalTurUrl?: T;
+  yatirimSkoru?:
+    | T
+    | {
+        toplam?: T;
+        hesaplanmaTarihi?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "talepler_select".
+ */
+export interface TaleplerSelect<T extends boolean = true> {
+  durum?: T;
+  skor?: T;
+  sonTemas?: T;
+  adSoyad?: T;
+  tip?: T;
+  telefon?: T;
+  eposta?: T;
+  mesaj?: T;
+  ilgiliIlan?: T;
+  ilgiliMahalle?: T;
+  butceMin?: T;
+  butceMax?: T;
+  kaynak?: T;
+  gonderildigiSayfa?: T;
+  kvkkOnay?: T;
+  kvkkOnayTarihi?: T;
+  saklamaBitis?: T;
+  pazarlamaOnayi?: T;
+  notlar?:
+    | T
+    | {
+        tarih?: T;
+        metin?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sayfalar_select".
+ */
+export interface SayfalarSelect<T extends boolean = true> {
+  yayinda?: T;
+  slug?: T;
+  hukukiMetin?: T;
+  baslik?: T;
+  ozet?: T;
+  icerik?: T;
+  seoBaslik?: T;
+  seoAciklama?: T;
+  seoGorsel?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "medya_select".
+ */
+export interface MedyaSelect<T extends boolean = true> {
+  alt?: T;
+  kaynak?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  url?: T;
+  thumbnailURL?: T;
+  filename?: T;
+  mimeType?: T;
+  filesize?: T;
+  width?: T;
+  height?: T;
+  focalX?: T;
+  focalY?: T;
+  sizes?:
+    | T
+    | {
+        kucuk?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        orta?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        buyuk?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+        paylasim?:
+          | T
+          | {
+              url?: T;
+              width?: T;
+              height?: T;
+              mimeType?: T;
+              filesize?: T;
+              filename?: T;
+            };
+      };
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kullanicilar_select".
  */
 export interface KullanicilarSelect<T extends boolean = true> {
   adSoyad?: T;
+  rol?: T;
+  telefon?: T;
+  fotograf?: T;
   updatedAt?: T;
   createdAt?: T;
   email?: T;
@@ -272,6 +1004,83 @@ export interface PayloadMigrationsSelect<T extends boolean = true> {
   batch?: T;
   updatedAt?: T;
   createdAt?: T;
+}
+/**
+ * Sitenin altbilgisinde ve /hakkimizda sayfasında görünen yasal ve iletişim bilgileri.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kurumsal-bilgiler".
+ */
+export interface KurumsalBilgiler {
+  id: number;
+  ticaretUnvani?: string | null;
+  /**
+   * Ticaret Bakanlığı tarafından verilen belge numarası. Sitenin altbilgisinde gösterilir.
+   */
+  yetkiBelgesiNo?: string | null;
+  mersisNo?: string | null;
+  vergiDairesi?: string | null;
+  vergiNo?: string | null;
+  sorumluDanismanBelgeNo?: string | null;
+  adres?: string | null;
+  telefon?: string | null;
+  eposta?: string | null;
+  /**
+   * Uluslararası biçimde, yalnızca rakam. Örn: 905321234567. Boşsa sitedeki tüm WhatsApp butonları gizlenir.
+   */
+  whatsapp?: string | null;
+  calismaSaatleri?: string | null;
+  sosyalMedya?:
+    | {
+        platform: 'instagram' | 'youtube' | 'facebook' | 'linkedin' | 'x';
+        adres: string;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * KVKK kapsamında veri sorumlusu sıfatını taşıyan kişi/işletme.
+   */
+  veriSorumlusu?: string | null;
+  /**
+   * Kayıt yükümlülüğünüz varsa. Yoksa boş bırakın.
+   */
+  verbisKayitNo?: string | null;
+  /**
+   * Silme/erişim taleplerinin gönderileceği adres.
+   */
+  kvkkBasvuruEpostasi?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "kurumsal-bilgiler_select".
+ */
+export interface KurumsalBilgilerSelect<T extends boolean = true> {
+  ticaretUnvani?: T;
+  yetkiBelgesiNo?: T;
+  mersisNo?: T;
+  vergiDairesi?: T;
+  vergiNo?: T;
+  sorumluDanismanBelgeNo?: T;
+  adres?: T;
+  telefon?: T;
+  eposta?: T;
+  whatsapp?: T;
+  calismaSaatleri?: T;
+  sosyalMedya?:
+    | T
+    | {
+        platform?: T;
+        adres?: T;
+        id?: T;
+      };
+  veriSorumlusu?: T;
+  verbisKayitNo?: T;
+  kvkkBasvuruEpostasi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

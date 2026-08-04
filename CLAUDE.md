@@ -148,10 +148,20 @@ main'e doğrudan push YOK — PR üzerinden
 pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
 
 ## Teknik borç (kapatılacak)
-- [ ] **Faz 1.4'te KALDIR:** `vitest.config.ts` içindeki `passWithNoTests: true`.
-      Faz 1.1'de hiç test yokken vitest'in exit 1 döndürmesini engellemek için
-      geçici olarak eklendi. EİDS testleri yazılınca silinmeli — yoksa
-      testlerin hiç çalışmaması sessizce gizlenir.
+- [x] ~~`vitest.config.ts` içindeki `passWithNoTests: true`~~ — Faz 1.4'te
+      kaldırıldı. EİDS birim + entegrasyon testleri yazıldı.
+- [ ] postgis imajının tiger/topology şemaları → temizlenebilir, düşük öncelik
+- [ ] `sharp` 0.34'e sabitlendi: 0.35'in tip imzası Payload'ın
+      `SharpDependency` tipiyle uyuşmuyor. Payload sürüm yükseltmesinde
+      tekrar denenebilir.
+
+## Test katmanları
+- `*.test.ts` — birim testi, bağımlılık yok, milisaniyeler içinde koşar
+- `*.entegrasyon.test.ts` — gerçek PostgreSQL'e karşı Payload Local API ile
+      koşar. EİDS ve KVKK kurallarının **gerçekten bağlı olduğunu** kanıtlar;
+      birim testi kuralın doğru hesaplandığını, entegrasyon testi kuralın
+      atlanamadığını gösterir. `pnpm test` ikisini de çalıştırır ve
+      `DATABASE_URI` ister.
 
 ## Faz durumu
 - [ ] Faz 1  — MVP (iskelet, veri modeli, EİDS, KVKK, temel sayfalar, CI/CD)
