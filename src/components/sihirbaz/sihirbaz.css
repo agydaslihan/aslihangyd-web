@@ -1,0 +1,387 @@
+/**
+ * Portföy sihirbazı stilleri.
+ *
+ * ⚠️ Payload'ın kendi CSS değişkenleri kullanılıyor (--theme-elevation-*,
+ * --theme-text, --theme-success-*, --theme-error-*). Sabit renk yazmak,
+ * admin'in koyu temasında okunmaz bir ekran üretirdi. Değişken bulunmadığı
+ * durumlar için `color-mix` yerine yedek değer veriliyor.
+ */
+
+.sihirbaz {
+  max-width: 68rem;
+  margin-inline: auto;
+  padding: 1.5rem 0 3rem;
+}
+
+/* ── Adım göstergesi ────────────────────────────────────────────────── */
+
+.sihirbaz-adimlar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin: 0 0 2rem;
+  padding: 0;
+  list-style: none;
+}
+
+.sihirbaz-adimlar li {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--theme-elevation-500, #888);
+}
+
+.sihirbaz-adimlar li.etkin {
+  color: var(--theme-text, #111);
+  font-weight: 600;
+}
+
+.sihirbaz-adimlar li.tamam {
+  color: var(--theme-elevation-700, #555);
+}
+
+.sihirbaz-adim-no {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 1.5rem;
+  height: 1.5rem;
+  border-radius: 50%;
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+}
+
+.sihirbaz-adimlar li.etkin .sihirbaz-adim-no {
+  border-color: var(--theme-text, #111);
+}
+
+.sihirbaz-adimlar li.tamam .sihirbaz-adim-no {
+  background: var(--theme-elevation-100, #eee);
+}
+
+/* ── Düzen ──────────────────────────────────────────────────────────── */
+
+.sihirbaz-govde {
+  display: grid;
+  gap: 2rem;
+}
+
+@media (min-width: 60rem) {
+  .sihirbaz-govde {
+    grid-template-columns: minmax(0, 1fr) 20rem;
+    align-items: start;
+  }
+}
+
+.sihirbaz-form {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.sihirbaz-baslik {
+  margin: 0;
+  font-size: 1.375rem;
+  line-height: 1.3;
+}
+
+.sihirbaz-aciklama {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.6;
+  color: var(--theme-elevation-600, #666);
+}
+
+.sihirbaz-satir {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: 1fr;
+}
+
+@media (min-width: 40rem) {
+  .sihirbaz-satir {
+    grid-template-columns: repeat(auto-fit, minmax(10rem, 1fr));
+  }
+}
+
+/* ── Alanlar ────────────────────────────────────────────────────────── */
+
+.sihirbaz-alan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.sihirbaz-etiketli {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+}
+
+.sihirbaz-etiket {
+  font-size: 0.8125rem;
+  font-weight: 500;
+}
+
+.sihirbaz-gerekli {
+  margin-left: 0.25rem;
+  color: var(--theme-error-500, #c33);
+}
+
+.sihirbaz-girdi {
+  width: 100%;
+  min-height: 2.75rem;
+  padding: 0.5rem 0.75rem;
+  font: inherit;
+  font-size: 0.9375rem;
+  color: var(--theme-elevation-800, #222);
+  background: var(--theme-input-bg, var(--theme-elevation-0, #fff));
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  border-radius: 4px;
+}
+
+.sihirbaz-girdi:focus-visible {
+  outline: 2px solid var(--theme-text, #111);
+  outline-offset: -1px;
+}
+
+textarea.sihirbaz-girdi {
+  min-height: 5rem;
+  resize: vertical;
+}
+
+.sihirbaz-birimli {
+  position: relative;
+}
+
+.sihirbaz-birimli .sihirbaz-girdi {
+  padding-right: 2.75rem;
+}
+
+.sihirbaz-birim {
+  position: absolute;
+  inset-block: 0;
+  right: 0.75rem;
+  display: flex;
+  align-items: center;
+  font-size: 0.875rem;
+  color: var(--theme-elevation-500, #888);
+  pointer-events: none;
+}
+
+.sihirbaz-onay {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.sihirbaz-onay label {
+  font-size: 0.875rem;
+  cursor: pointer;
+}
+
+.sihirbaz-ipucu,
+.sihirbaz-hata {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+}
+
+.sihirbaz-ipucu {
+  color: var(--theme-elevation-500, #888);
+}
+
+.sihirbaz-hata {
+  color: var(--theme-error-500, #c33);
+}
+
+.sihirbaz-genel-hata {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--theme-error-500, #c33);
+  background: var(--theme-error-50, #fdf0f0);
+  border: 1px solid var(--theme-error-100, #f5d0d0);
+  border-radius: 4px;
+}
+
+/* ── Düğmeler ───────────────────────────────────────────────────────── */
+
+.sihirbaz-dugmeler {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  justify-content: space-between;
+  margin-top: 0.5rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid var(--theme-elevation-100, #eee);
+}
+
+.sihirbaz-dugme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Dokunma hedefi en az 44px. */
+  min-height: 2.75rem;
+  padding-inline: 1.25rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-decoration: none;
+  color: var(--theme-elevation-0, #fff);
+  background: var(--theme-elevation-800, #222);
+  border: 1px solid transparent;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.sihirbaz-dugme:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.sihirbaz-dugme.sessiz {
+  color: var(--theme-text, #111);
+  background: transparent;
+  border-color: var(--theme-elevation-200, #ddd);
+}
+
+/* ── Göstergeler önizlemesi ─────────────────────────────────────────── */
+
+.sihirbaz-gostergeler {
+  padding: 1rem;
+  background: var(--theme-elevation-50, #f7f7f7);
+  border: 1px solid var(--theme-elevation-100, #eee);
+  border-radius: 4px;
+}
+
+.sihirbaz-gostergeler-baslik {
+  margin: 0 0 0.75rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  color: var(--theme-elevation-600, #666);
+}
+
+.sihirbaz-gostergeler dl {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin: 0;
+}
+
+.sihirbaz-gostergeler dt {
+  font-size: 0.75rem;
+  color: var(--theme-elevation-500, #888);
+}
+
+.sihirbaz-gostergeler dd {
+  margin: 0.125rem 0 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+.sihirbaz-gostergeler-not {
+  margin: 0.75rem 0 0;
+  font-size: 0.75rem;
+  color: var(--theme-elevation-500, #888);
+}
+
+/* ── Özet ───────────────────────────────────────────────────────────── */
+
+.sihirbaz-ozet {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin: 0;
+}
+
+.sihirbaz-ozet > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--theme-elevation-100, #eee);
+}
+
+.sihirbaz-ozet dt {
+  font-size: 0.875rem;
+  color: var(--theme-elevation-600, #666);
+}
+
+.sihirbaz-ozet dd {
+  margin: 0;
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-align: right;
+}
+
+/* ── EİDS paneli ────────────────────────────────────────────────────── */
+
+.sihirbaz-eids {
+  position: sticky;
+  top: 1rem;
+  padding: 1.25rem;
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  border-radius: 4px;
+}
+
+.sihirbaz-eids.hazir {
+  border-color: var(--theme-success-200, #b5dfc0);
+  background: var(--theme-success-50, #f2faf4);
+}
+
+.sihirbaz-eids.eksik {
+  border-color: var(--theme-warning-200, #f0dca8);
+  background: var(--theme-warning-50, #fdf8ec);
+}
+
+.sihirbaz-eids-durum {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+}
+
+.sihirbaz-eids-aciklama {
+  margin: 0.5rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: var(--theme-elevation-700, #555);
+}
+
+.sihirbaz-eids-liste {
+  margin: 0.875rem 0 0;
+  padding-left: 1.125rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  line-height: 1.55;
+  color: var(--theme-elevation-700, #555);
+}
+
+.sihirbaz-eids-kalan,
+.sihirbaz-eids-yasal {
+  margin: 0.875rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.55;
+  color: var(--theme-elevation-600, #666);
+}
+
+.sihirbaz-eids-yasal {
+  padding-top: 0.875rem;
+  border-top: 1px solid var(--theme-elevation-100, #eee);
+}
+
+/* ── Başarı ekranı ──────────────────────────────────────────────────── */
+
+.sihirbaz-basari {
+  max-width: 36rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}

@@ -112,6 +112,15 @@ Yeni skor ÜRETMEZ; sinyal üretir. İkinci bir puan, Yatırım Skoruyla
 mahalle medyanına göre hesaplanır. Veri zayıflığı gizlenmez, sinyal olarak
 gösterilir.
 
+### Portföy giriş sihirbazı
+Payload admin'in YERİNE değil YANINDA durur (`/admin/portfoy-sihirbazi`).
+Kayıt daima `taslak`; `durum` alanı şemada yoktur, istemci yayın durumu
+dayatamaz. Yazma yolu Local API + `overrideAccess: false` — kancalar ve
+erişim kuralları aynen çalışır. EİDS paneli bir kapı değil ayna; gerçek kapı
+`eidsYayinEngeli` kancasıdır ve panel aynı motoru kullanır.
+⚠️ Admin görünümleri oturumsuz da ÇALIŞIR — görünüm gövdesinde
+`if (!req.user) return null` kapısı zorunludur.
+
 ### Raporlar
 PDF, kütüphaneyle değil yazdırma yoluyla üretilir (`@media print` +
 tarayıcının "PDF olarak kaydet"i). Gerekçe: pdf-lib'in standart fontları
@@ -190,8 +199,8 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
               (bkz. BAL-KUPU-VE-PORTFOY-YONETIMI.md)
               Bal küpü modülleri tamam (değerleme, gizli portföy, mahalle
               eşleştirme testi, yatırım simülatörü, kira mı satın alma mı,
-              bölge radarı, PDF rapor). CRM eşleştirme motoru, portföy giriş
-              sihirbazı ve sosyal medya materyali kaldı.
+              bölge radarı, PDF rapor). Portföy giriş sihirbazı tamam.
+              CRM eşleştirme motoru ve sosyal medya materyali kaldı.
 - [ ] Faz 2C — Gözlem giriş sistemi ve endeks altyapısı
               (bkz. ENDEKS-VERI-YONETIMI.md) — sayfa 6. ayda açılır
 - [ ] Faz 3  — Drone/360 medya, CDN
