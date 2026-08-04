@@ -104,8 +104,49 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 - [ ] **Anthropic API anahtarı** (Faz 4 — AI doğal dil arama)
       Nereye: `.env` → `ANTHROPIC_API_KEY`
 
+- [ ] **Bakım anahtarı ve cron kurulumu** (Faz 1.10 — ZORUNLU)
+      `.env` → `BAKIM_ANAHTARI=$(openssl rand -hex 32)`
+      Cron kurulumu: `docs/ISLETME-REHBERI.md` bölüm 6
+      Olmazsa: Yetkisi dolan ilanlar **otomatik yayından kalkmaz** ve
+      saklama süresi dolan kişisel veriler silinmez. Bu iki iş de yasal
+      yükümlülük — kurulumu atlanmamalı.
+
 ---
 
-## Bana sorman gerekenler (cevabını bekliyorum)
+## Bana sorman gereken / avukata sorman gereken
 
-Şu an bekleyen soru yok. Çıktıkça buraya yazacağım.
+### 1. EİDS kiralık ilanları da kapsıyor mu?
+
+**Şu anki davranış:** Kural satılık/kiralık ayrımı yapmadan **tüm** ilanlara
+uygulanıyor. Yani kiralık bir ilanı da EİDS yetkisi olmadan yayınlayamıyorsun.
+
+**Neden böyle yaptım:** Mevzuat metni satılık taşınmazı açıkça sayıyor;
+kiralık tarafın kapsamı yoruma açık. Katı davranmak hukuki risk üretmez,
+gevşek davranmak üretir. Bu yüzden katı tarafı seçtim.
+
+**Senden istediğim:** Avukatına sor. Kiralık ilanlar kapsam dışıysa kuralı
+daraltabilirim — ama bunu senin bilinçli kararınla ve hukuki dayanakla
+yapmak istiyorum, kendi başıma gevşetmem.
+
+**Aciliyet:** Kiralık portföy girmeye başlayana kadar bekleyebilir.
+
+### 2. Kişisel veri saklama süresi 24 ay uygun mu?
+
+**Şu anki davranış:** Siteden gelen her talep kaydına oluşturulduğu anda
+"saklama bitiş tarihi" yazılıyor (onay + 24 ay). Süresi dolan kayıtlar
+günlük bakım göreviyle otomatik siliniyor.
+
+**Senden istediğim:** 24 ay makul bir varsayılan ama hukuki bir tercih.
+Avukatın farklı bir süre belirlerse söyle, tek satırda değiştiriyorum
+(`src/lib/kvkk/saklama.ts` → `VARSAYILAN_SAKLAMA_AYI`).
+
+### 3. Marka rengi ve tipografi onayın var mı?
+
+**Şu anki durum:** Kendi seçtiğim paletle ilerledim — sıcak kağıt zemini,
+derin lacivert, veri vurguları için pirinç sarısı. Emlak sitelerinin
+kırmızı "ACİL SATILIK" estetiğinden bilinçli olarak uzak durdum.
+
+Başlıklarda Source Serif 4, arayüzde Inter kullanıyorum.
+
+**Senden istediğim:** Siteye bak, beğenmezsen söyle — değiştiririm.
+Logon varsa gönder, yerleştireyim.

@@ -28,6 +28,9 @@ export default defineConfig({
     alias: {
       '@': path.resolve(dirname, './src'),
       '@payload-config': path.resolve(dirname, './src/payload.config.ts'),
+      // `server-only` react-server koşulu dışındaki her ortamda hata fırlatır;
+      // testlerde koruma gereksiz, modülleri import edilemez hale getiriyordu.
+      'server-only': path.resolve(dirname, './test/sunucu-only-stub.ts'),
     },
   },
 })

@@ -1,0 +1,76 @@
+name: CI
+
+# Her PR ve main/develop push'unda kalite kapısı.
+#
+# CLAUDE.md: "Her fazın sonunda pnpm typecheck && lint && test && build →
+# hepsi temiz." Bu iş akışı o kuralı insan disiplinine bırakmaz.
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+# Aynı dala arka arkaya push gelirse eskisini iptal et — 2 vCPU'luk
+# runner kotasını boşa harcama.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  kalite:
+    name: Tip, lint, test ve derleme
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+
+    # Entegrasyon testleri gerçek PostgreSQL + PostGIS ister. EİDS ve KVKK
+    # güvenceleri yalnızca bu testlerle kanıtlanıyor; onları CI'da atlamak
+    # kapıyı anlamsız kılardı.
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: aslihangyd
+          POSTGRES_PASSWORD: ci_gecici_sifre
+          POSTGRES_DB: aslihangyd_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aslihangyd -d aslihangyd_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URI: postgres://aslihangyd:ci_gecici_sifre@localhost:5432/aslihangyd_test
+      # CI'ya özel, tek kullanımlık sır. Üretim sırrıyla ilgisi yoktur.
+      PAYLOAD_SECRET: ci_gecici_payload_sirri_degistirilmeyecek
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - name: Bağımlılıkları kur
+        run: pnpm install --frozen-lockfile
+
+      - name: Veritabanı şemasını uygula
+        run: pnpm payload migrate
+
+      - name: Tip kontrolü
+        run: pnpm typecheck
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Testler (birim + entegrasyon)
+        run: pnpm test
+
+      - name: Derleme
+        run: pnpm build
