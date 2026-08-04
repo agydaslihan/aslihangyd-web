@@ -29,19 +29,34 @@ export interface GezinmeOgesi {
   adres: string
   /** Yalnızca ilgili faz açıldığında görünür. */
   hazir?: boolean
+  /**
+   * Üst menüde görünsün mü.
+   *
+   * Sayfa sayısı arttıkça üst menü seçici olmalı: dokuz öğe masaüstünde
+   * sıkışır, mobilde uzun bir listeye döner ve hiçbiri öne çıkmaz. Üst menü
+   * ziyaretçinin en sık ihtiyaç duyduğu beş yolu taşır; geri kalanı
+   * altbilgide ve sayfa içi çapraz bağlantılarda yaşar.
+   */
+  ustMenude?: boolean
 }
 
-/** Ana gezinme. Faz ilerledikçe `hazir` bayrakları açılır. */
+/** Tüm sayfalar. Faz ilerledikçe `hazir` bayrakları açılır. */
 export const ANA_GEZINME: readonly GezinmeOgesi[] = [
-  { ad: 'Portföy', adres: '/portfoy', hazir: true },
-  { ad: 'Mahalleler', adres: '/mahalleler', hazir: true },
+  { ad: 'Portföy', adres: '/portfoy', hazir: true, ustMenude: true },
+  { ad: 'Mahalleler', adres: '/mahalleler', hazir: true, ustMenude: true },
+  { ad: 'Değerleme', adres: '/degerleme', hazir: true, ustMenude: true },
+  { ad: 'Araçlar', adres: '/araclar', hazir: true, ustMenude: true },
+  { ad: 'İletişim', adres: '/iletisim', hazir: true, ustMenude: true },
+  { ad: 'Gizli Portföy', adres: '/gizli-portfoy', hazir: true },
   { ad: 'Harita', adres: '/harita', hazir: true },
   { ad: 'Ticari', adres: '/ticari', hazir: true },
-  { ad: 'Araçlar', adres: '/araclar', hazir: true },
   { ad: 'Hakkımızda', adres: '/hakkimizda', hazir: true },
-  { ad: 'İletişim', adres: '/iletisim', hazir: true },
 ]
 
+/** Üst menü — seçici. */
+export const UST_MENU = ANA_GEZINME.filter((oge) => oge.hazir && oge.ustMenude)
+
+/** Altbilgi — yayında olan her sayfa. */
 export const GORUNUR_GEZINME = ANA_GEZINME.filter((oge) => oge.hazir)
 
 /** Altbilgideki hukuki metin bağlantıları. */
