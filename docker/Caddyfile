@@ -1,0 +1,58 @@
+# =============================================================================
+# aslihangyd.com — Caddy ters vekil
+#
+# Caddy Let's Encrypt sertifikasını kendi alır ve yeniler; ayrı bir certbot
+# kurulumu gerekmiyor.
+# =============================================================================
+
+{
+	email {$CADDY_EPOSTA}
+	# Sunucu kimliğini yanıt başlığında duyurmaya gerek yok.
+	servers {
+		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22
+	}
+}
+
+aslihangyd.com {
+	encode zstd gzip
+
+	# ── Güvenlik başlıkları ───────────────────────────────────────────────
+	header {
+		# HTTPS'e kilitle. Alan adı ilk kez yayına alınırken max-age'i
+		# kısa tutup (örn. 300) her şeyin çalıştığını doğruladıktan sonra
+		# uzun değere geçin — HSTS geri alınamaz.
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+
+		X-Content-Type-Options "nosniff"
+		X-Frame-Options "SAMEORIGIN"
+		Referrer-Policy "strict-origin-when-cross-origin"
+
+		# Kullanılmayan tarayıcı yetkilerini kapat.
+		Permissions-Policy "camera=(), microphone=(), payment=(), usb=()"
+
+		-Server
+		-X-Powered-By
+	}
+
+	# ── Yönetim paneli ────────────────────────────────────────────────────
+	# Arama motorlarına kapalı; robots.txt zaten yasaklıyor, başlık ikinci hat.
+	@panel path /admin*
+	header @panel X-Robots-Tag "noindex, nofollow"
+
+	# ── Statik varlıklar ──────────────────────────────────────────────────
+	# Next.js bu dosyaları içerik özetiyle adlandırır; süresiz önbelleklenebilir.
+	@degismez path /_next/static/*
+	header @degismez Cache-Control "public, max-age=31536000, immutable"
+
+	reverse_proxy uygulama:3000 {
+		health_uri /api/saglik
+		health_interval 30s
+		health_timeout 5s
+	}
+}
+
+# www → kök yönlendirmesi Cloudflare'de de yapılabilir; burada tutmak
+# Cloudflare devre dışı kaldığında da davranışı korur.
+www.aslihangyd.com {
+	redir https://aslihangyd.com{uri} permanent
+}

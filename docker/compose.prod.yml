@@ -1,0 +1,144 @@
+# =============================================================================
+# aslihangyd.com — ÜRETİM
+#
+# ⚠️ GÜVENLİK: Postgres ve Redis DIŞARIYA HİÇ AÇILMAZ. Geliştirme
+# dosyasından farkı budur — orada 127.0.0.1'e bağlıydılar, burada hiç
+# `ports` tanımı yok. Servisler birbirine yalnızca Docker ağı üzerinden
+# ulaşır. Docker'ın port yayınlaması UFW kurallarını atladığı için
+# `ports` eklemek veritabanını internete açmak demektir.
+#
+# Kullanım:
+#   docker compose --env-file .env -f docker/compose.prod.yml up -d
+# =============================================================================
+
+name: aslihangyd
+
+services:
+  uygulama:
+    image: ${UYGULAMA_IMAJI:-ghcr.io/agydaslihan/aslihangyd-web:latest}
+    container_name: aslihangyd-uygulama
+    restart: unless-stopped
+
+    environment:
+      NODE_ENV: production
+      DATABASE_URI: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET tanimli olmali}
+      REDIS_URL: redis://redis:6379
+      MEDYA_DIZINI: /uygulama/medya
+      BAKIM_ANAHTARI: ${BAKIM_ANAHTARI:-}
+      NEXT_PUBLIC_SITE_ADRESI: ${NEXT_PUBLIC_SITE_ADRESI:-https://aslihangyd.com}
+      NEXT_PUBLIC_WHATSAPP_NUMARA: ${NEXT_PUBLIC_WHATSAPP_NUMARA:-}
+      NEXT_PUBLIC_UMAMI_URL: ${NEXT_PUBLIC_UMAMI_URL:-}
+      NEXT_PUBLIC_UMAMI_SITE_ID: ${NEXT_PUBLIC_UMAMI_SITE_ID:-}
+
+    volumes:
+      - medya:/uygulama/medya
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+    mem_limit: 1200m
+
+    networks: [ic]
+
+  caddy:
+    image: caddy:2-alpine
+    container_name: aslihangyd-caddy
+    restart: unless-stopped
+
+    # Dışarıya açılan TEK servis budur.
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+
+    environment:
+      CADDY_EPOSTA: ${CADDY_EPOSTA:?Let\'s Encrypt bildirimleri icin e-posta gerekli}
+
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_veri:/data
+      - caddy_yapilandirma:/config
+
+    depends_on: [uygulama]
+
+    mem_limit: 128m
+
+    networks: [ic]
+
+  postgres:
+    image: postgis/postgis:17-3.5
+    container_name: aslihangyd-postgres
+    restart: unless-stopped
+
+    # ⚠️ `ports` YOK ve eklenmeyecek. Yukarıdaki güvenlik notunu okuyun.
+
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:?tanimli olmali}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?tanimli olmali}
+      POSTGRES_DB: ${POSTGRES_DB:?tanimli olmali}
+      POSTGRES_INITDB_ARGS: '--encoding=UTF8'
+
+    command:
+      - postgres
+      - -c
+      - shared_buffers=256MB
+      - -c
+      - max_connections=50
+
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U "$$POSTGRES_USER" -d "$$POSTGRES_DB"']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+    mem_limit: 700m
+
+    networks: [ic]
+
+  redis:
+    image: redis:7-alpine
+    container_name: aslihangyd-redis
+    restart: unless-stopped
+
+    command:
+      - redis-server
+      - --maxmemory
+      - 96mb
+      - --maxmemory-policy
+      - allkeys-lru
+      - --save
+      - ''
+      - --appendonly
+      - 'no'
+
+    healthcheck:
+      test: ['CMD', 'redis-cli', 'ping']
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+    mem_limit: 128m
+
+    networks: [ic]
+
+networks:
+  ic:
+    driver: bridge
+
+volumes:
+  pgdata:
+    name: aslihangyd-pgdata
+  medya:
+    name: aslihangyd-medya
+  caddy_veri:
+    name: aslihangyd-caddy-veri
+  caddy_yapilandirma:
+    name: aslihangyd-caddy-yapilandirma

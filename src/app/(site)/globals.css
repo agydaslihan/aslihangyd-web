@@ -1,32 +1,237 @@
 @import 'tailwindcss';
 
-/*
- * CLAUDE.md erişilebilirlik standardı: WCAG AA kontrast, klavye navigasyonu.
- * Renk paleti ve tipografi marka kararları netleştikten sonra doldurulacak.
- */
+/* ==========================================================================
+   aslihangyd.com — Tasarım sistemi
+   --------------------------------------------------------------------------
+   Yön: emlak sitelerinin kırmızı "ACİL SATILIK" estetiğinin tam tersi.
+   Sakin, veri odaklı, pahalı. Referans: Stripe'ın netliği, Linear'ın
+   disiplini, Bloomberg'in veri yoğunluğu — ama sıcak ve insani.
+
+   Renk kararları:
+   - Zemin saf beyaz değil, hafif sıcak kağıt tonu. Saf beyaz ekranda
+     klinik ve ucuz durur.
+   - Marka rengi derin lacivert: güven ve kurumsallık, dikkat çalmadan.
+   - Vurgu rengi pirinç sarısı. Yalnızca VERİ vurgularında kullanılır
+     (rakam, rozet, grafik) — dekorasyon için değil.
+   - Artı/eksi değişim renkleri kısık tonda. Parlak yeşil/kırmızı borsa
+     ekranı hissi verir; burada güven aranıyor, adrenalin değil.
+
+   Tüm renkler OKLCH: açıklık değeri algısal olarak doğrusal, bu yüzden
+   kontrast oranlarını tahmin etmek yerine hesaplamak mümkün.
+   ========================================================================== */
 
 @theme {
-  /* Marka renkleri: AslihanTarafindanDoldurulacak */
+  /* ── Yüzeyler ── */
+  --color-kagit: oklch(0.986 0.004 85);
+  --color-yuzey: oklch(1 0 0);
+  --color-yuzey-2: oklch(0.968 0.006 85);
+  --color-cizgi: oklch(0.9 0.008 85);
+  --color-cizgi-guclu: oklch(0.82 0.012 85);
+
+  /* ── Metin ── */
+  --color-murekkep: oklch(0.24 0.018 250);
+  --color-murekkep-2: oklch(0.46 0.016 250);
+  --color-murekkep-3: oklch(0.6 0.014 250);
+
+  /* ── Marka ── */
+  --color-lacivert: oklch(0.36 0.072 248);
+  --color-lacivert-koyu: oklch(0.27 0.062 250);
+  --color-lacivert-acik: oklch(0.95 0.016 248);
+
+  /* ── Vurgu (yalnızca veri) ── */
+  --color-pirinc: oklch(0.72 0.115 78);
+  --color-pirinc-koyu: oklch(0.52 0.095 72);
+  --color-pirinc-acik: oklch(0.955 0.03 88);
+
+  /* ── Durum ── */
+  --color-artis: oklch(0.5 0.09 155);
+  --color-artis-acik: oklch(0.955 0.028 155);
+  --color-azalis: oklch(0.52 0.115 32);
+  --color-azalis-acik: oklch(0.96 0.024 32);
+  --color-uyari-acik: oklch(0.96 0.04 85);
+
+  /* ── Tipografi ── */
+  --font-sans: var(--yazi-arayuz), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
+  --font-serif: var(--yazi-baslik), ui-serif, Georgia, 'Times New Roman', serif;
+
+  /* Ölçek: mobil öncelikli, başlıklar clamp ile akıcı büyür. */
+  --text-mikro: 0.75rem;
+  --text-mikro--line-height: 1.4;
+  --text-kucuk: 0.8125rem;
+  --text-kucuk--line-height: 1.5;
+
+  /* ── Yumuşak gölgeler ── Sert gölge ucuz durur. */
+  --shadow-kart: 0 1px 2px oklch(0.24 0.018 250 / 0.04), 0 4px 16px oklch(0.24 0.018 250 / 0.04);
+  --shadow-kalkik: 0 2px 4px oklch(0.24 0.018 250 / 0.05), 0 12px 32px oklch(0.24 0.018 250 / 0.07);
+
+  --radius-yumusak: 0.625rem;
 }
 
-:root {
-  color-scheme: light;
-}
+/* ==========================================================================
+   Koyu tema
+   Sistem tercihine saygı gösterilir. Koyu temada pirinç vurgusu bir tık
+   parlatılır; koyu zeminde aynı ton söner ve kontrast AA'nın altına düşer.
+   ========================================================================== */
 
-/* Klavye ile gezinenler için görünür odak halkası. */
-:focus-visible {
-  outline: 2px solid currentColor;
-  outline-offset: 2px;
-}
+@media (prefers-color-scheme: dark) {
+  @theme {
+    --color-kagit: oklch(0.19 0.014 250);
+    --color-yuzey: oklch(0.23 0.016 250);
+    --color-yuzey-2: oklch(0.27 0.016 250);
+    --color-cizgi: oklch(0.32 0.016 250);
+    --color-cizgi-guclu: oklch(0.42 0.018 250);
 
-/* Hareket azaltma tercihine saygı. */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-    scroll-behavior: auto !important;
+    --color-murekkep: oklch(0.95 0.006 85);
+    --color-murekkep-2: oklch(0.78 0.01 250);
+    --color-murekkep-3: oklch(0.64 0.012 250);
+
+    --color-lacivert: oklch(0.72 0.075 248);
+    --color-lacivert-koyu: oklch(0.82 0.06 248);
+    --color-lacivert-acik: oklch(0.3 0.04 248);
+
+    --color-pirinc: oklch(0.79 0.12 82);
+    --color-pirinc-koyu: oklch(0.86 0.1 85);
+    --color-pirinc-acik: oklch(0.3 0.045 80);
+
+    --color-artis: oklch(0.75 0.13 155);
+    --color-artis-acik: oklch(0.28 0.05 155);
+    --color-azalis: oklch(0.72 0.13 32);
+    --color-azalis-acik: oklch(0.29 0.055 32);
+    --color-uyari-acik: oklch(0.3 0.045 85);
+
+    --shadow-kart: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 16px oklch(0 0 0 / 0.25);
+    --shadow-kalkik: 0 2px 4px oklch(0 0 0 / 0.35), 0 12px 32px oklch(0 0 0 / 0.35);
   }
+}
+
+/* ==========================================================================
+   Temel katman
+   ========================================================================== */
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+    /* Tarayıcı yerel arayüzlerini (odak halkası, seçim) markaya bağlar. */
+    accent-color: var(--color-lacivert);
+  }
+
+  html {
+    scroll-behavior: smooth;
+    /* Sabit başlığın altına kayan bağlantı hedeflerini kurtarır. */
+    scroll-padding-top: 5rem;
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    background-color: var(--color-kagit);
+    color: var(--color-murekkep);
+    font-family: var(--font-sans);
+    /* Metinde eski usul rakam yerine hizalı rakam: tablolar kaymaz. */
+    font-variant-numeric: tabular-nums;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-serif);
+    font-weight: 400;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Klavye ile gezinenler için her zaman görünür odak halkası.
+     `:focus-visible` kullanılıyor ki fare tıklamasında halka çıkmasın. */
+  :focus-visible {
+    outline: 2px solid var(--color-lacivert);
+    outline-offset: 2px;
+    border-radius: 2px;
+  }
+
+  /* Hareket azaltma tercihine saygı. */
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  /* Yazdırma: gezinme ve çağrı butonları kağıda basılmaz. */
+  @media print {
+    [data-yazdirma='gizle'] {
+      display: none !important;
+    }
+  }
+}
+
+/* ==========================================================================
+   Yardımcılar
+   ========================================================================== */
+
+@utility kapsayici {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 76rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 48rem) {
+    padding-inline: 2rem;
+  }
+}
+
+/** Büyük rakamlar için: hizalı, sıkı, dikkat çeken. */
+@utility rakam {
+  font-variant-numeric: tabular-nums;
+  letter-spacing: -0.02em;
+  font-feature-settings: 'ss01';
+}
+
+/**
+ * Yükleme iskeleti. Spinner değil skeleton kullanılıyor: spinner "bir şey
+ * oluyor" der, skeleton "ne geleceğini" gösterir ve algılanan bekleme
+ * süresini kısaltır.
+ */
+@utility iskelet {
+  background: linear-gradient(
+    90deg,
+    var(--color-yuzey-2) 25%,
+    var(--color-cizgi) 37%,
+    var(--color-yuzey-2) 63%
+  );
+  background-size: 400% 100%;
+  animation: iskelet-parla 1.4s ease infinite;
+  border-radius: var(--radius-yumusak);
+}
+
+@keyframes iskelet-parla {
+  0% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0 50%;
+  }
+}
+
+/** Ekran okuyucuya görünür, göze görünmez. */
+@utility yalnizca-okuyucu {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border-width: 0;
 }

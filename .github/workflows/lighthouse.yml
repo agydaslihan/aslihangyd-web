@@ -1,0 +1,91 @@
+name: Lighthouse
+
+# Performansı tahmin etmek yerine ölçer.
+#
+# Bu iş akışı geliştirme sunucusunda değil CI'da çalışır; sebebi orada
+# Chrome'un hazır bulunması ve ölçümün yükten arınmış bir makinede
+# yapılabilmesi. 3.2 GB RAM'li kendi sunucumuzda alınan sayılar
+# gerçek kullanıcı deneyimini temsil etmez.
+#
+# ⚠️ Şu an ENGELLEYİCİ DEĞİL, raporlayıcıdır. Sebep: site henüz demo
+# veriyle ve gerçek görseller olmadan çalışıyor; bu koşullarda alınan
+# skorlar yayına girecek halin skorları değil. Gerçek içerik ve medya
+# geldiğinde eşikler zorunlu hale getirilecek (bkz. docs/ILERLEME.md).
+
+on:
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  olcum:
+    name: Core Web Vitals ölçümü
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+
+    services:
+      postgres:
+        image: postgis/postgis:17-3.5
+        env:
+          POSTGRES_USER: aslihangyd
+          POSTGRES_PASSWORD: ci_gecici_sifre
+          POSTGRES_DB: aslihangyd_lh
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U aslihangyd -d aslihangyd_lh"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      DATABASE_URI: postgres://aslihangyd:ci_gecici_sifre@localhost:5432/aslihangyd_lh
+      PAYLOAD_SECRET: ci_gecici_payload_sirri
+      NEXT_TELEMETRY_DISABLED: '1'
+
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm payload migrate
+
+      # Boş bir siteyi ölçmek anlamsız; demo veri sayfaları doldurur.
+      # (Betik üretim ortamında çalışmayı reddeder, burada güvenli.)
+      - run: pnpm seed
+
+      - run: pnpm build
+
+      - name: Sunucuyu başlat
+        run: |
+          pnpm start &
+          npx --yes wait-on http://localhost:3000/api/saglik --timeout 60000
+
+      - name: Lighthouse çalıştır
+        run: |
+          mkdir -p lighthouse-raporlari
+          for yol in "" "portfoy" "mahalleler"; do
+            ad="${yol:-anasayfa}"
+            npx --yes lighthouse "http://localhost:3000/${yol}" \
+              --output=json --output=html \
+              --output-path="lighthouse-raporlari/${ad}" \
+              --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
+              --preset=desktop \
+              --quiet || echo "::warning::${ad} ölçülemedi"
+          done
+
+      - name: Skorları özetle
+        if: always()
+        run: node scripts/lighthouse-ozet.mjs lighthouse-raporlari >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Raporları sakla
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: lighthouse-raporlari
+          path: lighthouse-raporlari/
+          retention-days: 14
