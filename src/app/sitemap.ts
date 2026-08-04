@@ -1,5 +1,6 @@
 import type { MetadataRoute } from 'next'
 
+import { ARACLAR } from '@/lib/araclar'
 import { mutlakAdres } from '@/lib/site'
 import { tumIlanSluglari } from '@/lib/veri/ilanlar'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
@@ -24,6 +25,17 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: mutlakAdres('/'), changeFrequency: 'weekly', priority: 1 },
     { url: mutlakAdres('/portfoy'), changeFrequency: 'daily', priority: 0.9 },
     { url: mutlakAdres('/mahalleler'), changeFrequency: 'weekly', priority: 0.9 },
+    { url: mutlakAdres('/mahalleler/karsilastir'), changeFrequency: 'monthly', priority: 0.6 },
+    { url: mutlakAdres('/ticari'), changeFrequency: 'weekly', priority: 0.8 },
+    { url: mutlakAdres('/harita'), changeFrequency: 'weekly', priority: 0.6 },
+    // Hesaplayıcılar arama trafiğinin önemli bir kaynağı: "kira getirisi
+    // hesaplama", "tapu harcı ne kadar" gibi sorgular yüksek hacimli.
+    { url: mutlakAdres('/araclar'), changeFrequency: 'monthly', priority: 0.8 },
+    ...ARACLAR.map((arac) => ({
+      url: mutlakAdres(arac.adres),
+      changeFrequency: 'monthly' as const,
+      priority: 0.7,
+    })),
     { url: mutlakAdres('/hakkimizda'), changeFrequency: 'monthly', priority: 0.5 },
     { url: mutlakAdres('/iletisim'), changeFrequency: 'monthly', priority: 0.6 },
   ]

@@ -69,7 +69,9 @@ export interface Config {
   collections: {
     ilanlar: Ilanlar;
     mahalleler: Mahalleler;
+    'ilgi-noktalari': IlgiNoktalari;
     talepler: Talepler;
+    'vergi-parametreleri': VergiParametreleri;
     sayfalar: Sayfalar;
     medya: Medya;
     kullanicilar: Kullanicilar;
@@ -82,7 +84,9 @@ export interface Config {
   collectionsSelect: {
     ilanlar: IlanlarSelect<false> | IlanlarSelect<true>;
     mahalleler: MahallelerSelect<false> | MahallelerSelect<true>;
+    'ilgi-noktalari': IlgiNoktalariSelect<false> | IlgiNoktalariSelect<true>;
     talepler: TaleplerSelect<false> | TaleplerSelect<true>;
+    'vergi-parametreleri': VergiParametreleriSelect<false> | VergiParametreleriSelect<true>;
     sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
     medya: MedyaSelect<false> | MedyaSelect<true>;
     kullanicilar: KullanicilarSelect<false> | KullanicilarSelect<true>;
@@ -521,6 +525,46 @@ export interface Mahalleler {
   createdAt: string;
 }
 /**
+ * Haritadaki katmanlar ve mesafe hesapları bu kayıtlardan beslenir. Konum girilmemiş kayıtlar haritada gösterilmez.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilgi-noktalari".
+ */
+export interface IlgiNoktalari {
+  id: number;
+  ad: string;
+  tip:
+    | 'okul'
+    | 'universite'
+    | 'hastane'
+    | 'market'
+    | 'avm'
+    | 'park'
+    | 'sanayi'
+    | 'durak'
+    | 'istasyon'
+    | 'havalimani'
+    | 'resmi';
+  /**
+   * Haritadan seçin veya koordinat girin. Mesafe hesapları bu noktayı kullanır.
+   *
+   * @minItems 2
+   * @maxItems 2
+   */
+  konum: [number, number];
+  /**
+   * İsteğe bağlı. Mahalle sınırı tanımlıysa sistem bunu ileride otomatik belirleyebilir.
+   */
+  mahalle?: (number | null) | Mahalleler;
+  /**
+   * Şehir hastanesi, OSB, tren istasyonu gibi bölgenin değerini belirleyen noktalar. Mahalle sayfasında ayrıca vurgulanır.
+   */
+  onemli?: boolean | null;
+  detay?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Siteden gelen talepler. Kişisel veri içerir — dışarı aktarırken KVKK yükümlülüklerini gözetin.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -562,6 +606,65 @@ export interface Talepler {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Hesaplayıcıların kullandığı oran ve tutarlar. Bir parametre girilmemişse ilgili hesaplayıcı çalışmaz ve ziyaretçiye eksik olanı söyler — yanlış rakam üretmez.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "vergi-parametreleri".
+ */
+export interface VergiParametreleri {
+  id: number;
+  /**
+   * Hangi oran/tutar olduğunu seçin. Liste kod tarafında tanımlıdır.
+   */
+  anahtar:
+    | 'tapu_harci_orani_alici'
+    | 'doner_sermaye_ucreti'
+    | 'dask_tahmini_prim'
+    | 'ekspertiz_ucreti'
+    | 'emlak_komisyon_orani'
+    | 'komisyon_kdv_orani'
+    | 'kira_geliri_istisna_tutari'
+    | 'goturu_gider_orani'
+    | 'gelir_vergisi_dilimleri'
+    | 'deger_artis_istisna_tutari'
+    | 'deger_artis_muafiyet_yili';
+  /**
+   * ORAN ise ondalık girin: %2 için 0,02 — %20 için 0,2. TUTAR ise TL olarak girin. Dilim türü parametrede bu alan boş kalır.
+   */
+  deger?: number | null;
+  /**
+   * Artan oranlı tarife. Her dilim için ÜST SINIR ve ORAN girin. Son dilimin üst sınırını BOŞ bırakın ("ve üzeri" anlamına gelir). Sıralama önemli değil, sistem kendisi sıralar.
+   */
+  dilimler?:
+    | {
+        /**
+         * En üst dilimde boş bırakın.
+         */
+        ustSinir?: number | null;
+        /**
+         * %15 için 0,15
+         */
+        oran: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Bu değer hangi yıl için geçerli? Örn: 2026
+   */
+  gecerlilikYili: number;
+  /**
+   * Hesaplayıcı sayfalarında "veriler [tarih] itibarıyladır" ibaresinde gösterilir.
+   */
+  guncellemeTarihi: string;
+  /**
+   * Bu değeri nereden aldınız? Örn: "Gelir İdaresi Başkanlığı 2026 tebliği". Bir gazeteci veya müşteri sorduğunda cevabınız net olsun.
+   */
+  kaynak?: string | null;
+  aciklama?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -647,8 +750,16 @@ export interface PayloadLockedDocument {
         value: number | Mahalleler;
       } | null)
     | ({
+        relationTo: 'ilgi-noktalari';
+        value: number | IlgiNoktalari;
+      } | null)
+    | ({
         relationTo: 'talepler';
         value: number | Talepler;
+      } | null)
+    | ({
+        relationTo: 'vergi-parametreleri';
+        value: number | VergiParametreleri;
       } | null)
     | ({
         relationTo: 'sayfalar';
@@ -828,6 +939,20 @@ export interface MahallelerSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilgi-noktalari_select".
+ */
+export interface IlgiNoktalariSelect<T extends boolean = true> {
+  ad?: T;
+  tip?: T;
+  konum?: T;
+  mahalle?: T;
+  onemli?: T;
+  detay?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "talepler_select".
  */
 export interface TaleplerSelect<T extends boolean = true> {
@@ -856,6 +981,27 @@ export interface TaleplerSelect<T extends boolean = true> {
         metin?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "vergi-parametreleri_select".
+ */
+export interface VergiParametreleriSelect<T extends boolean = true> {
+  anahtar?: T;
+  deger?: T;
+  dilimler?:
+    | T
+    | {
+        ustSinir?: T;
+        oran?: T;
+        id?: T;
+      };
+  gecerlilikYili?: T;
+  guncellemeTarihi?: T;
+  kaynak?: T;
+  aciklama?: T;
   updatedAt?: T;
   createdAt?: T;
 }
