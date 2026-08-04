@@ -364,11 +364,14 @@ olarak bırakıldı:
 | Kira mı Satın Alma mı | ✅ Faz 2B+ | — |
 | Bölge Radarı | ✅ Faz 2B+ | — |
 | Kişiye özel PDF rapor | ✅ Faz 2B+ | Bağımlılıksız yazdırma yoluyla; gerekçe aşağıda |
-| CRM eşleştirme motoru | Yapılmadı | Portföy–talep eşleştirmesi anlamlı miktarda veri gerektiriyor |
-| Portföy giriş sihirbazı | Yapılmadı | Payload admin şu an yeterli; sihirbaz optimizasyondur |
-| Sosyal medya materyal üretimi | Yapılmadı | Görsel şablon kararları marka kimliği netleşince |
+| Portföy giriş sihirbazı | Sırada — **1.** | Aslıhan'ın belirlediği öncelik |
+| CRM eşleştirme motoru | Sırada — **2.** | Portföy giremeden CRM'in besleyeceği veri yok |
+| Sosyal medya materyal üretimi | Sırada — **3.** | Görsel şablon kararları marka kimliği netleşince |
 
-Kalan üçü `docs/SENDEN-BEKLENENLER.md` üzerinden takip ediliyor.
+**Öncelik sırası Aslıhan tarafından verildi (4 Ağustos 2026):** portföy giriş
+sihirbazı → CRM eşleştirme motoru → sosyal medya. Gerekçe: *portföy giremeden
+CRM'in besleyeceği veri yok.* Bu sıra, CRM'i veri kıtlığı içinde yazıp boş
+bir ekranla teslim etme riskini ortadan kaldırıyor.
 
 ---
 
@@ -478,6 +481,28 @@ tarayıcının "PDF olarak kaydet" seçeneği. Kullanıcının eline geçen çı
 gerçek bir PDF dosyasıdır, Türkçe sistem fontlarıyla kusursuz çıkar, **sıfır
 bağımlılık** ekler ve derleme süresini artırmaz.
 
+#### Sunucu tarafı PDF — Faz 4 teknik borcu
+
+Rapor **e-postaya iliştirilecekse** yazdırma yolu yetmez: kullanıcının
+tarayıcısı gerekiyor. O aşamada **Playwright + headless Chrome** kullanılacak:
+mevcut `/rapor/*` rotaları olduğu gibi render edilip `page.pdf()` ile PDF'e
+çevrilecek.
+
+Neden bu yol:
+- **Türkçe sorunu yok** — Chrome sistem fontlarını kullanır, `pdf-lib`'in
+  WinAnsi kısıtı burada yok.
+- **Düzen motoru zaten var** — `@media print` kuralları aynen geçerli; tablo
+  ve sayfa sonu davranışı elle koordinatlanmaz.
+- **Tek kaynak** — ekran, yazdırma ve e-posta PDF'i aynı rotadan üretilir;
+  üçünün birbirinden ayrılma riski ortadan kalkar.
+
+Dikkat edilecekler:
+- Chromium ~300 MB; sunucu 3,2 GB RAM. PDF üretimi **istek anında değil,
+  kuyrukta** çalışmalı — eşzamanlı iki render belleği zorlar.
+- Yalnızca sunucu tarafında, `NEXT_RUNTIME=nodejs` altında; istemci
+  paketine sızmamalı.
+- SMTP bilgileri gelmeden bu iş anlamsız (bkz. bilinen eksikler).
+
 **Rapor URL'sinde SONUÇ değil GİRDİ taşınıyor** ve sunucuda aynı motorlarla
 yeniden hesaplanıyor. İstemcinin hesapladığı rakamı URL'den alıp rapora
 basmak, adres çubuğunu düzenleyen herkese "aslihangyd.com raporu" görünümlü
@@ -489,15 +514,25 @@ Raporlar `robots: noindex` — kişiye özel girdilerle üretiliyorlar.
 **Rapor bal küpü kuralına tabi (6b):** raporu açmak ve PDF olarak kaydetmek
 için iletişim bilgisi istenmiyor. İletişim yalnızca *yerinde* değerleme için.
 
-### ⚠️ Derleme süresi eşiği aşıldı
+### Derleme süresi: eşik 150 sn, CI'da önbellek
 
-**87 sn → 107 sn.** `docs/ILERLEME.md`'deki 90 sn eşiği aşıldı.
+**87 sn → 107 sn.** Sebep bağımlılık DEĞİL — bu fazda hiçbir paket eklenmedi.
+Artış 8 yeni rotadan ve ~4.000 satır koddan geliyor; rota başına ~2,5 sn.
 
-Sebep bağımlılık DEĞİL — bu fazda hiçbir paket eklenmedi. Artış 8 yeni
-rotadan ve ~4.000 satır koddan geliyor; rota başına ~2,5 sn, orantılı.
+Alınan kararlar:
 
-Karar gerektiren bir konu: eşik 120 sn'ye çekilebilir ya da CI'da derleme
-önbelleği devreye alınabilir. Şimdilik yalnızca kaydedildi.
+1. **Eşik 90 → 150 sn.** Site büyüdükçe derleme uzar; 90 sn artık gerçekçi
+   değildi ve sürekli ihlal edilen bir eşik, eşik olmaktan çıkar.
+2. **CI'da `.next/cache` önbelleği** (`actions/cache@v4`). Anahtar iki
+   katmanlı: kilit dosyası + kaynak özeti. Bağımlılık değişirse önbellek
+   bilinçli olarak ıskalanır — eski SWC çıktısını yeni sürümle karıştırmak
+   sinsi hatalar üretir.
+3. **Süre CI'da ölçülüp iş akışı özetine yazılıyor.** Eşik aşılırsa koşu
+   BAŞARISIZ OLMAZ, uyarı düşer. Derleme süresi bir kalite kapısı değil,
+   trend göstergesidir; testleri geçen bir PR'ı süre yüzünden bloklamak
+   kapının kendisini anlamsızlaştırırdı.
+
+Ölçüm sonuçları aşağıdaki "CI derleme önbelleği ölçümü" başlığında.
 
 ---
 
@@ -667,7 +702,8 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 | --- | --- | --- |
 | **Tüm sayfalar dinamik render** | TTFB ve önbellek | Layout, çerez onayını okumak için `cookies()` çağırıyor; bu bütün rotaları dinamik yapıyor. Bilinçli takas — yasal güvence performanstan önce. Çözüm adayı: PPR / `cacheComponents` olgunlaştığında dinamik parçaları `Suspense` içine almak. |
 | Lighthouse eşikleri engelleyici değil | Regresyon kaçabilir | Gerçek içerik gelince zorunlu yapılacak |
-| **Derleme 107 sn** | Eşik aşıldı | 90 sn eşiği aşıldı. Sebep bağımlılık değil, 8 yeni rota (~2,5 sn/rota). Eşiği 120 sn'ye çekmek veya CI derleme önbelleği — karar bekliyor. |
+| Derleme 107 sn (yerel) | — | Eşik 150 sn'ye çekildi, CI'da `.next/cache` önbelleği açıldı. Süre CI özetinde raporlanıyor; eşik aşımı uyarı verir, koşuyu düşürmez. |
+| **Sunucu tarafı PDF yok** | Rapor e-postaya iliştirilemiyor | Faz 4: Playwright + headless Chrome ile `/rapor/*` rotaları render edilecek. Türkçe sorunu yok, `@media print` aynen geçerli. Chromium ~300 MB → kuyrukta çalışmalı. SMTP gelmeden anlamsız. |
 | SMTP yok | Lead bildirimi gitmiyor | Kayıt düşüyor, e-posta gitmiyor. Bilgi bekleniyor. |
 | E-posta bildirimi kodu yok | — | SMTP bilgileri gelince `yetkisiBitecekleriBildir` görevine eklenecek |
 | `sharp` 0.34'e sabit | — | Payload sürüm yükseltmesinde 0.35 tekrar denenebilir |

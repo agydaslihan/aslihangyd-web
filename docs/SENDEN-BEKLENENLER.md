@@ -60,7 +60,7 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 - [ ] **Hakkımızda metni ve fotoğraf**
       Nereye: Payload admin → Sayfalar → Hakkımızda
 
-- [ ] **Mahalle Eşleştirme profili — her mahalle için 4 puan (0–100)**
+- [ ] **Mahalle Eşleştirme profili — her mahalle için 4 puan (0–100)** ⬅️ *sen dolduracaksın*
       Nereye: Payload admin → Mahalleler → [mahalle] → Eşleştirme profili
       Alanlar: toplu taşıma, okul erişimi, sakinlik, merkeze yakınlık
       Olmazsa: `/mahalle-testi` o mahalle için uyum yüzdesi üretmez.
@@ -184,29 +184,26 @@ Talimatın üzerine dördü de yazıldı: Mahalle Eşleştirme Testi, Yatırım
 Simülatörü, Kira mı Satın Alma mı, Bölge Radarı. PDF rapor da eklendi.
 Ayrıntı `docs/ILERLEME.md` → "Faz 2B+".
 
-**Geriye kalan üç modül** hâlâ bekliyor ve öncelik sıranı istiyorum:
+**Öncelik sırasını verdin (4 Ağustos 2026):**
 
-| Modül | Neden yapılmadı |
-| --- | --- |
-| CRM eşleştirme motoru | Portföy–talep eşleştirmesi anlamlı miktarda veri gerektiriyor; şu an eşleştirilecek yeterli kayıt yok |
-| Portföy giriş sihirbazı | Payload admin şu an yeterli; sihirbaz bir hız optimizasyonu |
-| Sosyal medya materyal üretimi | Görsel şablon kararları marka kimliği netleşince anlamlı |
+| Sıra | Modül | Durum |
+| --- | --- | --- |
+| 1 | Portföy giriş sihirbazı | Sırada |
+| 2 | CRM eşleştirme motoru | Bekliyor |
+| 3 | Sosyal medya materyal üretimi | Bekliyor |
 
-Bir cümle yeter — tasarımı ben yaparım.
+Gerekçen — *portföy giremeden CRM'in besleyeceği veri yok* — doğru ve sıralamayı
+tek başına haklı çıkarıyor. CRM'i önce yazsaydık, eşleştirecek kaydı olmayan
+boş bir ekran teslim etmiş olurduk.
 
-### 4b. Derleme süresi eşiği aşıldı — karar gerekiyor
+### 4b. ✅ Cevaplandı — derleme süresi
 
-Derleme süresi **87 sn → 107 sn** çıktı; kendi koyduğumuz 90 sn eşiği aşıldı.
+Kararın uygulandı: eşik **150 sn**'ye çekildi ve CI'ya `.next/cache` önbelleği
+(`actions/cache@v4`) eklendi. Süre artık her koşuda ölçülüp iş akışı özetine
+yazılıyor; eşik aşılırsa uyarı düşer ama koşu başarısız olmaz.
 
-**Sebep bağımlılık değil** — bu fazda hiçbir paket eklenmedi. Artış 8 yeni
-sayfadan geliyor, rota başına ~2,5 sn. Yani orantılı ve beklenen bir artış.
-
-**Seçenekler:**
-1. Eşiği 120 sn'ye çek (bence doğrusu bu — site büyüdükçe derleme uzar)
-2. CI'da derleme önbelleği kur (biraz iş, süreyi tekrar aşağı çeker)
-3. Şimdilik yoksay
-
-Karar senin; bunlardan biri olmadan eşik anlamsız bir uyarı olarak kalır.
+Önbellek sonrası ölçüm sonuçları `docs/ILERLEME.md` → "CI derleme önbelleği
+ölçümü" başlığında.
 
 ### 5. Endeks sepet ağırlıkları — senin saha bilgin gerekiyor
 
