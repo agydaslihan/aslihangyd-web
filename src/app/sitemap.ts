@@ -27,6 +27,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { url: mutlakAdres('/mahalleler'), changeFrequency: 'weekly', priority: 0.9 },
     { url: mutlakAdres('/mahalleler/karsilastir'), changeFrequency: 'monthly', priority: 0.6 },
     { url: mutlakAdres('/ticari'), changeFrequency: 'weekly', priority: 0.8 },
+    // Değerleme, satıcı tarafını getiren sayfa — portföy motorunun kendisi.
+    { url: mutlakAdres('/degerleme'), changeFrequency: 'monthly', priority: 0.9 },
+    { url: mutlakAdres('/gizli-portfoy'), changeFrequency: 'daily', priority: 0.7 },
     { url: mutlakAdres('/harita'), changeFrequency: 'weekly', priority: 0.6 },
     // Hesaplayıcılar arama trafiğinin önemli bir kaynağı: "kira getirisi
     // hesaplama", "tapu harcı ne kadar" gibi sorgular yüksek hacimli.

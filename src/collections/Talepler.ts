@@ -2,6 +2,7 @@ import { APIError } from 'payload'
 import type { CollectionConfig } from 'payload'
 
 import { herkesOlusturur, yalnizcaPanel } from '@/lib/erisim'
+import { talepSkorla } from '@/lib/crm/skorlama'
 import { saklamaBitisi } from '@/lib/kvkk/saklama'
 import { TALEP_DURUMLARI, TALEP_KAYNAKLARI, TALEP_TIPLERI } from '@/lib/secenekler'
 
@@ -40,6 +41,20 @@ export const Talepler: CollectionConfig = {
       ({ data, operation, originalDoc }) => {
         const kayit = { ...(originalDoc ?? {}), ...data } as Record<string, unknown>
 
+        // Skor her kaydetmede yeniden hesaplanır: Aslıhan panelde bütçe veya
+        // not eklediğinde skor güncel kalsın.
+        const skor = talepSkorla({
+          telefon: typeof kayit.telefon === 'string' ? kayit.telefon : null,
+          eposta: typeof kayit.eposta === 'string' ? kayit.eposta : null,
+          mesaj: typeof kayit.mesaj === 'string' ? kayit.mesaj : null,
+          tip: typeof kayit.tip === 'string' ? kayit.tip : null,
+          butceMin: typeof kayit.butceMin === 'number' ? kayit.butceMin : null,
+          butceMax: typeof kayit.butceMax === 'number' ? kayit.butceMax : null,
+          ilgiliIlanVar: kayit.ilgiliIlan !== null && kayit.ilgiliIlan !== undefined,
+          ilgiliMahalleVar: kayit.ilgiliMahalle !== null && kayit.ilgiliMahalle !== undefined,
+          pazarlamaOnayi: kayit.pazarlamaOnayi === true,
+        }).toplam
+
         if (operation === 'create') {
           // Açık rıza olmadan kişisel veri işlenmez. Bu kontrol arayüzdeki
           // onay kutusundan bağımsızdır: API'ye doğrudan istek atılsa da geçerlidir.
@@ -56,6 +71,7 @@ export const Talepler: CollectionConfig = {
           const onayAni = new Date()
           return {
             ...data,
+            skor,
             kvkkOnayTarihi: onayAni.toISOString(),
             saklamaBitis: saklamaBitisi(onayAni).toISOString(),
           }
@@ -64,6 +80,7 @@ export const Talepler: CollectionConfig = {
         // Güncellemede onay bilgileri korunur — geçmişe dönük değiştirilemez.
         return {
           ...data,
+          skor,
           kvkkOnay: originalDoc?.kvkkOnay ?? data.kvkkOnay,
           kvkkOnayTarihi: originalDoc?.kvkkOnayTarihi ?? data.kvkkOnayTarihi,
           saklamaBitis: originalDoc?.saklamaBitis ?? data.saklamaBitis,
@@ -92,7 +109,10 @@ export const Talepler: CollectionConfig = {
       admin: {
         position: 'sidebar',
         readOnly: true,
-        description: 'Faz 2B lead skorlama motoru tarafından yazılır.',
+        description:
+          'Otomatik hesaplanır (0-100). Talepleri SIRALAMAK içindir, elemek için değil — ' +
+          'en kısa mesajı yazan kişi en hazır müşteri olabilir. Bileşenler: telefon, ' +
+          'e-posta, mesaj ayrıntısı, bütçe, hedef belirginliği, talep tipi.',
       },
     },
     {

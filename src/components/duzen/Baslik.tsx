@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react'
 import { KapatIkon, MenuIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { sinif } from '@/lib/sinif'
-import { GORUNUR_GEZINME, SITE_ADI, whatsappMesaji } from '@/lib/site'
+import { GORUNUR_GEZINME, SITE_ADI, UST_MENU, whatsappMesaji } from '@/lib/site'
 
 /**
  * Site başlığı.
@@ -66,7 +66,7 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
         {/* Masaüstü gezinme */}
         <nav aria-label="Ana gezinme" className="hidden lg:block">
           <ul className="flex items-center gap-1">
-            {GORUNUR_GEZINME.map((oge) => (
+            {UST_MENU.map((oge) => (
               <li key={oge.adres}>
                 <Link
                   href={oge.adres}
@@ -118,6 +118,8 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
           className="border-cizgi bg-kagit fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
         >
           <nav aria-label="Mobil gezinme" className="kapsayici py-4">
+            {/* Mobilde tam ekran menü var; üst menüdeki gibi kısaltmaya
+                gerek yok — tüm sayfalar listelenir. */}
             <ul className="flex flex-col">
               {GORUNUR_GEZINME.map((oge) => (
                 <li key={oge.adres} className="border-cizgi border-b last:border-0">

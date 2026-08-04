@@ -7,6 +7,7 @@ import { tr } from '@payloadcms/translations/languages/tr'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
+import { Degerlemeler } from '@/collections/Degerlemeler'
 import { Ilanlar } from '@/collections/Ilanlar'
 import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
 import { Kullanicilar } from '@/collections/Kullanicilar'
@@ -15,6 +16,7 @@ import { Medya } from '@/collections/Medya'
 import { Sayfalar } from '@/collections/Sayfalar'
 import { Talepler } from '@/collections/Talepler'
 import { VergiParametreleri } from '@/collections/VergiParametreleri'
+import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -41,13 +43,14 @@ export default buildConfig({
     Mahalleler,
     IlgiNoktalari,
     Talepler,
+    Degerlemeler,
     VergiParametreleri,
     Sayfalar,
     Medya,
     Kullanicilar,
   ],
 
-  globals: [KurumsalBilgiler],
+  globals: [KurumsalBilgiler, DegerlemeAyarlari],
 
   editor: lexicalEditor(),
 

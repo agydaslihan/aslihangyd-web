@@ -19,7 +19,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 1.9 | Lead formu + WhatsApp | ✅ |
 | 1.10 | SEO, CI/CD, yedekleme, dokümantasyon | ✅ |
 | 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
-| 2B | Bal küpü modülleri, CRM, portföy yönetimi | ⏳ |
+| 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
 | 2C | Gözlem girişi ve endeks altyapısı | ⏳ |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
 | 4 | Yatırım skoru, AI arama, raporlar | ⏳ |
@@ -294,6 +294,80 @@ karşılaştırma yapılmış izlenimi verirdi.
 yol açıyordu: `pnpm test` şemayı sessizce değiştiriyordu, `payload migrate`
 etkileşimli soru sorup kilitleniyordu, ve migration'ın gerçekten çalıştığı
 ilk yer üretim oluyordu.
+
+---
+
+## Faz 2B — Bal küpü modülleri ve CRM çekirdeği (kısmi)
+
+### Ne yapıldı
+
+- **B1 — "Evim ne eder?" değerleme motoru** (`src/lib/degerleme`) + `/degerleme`
+  sayfası + `Degerlemeler` koleksiyonu + `DegerlemeAyarlari` global. 27 test.
+- **B2 — Gizli Portföy** (`/gizli-portfoy`) sunucu tarafı maskelemeyle
+- **Lead skorlama motoru** (`src/lib/crm/skorlama.ts`) + `Talepler` kancasına
+  bağlandı. 14 test.
+- Gezinme üst menü / altbilgi olarak ayrıldı
+
+### Kararlar ve gerekçeleri
+
+**Değerleme sonucu iletişim bilgisi arkasında kilitli değil** (CLAUDE.md
+kural 6b). Ziyaretçi hiçbir şey vermeden gerçek bir sonuç görüyor; iletişim
+yalnızca *derinleştirme* (yerinde değerleme) için isteniyor.
+
+**Nokta değer değil aralık veriliyor.** "Eviniz 4.437.500 ₺ eder" cümlesi,
+sahip olmadığımız bir kesinliği iddia eder.
+
+**Az veri = geniş aralık + düşük güven rozeti.** Dürüstlük burada satıştır:
+dar bir aralık verip yanılmak o müşteriyi kalıcı kaybettirir. Güven düzeyi
+yalnızca gözlem sayısına değil, **hesaba katılamayan faktör sayısına** da
+bakıyor.
+
+**Mahalle m² verisi yoksa değerleme yapılmıyor.** Model, gerçek gözleme
+dayanmayan çıktı üretmez. Ziyaretçiye "bu mahalle için henüz yeterli veri
+yok" denip doğrudan iletişime yönlendiriliyor.
+
+**Tanımsız katsayı 1,0 varsayılmıyor.** O faktör hesaba hiç katılmıyor ve
+kullanıcıya "bu etki hesaba katılmadı" deniyor. Sessizce 1,0 uygulamak,
+ayarlama yapılmış izlenimi verirdi.
+
+**Katsayılara başlangıç değeri konulmadı.** "Makul görünen" bir katsayı
+yazmak, uydurma veriyi model parametresi kılığında sokmak olurdu. Aslıhan'ın
+saha bilgisiyle belirlenecek.
+
+**Gizli portföy maskelemesi sunucuda.** Sorgu `select` ile yalnızca
+gösterilecek alanları çekiyor; adres, fotoğraf, kat planı, tam konum ve
+taşınmaz numarası veritabanından **hiç okunmuyor.** İstemcide gizlemek
+(CSS bulanıklığı, render etmeme) gerçek koruma değildir — veri RSC yükünde
+durur ve geliştirici araçlarıyla okunur. Rakibin portföyü kopyalaması için
+bu yeterli olurdu.
+
+**Fiyat ve m² banda yuvarlanıyor**, gizlenmiyor. Gerçek değer gerçekten o
+bandın içinde — kıtlık hissi korunuyor ama yanıltma yok.
+
+**Lead skoru sıralar, elemez.** Skor asla bir talebi gizlemiyor. Bileşenler
+tamamen gözlemlenebilir davranışa dayanıyor (ne kadar bilgi paylaştı,
+ulaşılabilir mi, ne kadar somut); demografik hiçbir bileşen yok. Satıcı ve
+değerleme talepleri en yüksek ağırlıkta — emlakta kıt kaynak alıcı değil
+portföydür.
+
+### ⚠️ Faz 2B'de YAPILMAYANLAR
+
+Şartname dosyası (`BAL-KUPU-VE-PORTFOY-YONETIMI.md`) **B3 modülünün
+ortasında kesiliyor**; B4 ve sonrası hiç yazılmamış. Aşağıdakiler bilinçli
+olarak bırakıldı:
+
+| Modül | Durum | Neden |
+| --- | --- | --- |
+| B3 — Mahalle Eşleştirme Testi | Yapılmadı | Şartname yarım; eşleştirme algoritmasının kriter ağırlıkları Aslıhan'ın saha bilgisini gerektiriyor |
+| Yatırım Simülatörü | Yapılmadı | Şartnamesi yok |
+| Kira mı Satın Alma mı | Yapılmadı | Şartnamesi yok |
+| Bölge Radarı | Yapılmadı | Şartnamesi yok |
+| Kişiye özel PDF rapor | Yapılmadı | PDF üretimi ağır bağımlılık (~2 MB); 3.2 GB RAM'de değerlendirilmeli |
+| CRM eşleştirme motoru | Yapılmadı | Portföy–talep eşleştirmesi anlamlı miktarda veri gerektiriyor |
+| Portföy giriş sihirbazı | Yapılmadı | Payload admin şu an yeterli; sihirbaz optimizasyondur |
+| Sosyal medya materyal üretimi | Yapılmadı | Görsel şablon kararları marka kimliği netleşince |
+
+Bunlar `docs/SENDEN-BEKLENENLER.md` üzerinden takip ediliyor.
 
 ---
 

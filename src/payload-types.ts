@@ -71,6 +71,7 @@ export interface Config {
     mahalleler: Mahalleler;
     'ilgi-noktalari': IlgiNoktalari;
     talepler: Talepler;
+    degerlemeler: Degerlemeler;
     'vergi-parametreleri': VergiParametreleri;
     sayfalar: Sayfalar;
     medya: Medya;
@@ -86,6 +87,7 @@ export interface Config {
     mahalleler: MahallelerSelect<false> | MahallelerSelect<true>;
     'ilgi-noktalari': IlgiNoktalariSelect<false> | IlgiNoktalariSelect<true>;
     talepler: TaleplerSelect<false> | TaleplerSelect<true>;
+    degerlemeler: DegerlemelerSelect<false> | DegerlemelerSelect<true>;
     'vergi-parametreleri': VergiParametreleriSelect<false> | VergiParametreleriSelect<true>;
     sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
     medya: MedyaSelect<false> | MedyaSelect<true>;
@@ -101,9 +103,11 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
+    'degerleme-ayarlari': DegerlemeAyarlari;
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
+    'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
   };
   locale: null;
   widgets: {
@@ -574,7 +578,7 @@ export interface Talepler {
   id: number;
   durum: 'yeni' | 'arandi' | 'randevu' | 'teklif' | 'kazanildi' | 'kaybedildi';
   /**
-   * Faz 2B lead skorlama motoru tarafından yazılır.
+   * Otomatik hesaplanır (0-100). Talepleri SIRALAMAK içindir, elemek için değil — en kısa mesajı yazan kişi en hazır müşteri olabilir. Bileşenler: telefon, e-posta, mesaj ayrıntısı, bütçe, hedef belirginliği, talep tipi.
    */
   skor?: number | null;
   sonTemas?: string | null;
@@ -606,6 +610,47 @@ export interface Talepler {
         id?: string | null;
       }[]
     | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Siteden yapılan değerleme talepleri. İletişim bilgisi olmayan kayıtlar da değerlidir: hangi mahallede ne tür taşınmaz sorgulandığını gösterir.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "degerlemeler".
+ */
+export interface Degerlemeler {
+  id: number;
+  durum?: ('yeni' | 'incelendi' | 'arandi' | 'randevu' | 'portfoye_alindi' | 'kapandi') | null;
+  /**
+   * İşaretsiz kayıtlar anonimdir; yalnızca talep sinyali taşır.
+   */
+  iletisimVar?: boolean | null;
+  ozet?: string | null;
+  mahalle?: (number | null) | Mahalleler;
+  brutM2?: number | null;
+  odaSayisi?: string | null;
+  kat?: ('bodrum' | 'zemin' | 'ara' | 'yuksek' | 'en_ust') | null;
+  binaYasi?: number | null;
+  yapiDurumu?: ('sifir' | 'iyi' | 'ortalama' | 'tadilat') | null;
+  adresNotu?: string | null;
+  tahminiAlt?: number | null;
+  tahminiUst?: number | null;
+  guvenDuzeyi?: string | null;
+  /**
+   * İşlem gerçekleştiyse buraya yazın. Bu, modelin ne kadar isabetli olduğunu ölçmenin tek yolu — zamanla katsayıları buna göre düzeltin.
+   */
+  gerceklesenDeger?: number | null;
+  notlar?: string | null;
+  adSoyad?: string | null;
+  telefon?: string | null;
+  eposta?: string | null;
+  kvkkOnay?: boolean | null;
+  kvkkOnayTarihi?: string | null;
+  /**
+   * Bu tarihten sonra kişisel veriler otomatik silinir.
+   */
+  saklamaBitis?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -756,6 +801,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'talepler';
         value: number | Talepler;
+      } | null)
+    | ({
+        relationTo: 'degerlemeler';
+        value: number | Degerlemeler;
       } | null)
     | ({
         relationTo: 'vergi-parametreleri';
@@ -986,6 +1035,35 @@ export interface TaleplerSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "degerlemeler_select".
+ */
+export interface DegerlemelerSelect<T extends boolean = true> {
+  durum?: T;
+  iletisimVar?: T;
+  ozet?: T;
+  mahalle?: T;
+  brutM2?: T;
+  odaSayisi?: T;
+  kat?: T;
+  binaYasi?: T;
+  yapiDurumu?: T;
+  adresNotu?: T;
+  tahminiAlt?: T;
+  tahminiUst?: T;
+  guvenDuzeyi?: T;
+  gerceklesenDeger?: T;
+  notlar?: T;
+  adSoyad?: T;
+  telefon?: T;
+  eposta?: T;
+  kvkkOnay?: T;
+  kvkkOnayTarihi?: T;
+  saklamaBitis?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "vergi-parametreleri_select".
  */
 export interface VergiParametreleriSelect<T extends boolean = true> {
@@ -1199,6 +1277,54 @@ export interface KurumsalBilgiler {
   createdAt?: string | null;
 }
 /**
+ * Değerleme modelinin katsayıları. Girilmeyen katsayı hesaba katılmaz — tahmini bir değer uydurulmaz. Katsayılar çarpımsaldır: 1,00 etkisiz demektir.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "degerleme-ayarlari".
+ */
+export interface DegerlemeAyarlari {
+  id: number;
+  /**
+   * Örnek düşünce: zemin kat genellikle ara kattan düşük, yüksek kat manzara varsa yüksek değerlenir. Rakamları kendi gözleminize göre siz belirleyin.
+   */
+  katKatsayilari?:
+    | {
+        kat: 'bodrum' | 'zemin' | 'ara' | 'yuksek' | 'en_ust';
+        /**
+         * 1,00 = etkisiz
+         */
+        katsayi: number;
+        id?: string | null;
+      }[]
+    | null;
+  durumKatsayilari?:
+    | {
+        durum: 'sifir' | 'iyi' | 'ortalama' | 'tadilat';
+        katsayi: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Her dilim için ÜST YAŞ sınırı ve katsayı girin. En yaşlı dilimin üst sınırını BOŞ bırakın ("ve üzeri"). Sıralama önemli değil, sistem kendisi sıralar.
+   */
+  yasKatsayilari?:
+    | {
+        /**
+         * En yaşlı dilimde boş bırakın.
+         */
+        ustYas?: number | null;
+        katsayi: number;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Katsayıları neye göre belirlediğinizi buraya yazın. Bir müşteri veya gazeteci "bu rakamı nasıl buldunuz?" diye sorduğunda cevabınız hazır olsun.
+   */
+  notlar?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kurumsal-bilgiler_select".
  */
@@ -1224,6 +1350,37 @@ export interface KurumsalBilgilerSelect<T extends boolean = true> {
   veriSorumlusu?: T;
   verbisKayitNo?: T;
   kvkkBasvuruEpostasi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "degerleme-ayarlari_select".
+ */
+export interface DegerlemeAyarlariSelect<T extends boolean = true> {
+  katKatsayilari?:
+    | T
+    | {
+        kat?: T;
+        katsayi?: T;
+        id?: T;
+      };
+  durumKatsayilari?:
+    | T
+    | {
+        durum?: T;
+        katsayi?: T;
+        id?: T;
+      };
+  yasKatsayilari?:
+    | T
+    | {
+        ustYas?: T;
+        katsayi?: T;
+        id?: T;
+      };
+  notlar?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -140,7 +140,41 @@ günlük bakım göreviyle otomatik siliniyor.
 Avukatın farklı bir süre belirlerse söyle, tek satırda değiştiriyorum
 (`src/lib/kvkk/saklama.ts` → `VARSAYILAN_SAKLAMA_AYI`).
 
-### 3. Marka rengi ve tipografi onayın var mı?
+### 3. Değerleme katsayıları — senin saha bilgin gerekiyor
+
+**Şu anki durum:** Değerleme aracı (`/degerleme`) çalışıyor ama katsayılar
+boş. Bu yüzden kat, bina yaşı ve yapı durumu tahmine **hiç katılmıyor** ve
+ziyaretçiye "bu etkiler hesaba katılmadı" deniyor.
+
+**Neden ben doldurmadım:** "Zemin kat %8 düşük değerlenir" gibi bir rakam
+yazsaydım, uydurma veriyi model parametresi kılığında sokmuş olurdum. Bu
+rakamlar senin gözlemin.
+
+**Nereye:** Payload admin → Değerleme Ayarları
+
+Doldurman gerekenler:
+- **Kat katsayıları** — bodrum, zemin, ara kat, yüksek kat, en üst kat
+- **Yapı durumu katsayıları** — sıfır, iyi, ortalama, tadilat gerekli
+- **Bina yaşı dilimleri** — örn. 0-5 yaş, 6-10, 11-20, 20+ ve katsayıları
+
+Katsayılar çarpımsal: `1,00` etkisiz, `1,05` %5 artırır, `0,90` %10 düşürür.
+
+**Ayrıca:** Mahalle rakamları (ortalama m² satış + gözlem sayısı) girilmeden
+değerleme aracı hiçbir mahalle için sonuç üretemez. Bu, bilinçli bir kapı.
+
+### 4. Faz 2B'de yapılmayan modüller — ne istiyorsun?
+
+`docs/BAL-KUPU-VE-PORTFOY-YONETIMI.md` şartnamesi **B3 modülünün ortasında
+kesiliyor.** B4 ve sonrası (Yatırım Simülatörü, Kira mı Satın Alma mı,
+Bölge Radarı) hiç yazılmamış.
+
+Yaptıklarım: B1 (Anlık Değerleme), B2 (Gizli Portföy), lead skorlama.
+
+**Senden istediğim:** Yapılmayanlar arasında öncelik sıran ne? Şartname
+yazmana gerek yok, bir cümle yeter — tasarımı ben yaparım. Liste
+`docs/ILERLEME.md` içinde "Faz 2B'de YAPILMAYANLAR" başlığı altında.
+
+### 5. Marka rengi ve tipografi onayın var mı?
 
 **Şu anki durum:** Kendi seçtiğim paletle ilerledim — sıcak kağıt zemini,
 derin lacivert, veri vurguları için pirinç sarısı. Emlak sitelerinin
