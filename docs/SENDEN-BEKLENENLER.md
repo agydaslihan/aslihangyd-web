@@ -202,8 +202,24 @@ Kararın uygulandı: eşik **150 sn**'ye çekildi ve CI'ya `.next/cache` önbell
 (`actions/cache@v4`) eklendi. Süre artık her koşuda ölçülüp iş akışı özetine
 yazılıyor; eşik aşılırsa uyarı düşer ama koşu başarısız olmaz.
 
-Önbellek sonrası ölçüm sonuçları `docs/ILERLEME.md` → "CI derleme önbelleği
-ölçümü" başlığında.
+**Ölçüm sonucu — beklentiyi karşılamadı, sebebini buldum:**
+
+| Koşu | Önbellek | Derleme |
+| --- | --- | --- |
+| 1 | miss | 37 sn |
+| 2 | hit | 35 sn |
+
+Önbellek işe yaramadı çünkü **Next 16 Turbopack kullanıyor ve derleme
+önbelleğini `.next/cache`'e yazmıyor** (orada sadece 187 KB kalıyor). Klasik
+`actions/cache` tarifi webpack dönemine ait.
+
+**Ama sorun zaten yoktu:** yereldeki 107 sn benim makinemin hızıydı. CI'da
+soğuk derleme **37 sn** — senin hedeflediğin 40–50 sn bandının zaten altında.
+150 sn eşiği bol bol karşılanıyor.
+
+Adımı kaldırmadım (maliyeti ~1 sn) ama yorumuna şu an bir şey yapmadığını
+yazdım. Kaldırmamı istersen söyle. Ayrıntı `docs/ILERLEME.md` → "CI derleme
+önbelleği ölçümü".
 
 ### 5. Endeks sepet ağırlıkları — senin saha bilgin gerekiyor
 

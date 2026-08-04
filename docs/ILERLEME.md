@@ -532,7 +532,42 @@ Alınan kararlar:
    trend göstergesidir; testleri geçen bir PR'ı süre yüzünden bloklamak
    kapının kendisini anlamsızlaştırırdı.
 
-Ölçüm sonuçları aşağıdaki "CI derleme önbelleği ölçümü" başlığında.
+#### CI derleme önbelleği ölçümü
+
+Önbellek eklendikten sonra aynı commit iki kez koşuldu:
+
+| Koşu | Önbellek | Derleme | Toplam iş |
+| --- | --- | --- | --- |
+| 1 | miss (yazdı) | **37 sn** | 2 dk 08 sn |
+| 2 | **hit** | **35 sn** | 1 dk 57 sn |
+
+**Beklenen kazanç gerçekleşmedi ve sebebi öğrenildi.**
+
+`.next/cache` içeriği CI'da **187 KB** — neredeyse boş. İçinde yalnızca
+`.tsbuildinfo` var. İki sebep:
+
+1. **Next 16 varsayılan olarak Turbopack kullanıyor** ve Turbopack derleme
+   önbelleğini `.next/cache`'e yazmıyor. Klasik `actions/cache` + `.next/cache`
+   tarifi webpack dönemine ait; bu projede karşılığı yok.
+2. **Tüm rotalar dinamik (ƒ).** Layout çerez onayını okumak için `cookies()`
+   çağırıyor (bilinen ve bilinçli takas). Statik ön-render olmadığı için
+   önbelleğe alınacak prerender çıktısı da yok.
+
+37 → 35 sn farkı gürültü seviyesinde; önbellek restore 1 sn, save 1 sn.
+Yani adım net olarak **başa baş**.
+
+**Asıl bulgu: sorun zaten yoktu.** Yereldeki 107 sn, geliştirme makinesinin
+hızıydı. CI'da soğuk derleme **37 sn** — hedeflenen 40–50 sn bandının zaten
+altında. 150 sn eşiği bol bol karşılanıyor.
+
+**Adım kaldırılmadı** çünkü maliyeti ~1 sn ve iki durumda kendiliğinden işe
+yarayacak: bazı rotalar statikleşirse, ya da Turbopack kalıcı önbelleği
+kararlı hale gelirse. Yorumu, şu an bir şey yapmadığını açıkça söylüyor —
+bir şey yaptığı sanılan ölü adım, hiç adım olmamasından kötüdür.
+
+**Denenmeyen seçenek:** Turbopack'in deneysel kalıcı önbelleği. Deneysel bir
+derleyici bayrağı açmak yığın kararıdır (CLAUDE.md: "yığını değiştirmeden
+önce sor") ve derleme süresi zaten sorun olmadığı için gerekçesi yok.
 
 ---
 
@@ -702,7 +737,7 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 | --- | --- | --- |
 | **Tüm sayfalar dinamik render** | TTFB ve önbellek | Layout, çerez onayını okumak için `cookies()` çağırıyor; bu bütün rotaları dinamik yapıyor. Bilinçli takas — yasal güvence performanstan önce. Çözüm adayı: PPR / `cacheComponents` olgunlaştığında dinamik parçaları `Suspense` içine almak. |
 | Lighthouse eşikleri engelleyici değil | Regresyon kaçabilir | Gerçek içerik gelince zorunlu yapılacak |
-| Derleme 107 sn (yerel) | — | Eşik 150 sn'ye çekildi, CI'da `.next/cache` önbelleği açıldı. Süre CI özetinde raporlanıyor; eşik aşımı uyarı verir, koşuyu düşürmez. |
+| Derleme: yerel 107 sn, **CI 37 sn** | Sorun değil | Eşik 150 sn'ye çekildi; CI bunun çok altında. `.next/cache` önbelleği eklendi ama Turbopack oraya yazmadığı için kazancı yok — ölçüm ve gerekçe "CI derleme önbelleği ölçümü" başlığında. |
 | **Sunucu tarafı PDF yok** | Rapor e-postaya iliştirilemiyor | Faz 4: Playwright + headless Chrome ile `/rapor/*` rotaları render edilecek. Türkçe sorunu yok, `@media print` aynen geçerli. Chromium ~300 MB → kuyrukta çalışmalı. SMTP gelmeden anlamsız. |
 | SMTP yok | Lead bildirimi gitmiyor | Kayıt düşüyor, e-posta gitmiyor. Bilgi bekleniyor. |
 | E-posta bildirimi kodu yok | — | SMTP bilgileri gelince `yetkisiBitecekleriBildir` görevine eklenecek |

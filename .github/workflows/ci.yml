@@ -62,15 +62,20 @@ jobs:
 
       # Next.js derleme önbelleği.
       #
-      # `.next/cache` altında modül grafiği, SWC çıktısı ve görsel optimizasyon
-      # sonuçları durur. Önbelleksiz her koşu bunları sıfırdan üretiyor ve
-      # derleme süresinin büyük kısmı buraya gidiyor.
+      # ⚠️ ÖLÇÜLDÜ: şu anda kazancı YOK denecek kadar az (37 sn → 35 sn,
+      # gürültü seviyesinde). Sebep: Next 16 varsayılan olarak Turbopack
+      # kullanıyor ve Turbopack derleme önbelleğini `.next/cache`'e YAZMIYOR.
+      # Orada yalnızca 187 KB `.tsbuildinfo` kalıyor. Üstelik projedeki tüm
+      # rotalar dinamik (ƒ), yani önbelleğe alınacak ön-render çıktısı da yok.
       #
-      # Anahtar iki katmanlı: kilit dosyası + kaynak dosyaların özeti. Kaynak
-      # değişince tam isabet olmaz ama `restore-keys` aynı bağımlılık
-      # kümesindeki en son önbelleği geri yükler — Next.js değişmeyen modülleri
-      # oradan alır. Bağımlılık değişirse önbellek bilinçli olarak ıskalanır;
-      # eski SWC çıktısını yeni sürümle karıştırmak sinsi hatalar üretir.
+      # Adım yine de duruyor: maliyeti ~1 sn, ve iki durumda kendiliğinden
+      # işe yaramaya başlayacak — (a) bazı rotalar statikleşirse,
+      # (b) Turbopack kalıcı önbelleği kararlı hale gelirse. Ayrıntılı ölçüm
+      # docs/ILERLEME.md → "CI derleme önbelleği ölçümü".
+      #
+      # Anahtar iki katmanlı: kilit dosyası + kaynak özeti. Bağımlılık
+      # değişirse önbellek bilinçli olarak ıskalanır; eski derleyici çıktısını
+      # yeni sürümle karıştırmak sinsi hatalar üretir.
       - name: Next.js derleme önbelleği
         uses: actions/cache@v4
         with:
