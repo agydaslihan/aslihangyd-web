@@ -99,6 +99,26 @@ ulasim(%15) + sosyalDonati(%15) + arzBaskisi(%10)
 Metodoloji /yatirim-skoru-metodolojisi sayfasında yayınlanır.
 Skorun kırılımı her mahalle sayfasında radar grafikle gösterilir.
 
+### Mahalle Eşleştirme Testi
+Ölçüt ağırlıkları KODDA (`src/lib/eslestirme/motor.ts`) ve
+/mahalle-eslestirme-metodolojisi sayfasında yayınlanır — bunlar metodolojidir.
+Mahalle öznitelikleri CMS'te (`Mahalleler.eslestirmeProfili`), başlangıç
+değeri konulmaz — bunlar veridir. Yatırım skorundaki ayrımın aynısı.
+Eşleştirme portföyden bağımsızdır; ilan sayısı hesaba girmez.
+
+### Bölge Radarı
+Yeni skor ÜRETMEZ; sinyal üretir. İkinci bir puan, Yatırım Skoruyla
+çeliştiğinde ikisini birden değersizleştirirdi. Sinyaller mutlak eşiğe değil
+mahalle medyanına göre hesaplanır. Veri zayıflığı gizlenmez, sinyal olarak
+gösterilir.
+
+### Raporlar
+PDF, kütüphaneyle değil yazdırma yoluyla üretilir (`@media print` +
+tarayıcının "PDF olarak kaydet"i). Gerekçe: pdf-lib'in standart fontları
+Türkçe karakterleri kodlayamıyor ve 23 MB. Ayrıntı docs/ILERLEME.md.
+Rapor URL'si SONUÇ değil GİRDİ taşır; sunucu aynı motorlarla yeniden
+hesaplar — aksi halde adres çubuğu düzenlenerek sahte rapor üretilebilirdi.
+
 ### Mahalle sayfası zorunlu bölümleri
 1. Drone video hero (poster + lazy load)
 2. Yatırım skoru + radar
@@ -168,6 +188,10 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
 - [ ] Faz 2  — Harita, hesaplayıcılar, ticari dikey
 - [ ] Faz 2B — Bal küpü modülleri, portföy yönetimi/CRM, sosyal medya
               (bkz. BAL-KUPU-VE-PORTFOY-YONETIMI.md)
+              Bal küpü modülleri tamam (değerleme, gizli portföy, mahalle
+              eşleştirme testi, yatırım simülatörü, kira mı satın alma mı,
+              bölge radarı, PDF rapor). CRM eşleştirme motoru, portföy giriş
+              sihirbazı ve sosyal medya materyali kaldı.
 - [ ] Faz 2C — Gözlem giriş sistemi ve endeks altyapısı
               (bkz. ENDEKS-VERI-YONETIMI.md) — sayfa 6. ayda açılır
 - [ ] Faz 3  — Drone/360 medya, CDN

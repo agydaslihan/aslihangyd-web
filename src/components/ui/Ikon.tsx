@@ -140,6 +140,17 @@ export function VeriBekleniyorIkon(ozellikler: IkonOzellikleri) {
   )
 }
 
+/** Rapor sayfalarındaki "PDF olarak kaydet" butonunda kullanılır. */
+export function IndirIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M12 3v12" />
+      <path d="m7.5 10.5 4.5 4.5 4.5-4.5" />
+      <path d="M4 17.5V19a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-1.5" />
+    </Govde>
+  )
+}
+
 export function MenuIkon(ozellikler: IkonOzellikleri) {
   return (
     <Govde {...ozellikler}>

@@ -172,6 +172,57 @@
     [data-yazdirma='gizle'] {
       display: none !important;
     }
+
+    /* ── Rapor sayfaları ──
+       Rapor, tarayıcının "PDF olarak kaydet" seçeneğiyle gerçek bir PDF
+       üretir. Bu yol bilinçli seçildi: Türkçe karakterler sistem fontlarıyla
+       sorunsuz çıkar, hiçbir bağımlılık eklenmez ve derleme süresi artmaz.
+       Gerekçe docs/ILERLEME.md içinde ayrıntılı yazıldı. */
+
+    /* Koyu tema kağıda basılmaz: mürekkep israfı ve okunmaz çıktı. */
+    :root {
+      color-scheme: light;
+    }
+
+    body {
+      background: #fff !important;
+      color: #000 !important;
+    }
+
+    /* Kart çerçeveleri ekranda derinlik verir, kağıtta gürültü yapar. */
+    [data-rapor] {
+      max-width: none;
+      padding: 0;
+    }
+
+    [data-rapor] section {
+      break-inside: avoid;
+    }
+
+    [data-rapor] table {
+      break-inside: auto;
+    }
+
+    [data-rapor] tr {
+      break-inside: avoid;
+    }
+
+    [data-rapor] thead {
+      display: table-header-group;
+    }
+
+    /* Bağlantı adresleri kağıtta görünmeli — tıklanamayan bir mavi metin
+       okuyucuya hiçbir şey söylemez. */
+    [data-rapor] a[href^='http']::after {
+      content: ' (' attr(href) ')';
+      font-size: 0.75em;
+      font-weight: 400;
+      word-break: break-all;
+    }
+
+    @page {
+      margin: 16mm 14mm;
+    }
   }
 }
 

@@ -60,6 +60,22 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 - [ ] **Hakkımızda metni ve fotoğraf**
       Nereye: Payload admin → Sayfalar → Hakkımızda
 
+- [ ] **Mahalle Eşleştirme profili — her mahalle için 4 puan (0–100)** ⬅️ *sen dolduracaksın*
+      Nereye: Payload admin → Mahalleler → [mahalle] → Eşleştirme profili
+      Alanlar: toplu taşıma, okul erişimi, sakinlik, merkeze yakınlık
+      Olmazsa: `/mahalle-testi` o mahalle için uyum yüzdesi üretmez.
+      ⚠️ Bu puanları ben dolduramam: "Şeyhsinan ne kadar sakindir?"
+      sorusunun cevabı orayı bilen birinin bilgisidir. Testte kullanılan
+      diğer dört ölçüt (yatırım potansiyeli, sanayi yakınlığı, ulaşım,
+      sosyal donatı) yatırım skorundan otomatik okunuyor.
+
+      **Sakinlik bir kalite yargısı DEĞİL:** kimi sakinlik ister, kimi
+      hareket. 100 = çok sakin, 0 = ana arter üzerinde. Merkeze yakınlıkla
+      genellikle ters çalışır; ikisini birlikte düşün.
+
+      Puanları neye göre verdiğini "Profil notu" alanına yaz — bir ziyaretçi
+      "neden bu mahalle önerildi?" diye sorduğunda cevabın hazır olsun.
+
 ## Sonra (fazlar geldiğinde gerekecek)
 
 - [ ] **MapTiler API anahtarı** (Faz 2)
@@ -162,17 +178,48 @@ Katsayılar çarpımsal: `1,00` etkisiz, `1,05` %5 artırır, `0,90` %10 düşü
 **Ayrıca:** Mahalle rakamları (ortalama m² satış + gözlem sayısı) girilmeden
 değerleme aracı hiçbir mahalle için sonuç üretemez. Bu, bilinçli bir kapı.
 
-### 4. Faz 2B'de yapılmayan modüller — ne istiyorsun?
+### 4. ✅ Cevaplandı — kalan bal küpü modülleri yapıldı
 
-`docs/BAL-KUPU-VE-PORTFOY-YONETIMI.md` şartnamesi **B3 modülünün ortasında
-kesiliyor.** B4 ve sonrası (Yatırım Simülatörü, Kira mı Satın Alma mı,
-Bölge Radarı) hiç yazılmamış.
+Talimatın üzerine dördü de yazıldı: Mahalle Eşleştirme Testi, Yatırım
+Simülatörü, Kira mı Satın Alma mı, Bölge Radarı. PDF rapor da eklendi.
+Ayrıntı `docs/ILERLEME.md` → "Faz 2B+".
 
-Yaptıklarım: B1 (Anlık Değerleme), B2 (Gizli Portföy), lead skorlama.
+**Öncelik sırasını verdin (4 Ağustos 2026):**
 
-**Senden istediğim:** Yapılmayanlar arasında öncelik sıran ne? Şartname
-yazmana gerek yok, bir cümle yeter — tasarımı ben yaparım. Liste
-`docs/ILERLEME.md` içinde "Faz 2B'de YAPILMAYANLAR" başlığı altında.
+| Sıra | Modül | Durum |
+| --- | --- | --- |
+| 1 | Portföy giriş sihirbazı | Sırada |
+| 2 | CRM eşleştirme motoru | Bekliyor |
+| 3 | Sosyal medya materyal üretimi | Bekliyor |
+
+Gerekçen — *portföy giremeden CRM'in besleyeceği veri yok* — doğru ve sıralamayı
+tek başına haklı çıkarıyor. CRM'i önce yazsaydık, eşleştirecek kaydı olmayan
+boş bir ekran teslim etmiş olurduk.
+
+### 4b. ✅ Cevaplandı — derleme süresi
+
+Kararın uygulandı: eşik **150 sn**'ye çekildi ve CI'ya `.next/cache` önbelleği
+(`actions/cache@v4`) eklendi. Süre artık her koşuda ölçülüp iş akışı özetine
+yazılıyor; eşik aşılırsa uyarı düşer ama koşu başarısız olmaz.
+
+**Ölçüm sonucu — beklentiyi karşılamadı, sebebini buldum:**
+
+| Koşu | Önbellek | Derleme |
+| --- | --- | --- |
+| 1 | miss | 37 sn |
+| 2 | hit | 35 sn |
+
+Önbellek işe yaramadı çünkü **Next 16 Turbopack kullanıyor ve derleme
+önbelleğini `.next/cache`'e yazmıyor** (orada sadece 187 KB kalıyor). Klasik
+`actions/cache` tarifi webpack dönemine ait.
+
+**Ama sorun zaten yoktu:** yereldeki 107 sn benim makinemin hızıydı. CI'da
+soğuk derleme **37 sn** — senin hedeflediğin 40–50 sn bandının zaten altında.
+150 sn eşiği bol bol karşılanıyor.
+
+Adımı kaldırmadım (maliyeti ~1 sn) ama yorumuna şu an bir şey yapmadığını
+yazdım. Kaldırmamı istersen söyle. Ayrıntı `docs/ILERLEME.md` → "CI derleme
+önbelleği ölçümü".
 
 ### 5. Endeks sepet ağırlıkları — senin saha bilgin gerekiyor
 

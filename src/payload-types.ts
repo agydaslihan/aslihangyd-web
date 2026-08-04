@@ -556,6 +556,28 @@ export interface Mahalleler {
      */
     arzBaskisi?: number | null;
   };
+  eslestirmeProfili?: {
+    /**
+     * Araç kullanmayan biri için otobüs/dolmuş erişimi ve hat sıklığı. 100 = araçsız rahatça yaşanır.
+     */
+    topluTasima?: number | null;
+    /**
+     * Okul öncesi, ilkokul ve ortaokullara yürüme mesafesi. 100 = çocuk okula yürüyerek gider.
+     */
+    okulErisimi?: number | null;
+    /**
+     * Trafik, gürültü ve yoğunluk. 100 = çok sakin, 0 = ana arter üzerinde. Bu bir kalite yargısı DEĞİL: kimi sakinlik ister, kimi hareket.
+     */
+    sessizlik?: number | null;
+    /**
+     * Çorlu merkezine ve çarşıya yakınlık. 100 = merkezde. Sakinlikle genellikle ters çalışır; ikisini birlikte düşünün.
+     */
+    merkezeYakinlik?: number | null;
+    /**
+     * Bu puanları neye göre verdiğinizi yazın. Bir ziyaretçi "neden bu mahalle önerildi?" diye sorduğunda cevabınız hazır olsun.
+     */
+    profilNotu?: string | null;
+  };
   updatedAt: string;
   createdAt: string;
 }
@@ -1066,6 +1088,15 @@ export interface MahallelerSelect<T extends boolean = true> {
         ulasim?: T;
         sosyalDonati?: T;
         arzBaskisi?: T;
+      };
+  eslestirmeProfili?:
+    | T
+    | {
+        topluTasima?: T;
+        okulErisimi?: T;
+        sessizlik?: T;
+        merkezeYakinlik?: T;
+        profilNotu?: T;
       };
   updatedAt?: T;
   createdAt?: T;

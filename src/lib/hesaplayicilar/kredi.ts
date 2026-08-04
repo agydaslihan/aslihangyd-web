@@ -45,6 +45,35 @@ export interface KrediSonucu {
 /** Ödeme planı en fazla bu kadar satır üretir (30 yıl). */
 const AZAMI_VADE_AY = 360
 
+/**
+ * Eşit taksitli (anüite) aylık ödeme.
+ *
+ * Kredi hesaplayıcı dışında yatırım simülatörü ve kira/satın alma
+ * karşılaştırıcısı da aynı formülü kullanıyor. Üç ayrı kopya, birinde
+ * yapılan bir düzeltmenin diğerlerine geçmemesi demek olurdu.
+ *
+ * `anapara` sıfır veya negatifse 0 döner (kredisiz senaryo).
+ * Hesaplanamayan birleşimlerde `null` döner.
+ */
+export function anuiteTaksiti(
+  anapara: number,
+  aylikFaizOrani: number,
+  vadeAy: number,
+): number | null {
+  if (anapara <= 0) return 0
+  if (vadeAy <= 0) return null
+
+  // Faizsiz kredi matematiksel olarak geçerli bir durum; anüite formülü
+  // burada sıfıra bölme üretir, bu yüzden ayrı ele alınıyor.
+  const taksit =
+    aylikFaizOrani === 0
+      ? anapara / vadeAy
+      : (anapara * (aylikFaizOrani * (1 + aylikFaizOrani) ** vadeAy)) /
+        ((1 + aylikFaizOrani) ** vadeAy - 1)
+
+  return Number.isFinite(taksit) && taksit > 0 ? taksit : null
+}
+
 export function krediHesapla(girdi: KrediGirdisi): HesapSonucu<KrediSonucu> {
   const eksikler: { anahtar: string; etiket: string }[] = []
   if (!pozitifMi(girdi.tutar)) eksikler.push({ anahtar: 'tutar', etiket: 'Kredi tutarı' })
@@ -58,14 +87,9 @@ export function krediHesapla(girdi: KrediGirdisi): HesapSonucu<KrediSonucu> {
   const vade = Math.min(Math.round(girdi.vadeAy as number), AZAMI_VADE_AY)
   const aylikFaiz = (girdi.aylikFaizYuzdesi as number) / 100
 
-  // Faizsiz kredi (oran 0) matematiksel olarak geçerli bir durum; anüite
-  // formülü burada sıfıra bölme üretir, bu yüzden ayrı ele alınıyor.
-  const aylikTaksit =
-    aylikFaiz === 0
-      ? anapara / vade
-      : (anapara * (aylikFaiz * (1 + aylikFaiz) ** vade)) / ((1 + aylikFaiz) ** vade - 1)
+  const aylikTaksit = anuiteTaksiti(anapara, aylikFaiz, vade)
 
-  if (!Number.isFinite(aylikTaksit)) {
+  if (aylikTaksit === null || aylikTaksit === 0) {
     return girdiEksik([
       { anahtar: 'aylikFaizYuzdesi', etiket: 'Faiz oranı bu vade için hesaplanamıyor' },
     ])

@@ -20,9 +20,10 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 1.10 | SEO, CI/CD, yedekleme, dokümantasyon | ✅ |
 | 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
+| 2B+ | Kalan bal küpü modülleri + raporlar | ✅ 4 modül + PDF rapor — bkz. aşağısı |
 | 2C | Gözlem girişi ve endeks altyapısı | ✅ (sayfa kapalı — tasarım gereği) |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
-| 4 | Yatırım skoru, AI arama, raporlar | 🟡 Skor tamam; AI arama ve raporlar yapılmadı |
+| 4 | Yatırım skoru, AI arama, raporlar | 🟡 Skor + raporlar tamam; AI arama yapılmadı |
 | 5 | Çorlu Live | ⏭️ atlandı |
 
 ---
@@ -358,16 +359,215 @@ olarak bırakıldı:
 
 | Modül | Durum | Neden |
 | --- | --- | --- |
-| B3 — Mahalle Eşleştirme Testi | Yapılmadı | Şartname yarım; eşleştirme algoritmasının kriter ağırlıkları Aslıhan'ın saha bilgisini gerektiriyor |
-| Yatırım Simülatörü | Yapılmadı | Şartnamesi yok |
-| Kira mı Satın Alma mı | Yapılmadı | Şartnamesi yok |
-| Bölge Radarı | Yapılmadı | Şartnamesi yok |
-| Kişiye özel PDF rapor | Yapılmadı | PDF üretimi ağır bağımlılık (~2 MB); 3.2 GB RAM'de değerlendirilmeli |
-| CRM eşleştirme motoru | Yapılmadı | Portföy–talep eşleştirmesi anlamlı miktarda veri gerektiriyor |
-| Portföy giriş sihirbazı | Yapılmadı | Payload admin şu an yeterli; sihirbaz optimizasyondur |
-| Sosyal medya materyal üretimi | Yapılmadı | Görsel şablon kararları marka kimliği netleşince |
+| B3 — Mahalle Eşleştirme Testi | ✅ Faz 2B+ | — |
+| Yatırım Simülatörü | ✅ Faz 2B+ | — |
+| Kira mı Satın Alma mı | ✅ Faz 2B+ | — |
+| Bölge Radarı | ✅ Faz 2B+ | — |
+| Kişiye özel PDF rapor | ✅ Faz 2B+ | Bağımlılıksız yazdırma yoluyla; gerekçe aşağıda |
+| Portföy giriş sihirbazı | Sırada — **1.** | Aslıhan'ın belirlediği öncelik |
+| CRM eşleştirme motoru | Sırada — **2.** | Portföy giremeden CRM'in besleyeceği veri yok |
+| Sosyal medya materyal üretimi | Sırada — **3.** | Görsel şablon kararları marka kimliği netleşince |
 
-Bunlar `docs/SENDEN-BEKLENENLER.md` üzerinden takip ediliyor.
+**Öncelik sırası Aslıhan tarafından verildi (4 Ağustos 2026):** portföy giriş
+sihirbazı → CRM eşleştirme motoru → sosyal medya. Gerekçe: *portföy giremeden
+CRM'in besleyeceği veri yok.* Bu sıra, CRM'i veri kıtlığı içinde yazıp boş
+bir ekranla teslim etme riskini ortadan kaldırıyor.
+
+---
+
+## Faz 2B+ — Kalan bal küpü modülleri ve raporlar
+
+### Ne yapıldı
+
+- **Kira mı Satın Alma mı** (`src/lib/hesaplayicilar/kiraMiSatinAlmaMi.ts`)
+  + `/araclar/kira-mi-satin-alma-mi`. 23 test.
+- **Yatırım Simülatörü** (`src/lib/hesaplayicilar/yatirimSimulatoru.ts`)
+  + `/araclar/yatirim-simulatoru`. 26 test.
+- **B3 — Mahalle Eşleştirme Testi** (`src/lib/eslestirme/`) + `/mahalle-testi`
+  + `/mahalle-eslestirme-metodolojisi` + `Mahalleler.eslestirmeProfili`
+  (4 yeni CMS alanı, migration `20260804_091230`). 26 test.
+- **Bölge Radarı** (`src/lib/radar/motor.ts`) + `/bolge-radari`. 23 test.
+- **PDF rapor** — `/rapor/degerleme`, `/rapor/yatirim-simulatoru`,
+  `/rapor/kira-mi-satin-alma-mi` + `RaporKabugu` + yazdırma stilleri.
+- `anuiteTaksiti` `kredi.ts`'e çıkarıldı — üç modül aynı formülü kullanıyordu.
+
+Toplam **98 yeni test**; süit 366 → 464 (21 dosya).
+
+### Kararlar ve gerekçeleri
+
+**Kira/satın alma karşılaştırması aylık ödemeyi değil NET VARLIĞI kıyaslıyor.**
+Aracın en kolay yanlış yapılan hâli taksiti kirayla yan yana koymaktır; o
+karşılaştırma ya peşinatın alternatif getirisini ya kiracının biriktirdiği
+parayı görmez. Her ay **az ödeyen taraf farkı yatırır** — bu adım atlanırsa
+"kiralamak ucuz" derken kiracının o parayı harcadığı varsayılmış olur.
+
+**Başabaş değer artışı eşiği.** Aracın en değerli çıktısı bu: satın almanın
+kiralamayı geçmesi için gereken yıllık değer artışı. Kullanıcının tahmin
+etmesine gerek bırakmıyor, kendi beklentisiyle kıyaslayacağı bir eşik
+veriyor. İkiye bölme ile bulunuyor; testi doğrudan tanımı sınıyor.
+
+**Büyüme varsayımlarına yer tutucu KONULMADI.** Değer artışı, kira artışı ve
+alternatif getiri alanları boş açılıyor. Yer tutucu, kullanıcının çoğu zaman
+doğrudan kabul ettiği bir öneridir; oraya rakam yazmak tahminimizi veri
+kılığında sunmak olurdu (kural 2).
+
+**Simülatörde getiri ölçüsü İVO (iç verim oranı).** Kaldıraçlı ve ara nakit
+akışlı bir yatırımda anlamlı tek ölçü budur. "Toplam getiri %180" cümlesi
+bunun 3 yılda mı 15 yılda mı elde edildiğini gizler.
+
+**Reel getiri Fisher denklemiyle.** `(1+n)/(1+e)−1`. Nominalden enflasyonu
+çıkarmak yüksek enflasyonda ciddi biçimde yanıltır; test bunu ayrıca sınıyor.
+
+**Vergi dilimi kayması düzeltiliyor.** Bugünün dilimlerini 10 yıl sonrasının
+nominal kirasına uygulamak vergiyi sistematik olarak şişirir — dilimler her
+yıl yeniden belirlenir. Enflasyon girildiğinde kira bugünkü paraya indirgenip
+vergi öyle hesaplanıyor. Enflasyon girilmezse düzeltme yapılamıyor ve bu
+uyarı olarak bildiriliyor.
+
+**Vergi parametresi yoksa simülasyon DURMUYOR**, ama sonuç açıkça "vergi
+öncesi" etiketleniyor. Vergiyi uydurmaktansa göstermemek ve bunu söylemek
+doğru.
+
+**Eşleştirmede ağırlıklar KODDA, mahalle öznitelikleri CMS'TE.** Yatırım
+skorundaki ayrımın aynısı: "çocuklu hane için okul erişimi ne kadar önemli?"
+bir ölçüm değil, aracın ilan ettiği metodolojidir ve yayınlanır.
+"Şeyhsinan ne kadar sakindir?" ise orayı bilen birinin bilgisidir — CMS'e
+girilir, başlangıç değeri konulmaz.
+
+**Eşleştirme portföyden TAMAMEN bağımsız.** Bir mahallede kaç ilanımız olduğu
+hesaba hiç girmiyor ve bu metodoloji sayfasında açıkça yazılı. Test elimizdeki
+evi satmanın yolu olsaydı, ilk yanlış öneride hem müşteriyi hem itibarı
+kaybederdik.
+
+**Bütçe mutlak eşikle değil, karşılaştırmalı puanlanıyor.** "70 m² altı
+yetersizdir" demek bizim uydurduğumuz bir yaşam standardını dayatmak olurdu.
+Bütçeyle en çok m² alınan mahalle 100 puan; kullanılan tek veri gerçek m²
+fiyatları.
+
+**Zaman ufku eşleştirmeyi ETKİLEMİYOR.** Aceleci olana farklı mahalle önermek,
+aceleye getirmenin örtülü bir yolu olurdu. Cevap yalnızca sonuç ekranındaki
+yönlendirmeyi değiştiriyor.
+
+**Radar YENİ BİR SKOR ÜRETMİYOR.** İkinci bir puan icat etmek, Yatırım
+Skoruyla çeliştiğinde hangisine inanılacağı sorusunu doğurur ve ikisini de
+değersizleştirir. Radar bunun yerine **sinyal** üretiyor: rakamıyla birlikte
+gösterilen, veriye dayanan tek cümlelik gözlemler.
+
+**Radarda mutlak eşik yok.** Her sinyal, verisi olan mahallelerin MEDYANINA
+göre hesaplanıyor — ölçüt Çorlu'nun kendisi. Medyan tercihi ortalamaya karşı
+bilinçli; test tek bir aykırı değerin medyanı kıpırdatmadığını gösteriyor.
+
+**Radar veri zayıflığını GİZLEMİYOR, sinyal olarak gösteriyor.** Bir mahallenin
+gözlem sayısı endeksin yayınlanmış katman eşiğinin (8) altındaysa bunu açıkça
+söylüyor. Eşik uydurulmadı; endeks metodolojisindeki sayıyla aynı.
+
+### PDF: neden kütüphane kullanılmadı
+
+Ölçüldü:
+
+| Aday | Disk | Türkçe |
+| --- | --- | --- |
+| `pdf-lib` | 23 MB | ❌ `WinAnsi cannot encode "ğ"` |
+| `@react-pdf/renderer` | 71 paket / 56 MB | Font kaydı gerektirir |
+
+`pdf-lib`'in standart fontları WinAnsi kodlamalıdır ve Türkçe karakterleri
+**kodlayamaz** — doğrulandı, hata mesajı yukarıda. Çalışması için `fontkit`
++ depoya gömülü ~700 KB'lık bir TTF gerekiyor. Kullanıcıya görünen her şeyin
+Türkçe olduğu bir projede bu, kütüphanenin en temel işini yapamaması demek.
+Üstelik `pdf-lib`'in düzen motoru yok; her tablo elle koordinatlanacaktı.
+
+Bunun yerine **yazdırma yolu** seçildi: rapor sayfası + `@media print` +
+tarayıcının "PDF olarak kaydet" seçeneği. Kullanıcının eline geçen çıktı
+gerçek bir PDF dosyasıdır, Türkçe sistem fontlarıyla kusursuz çıkar, **sıfır
+bağımlılık** ekler ve derleme süresini artırmaz.
+
+#### Sunucu tarafı PDF — Faz 4 teknik borcu
+
+Rapor **e-postaya iliştirilecekse** yazdırma yolu yetmez: kullanıcının
+tarayıcısı gerekiyor. O aşamada **Playwright + headless Chrome** kullanılacak:
+mevcut `/rapor/*` rotaları olduğu gibi render edilip `page.pdf()` ile PDF'e
+çevrilecek.
+
+Neden bu yol:
+- **Türkçe sorunu yok** — Chrome sistem fontlarını kullanır, `pdf-lib`'in
+  WinAnsi kısıtı burada yok.
+- **Düzen motoru zaten var** — `@media print` kuralları aynen geçerli; tablo
+  ve sayfa sonu davranışı elle koordinatlanmaz.
+- **Tek kaynak** — ekran, yazdırma ve e-posta PDF'i aynı rotadan üretilir;
+  üçünün birbirinden ayrılma riski ortadan kalkar.
+
+Dikkat edilecekler:
+- Chromium ~300 MB; sunucu 3,2 GB RAM. PDF üretimi **istek anında değil,
+  kuyrukta** çalışmalı — eşzamanlı iki render belleği zorlar.
+- Yalnızca sunucu tarafında, `NEXT_RUNTIME=nodejs` altında; istemci
+  paketine sızmamalı.
+- SMTP bilgileri gelmeden bu iş anlamsız (bkz. bilinen eksikler).
+
+**Rapor URL'sinde SONUÇ değil GİRDİ taşınıyor** ve sunucuda aynı motorlarla
+yeniden hesaplanıyor. İstemcinin hesapladığı rakamı URL'den alıp rapora
+basmak, adres çubuğunu düzenleyen herkese "aslihangyd.com raporu" görünümlü
+uydurma bir belge üretme imkânı verirdi. Değerlemede taban m² fiyatı da
+URL'den değil mahalle kaydından okunuyor.
+
+Raporlar `robots: noindex` — kişiye özel girdilerle üretiliyorlar.
+
+**Rapor bal küpü kuralına tabi (6b):** raporu açmak ve PDF olarak kaydetmek
+için iletişim bilgisi istenmiyor. İletişim yalnızca *yerinde* değerleme için.
+
+### Derleme süresi: eşik 150 sn, CI'da önbellek
+
+**87 sn → 107 sn.** Sebep bağımlılık DEĞİL — bu fazda hiçbir paket eklenmedi.
+Artış 8 yeni rotadan ve ~4.000 satır koddan geliyor; rota başına ~2,5 sn.
+
+Alınan kararlar:
+
+1. **Eşik 90 → 150 sn.** Site büyüdükçe derleme uzar; 90 sn artık gerçekçi
+   değildi ve sürekli ihlal edilen bir eşik, eşik olmaktan çıkar.
+2. **CI'da `.next/cache` önbelleği** (`actions/cache@v4`). Anahtar iki
+   katmanlı: kilit dosyası + kaynak özeti. Bağımlılık değişirse önbellek
+   bilinçli olarak ıskalanır — eski SWC çıktısını yeni sürümle karıştırmak
+   sinsi hatalar üretir.
+3. **Süre CI'da ölçülüp iş akışı özetine yazılıyor.** Eşik aşılırsa koşu
+   BAŞARISIZ OLMAZ, uyarı düşer. Derleme süresi bir kalite kapısı değil,
+   trend göstergesidir; testleri geçen bir PR'ı süre yüzünden bloklamak
+   kapının kendisini anlamsızlaştırırdı.
+
+#### CI derleme önbelleği ölçümü
+
+Önbellek eklendikten sonra aynı commit iki kez koşuldu:
+
+| Koşu | Önbellek | Derleme | Toplam iş |
+| --- | --- | --- | --- |
+| 1 | miss (yazdı) | **37 sn** | 2 dk 08 sn |
+| 2 | **hit** | **35 sn** | 1 dk 57 sn |
+
+**Beklenen kazanç gerçekleşmedi ve sebebi öğrenildi.**
+
+`.next/cache` içeriği CI'da **187 KB** — neredeyse boş. İçinde yalnızca
+`.tsbuildinfo` var. İki sebep:
+
+1. **Next 16 varsayılan olarak Turbopack kullanıyor** ve Turbopack derleme
+   önbelleğini `.next/cache`'e yazmıyor. Klasik `actions/cache` + `.next/cache`
+   tarifi webpack dönemine ait; bu projede karşılığı yok.
+2. **Tüm rotalar dinamik (ƒ).** Layout çerez onayını okumak için `cookies()`
+   çağırıyor (bilinen ve bilinçli takas). Statik ön-render olmadığı için
+   önbelleğe alınacak prerender çıktısı da yok.
+
+37 → 35 sn farkı gürültü seviyesinde; önbellek restore 1 sn, save 1 sn.
+Yani adım net olarak **başa baş**.
+
+**Asıl bulgu: sorun zaten yoktu.** Yereldeki 107 sn, geliştirme makinesinin
+hızıydı. CI'da soğuk derleme **37 sn** — hedeflenen 40–50 sn bandının zaten
+altında. 150 sn eşiği bol bol karşılanıyor.
+
+**Adım kaldırılmadı** çünkü maliyeti ~1 sn ve iki durumda kendiliğinden işe
+yarayacak: bazı rotalar statikleşirse, ya da Turbopack kalıcı önbelleği
+kararlı hale gelirse. Yorumu, şu an bir şey yapmadığını açıkça söylüyor —
+bir şey yaptığı sanılan ölü adım, hiç adım olmamasından kötüdür.
+
+**Denenmeyen seçenek:** Turbopack'in deneysel kalıcı önbelleği. Deneysel bir
+derleyici bayrağı açmak yığın kararıdır (CLAUDE.md: "yığını değiştirmeden
+önce sor") ve derleme süresi zaten sorun olmadığı için gerekçesi yok.
 
 ---
 
@@ -537,13 +737,16 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 | --- | --- | --- |
 | **Tüm sayfalar dinamik render** | TTFB ve önbellek | Layout, çerez onayını okumak için `cookies()` çağırıyor; bu bütün rotaları dinamik yapıyor. Bilinçli takas — yasal güvence performanstan önce. Çözüm adayı: PPR / `cacheComponents` olgunlaştığında dinamik parçaları `Suspense` içine almak. |
 | Lighthouse eşikleri engelleyici değil | Regresyon kaçabilir | Gerçek içerik gelince zorunlu yapılacak |
-| Derleme 87 sn | Sınıra yakın | 90 sn eşiği aşılırsa araştır |
+| Derleme: yerel 107 sn, **CI 37 sn** | Sorun değil | Eşik 150 sn'ye çekildi; CI bunun çok altında. `.next/cache` önbelleği eklendi ama Turbopack oraya yazmadığı için kazancı yok — ölçüm ve gerekçe "CI derleme önbelleği ölçümü" başlığında. |
+| **Sunucu tarafı PDF yok** | Rapor e-postaya iliştirilemiyor | Faz 4: Playwright + headless Chrome ile `/rapor/*` rotaları render edilecek. Türkçe sorunu yok, `@media print` aynen geçerli. Chromium ~300 MB → kuyrukta çalışmalı. SMTP gelmeden anlamsız. |
 | SMTP yok | Lead bildirimi gitmiyor | Kayıt düşüyor, e-posta gitmiyor. Bilgi bekleniyor. |
 | E-posta bildirimi kodu yok | — | SMTP bilgileri gelince `yetkisiBitecekleriBildir` görevine eklenecek |
 | `sharp` 0.34'e sabit | — | Payload sürüm yükseltmesinde 0.35 tekrar denenebilir |
 | PostGIS `tiger`/`topology` şemaları | Disk | Düşük öncelik |
-| Rol tabanlı yetkilendirme | — | `Kullanicilar.rol` alanı var ama henüz erişim kurallarına bağlı değil; Faz 2B (CRM) |
-| Gizli portföy modülü | — | `gizliPortfoy` alanı ve liste filtresi hazır; kilitli görünüm Faz 2B |
+| Rol tabanlı yetkilendirme | — | `Kullanicilar.rol` alanı var ama henüz erişim kurallarına bağlı değil; CRM fazında |
+| Gizli portföy modülü | ✅ | Faz 2B'de tamamlandı |
+| Eşleştirme profili boş | Test sonuç üretmez | `Mahalleler → Eşleştirme profili` 4 alan doldurulmalı; SENDEN-BEKLENENLER md. 8 |
+| Radar en az 4 mahalle ister | Sayfa boş durum gösterir | Verisi olan mahalle sayısı 4'e ulaşınca kendiliğinden açılır |
 
 ---
 

@@ -32,6 +32,22 @@ export const ARACLAR = [
     vergiParametresiGerekli: false,
   },
   {
+    adres: '/araclar/yatirim-simulatoru',
+    ad: 'Yatırım Simülatörü',
+    kisaAd: 'Yatırım simülatörü',
+    aciklama:
+      'Kiralık konut yatırımının yıl yıl nakit akışı, öz sermaye birikimi ve enflasyondan arındırılmış reel getirisi.',
+    vergiParametresiGerekli: true,
+  },
+  {
+    adres: '/araclar/kira-mi-satin-alma-mi',
+    ad: 'Kiralasam mı, Satın Alsam mı?',
+    kisaAd: 'Kira mı, satın alma mı',
+    aciklama:
+      'Aylık taksiti kirayla kıyaslamak yanıltır. İki senaryonun süre sonundaki net varlığını ve başabaş değer artışı eşiğini görün.',
+    vergiParametresiGerekli: false,
+  },
+  {
     adres: '/araclar/alim-maliyeti',
     ad: 'Alım Maliyeti Hesaplayıcı',
     kisaAd: 'Alım maliyeti',

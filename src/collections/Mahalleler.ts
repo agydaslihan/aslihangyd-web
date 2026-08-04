@@ -414,6 +414,99 @@ export const Mahalleler: CollectionConfig = {
             },
           ],
         },
+
+        {
+          label: 'Eşleştirme profili',
+          description:
+            'Mahalle Eşleştirme Testi bu öznitelikleri kullanır. Yatırım skorundaki dört ' +
+            'bileşen (yatırım potansiyeli, sanayi yakınlığı, ulaşım, sosyal donatı) oradan ' +
+            'otomatik okunur; burada yalnızca testte ek olarak gereken dördü var. ' +
+            '⚠️ Başlangıç değeri KONULMADI: "Şeyhsinan ne kadar sakindir?" sorusunun cevabı ' +
+            'orayı bilen birinin bilgisidir. Girilmeyen öznitelik hesaba katılmaz; ' +
+            'ölçütlerin en az %60 ağırlığı dolmadan o mahalle için uyum yüzdesi ÜRETİLMEZ. ' +
+            'Metodoloji /mahalle-eslestirme-metodolojisi sayfasında yayınlanır.',
+          fields: [
+            {
+              name: 'eslestirmeProfili',
+              type: 'group',
+              label: 'Eşleştirme profili',
+              fields: [
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'topluTasima',
+                      type: 'number',
+                      label: 'Toplu taşıma',
+                      min: 0,
+                      max: 100,
+                      admin: {
+                        width: '50%',
+                        description:
+                          'Araç kullanmayan biri için otobüs/dolmuş erişimi ve hat sıklığı. ' +
+                          '100 = araçsız rahatça yaşanır.',
+                      },
+                    },
+                    {
+                      name: 'okulErisimi',
+                      type: 'number',
+                      label: 'Okul erişimi',
+                      min: 0,
+                      max: 100,
+                      admin: {
+                        width: '50%',
+                        description:
+                          'Okul öncesi, ilkokul ve ortaokullara yürüme mesafesi. ' +
+                          '100 = çocuk okula yürüyerek gider.',
+                      },
+                    },
+                  ],
+                },
+                {
+                  type: 'row',
+                  fields: [
+                    {
+                      name: 'sessizlik',
+                      type: 'number',
+                      label: 'Sakinlik',
+                      min: 0,
+                      max: 100,
+                      admin: {
+                        width: '50%',
+                        description:
+                          'Trafik, gürültü ve yoğunluk. 100 = çok sakin, 0 = ana arter üzerinde. ' +
+                          'Bu bir kalite yargısı DEĞİL: kimi sakinlik ister, kimi hareket.',
+                      },
+                    },
+                    {
+                      name: 'merkezeYakinlik',
+                      type: 'number',
+                      label: 'Merkeze yakınlık',
+                      min: 0,
+                      max: 100,
+                      admin: {
+                        width: '50%',
+                        description:
+                          'Çorlu merkezine ve çarşıya yakınlık. 100 = merkezde. ' +
+                          'Sakinlikle genellikle ters çalışır; ikisini birlikte düşünün.',
+                      },
+                    },
+                  ],
+                },
+                {
+                  name: 'profilNotu',
+                  type: 'textarea',
+                  label: 'Profil notu',
+                  admin: {
+                    description:
+                      'Bu puanları neye göre verdiğinizi yazın. Bir ziyaretçi "neden bu mahalle ' +
+                      'önerildi?" diye sorduğunda cevabınız hazır olsun.',
+                  },
+                },
+              ],
+            },
+          ],
+        },
       ],
     },
   ],
