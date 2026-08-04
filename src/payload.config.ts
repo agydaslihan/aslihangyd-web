@@ -8,6 +8,7 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { Degerlemeler } from '@/collections/Degerlemeler'
+import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
 import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
 import { Kullanicilar } from '@/collections/Kullanicilar'
@@ -17,6 +18,7 @@ import { Sayfalar } from '@/collections/Sayfalar'
 import { Talepler } from '@/collections/Talepler'
 import { VergiParametreleri } from '@/collections/VergiParametreleri'
 import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
+import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -44,13 +46,14 @@ export default buildConfig({
     IlgiNoktalari,
     Talepler,
     Degerlemeler,
+    Gozlemler,
     VergiParametreleri,
     Sayfalar,
     Medya,
     Kullanicilar,
   ],
 
-  globals: [KurumsalBilgiler, DegerlemeAyarlari],
+  globals: [KurumsalBilgiler, DegerlemeAyarlari, EndeksAyarlari],
 
   editor: lexicalEditor(),
 

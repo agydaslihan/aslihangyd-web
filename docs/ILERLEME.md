@@ -20,7 +20,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 1.10 | SEO, CI/CD, yedekleme, dokümantasyon | ✅ |
 | 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
-| 2C | Gözlem girişi ve endeks altyapısı | ⏳ |
+| 2C | Gözlem girişi ve endeks altyapısı | ✅ (sayfa kapalı — tasarım gereği) |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
 | 4 | Yatırım skoru, AI arama, raporlar | ⏳ |
 | 5 | Çorlu Live | ⏭️ atlandı |
@@ -368,6 +368,64 @@ olarak bırakıldı:
 | Sosyal medya materyal üretimi | Yapılmadı | Görsel şablon kararları marka kimliği netleşince |
 
 Bunlar `docs/SENDEN-BEKLENENLER.md` üzerinden takip ediliyor.
+
+---
+
+## Faz 2C — Endeks altyapısı
+
+### Ne yapıldı
+
+- `src/lib/endeks/motor.ts` — tabakalı medyan, sabit ağırlıklı endeks motoru
+- `src/lib/endeks/kalite.ts` — veri kalitesi korumaları
+- `Gozlemler` koleksiyonu + `EndeksAyarlari` global
+- `/endeks` sayfası — **kapalı**, yayın kapısı koda gömülü
+- `/endeks-metodolojisi` — yayında
+- 51 test
+
+### Kararlar ve gerekçeleri
+
+**Yayın kapısı iki taraflı.** Aslıhan'ın onay kutusu **tek başına yetmez**;
+sistem ayrıca veri koşullarını kontrol eder (≥6 ay, ≥500 gözlem, %70 ağırlık
+kapsamı, metodoloji yayında). Koşullar sağlanmazsa sayfa 404 döner. Bu,
+"bir ay erken açalım" cazibesine karşı duran tek şey.
+
+**`/endeks` site haritasında YOK.** Sayfa 404 dönerken site haritasına
+koymak, arama motoruna ölü bağlantı vermek olurdu. Endeks yayına alındığında
+eklenecek.
+
+**Medyan, ortalama değil.** Test bunu gösteriyor: tek bir 71.000 TL/m²
+gözlemi ortalamayı 3.000 TL kaydırıyor, medyanı 300 TL.
+
+**Sabit ağırlık, bileşim yanlılığını öldüren adım.** Bir test tam da bunu
+sınıyor: gözlem dağılımı köklü biçimde değişiyor ama fiyatlar sabit —
+endeks kıpırdamıyor.
+
+**Eşik altında uydurma yok.** Katmanda 8'den az gözlem varsa önceki ayın
+değeri taşınıyor ve bu tabloda **açıkça işaretleniyor.**
+
+**İstenen ve gerçekleşen fiyat asla karışmıyor.** İki ayrı seri; endeksin
+adında "İstenen Fiyat" geçiyor ve sayfada bu bir uyarı kutusuyla
+vurgulanıyor.
+
+**Ağırlıklara başlangıç değeri konulmadı.** Ağırlıklar konut stokunu temsil
+etmeli, gözlem sayısını değil — bu Aslıhan'ın saha bilgisi.
+
+**Kalite korumaları UYARIR, ENGELLEMEZ.** Bir gözlemi "aykırı" diye
+reddetmek, veriyi kendi beklentimize göre budamak olurdu — endeksin
+bozulmasının en sinsi yolu. Sistem soruyu sorar, kararı insan verir.
+
+**Gözlemler koleksiyonu ziyaretçiye tamamen kapalı.** Tek tek kayıtlar asla
+yayınlanmaz; yalnızca toplulaştırılmış göstergeler.
+
+### Faz 2C'de yapılmayanlar
+
+| Konu | Durum | Not |
+| --- | --- | --- |
+| Hızlı Gözlem Girişi ekranı | Yapılmadı | Payload admin formu şu an çalışıyor ve m² fiyatını otomatik hesaplıyor. Özel ekran (15 sn/kayıt hedefi, "son seçilen değerde kalma") bir optimizasyon — gerçek kullanım alışkanlığı görülmeden tasarlamak erken. |
+| CSV içe aktarma | Yapılmadı | Aslıhan'ın mevcut Excel/Sheets sütun düzeni bilinmeden yazmak, iki kez yazmak demek |
+| Reel endeks (TÜFE) arayüzü | Motor hazır, arayüz yok | `reelEndeksHesapla` yazıldı ve test edildi; TÜFE serisi girişi henüz yok |
+| Kira çarpanı serisi arayüzü | Motor hazır, arayüz yok | `kiraCarpaniSerisi` yazıldı ve test edildi |
+| Aylık onay akışı | Yapılmadı | "Sistem hesaplar, Aslıhan onaylar" akışı; endeks yayına yaklaşınca anlamlı olacak |
 
 ---
 
