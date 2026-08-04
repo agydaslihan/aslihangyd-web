@@ -47,6 +47,8 @@ export const ANA_GEZINME: readonly GezinmeOgesi[] = [
   { ad: 'Değerleme', adres: '/degerleme', hazir: true, ustMenude: true },
   { ad: 'Araçlar', adres: '/araclar', hazir: true, ustMenude: true },
   { ad: 'İletişim', adres: '/iletisim', hazir: true, ustMenude: true },
+  { ad: 'Mahalle Testi', adres: '/mahalle-testi', hazir: true },
+  { ad: 'Bölge Radarı', adres: '/bolge-radari', hazir: true },
   { ad: 'Gizli Portföy', adres: '/gizli-portfoy', hazir: true },
   { ad: 'Harita', adres: '/harita', hazir: true },
   { ad: 'Ticari', adres: '/ticari', hazir: true },

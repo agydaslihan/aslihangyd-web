@@ -60,6 +60,22 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 - [ ] **Hakkımızda metni ve fotoğraf**
       Nereye: Payload admin → Sayfalar → Hakkımızda
 
+- [ ] **Mahalle Eşleştirme profili — her mahalle için 4 puan (0–100)**
+      Nereye: Payload admin → Mahalleler → [mahalle] → Eşleştirme profili
+      Alanlar: toplu taşıma, okul erişimi, sakinlik, merkeze yakınlık
+      Olmazsa: `/mahalle-testi` o mahalle için uyum yüzdesi üretmez.
+      ⚠️ Bu puanları ben dolduramam: "Şeyhsinan ne kadar sakindir?"
+      sorusunun cevabı orayı bilen birinin bilgisidir. Testte kullanılan
+      diğer dört ölçüt (yatırım potansiyeli, sanayi yakınlığı, ulaşım,
+      sosyal donatı) yatırım skorundan otomatik okunuyor.
+
+      **Sakinlik bir kalite yargısı DEĞİL:** kimi sakinlik ister, kimi
+      hareket. 100 = çok sakin, 0 = ana arter üzerinde. Merkeze yakınlıkla
+      genellikle ters çalışır; ikisini birlikte düşün.
+
+      Puanları neye göre verdiğini "Profil notu" alanına yaz — bir ziyaretçi
+      "neden bu mahalle önerildi?" diye sorduğunda cevabın hazır olsun.
+
 ## Sonra (fazlar geldiğinde gerekecek)
 
 - [ ] **MapTiler API anahtarı** (Faz 2)
@@ -162,17 +178,35 @@ Katsayılar çarpımsal: `1,00` etkisiz, `1,05` %5 artırır, `0,90` %10 düşü
 **Ayrıca:** Mahalle rakamları (ortalama m² satış + gözlem sayısı) girilmeden
 değerleme aracı hiçbir mahalle için sonuç üretemez. Bu, bilinçli bir kapı.
 
-### 4. Faz 2B'de yapılmayan modüller — ne istiyorsun?
+### 4. ✅ Cevaplandı — kalan bal küpü modülleri yapıldı
 
-`docs/BAL-KUPU-VE-PORTFOY-YONETIMI.md` şartnamesi **B3 modülünün ortasında
-kesiliyor.** B4 ve sonrası (Yatırım Simülatörü, Kira mı Satın Alma mı,
-Bölge Radarı) hiç yazılmamış.
+Talimatın üzerine dördü de yazıldı: Mahalle Eşleştirme Testi, Yatırım
+Simülatörü, Kira mı Satın Alma mı, Bölge Radarı. PDF rapor da eklendi.
+Ayrıntı `docs/ILERLEME.md` → "Faz 2B+".
 
-Yaptıklarım: B1 (Anlık Değerleme), B2 (Gizli Portföy), lead skorlama.
+**Geriye kalan üç modül** hâlâ bekliyor ve öncelik sıranı istiyorum:
 
-**Senden istediğim:** Yapılmayanlar arasında öncelik sıran ne? Şartname
-yazmana gerek yok, bir cümle yeter — tasarımı ben yaparım. Liste
-`docs/ILERLEME.md` içinde "Faz 2B'de YAPILMAYANLAR" başlığı altında.
+| Modül | Neden yapılmadı |
+| --- | --- |
+| CRM eşleştirme motoru | Portföy–talep eşleştirmesi anlamlı miktarda veri gerektiriyor; şu an eşleştirilecek yeterli kayıt yok |
+| Portföy giriş sihirbazı | Payload admin şu an yeterli; sihirbaz bir hız optimizasyonu |
+| Sosyal medya materyal üretimi | Görsel şablon kararları marka kimliği netleşince anlamlı |
+
+Bir cümle yeter — tasarımı ben yaparım.
+
+### 4b. Derleme süresi eşiği aşıldı — karar gerekiyor
+
+Derleme süresi **87 sn → 107 sn** çıktı; kendi koyduğumuz 90 sn eşiği aşıldı.
+
+**Sebep bağımlılık değil** — bu fazda hiçbir paket eklenmedi. Artış 8 yeni
+sayfadan geliyor, rota başına ~2,5 sn. Yani orantılı ve beklenen bir artış.
+
+**Seçenekler:**
+1. Eşiği 120 sn'ye çek (bence doğrusu bu — site büyüdükçe derleme uzar)
+2. CI'da derleme önbelleği kur (biraz iş, süreyi tekrar aşağı çeker)
+3. Şimdilik yoksay
+
+Karar senin; bunlardan biri olmadan eşik anlamsız bir uyarı olarak kalır.
 
 ### 5. Endeks sepet ağırlıkları — senin saha bilgin gerekiyor
 

@@ -20,9 +20,10 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 1.10 | SEO, CI/CD, yedekleme, dokümantasyon | ✅ |
 | 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
+| 2B+ | Kalan bal küpü modülleri + raporlar | ✅ 4 modül + PDF rapor — bkz. aşağısı |
 | 2C | Gözlem girişi ve endeks altyapısı | ✅ (sayfa kapalı — tasarım gereği) |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
-| 4 | Yatırım skoru, AI arama, raporlar | 🟡 Skor tamam; AI arama ve raporlar yapılmadı |
+| 4 | Yatırım skoru, AI arama, raporlar | 🟡 Skor + raporlar tamam; AI arama yapılmadı |
 | 5 | Çorlu Live | ⏭️ atlandı |
 
 ---
@@ -358,16 +359,145 @@ olarak bırakıldı:
 
 | Modül | Durum | Neden |
 | --- | --- | --- |
-| B3 — Mahalle Eşleştirme Testi | Yapılmadı | Şartname yarım; eşleştirme algoritmasının kriter ağırlıkları Aslıhan'ın saha bilgisini gerektiriyor |
-| Yatırım Simülatörü | Yapılmadı | Şartnamesi yok |
-| Kira mı Satın Alma mı | Yapılmadı | Şartnamesi yok |
-| Bölge Radarı | Yapılmadı | Şartnamesi yok |
-| Kişiye özel PDF rapor | Yapılmadı | PDF üretimi ağır bağımlılık (~2 MB); 3.2 GB RAM'de değerlendirilmeli |
+| B3 — Mahalle Eşleştirme Testi | ✅ Faz 2B+ | — |
+| Yatırım Simülatörü | ✅ Faz 2B+ | — |
+| Kira mı Satın Alma mı | ✅ Faz 2B+ | — |
+| Bölge Radarı | ✅ Faz 2B+ | — |
+| Kişiye özel PDF rapor | ✅ Faz 2B+ | Bağımlılıksız yazdırma yoluyla; gerekçe aşağıda |
 | CRM eşleştirme motoru | Yapılmadı | Portföy–talep eşleştirmesi anlamlı miktarda veri gerektiriyor |
 | Portföy giriş sihirbazı | Yapılmadı | Payload admin şu an yeterli; sihirbaz optimizasyondur |
 | Sosyal medya materyal üretimi | Yapılmadı | Görsel şablon kararları marka kimliği netleşince |
 
-Bunlar `docs/SENDEN-BEKLENENLER.md` üzerinden takip ediliyor.
+Kalan üçü `docs/SENDEN-BEKLENENLER.md` üzerinden takip ediliyor.
+
+---
+
+## Faz 2B+ — Kalan bal küpü modülleri ve raporlar
+
+### Ne yapıldı
+
+- **Kira mı Satın Alma mı** (`src/lib/hesaplayicilar/kiraMiSatinAlmaMi.ts`)
+  + `/araclar/kira-mi-satin-alma-mi`. 23 test.
+- **Yatırım Simülatörü** (`src/lib/hesaplayicilar/yatirimSimulatoru.ts`)
+  + `/araclar/yatirim-simulatoru`. 26 test.
+- **B3 — Mahalle Eşleştirme Testi** (`src/lib/eslestirme/`) + `/mahalle-testi`
+  + `/mahalle-eslestirme-metodolojisi` + `Mahalleler.eslestirmeProfili`
+  (4 yeni CMS alanı, migration `20260804_091230`). 26 test.
+- **Bölge Radarı** (`src/lib/radar/motor.ts`) + `/bolge-radari`. 23 test.
+- **PDF rapor** — `/rapor/degerleme`, `/rapor/yatirim-simulatoru`,
+  `/rapor/kira-mi-satin-alma-mi` + `RaporKabugu` + yazdırma stilleri.
+- `anuiteTaksiti` `kredi.ts`'e çıkarıldı — üç modül aynı formülü kullanıyordu.
+
+Toplam **98 yeni test**; süit 366 → 464 (21 dosya).
+
+### Kararlar ve gerekçeleri
+
+**Kira/satın alma karşılaştırması aylık ödemeyi değil NET VARLIĞI kıyaslıyor.**
+Aracın en kolay yanlış yapılan hâli taksiti kirayla yan yana koymaktır; o
+karşılaştırma ya peşinatın alternatif getirisini ya kiracının biriktirdiği
+parayı görmez. Her ay **az ödeyen taraf farkı yatırır** — bu adım atlanırsa
+"kiralamak ucuz" derken kiracının o parayı harcadığı varsayılmış olur.
+
+**Başabaş değer artışı eşiği.** Aracın en değerli çıktısı bu: satın almanın
+kiralamayı geçmesi için gereken yıllık değer artışı. Kullanıcının tahmin
+etmesine gerek bırakmıyor, kendi beklentisiyle kıyaslayacağı bir eşik
+veriyor. İkiye bölme ile bulunuyor; testi doğrudan tanımı sınıyor.
+
+**Büyüme varsayımlarına yer tutucu KONULMADI.** Değer artışı, kira artışı ve
+alternatif getiri alanları boş açılıyor. Yer tutucu, kullanıcının çoğu zaman
+doğrudan kabul ettiği bir öneridir; oraya rakam yazmak tahminimizi veri
+kılığında sunmak olurdu (kural 2).
+
+**Simülatörde getiri ölçüsü İVO (iç verim oranı).** Kaldıraçlı ve ara nakit
+akışlı bir yatırımda anlamlı tek ölçü budur. "Toplam getiri %180" cümlesi
+bunun 3 yılda mı 15 yılda mı elde edildiğini gizler.
+
+**Reel getiri Fisher denklemiyle.** `(1+n)/(1+e)−1`. Nominalden enflasyonu
+çıkarmak yüksek enflasyonda ciddi biçimde yanıltır; test bunu ayrıca sınıyor.
+
+**Vergi dilimi kayması düzeltiliyor.** Bugünün dilimlerini 10 yıl sonrasının
+nominal kirasına uygulamak vergiyi sistematik olarak şişirir — dilimler her
+yıl yeniden belirlenir. Enflasyon girildiğinde kira bugünkü paraya indirgenip
+vergi öyle hesaplanıyor. Enflasyon girilmezse düzeltme yapılamıyor ve bu
+uyarı olarak bildiriliyor.
+
+**Vergi parametresi yoksa simülasyon DURMUYOR**, ama sonuç açıkça "vergi
+öncesi" etiketleniyor. Vergiyi uydurmaktansa göstermemek ve bunu söylemek
+doğru.
+
+**Eşleştirmede ağırlıklar KODDA, mahalle öznitelikleri CMS'TE.** Yatırım
+skorundaki ayrımın aynısı: "çocuklu hane için okul erişimi ne kadar önemli?"
+bir ölçüm değil, aracın ilan ettiği metodolojidir ve yayınlanır.
+"Şeyhsinan ne kadar sakindir?" ise orayı bilen birinin bilgisidir — CMS'e
+girilir, başlangıç değeri konulmaz.
+
+**Eşleştirme portföyden TAMAMEN bağımsız.** Bir mahallede kaç ilanımız olduğu
+hesaba hiç girmiyor ve bu metodoloji sayfasında açıkça yazılı. Test elimizdeki
+evi satmanın yolu olsaydı, ilk yanlış öneride hem müşteriyi hem itibarı
+kaybederdik.
+
+**Bütçe mutlak eşikle değil, karşılaştırmalı puanlanıyor.** "70 m² altı
+yetersizdir" demek bizim uydurduğumuz bir yaşam standardını dayatmak olurdu.
+Bütçeyle en çok m² alınan mahalle 100 puan; kullanılan tek veri gerçek m²
+fiyatları.
+
+**Zaman ufku eşleştirmeyi ETKİLEMİYOR.** Aceleci olana farklı mahalle önermek,
+aceleye getirmenin örtülü bir yolu olurdu. Cevap yalnızca sonuç ekranındaki
+yönlendirmeyi değiştiriyor.
+
+**Radar YENİ BİR SKOR ÜRETMİYOR.** İkinci bir puan icat etmek, Yatırım
+Skoruyla çeliştiğinde hangisine inanılacağı sorusunu doğurur ve ikisini de
+değersizleştirir. Radar bunun yerine **sinyal** üretiyor: rakamıyla birlikte
+gösterilen, veriye dayanan tek cümlelik gözlemler.
+
+**Radarda mutlak eşik yok.** Her sinyal, verisi olan mahallelerin MEDYANINA
+göre hesaplanıyor — ölçüt Çorlu'nun kendisi. Medyan tercihi ortalamaya karşı
+bilinçli; test tek bir aykırı değerin medyanı kıpırdatmadığını gösteriyor.
+
+**Radar veri zayıflığını GİZLEMİYOR, sinyal olarak gösteriyor.** Bir mahallenin
+gözlem sayısı endeksin yayınlanmış katman eşiğinin (8) altındaysa bunu açıkça
+söylüyor. Eşik uydurulmadı; endeks metodolojisindeki sayıyla aynı.
+
+### PDF: neden kütüphane kullanılmadı
+
+Ölçüldü:
+
+| Aday | Disk | Türkçe |
+| --- | --- | --- |
+| `pdf-lib` | 23 MB | ❌ `WinAnsi cannot encode "ğ"` |
+| `@react-pdf/renderer` | 71 paket / 56 MB | Font kaydı gerektirir |
+
+`pdf-lib`'in standart fontları WinAnsi kodlamalıdır ve Türkçe karakterleri
+**kodlayamaz** — doğrulandı, hata mesajı yukarıda. Çalışması için `fontkit`
++ depoya gömülü ~700 KB'lık bir TTF gerekiyor. Kullanıcıya görünen her şeyin
+Türkçe olduğu bir projede bu, kütüphanenin en temel işini yapamaması demek.
+Üstelik `pdf-lib`'in düzen motoru yok; her tablo elle koordinatlanacaktı.
+
+Bunun yerine **yazdırma yolu** seçildi: rapor sayfası + `@media print` +
+tarayıcının "PDF olarak kaydet" seçeneği. Kullanıcının eline geçen çıktı
+gerçek bir PDF dosyasıdır, Türkçe sistem fontlarıyla kusursuz çıkar, **sıfır
+bağımlılık** ekler ve derleme süresini artırmaz.
+
+**Rapor URL'sinde SONUÇ değil GİRDİ taşınıyor** ve sunucuda aynı motorlarla
+yeniden hesaplanıyor. İstemcinin hesapladığı rakamı URL'den alıp rapora
+basmak, adres çubuğunu düzenleyen herkese "aslihangyd.com raporu" görünümlü
+uydurma bir belge üretme imkânı verirdi. Değerlemede taban m² fiyatı da
+URL'den değil mahalle kaydından okunuyor.
+
+Raporlar `robots: noindex` — kişiye özel girdilerle üretiliyorlar.
+
+**Rapor bal küpü kuralına tabi (6b):** raporu açmak ve PDF olarak kaydetmek
+için iletişim bilgisi istenmiyor. İletişim yalnızca *yerinde* değerleme için.
+
+### ⚠️ Derleme süresi eşiği aşıldı
+
+**87 sn → 107 sn.** `docs/ILERLEME.md`'deki 90 sn eşiği aşıldı.
+
+Sebep bağımlılık DEĞİL — bu fazda hiçbir paket eklenmedi. Artış 8 yeni
+rotadan ve ~4.000 satır koddan geliyor; rota başına ~2,5 sn, orantılı.
+
+Karar gerektiren bir konu: eşik 120 sn'ye çekilebilir ya da CI'da derleme
+önbelleği devreye alınabilir. Şimdilik yalnızca kaydedildi.
 
 ---
 
@@ -537,13 +667,15 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 | --- | --- | --- |
 | **Tüm sayfalar dinamik render** | TTFB ve önbellek | Layout, çerez onayını okumak için `cookies()` çağırıyor; bu bütün rotaları dinamik yapıyor. Bilinçli takas — yasal güvence performanstan önce. Çözüm adayı: PPR / `cacheComponents` olgunlaştığında dinamik parçaları `Suspense` içine almak. |
 | Lighthouse eşikleri engelleyici değil | Regresyon kaçabilir | Gerçek içerik gelince zorunlu yapılacak |
-| Derleme 87 sn | Sınıra yakın | 90 sn eşiği aşılırsa araştır |
+| **Derleme 107 sn** | Eşik aşıldı | 90 sn eşiği aşıldı. Sebep bağımlılık değil, 8 yeni rota (~2,5 sn/rota). Eşiği 120 sn'ye çekmek veya CI derleme önbelleği — karar bekliyor. |
 | SMTP yok | Lead bildirimi gitmiyor | Kayıt düşüyor, e-posta gitmiyor. Bilgi bekleniyor. |
 | E-posta bildirimi kodu yok | — | SMTP bilgileri gelince `yetkisiBitecekleriBildir` görevine eklenecek |
 | `sharp` 0.34'e sabit | — | Payload sürüm yükseltmesinde 0.35 tekrar denenebilir |
 | PostGIS `tiger`/`topology` şemaları | Disk | Düşük öncelik |
-| Rol tabanlı yetkilendirme | — | `Kullanicilar.rol` alanı var ama henüz erişim kurallarına bağlı değil; Faz 2B (CRM) |
-| Gizli portföy modülü | — | `gizliPortfoy` alanı ve liste filtresi hazır; kilitli görünüm Faz 2B |
+| Rol tabanlı yetkilendirme | — | `Kullanicilar.rol` alanı var ama henüz erişim kurallarına bağlı değil; CRM fazında |
+| Gizli portföy modülü | ✅ | Faz 2B'de tamamlandı |
+| Eşleştirme profili boş | Test sonuç üretmez | `Mahalleler → Eşleştirme profili` 4 alan doldurulmalı; SENDEN-BEKLENENLER md. 8 |
+| Radar en az 4 mahalle ister | Sayfa boş durum gösterir | Verisi olan mahalle sayısı 4'e ulaşınca kendiliğinden açılır |
 
 ---
 

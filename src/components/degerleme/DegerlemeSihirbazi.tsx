@@ -17,6 +17,7 @@ import {
   type DegerlemeKatsayilari,
   type KatTipi,
 } from '@/lib/degerleme/motor'
+import { raporAdresi } from '@/lib/rapor/parametreler'
 import { sinif } from '@/lib/sinif'
 
 /**
@@ -125,7 +126,18 @@ export function DegerlemeSihirbazi({
 
       <div>
         {sonuc.durum === 'hesaplandi' ? (
-          <SonucEkrani sonuc={sonuc.veri} mahalle={secilenMahalle} whatsapp={whatsapp} />
+          <SonucEkrani
+            sonuc={sonuc.veri}
+            mahalle={secilenMahalle}
+            whatsapp={whatsapp}
+            raporBaglantisi={raporAdresi('/rapor/degerleme', {
+              mahalle: mahalleSlug,
+              m2: sayiyaCevir(m2),
+              kat: kat || null,
+              yas: sayiyaCevir(binaYasi),
+              durum: durum || null,
+            })}
+          />
         ) : (
           <BeklemeEkrani
             sebep={sonuc.sebep}
@@ -142,10 +154,12 @@ function SonucEkrani({
   sonuc,
   mahalle,
   whatsapp,
+  raporBaglantisi,
 }: {
   sonuc: Extract<ReturnType<typeof degerlemeYap>, { durum: 'hesaplandi' }>['veri']
   mahalle: MahalleSecenegi | null
   whatsapp: string | null
+  raporBaglantisi: string
 }) {
   const guvenTonlari = {
     yuksek: 'artis',
@@ -237,6 +251,12 @@ function SonucEkrani({
         </p>
 
         <div className="mt-4 flex flex-col gap-2 sm:flex-row">
+          {/* ⚠️ Rapor iletişim bilgisinin ARKASINDA DEĞİL (CLAUDE.md 6b):
+              ziyaretçi hiçbir şey vermeden raporu açıp PDF olarak kaydedebilir.
+              İletişim yalnızca YERİNDE değerleme için isteniyor. */}
+          <Buton href={raporBaglantisi} gorunum="ikincil">
+            Ayrıntılı raporu aç
+          </Buton>
           <Buton href={`/iletisim?tip=degerleme${mahalle ? `&mahalle=${mahalle.slug}` : ''}`}>
             Gerçek değerleme isteyin
             <OkIkon width={16} height={16} />

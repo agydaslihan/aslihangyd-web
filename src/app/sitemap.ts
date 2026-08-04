@@ -30,6 +30,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // Değerleme, satıcı tarafını getiren sayfa — portföy motorunun kendisi.
     { url: mutlakAdres('/degerleme'), changeFrequency: 'monthly', priority: 0.9 },
     { url: mutlakAdres('/gizli-portfoy'), changeFrequency: 'daily', priority: 0.7 },
+    // Eşleştirme testi, form türleri arasında en yüksek tamamlanma oranına
+    // sahip yapı; mahalle sayfalarına da doğal giriş kapısı.
+    { url: mutlakAdres('/mahalle-testi'), changeFrequency: 'monthly', priority: 0.8 },
+    // Radar mahalle verisinden türer; veri değiştikçe içeriği değişir.
+    { url: mutlakAdres('/bolge-radari'), changeFrequency: 'weekly', priority: 0.7 },
     { url: mutlakAdres('/harita'), changeFrequency: 'weekly', priority: 0.6 },
     // Hesaplayıcılar arama trafiğinin önemli bir kaynağı: "kira getirisi
     // hesaplama", "tapu harcı ne kadar" gibi sorgular yüksek hacimli.
@@ -47,6 +52,11 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     // indekslenmeleri hem SEO hem itibar açısından değerli.
     {
       url: mutlakAdres('/yatirim-skoru-metodolojisi'),
+      changeFrequency: 'yearly',
+      priority: 0.4,
+    },
+    {
+      url: mutlakAdres('/mahalle-eslestirme-metodolojisi'),
       changeFrequency: 'yearly',
       priority: 0.4,
     },
