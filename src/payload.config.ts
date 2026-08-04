@@ -8,6 +8,7 @@ import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
 import { Degerlemeler } from '@/collections/Degerlemeler'
+import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
 import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
 import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
@@ -37,6 +38,29 @@ export default buildConfig({
     },
     meta: {
       titleSuffix: '— Aslıhan GYD Yönetim',
+    },
+
+    /**
+     * Portföy giriş sihirbazı — admin'in İÇİNDE, yanında.
+     *
+     * Ayrı bir sayfa yerine admin görünümü seçildi: oturum yönetimi
+     * Payload'ın kalır, ikinci bir kimlik doğrulama yolu açılmaz ve
+     * kullanıcı admin'den çıkmaz.
+     *
+     * ⚠️ Sihirbaz admin'in yerine geçmez. Kayıtları daima `taslak` olarak
+     * oluşturur; yayına alma, EİDS kapısının bulunduğu ilan sayfasında
+     * bilinçli bir eylem olarak kalır (CLAUDE.md kural 1).
+     */
+    components: {
+      views: {
+        portfoySihirbazi: {
+          Component: '@/components/sihirbaz/SihirbazGorunumu#default',
+          path: SIHIRBAZ_YOLU,
+        },
+      },
+      // Sihirbaz bir koleksiyon olmadığı için otomatik menüde görünmez;
+      // görünmeyen bir araç, olmayan bir araçtır.
+      afterNavLinks: ['@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi'],
     },
   },
 

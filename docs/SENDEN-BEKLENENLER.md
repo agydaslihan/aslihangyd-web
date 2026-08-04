@@ -188,13 +188,22 @@ Ayrıntı `docs/ILERLEME.md` → "Faz 2B+".
 
 | Sıra | Modül | Durum |
 | --- | --- | --- |
-| 1 | Portföy giriş sihirbazı | Sırada |
-| 2 | CRM eşleştirme motoru | Bekliyor |
+| 1 | Portföy giriş sihirbazı | ✅ Yapıldı — `/admin/portfoy-sihirbazi` |
+| 2 | CRM eşleştirme motoru | Sırada |
 | 3 | Sosyal medya materyal üretimi | Bekliyor |
 
 Gerekçen — *portföy giremeden CRM'in besleyeceği veri yok* — doğru ve sıralamayı
 tek başına haklı çıkarıyor. CRM'i önce yazsaydık, eşleştirecek kaydı olmayan
 boş bir ekran teslim etmiş olurduk.
+
+**Sihirbaz hazır.** Admin'e girdiğinde sol menüde *Portföy giriş sihirbazı*
+bağlantısını göreceksin. 5 adımda taşınmazı giriyor, **taslak** olarak
+kaydediyor. Fotoğraf, uzun açıklama ve yayına alma her zamanki gibi ilan
+sayfasında.
+
+En işine yarayacak kısım: sağdaki panel **yazarken** EİDS durumunu söylüyor —
+"bu ilan şu an yayınlanamaz, şunlar eksik". Admin'de bunu ancak "Yayında"
+demeyi deneyince öğreniyordun.
 
 ### 4b. ✅ Cevaplandı — derleme süresi
 

@@ -21,6 +21,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
 | 2B+ | Kalan bal küpü modülleri + raporlar | ✅ 4 modül + PDF rapor — bkz. aşağısı |
+| 2B++ | Portföy giriş sihirbazı | ✅ Admin'in yanında, EİDS canlı geri bildirimli |
 | 2C | Gözlem girişi ve endeks altyapısı | ✅ (sayfa kapalı — tasarım gereği) |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
 | 4 | Yatırım skoru, AI arama, raporlar | 🟡 Skor + raporlar tamam; AI arama yapılmadı |
@@ -364,7 +365,7 @@ olarak bırakıldı:
 | Kira mı Satın Alma mı | ✅ Faz 2B+ | — |
 | Bölge Radarı | ✅ Faz 2B+ | — |
 | Kişiye özel PDF rapor | ✅ Faz 2B+ | Bağımlılıksız yazdırma yoluyla; gerekçe aşağıda |
-| Portföy giriş sihirbazı | Sırada — **1.** | Aslıhan'ın belirlediği öncelik |
+| Portföy giriş sihirbazı | ✅ Faz 2B++ | — |
 | CRM eşleştirme motoru | Sırada — **2.** | Portföy giremeden CRM'in besleyeceği veri yok |
 | Sosyal medya materyal üretimi | Sırada — **3.** | Görsel şablon kararları marka kimliği netleşince |
 
@@ -568,6 +569,92 @@ bir şey yaptığı sanılan ölü adım, hiç adım olmamasından kötüdür.
 **Denenmeyen seçenek:** Turbopack'in deneysel kalıcı önbelleği. Deneysel bir
 derleyici bayrağı açmak yığın kararıdır (CLAUDE.md: "yığını değiştirmeden
 önce sor") ve derleme süresi zaten sorun olmadığı için gerekçesi yok.
+
+---
+
+## Faz 2B++ — Portföy giriş sihirbazı
+
+### Ne yapıldı
+
+- `src/lib/sihirbaz/sema.ts` — adım adım doğrulanabilir Zod şeması
+- `src/lib/sihirbaz/eylemler.ts` — Local API üzerinden taslak oluşturan
+  sunucu eylemi
+- `src/components/sihirbaz/` — 5 adımlı sihirbaz, canlı EİDS paneli,
+  gösterge önizlemesi, admin temasına uyan CSS
+- Payload admin görünümü: `/admin/portfoy-sihirbazi` + yan menü bağlantısı
+- 29 test (20 birim + 9 entegrasyon); süit 464 → 493
+
+### Kararlar ve gerekçeleri
+
+**Sihirbaz admin'in YANINDA duruyor, yerine geçmiyor** (Aslıhan'ın kararı).
+Payload'ın özel görünüm (custom view) mekanizması kullanıldı: oturum
+yönetimi Payload'ın kalıyor, ikinci bir kimlik doğrulama yolu açılmıyor ve
+kullanıcı admin'den çıkmıyor.
+
+**Sihirbazın varlık sebebi "admin çirkin" değil.** Üç somut sorunu çözüyor:
+1. *Sıra belirsizliği* — admin'de 6 sekme var, hangisinden başlanacağı belli
+   değil.
+2. *EİDS geri bildirimi geç geliyor* — admin'de eksik EİDS ancak "Yayında"
+   denemesinde, yani tüm veri girildikten sonra hata olarak çıkıyor. Sihirbaz
+   **her tuşta** değerlendiriyor.
+3. *Göstergeler kaydetmeden görünmüyor* — kira çarpanı ve brüt getiri admin'de
+   kayıt sonrası hesaplanıyor; yanlış girilen fiyat bir kayıt döngüsü sonra
+   fark ediliyor.
+
+**Kayıt DAİMA taslak; `durum` alanı şemada YOK.** İstemci gövdeye
+`durum: 'yayinda'` eklese bile o değer şemadan geçemiyor. Yayına alma, EİDS
+kapısının bulunduğu admin'de bilinçli bir eylem olarak kalıyor. Sihirbaza
+yayınlama yetkisi vermek, o kapının ikinci bir kopyasını doğururdu ve iki
+kopyanın er ya da geç ayrışması demekti (CLAUDE.md kural 1).
+
+**Yazma yolu `overrideAccess: false`.** Kancalar (`ilanGostergeleri`,
+`eidsYayinEngeli`) ve `access.create` aynen çalışıyor. Sihirbaz bir kestirme
+değil, aynı kapıdan geçen daha rahat bir yol.
+
+**EİDS paneli bir KAPI değil, AYNA.** Gerçek kapı sunucudaki hook. Panel
+aynı motoru (`eidsDegerlendir`) kullanıyor — kendi kural kopyasını taşısaydı
+gösterilenle uygulanan zamanla ayrışırdı. Panel hiçbir zaman "yayınlayın"
+düğmesi göstermiyor.
+
+**EİDS alanları taslak için zorunlu değil.** "Yetkiyi henüz almadım, önce
+taşınmazı sisteme gireyim" tamamen meşru bir akış; zorunlu kılmak onu
+imkânsızlaştırırdı. Bu gevşeklik yayın kapısını gevşetmiyor — entegrasyon
+testi bunu ayrıca kanıtlıyor.
+
+**Alan bileşenleri site tarafından yeniden KULLANILMADI.** Sitedeki
+`hesaplayici/Alanlar.tsx` Tailwind ile sitenin tasarım sistemine bağlı;
+sihirbaz admin'in içinde çalışıyor ve admin temasını (koyu/açık tema, renk
+değişkenleri) miras almalı. Site paletini admin'e taşımak, iki tasarım
+sisteminin ortasında kalan yamalı bir ekran üretirdi.
+
+**Yan menü bağlantısı sunucu bileşeni.** İstemci bileşeni olsaydı
+`useConfig` için `@payloadcms/ui` doğrudan bağımlılık olacaktı — tek bir menü
+bağlantısı uğruna admin arayüz kütüphanesini bağımlılık listesine almak
+taşınacak yükün karşılığını vermez. Bedeli: bağlantıda "etkin sayfa" vurgusu
+yok. Beş öğelik bir menüde bu kayıp, bir paket bağımlılığından ucuz.
+
+### ⚠️ Duman testinde bulunan ve kapatılan açık
+
+Derleme sonrası gerçek sunucuya karşı yapılan duman testinde şu bulundu:
+
+**Payload, oturumu olmayan ziyaretçiye giriş ekranını gösteriyor ama görünüm
+bileşeninin gövdesi yine de ÇALIŞIYOR.** Sonuç: mahalle listesi sorgusu
+oturumsuz istekte de koşuyor ve mahalle adları sunucu bileşeni yükünde
+dışarı sızıyordu.
+
+İki katmanlı bir sorundu:
+1. Görünüm oturumsuz da çalışıyordu.
+2. Local API'de `overrideAccess` varsayılanı **`true`**; yani sorgu erişim
+   kurallarını atlıyor ve **yayında olmayan** mahalleleri de döndürüyordu.
+
+Kapatılışı: görünümün başına `if (!req.user) return null` kapısı ve sorguya
+açık `overrideAccess: false` + `user`. İkisi de doğrulandı — oturumsuz
+yanıtta artık ne mahalle adı ne görünüm gövdesi var, oturumlu akış aynen
+çalışıyor.
+
+Sızan verinin (mahalle adları) zaten büyük ölçüde herkese açık olması bu
+açığı önemsiz kılmıyordu: görünüme ileride portföy veya müşteri verisi
+eklendiğinde aynı sızıntı sessizce ciddileşirdi.
 
 ---
 
