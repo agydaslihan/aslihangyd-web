@@ -22,7 +22,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
 | 2C | Gözlem girişi ve endeks altyapısı | ✅ (sayfa kapalı — tasarım gereği) |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
-| 4 | Yatırım skoru, AI arama, raporlar | ⏳ |
+| 4 | Yatırım skoru, AI arama, raporlar | 🟡 Skor tamam; AI arama ve raporlar yapılmadı |
 | 5 | Çorlu Live | ⏭️ atlandı |
 
 ---
@@ -429,6 +429,59 @@ yayınlanmaz; yalnızca toplulaştırılmış göstergeler.
 
 ---
 
+## Faz 4 — Yatırım Skoru (kısmi)
+
+### Ne yapıldı
+
+- `src/lib/skorlama/yatirimSkoru.ts` — altı bileşenli skor motoru + ham puan
+  üreticileri. 42 test.
+- `/yatirim-skoru-metodolojisi` — metodoloji sayfası
+- Radar grafiği + sayısal kırılım bileşenleri
+- `Mahalleler.yatirimSkoru` grubuna bileşen alanları; toplam kaydetme anında
+  otomatik hesaplanıyor
+
+### Kararlar ve gerekçeleri
+
+**Yetersiz veriyle skor üretilmiyor.** Bileşenlerin en az %70 ağırlığı
+dolu değilse skor hiç gösterilmez. Eksik bileşeni sıfır saymak mahalleyi
+haksız yere cezalandırır; ortalama saymak veriyi uydurmaktır. İkisi de
+yapılmıyor — bir test bunu koruyor.
+
+**Kırılım her zaman gösteriliyor.** Kara kutu puan yayınlanmıyor: altı
+bileşenin hepsi, ham puanları, ağırlıkları ve hangisinde veri olmadığı
+görünüyor.
+
+**Fiyat trendi göreli ölçülüyor.** Yüksek enflasyonda her mahallenin fiyatı
+yükselir; mutlak artışı puanlamak her mahalleye yüksek puan verir ve skor
+hiçbir şey ayırt etmez. Mahallenin değişimi Çorlu ortalamasıyla
+karşılaştırılıyor.
+
+**İki bileşen ters yönlü** ve bu hem kodda hem metodoloji sayfasında açıkça
+yazılı: düşük kira çarpanı yüksek puan alır, çok yeni arz düşük puan alır.
+
+**Radar tek başına bırakılmadı.** CLAUDE.md radar istiyor ve radar profili
+iyi okutur; ama alan yanılsaması nedeniyle kesin karşılaştırmaya elverişsiz.
+Bu yüzden hemen altında her bileşenin sayısal değeri çubuk + rakam olarak
+veriliyor. Şekil radardan, kesin okuma listeden gelir. SVG `aria-hidden`;
+anlam listede yaşıyor.
+
+**Grafik kütüphanesi kullanılmadı.** Altı köşeli bir çokgen 40 satır SVG;
+bir kütüphane ~50 kB gzip eklerdi.
+
+**Çubuklar tek renk.** Değere göre renklendirmek, çubuk uzunluğunu ikinci
+kez kodlamak olurdu.
+
+### ⚠️ Faz 4'te YAPILMAYANLAR
+
+| Konu | Neden |
+| --- | --- |
+| AI doğal dil arama | `ANTHROPIC_API_KEY` yok. Ayrıca anlamlı bir portföy olmadan test edilemez — 6 demo ilan üzerinde "3+1 bahçeli daire ara" demenin bir karşılığı yok. |
+| PostGIS yakınlık sorguları | Skorun `sanayiYakinligi` ve `ulasim` bileşenleri şu an elle giriliyor. Otomatik hesap için POI verisi ve mahalle sınırları gerekiyor; ikisi de henüz yok. |
+| Çeyreklik PDF rapor | PDF üretimi ağır bağımlılık; birlikte karar verilmeli |
+| PriceHistory grafikleri | Endeks motoru (Faz 2C) bu veriyi üretecek; grafik endeks yayına yaklaşınca anlamlı |
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)
@@ -496,29 +549,39 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 
 ## Sonraki adım
 
-**Faz 2B** — Bal küpü modülleri (anlık değerleme, gizli portföy, mahalle
-eşleştirme testi, yatırım simülatörü), CRM (eşleştirme motoru, lead hunisi,
-skorlama), portföy giriş sihirbazı, sosyal medya materyal üretimi.
-Şartname: `docs/BAL-KUPU-VE-PORTFOY-YONETIMI.md`
+Planlanan fazların tamamı işlendi (Faz 3 ve 5 talimat gereği atlandı).
+**Sıradaki iş artık koddan değil, veriden ve karardan geliyor.**
 
-⚠️ Şartname dosyası B3 modülünde (Mahalle Eşleştirme Testi) kesiliyor —
-B4 ve sonrası yazılmamış. Bu modüllerin tasarımını ben yapacağım; Aslıhan
-farklı bir şey bekliyorsa söylemeli.
+### Sistem hazır, veri bekliyor
 
-**Faz 2C** — Observations koleksiyonu, hızlı gözlem girişi, veri kalitesi
-korumaları, endeks motoru, CSV içe aktarma, `/endeks` (kapalı kalacak).
+Şu modüller yazıldı, test edildi ve çalışıyor — ama gerçek veri girilene
+kadar boş durum gösteriyorlar. Bu bir eksiklik değil, tasarım:
 
-**Faz 4** — Yatırım skoru motoru + metodoloji sayfası, radar grafik, AI
-doğal dil arama, lead skorlama.
+| Modül | Beklediği |
+| --- | --- |
+| 3 hesaplayıcı | Vergi/harç oranları (CMS) |
+| Değerleme aracı | Mahalle m² fiyatları + katsayılar |
+| Harita | MapTiler anahtarı + POI verisi |
+| Yatırım skoru | Bileşen puanları |
+| Endeks | 6 ay veri, 500 gözlem, sepet ağırlıkları |
+| Mahalle sayfaları | 800+ kelime analiz metni |
+| Hukuki sayfalar | Avukat metinleri |
 
-### Faz 2'den devreden eksikler
+Tamamı `docs/SENDEN-BEKLENENLER.md` içinde, nereye gireceği ve olmazsa ne
+olacağıyla birlikte.
 
-- **PostGIS yakınlık sorguları henüz yazılmadı.** POI koleksiyonu ve harita
-  hazır; "sanayiye 10 dakika" tipi mesafe hesapları için ham SQL sorguları
-  Faz 4'te yatırım skoru motoruyla birlikte gelecek — skorun `sanayiYakinligi`
-  ve `ulasim` bileşenleri aynı sorguları kullanacak, iki kez yazmanın anlamı
-  yok.
-- **Vergi parametreleri boş.** Beş hesaplayıcıdan üçü şu an "güncel oranlar
-  bekleniyor" durumunda. Bu, tasarlanmış davranış — bkz. SENDEN-BEKLENENLER.md.
-- **MapTiler anahtarı yok.** `/harita` sayfası çalışıyor ama harita yerine
-  boş durum + nokta listesi gösteriyor.
+### Kod tarafında sırada ne var
+
+Öncelik sırasıyla, ama hepsi **Aslıhan'ın kararına bağlı**:
+
+1. **Faz 2B'nin kalan modülleri** — mahalle eşleştirme testi, yatırım
+   simülatörü, kira mı satın alma mı, bölge radarı. Şartname yarım
+   kaldığı için öncelik sorusu SENDEN-BEKLENENLER.md madde 4'te.
+2. **PostGIS yakınlık sorguları** — skorun `sanayiYakinligi` ve `ulasim`
+   bileşenlerini otomatikleştirir. POI verisi girilince anlamlı olur.
+3. **CSV içe aktarma** — Aslıhan'ın mevcut tablo düzeni bilinince.
+4. **AI doğal dil arama** — API anahtarı + anlamlı portföy gerektirir.
+5. **PDF rapor üretimi** — bağımlılık maliyeti nedeniyle birlikte
+   kararlaştırılmalı.
+6. **Faz 3 (drone/360)** — medya ve CDN hesabı gelince; alanlar ve boş
+   durumlar bugünden hazır.

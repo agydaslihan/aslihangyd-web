@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { IlanKarti } from '@/components/ilan/IlanKarti'
+import { MahalleSkoru } from '@/components/skor/MahalleSkoru'
 import { YakindaBolumu } from '@/components/mahalle/YakindaBolumu'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
@@ -76,14 +77,28 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
           <div className="min-w-0 space-y-14">
             {/* 2 ── Yatırım skoru */}
             <section aria-labelledby="skor">
-              <h2 id="skor" className="mb-4 font-sans text-lg font-semibold">
-                Yatırım skoru
-              </h2>
-              <YakindaBolumu
-                oran="aspect-auto"
-                ikon={<GrafikIkon width={30} height={30} />}
-                baslik="Yatırım skoru ve radar grafiği hazırlanıyor"
-                aciklama="Skor altı bileşenden oluşacak: fiyat trendi, kira çarpanı, sanayi yakınlığı, ulaşım, sosyal donatı ve arz baskısı. Metodolojiyi yayınlamadan ve yeterli gözlem birikmeden puan göstermiyoruz."
+              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                <h2 id="skor" className="font-sans text-lg font-semibold">
+                  Yatırım skoru
+                </h2>
+                <Link
+                  href="/yatirim-skoru-metodolojisi"
+                  className="text-lacivert text-sm underline underline-offset-2"
+                >
+                  Nasıl hesaplanıyor?
+                </Link>
+              </div>
+
+              <MahalleSkoru
+                bilesenler={{
+                  fiyatTrendi: mahalle.yatirimSkoru?.fiyatTrendi ?? null,
+                  kiraCarpani: mahalle.yatirimSkoru?.kiraCarpaniPuani ?? null,
+                  sanayiYakinligi: mahalle.yatirimSkoru?.sanayiYakinligi ?? null,
+                  ulasim: mahalle.yatirimSkoru?.ulasim ?? null,
+                  sosyalDonati: mahalle.yatirimSkoru?.sosyalDonati ?? null,
+                  arzBaskisi: mahalle.yatirimSkoru?.arzBaskisi ?? null,
+                }}
+                hesaplanmaTarihi={tarihiYaz(mahalle.yatirimSkoru?.hesaplanmaTarihi)}
               />
             </section>
 

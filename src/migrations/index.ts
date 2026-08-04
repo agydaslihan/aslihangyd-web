@@ -3,6 +3,7 @@ import * as migration_20260804_055955_faz1_veri_modeli from './20260804_055955_f
 import * as migration_20260804_071058_faz2_vergi_ve_poi from './20260804_071058_faz2_vergi_ve_poi';
 import * as migration_20260804_074445_faz2b_degerleme from './20260804_074445_faz2b_degerleme';
 import * as migration_20260804_080414_faz2c_gozlemler from './20260804_080414_faz2c_gozlemler';
+import * as migration_20260804_082730_faz4_yatirim_skoru from './20260804_082730_faz4_yatirim_skoru';
 
 export const migrations = [
   {
@@ -28,6 +29,11 @@ export const migrations = [
   {
     up: migration_20260804_080414_faz2c_gozlemler.up,
     down: migration_20260804_080414_faz2c_gozlemler.down,
-    name: '20260804_080414_faz2c_gozlemler'
+    name: '20260804_080414_faz2c_gozlemler',
+  },
+  {
+    up: migration_20260804_082730_faz4_yatirim_skoru.up,
+    down: migration_20260804_082730_faz4_yatirim_skoru.down,
+    name: '20260804_082730_faz4_yatirim_skoru'
   },
 ];
