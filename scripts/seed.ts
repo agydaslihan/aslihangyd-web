@@ -73,8 +73,23 @@ const MAHALLELER = [
  * iş bir fonksiyonun içine saklanırsa modül anında "bitmiş" sayılır ve betik
  * hiçbir şey yazmadan, hata da vermeden sessizce sonlanır.
  */
-if (process.env.NODE_ENV === 'production') {
-  console.error('✗ Seed betiği üretim ortamında çalıştırılamaz.')
+/**
+ * ⚠️ YALNIZCA GELİŞTİRME. Beyaz liste, kara liste değil.
+ *
+ * Önceki sürüm yalnızca `NODE_ENV === 'production'` ise duruyordu.
+ * `NODE_ENV` tanımsızsa — ki kabuktan elle çalıştırırken en yaygın durum
+ * budur — betik çalışıyordu. Üretim veritabanına bağlı bir kabukta
+ * `pnpm seed` yazmak, siteye "[DEMO]" kayıtlar basmak demekti.
+ *
+ * Artık ortamın açıkça `development` olması gerekiyor.
+ */
+if (process.env.NODE_ENV !== 'development') {
+  console.error(
+    `✗ Seed betiği yalnızca NODE_ENV=development ile çalışır (şu an: ${
+      process.env.NODE_ENV ?? 'tanımsız'
+    }).`,
+  )
+  console.error('  Bilerek çalıştırıyorsan: NODE_ENV=development pnpm seed')
   process.exit(1)
 }
 
