@@ -1294,6 +1294,89 @@ regresyon testi eklenmesi. SENDEN-BEKLENENLER md. 7'ye eklendi.
 
 ---
 
+## Bakım cron kurulumu
+
+`BAKIM_ANAHTARI` sunucudaki `.env`'e eklendi; cron tarafı tamamlandı.
+
+### Ne yapıldı
+
+- `src/lib/bakim/gorevler.ts` — görev kaydı (`GOREV_KAYDI`): her görevin
+  anahtarı, sıklığı, **başarısızlık sonucu** ve yasal bayrağı. 7 birim testi.
+- `/api/bakim?gorev=…` — görevler tek tek çağrılabiliyor.
+- `scripts/bakim.sh` — cron çağırıcısı; anahtarı `.env`'den okur, anlamlı
+  çıkış kodu döner.
+- `docs/ISLETME-REHBERI.md §6` baştan yazıldı: görev tablosu, cron dosyası,
+  nöbetçi satırı, doğrulama adımları, arıza tablosu.
+
+### ⚠️ Belgedeki cron satırı ÇALIŞMIYORDU
+
+Önceki §6 şu satırı öneriyordu:
+
+```cron
+0 4 * * * deploy curl -H "Authorization: Bearer ${BAKIM_ANAHTARI}" https://…
+```
+
+`/etc/cron.d` dosyaları uygulamanın `.env`'ini okumaz. `${BAKIM_ANAHTARI}`
+boş genişler, uç 401 döner ve **hiçbir bakım görevi hiç çalışmaz.** Üstelik
+sessizce: `curl -fsS` çıktısını bir günlüğe yazıyordu, o günlüğü de kimse
+okumuyordu.
+
+Anahtarı cron dosyasının içine yazmak alternatif değildi — `/etc/cron.d`
+altındaki dosyalar herkes tarafından okunabilir. Çözüm `scripts/bakim.sh`:
+anahtarı `750` izinli bir betik `.env`'den okuyor.
+
+### Kararlar ve gerekçeleri
+
+**Üç ayrı cron satırı, tek çağrı değil — arıza yalıtımı.**
+KVKK silme görevi bozulsaydı uç her gece hata döner, cron her gece uyarı
+üretirdi. İşletmecinin en olası tepkisi cron satırını susturmaktır — ve
+yasal riski olan EİDS kontrolü onunla birlikte susardı. Ayrı satırlar
+bunu imkânsız kılıyor.
+
+**`CRON_TZ=Europe/Istanbul` zorunlu.**
+Sunucu UTC ise "03:10" saat 06:10 İstanbul demektir. Uygulamanın tarih
+mantığı zaten Europe/Istanbul'a sabitli (`src/lib/tarih.ts`); kayan tek
+şey cron'un saatiydi.
+
+**Betik `curl -f` kullanmıyor.**
+`-f` yanıt gövdesini atar; hangi görevin neden başarısız olduğunu söyleyen
+JSON kaybolur. Durum kodu ayrıca okunuyor.
+
+**"Çalışmazsa ne olur" metni koda taşındı.**
+`GOREV_KAYDI` içindeki `calismazsaSonuc` alanı zorunlu ve bir test
+uzunluğunu denetliyor. Belgeye kopyalanan bir cümle güncellenmeyi
+unutturur; kaynağı kodda olan cümle, görevi değiştiren kişiyi sonucunu da
+güncellemeye zorlar.
+
+**Nöbetçi cron satırı eklendi.**
+Sessiz aksama bu işin en tehlikeli hali. Her sabah 09:00'da günlükte o
+güne ait `TAMAM (eids-kaldir)` satırı aranıyor; yoksa günlüğe `UYARI`
+yazılıyor. Dört senaryoda denendi: bugünkü satır var / yalnızca dünkü var
+/ hata satırı var ama TAMAM yok / başka görevin TAMAM'ı var.
+
+### Doğrulama (üretim derlemesi, canlı sunucu)
+
+| Senaryo | Sonuç |
+| --- | --- |
+| Anahtarsız istek | 401 |
+| Yanlış anahtar | 401 |
+| Geçersiz görev adı | 400 + geçerli görev listesi |
+| `?gorev=eids-kaldir` · `eids-uyar` · `kvkk-sil` | 200, tek tek |
+| Tüm görevler | 200 |
+| `bakim.sh` başarı | çıkış 0 |
+| `bakim.sh` yanlış anahtar | çıkış 1 + açıklama |
+| `bakim.sh` anahtar boş | çıkış 1 + "hiçbir görev çalışmaz" uyarısı |
+| `bakim.sh` uca ulaşılamıyor | çıkış 3 |
+| `bakim.sh` geçersiz görev | çıkış 2 |
+
+⚠️ **Denenemeyen tek yol:** `BAKIM_ANAHTARI` sunucuda hiç tanımlı değilken
+ucun 404 dönmesi. `.env` artık anahtarı içerdiği için Next onu her koşulda
+okuyor ve kabuktan `env -u` ile gizlemek işe yaramıyor. Bu, kodda üç
+satırlık bir dal (`if (!anahtar) return 404`) ve `.env`'den okumanın
+çalıştığı bu koşuda zaten kanıtlandı.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

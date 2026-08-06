@@ -136,31 +136,194 @@ docker exec -it aslihangyd-postgres psql -U <kullanici> -d <veritabani>
 
 ---
 
-## 6. Günlük bakım görevi ⚠️ ZORUNLU
+## 6. Bakım görevleri (cron) ⚠️ ZORUNLU
 
-Yetkisi dolan ilanları yayından kaldırır ve saklama süresi dolan kişisel
-verileri siler. **Bu görev çalışmazsa yasal uyum bozulur.**
+Üç görev var. **İkisi yasal yükümlülük**, biri ticari. Çalışmazlarsa
+kimse fark etmez — sessiz aksama bu işin en tehlikeli hali.
 
-`.env` dosyasına rastgele bir anahtar koyun:
+### 6.1 Görevler
+
+| Anahtar | Ne yapar | Sıklık | Yasal? |
+| --- | --- | --- | --- |
+| `eids-kaldir` | Yetki belgesi süresi dolmuş yayındaki ilanları `yetki_bitti` durumuna çeker | **Her gün 03:10** | ✅ evet |
+| `kvkk-sil` | Saklama süresi dolmuş talep ve danışman başvurularını siler | **Her gün 03:40** | ✅ evet |
+| `eids-uyar` | 15 gün içinde yetkisi bitecek ilanları raporlar | Her gün 08:10 | ✗ hayır |
+
+Kaydın kaynağı `src/lib/bakim/gorevler.ts` içindeki `GOREV_KAYDI`. Sıklık
+ve "çalışmazsa ne olur" metinleri orada duruyor; buradaki tablo onun
+özeti. Bir test her görevin bu alanlarının dolu olduğunu ve yasal
+görevlerin günlük işaretlendiğini denetliyor.
+
+### 6.2 ⚠️ Görev başına başarısızlık sonucu
+
+**`eids-kaldir` çalışmazsa — YASAL RİSK, ERTELENEMEZ**
+
+Yetki belgesi süresi dolmuş ilan yayında kalır. Bu, Taşınmaz Ticareti
+Hakkında Yönetmelik kapsamında yetkisiz ilan yayını sayılır; idari
+yaptırım ve ilan kaldırma riski doğar.
+
+Kritik olan şu: EİDS yayın engeli kancası yalnızca **kaydetme anında**
+çalışır. Hiç kimse ilana dokunmazsa yetki sessizce dolar ve ilan yayında
+kalmaya devam eder. **Bu görev o boşluğu kapatan tek mekanizmadır.**
+
+Görev bir gün atlarsa ertesi gün telafi eder — geriye dönük çalışır,
+biriken tüm süresi dolmuş ilanları kaldırır. Ama arada geçen her gün
+ihlal süresidir. Aksadığını gördüğünüzde **aynı gün** elle çalıştırın:
 
 ```bash
-BAKIM_ANAHTARI=$(openssl rand -hex 32)
+/srv/aslihangyd/app/scripts/bakim.sh eids-kaldir
 ```
 
-Cron'a ekleyin (`/etc/cron.d/aslihangyd-bakim`):
+**`kvkk-sil` çalışmazsa — YASAL RİSK**
+
+Saklama süresi dolmuş kişisel veri silinmeden kalır. KVKK md. 7 ve md. 12
+kapsamında ihlal; veri sahibinin başvurusu ya da denetim halinde yaptırım
+riski. Gecikme her gün büyür, kendiliğinden düzelmez. Bu görev de geriye
+dönük telafi eder.
+
+**`eids-uyar` çalışmazsa — ticari kayıp, yasal ihlal yok**
+
+Yaklaşan yetki bitişleri fark edilmez. Yasal ihlal doğmaz, çünkü
+`eids-kaldir` ilanı zaten yayından alır — ama portföy sessizce görünmez
+olur ve yetki yenileme fırsatı kaçar. Birkaç gün ertelenebilir.
+
+⚠️ Bu görev bugün **e-posta göndermiyor**: SMTP yapılandırması yok.
+Çıktısı yalnızca `/srv/aslihangyd/logs/bakim.log` dosyasına yazılıyor.
+SMTP bilgileri gelene kadar bu günlüğü haftada bir gözle taramak gerekiyor
+(`docs/SENDEN-BEKLENENLER.md`).
+
+### 6.3 ⚠️ Neden üç ayrı cron satırı
+
+Üçü tek çağrıda koşabilirdi. Koşmuyorlar, çünkü **arıza yalıtımı** gerekli:
+
+KVKK silme görevi bozulsaydı (bir veritabanı kısıtı, bir şema
+değişikliği), uç her gece hata döner ve cron her gece uyarı üretirdi. Bu
+durumda işletmecinin en olası tepkisi cron satırını susturmaktır — ve
+yasal riski olan **EİDS kontrolü de onunla birlikte susardı.**
+
+Ayrı satırlar bunu imkânsız kılıyor: bir görevin arızası diğerini
+durduramaz.
+
+### 6.4 Kurulum
+
+Anahtar `.env` içinde olmalı. Yoksa üretin:
+
+```bash
+cd /srv/aslihangyd/app
+echo "BAKIM_ANAHTARI=$(openssl rand -hex 32)" >> .env
+docker compose -f docker/compose.prod.yml up -d --force-recreate uygulama
+```
+
+⚠️ `.env` değişince **kabı yeniden başlatmak zorunlu** — Docker ortam
+değişkenlerini yalnızca başlangıçta okur. Yeniden başlatmazsanız uç 404
+dönmeye devam eder ve hiçbir görev çalışmaz.
+
+Betiği ve günlük dizinini hazırlayın:
+
+```bash
+chmod 750 /srv/aslihangyd/app/scripts/bakim.sh
+mkdir -p /srv/aslihangyd/logs
+chown deploy:deploy /srv/aslihangyd/logs
+```
+
+### 6.5 ⚠️ Cron dosyası
+
+`/etc/cron.d/aslihangyd-bakim` — kök kullanıcı oluşturur, izni `644`:
 
 ```cron
-0 4 * * * deploy curl -fsS -H "Authorization: Bearer ${BAKIM_ANAHTARI}" https://aslihangyd.com/api/bakim >> /srv/aslihangyd/logs/bakim.log 2>&1
+# aslihangyd.com bakım görevleri
+#
+# ⚠️ CRON_TZ zorunlu. Sunucu UTC ise "03:10" saat 06:10 İstanbul demektir
+#    ve EİDS kontrolü günün yanlış yerinde çalışır. Uygulamanın kendi tarih
+#    mantığı zaten Europe/Istanbul'a sabitli; kayan tek şey cron'un saati.
+CRON_TZ=Europe/Istanbul
+SHELL=/bin/bash
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=""
+
+# EİDS — yetkisi dolan ilanları yayından kaldır. YASAL, günlük.
+# Yedekleme 03:00'te başlıyor; çakışmasın diye 10 dakika sonra.
+10 3 * * *  deploy  /srv/aslihangyd/app/scripts/bakim.sh eids-kaldir >> /srv/aslihangyd/logs/bakim.log 2>&1
+
+# KVKK — saklama süresi dolan kişisel verileri sil. YASAL, günlük.
+40 3 * * *  deploy  /srv/aslihangyd/app/scripts/bakim.sh kvkk-sil >> /srv/aslihangyd/logs/bakim.log 2>&1
+
+# EİDS — yaklaşan yetki bitişlerini raporla. Mesai saatinde, okunsun diye.
+10 8 * * *  deploy  /srv/aslihangyd/app/scripts/bakim.sh eids-uyar >> /srv/aslihangyd/logs/bakim.log 2>&1
+
+# Nöbetçi — EİDS görevi bugün çalıştı mı? Çalışmadıysa haber ver.
+0 9 * * *  deploy  grep -q "^\[$(date +\%Y-\%m-\%d).*TAMAM (eids-kaldir)" /srv/aslihangyd/logs/bakim.log || echo "UYARI: EİDS bakım görevi bugün çalışmadı — yasal risk" | tee -a /srv/aslihangyd/logs/bakim.log
 ```
 
-`BAKIM_ANAHTARI` tanımlı değilse uç **404 döner** — açıkta duran, herkesin
-çağırabildiği bir veri silme ucu bırakmaktansa hiç çalışmasın.
+Yükleyin ve doğrulayın:
 
-Görevler:
+```bash
+sudo install -m 644 -o root -g root aslihangyd-bakim /etc/cron.d/aslihangyd-bakim
+sudo systemctl restart cron          # Debian/Ubuntu
+grep CRON /var/log/syslog | tail     # satırlar okundu mu
+```
 
-1. **EİDS** — yetkisi dolmuş yayındaki ilanları `yetki_bitti` durumuna çeker
-2. **EİDS** — 15 gün içinde yetkisi bitecekleri raporlar
-3. **KVKK** — saklama süresi dolan talep kayıtlarını siler
+⚠️ `/etc/cron.d` dosyalarında **satır sonunda newline olmalı** ve dosya
+adında nokta bulunamaz (`aslihangyd-bakim` olur, `aslihangyd.bakim`
+olmaz) — cron böyle dosyaları sessizce yok sayar.
+
+### 6.6 ⚠️ Neden doğrudan `curl` değil de betik
+
+İlk taslakta cron satırı şuydu:
+
+```cron
+0 4 * * * deploy curl -H "Authorization: Bearer ${BAKIM_ANAHTARI}" https://…
+```
+
+**Bu satır çalışmaz.** `/etc/cron.d` dosyaları uygulamanın `.env`'ini
+okumaz; `${BAKIM_ANAHTARI}` boş genişler ve uç her gece 401 döner.
+Anahtarı cron dosyasının içine yazmak ise onu `/etc/cron.d` altında
+herkesin okuyabileceği bir yere koymak demek.
+
+`scripts/bakim.sh` anahtarı `.env`'den okur (dosya izni `750`, sahibi
+`deploy`), vekil sunucuyu dolaşmadan doğrudan uygulama kabına gider ve
+anlamlı çıkış kodu döner:
+
+| Kod | Anlamı | Ne yapmalı |
+| --- | --- | --- |
+| 0 | Görev başarılı | — |
+| 1 | Yapılandırma hatası (anahtar yok/yanlış, uç kapalı) | `.env` ve kap yeniden başlatma |
+| 2 | Görev çalıştı ama hata verdi | Günlükteki JSON'a bakın |
+| 3 | Uca ulaşılamadı | Uygulama ayakta mı: `/api/saglik` |
+
+Betik `curl -f` **kullanmaz**: `-f` yanıt gövdesini atar ve hangi görevin
+neden başarısız olduğunu söyleyen JSON kaybolur.
+
+### 6.7 Doğrulama
+
+Kurulumdan sonra elle çalıştırıp görün:
+
+```bash
+sudo -u deploy /srv/aslihangyd/app/scripts/bakim.sh eids-kaldir
+echo "çıkış kodu: $?"          # 0 bekleniyor
+```
+
+Ertesi sabah günlüğe bakın:
+
+```bash
+tail -20 /srv/aslihangyd/logs/bakim.log
+```
+
+Üç `TAMAM` satırı görmelisiniz. Görmüyorsanız §9'daki "Bakım görevi
+çalışmıyor" başlığına bakın.
+
+Günlük dosyası büyür; aylık döndürün (`/etc/logrotate.d/aslihangyd`):
+
+```
+/srv/aslihangyd/logs/*.log {
+    monthly
+    rotate 12
+    compress
+    missingok
+    notifempty
+    create 0640 deploy deploy
+}
+```
 
 ---
 
@@ -198,7 +361,8 @@ HEDEF_VERITABANI=geri_yukleme_testi ./scripts/geri-yukle.sh latest
 | --- | --- |
 | Sağlık kontrolü | `GET /api/saglik` — veritabanına gerçek sorgu atar |
 | Uygulama günlükleri | `docker compose -f docker/compose.prod.yml logs -f uygulama` |
-| Bakım günlüğü | `/srv/aslihangyd/logs/bakim.log` |
+| Bakım günlüğü | `/srv/aslihangyd/logs/bakim.log` — günde üç `TAMAM` satırı olmalı |
+| Bakım nöbetçisi | Her sabah 09:00, EİDS görevi çalışmadıysa günlüğe `UYARI` yazar |
 | Yedek günlüğü | `/srv/aslihangyd/logs/yedek.log` |
 | Performans | Her PR'da Lighthouse (`.github/workflows/lighthouse.yml`) |
 
@@ -217,6 +381,41 @@ alınamaz. Hata mesajı tam olarak neyin eksik olduğunu yazar.
 Bu kural **kod seviyesinde zorlanır** ve devre dışı bırakılamaz. Geliştirme
 ortamında bile atlanamaz — test verisi gerekiyorsa geçerli EİDS alanlarına
 sahip test verisi üretilir (`scripts/seed.ts` böyle yapar).
+
+### "Bakım görevi çalışmıyor" ⚠️
+
+Belirti: `/srv/aslihangyd/logs/bakim.log` içinde bugüne ait `TAMAM` satırı
+yok ya da nöbetçi `UYARI` yazmış.
+
+Sırayla bakın — en sık görülenden başlayarak:
+
+```bash
+# 1. Betik elle çalışıyor mu, ne diyor?
+sudo -u deploy /srv/aslihangyd/app/scripts/bakim.sh eids-kaldir
+echo "çıkış: $?"
+```
+
+| Çıkış | Sebep | Çözüm |
+| --- | --- | --- |
+| 1 + "uç kapalı (404)" | `.env`'e anahtar eklendi ama kap yeniden başlatılmadı | `docker compose -f docker/compose.prod.yml up -d --force-recreate uygulama` |
+| 1 + "yetkisiz (401)" | `.env`'deki anahtar ile kabın gördüğü farklı | Aynı komut; anahtarı değiştirdiyseniz kap yeniden başlamalı |
+| 1 + ".env okunamıyor" | Betik yanlış dizinden çalışıyor ya da izin yok | `UYGULAMA_DIZINI` doğru mu, dosya sahibi `deploy` mi |
+| 3 | Uygulama ayakta değil | `docker compose ps`, `curl localhost:3000/api/saglik` |
+| 2 | Görev çalıştı, hata verdi | Günlükteki JSON'daki `hata` alanını okuyun |
+
+Betik elle çalışıyor ama cron çalışmıyorsa:
+
+```bash
+grep CRON /var/log/syslog | tail -20      # cron satırı okundu mu
+ls -l /etc/cron.d/aslihangyd-bakim        # izin 644, sahip root
+tail -c 1 /etc/cron.d/aslihangyd-bakim | xxd   # dosya newline ile bitmeli
+```
+
+⚠️ Dosya adında nokta varsa cron dosyayı **sessizce yok sayar**.
+
+⚠️ **`eids-kaldir` aksadıysa aynı gün elle çalıştırın.** Görev geriye
+dönük telafi eder ama arada geçen her gün, yetkisiz ilan yayında kaldığı
+gündür.
 
 ### "Analitik çalışmıyor"
 
@@ -246,3 +445,6 @@ yapıp yalnızca imajı çekin (varsayılan akış zaten budur).
 | `docs/SENDEN-BEKLENENLER.md` | Aslıhan'dan beklenenler |
 | `docs/ENDEKS-VERI-YONETIMI.md` | Endeks metodolojisi (Faz 2C) |
 | `docs/BAL-KUPU-VE-PORTFOY-YONETIMI.md` | Faz 2B şartnamesi |
+| `scripts/bakim.sh` | Bakım görevi çağırıcı (cron buradan çalışır) |
+| `scripts/yedekle.sh` · `geri-yukle.sh` | Yedekleme ve geri yükleme |
+| `src/lib/bakim/gorevler.ts` | Görev kaydı: sıklık ve başarısızlık sonuçları |
