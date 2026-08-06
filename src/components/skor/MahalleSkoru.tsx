@@ -47,17 +47,17 @@ export function MahalleSkoru({
   const eksikVar = veri.eksikBilesenler.length > 0
 
   return (
-    <div className="border-cizgi bg-yuzey rounded-yumusak border p-5 sm:p-6">
+    <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-6">
       <div className="grid gap-6 sm:grid-cols-[auto_minmax(0,1fr)] sm:gap-8">
         {/* Skor + radar */}
         <div className="flex flex-col items-center gap-3">
           <div className="text-center">
-            <p className="rakam text-[3rem] leading-none font-semibold">
+            <p className="rakam text-[3rem] leading-none font-medium">
               {veri.toplam}
-              <span className="text-murekkep-3 text-2xl font-normal">/100</span>
+              <span className="text-metin-3 text-baslik-2 font-normal">/100</span>
             </p>
             {hesaplanmaTarihi ? (
-              <p className="text-murekkep-3 mt-1 text-mikro">{hesaplanmaTarihi} itibarıyla</p>
+              <p className="text-metin-3 mt-1 text-mikro">{hesaplanmaTarihi} itibarıyla</p>
             ) : null}
           </div>
 
@@ -74,20 +74,20 @@ export function MahalleSkoru({
         </div>
       </div>
 
-      <div className="border-cizgi mt-6 flex flex-col gap-2 border-t pt-4">
+      <div className="border-kenar mt-6 flex flex-col gap-2 border-t-[0.5px] pt-4">
         {eksikVar ? (
-          <p className="text-murekkep-3 text-mikro leading-relaxed">
+          <p className="text-metin-3 text-mikro leading-relaxed">
             <strong className="font-medium">Not:</strong> {veri.eksikBilesenler.join(', ')} için
             veri bulunmadığından skor, mevcut %{Math.round(veri.kapsam * 100)} ağırlık üzerinden
             hesaplandı. Eksik bileşenler sıfır sayılmadı — bu, mahalleyi haksız yere cezalandırırdı.
           </p>
         ) : null}
 
-        <p className="text-murekkep-3 text-mikro">
+        <p className="text-metin-3 text-mikro">
           Ağırlıklar ve hesaplama yöntemi{' '}
           <Link
             href="/yatirim-skoru-metodolojisi"
-            className="text-lacivert underline underline-offset-2"
+            className="text-vurgu underline underline-offset-2"
           >
             metodoloji sayfasında
           </Link>{' '}

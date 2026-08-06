@@ -49,9 +49,9 @@ export function MahalleSecici({
   return (
     <div className={sinif('transition-opacity', gecisSuruyor && 'opacity-60')}>
       <fieldset>
-        <legend className="text-sm font-medium">
+        <legend className="text-govde-kucuk font-medium">
           Mahalle seçin{' '}
-          <span className="text-murekkep-3 font-normal">
+          <span className="text-metin-3 font-normal">
             ({secili.length}/{azami})
           </span>
         </legend>
@@ -69,11 +69,11 @@ export function MahalleSecici({
                 disabled={kapali}
                 aria-pressed={isaretli}
                 className={sinif(
-                  'inline-flex min-h-11 items-center rounded-full border px-4 text-sm transition-colors',
+                  'inline-flex min-h-11 items-center rounded-full border-[0.5px] px-4 text-govde-kucuk transition-colors',
                   isaretli
-                    ? 'border-lacivert bg-lacivert font-medium text-white'
-                    : 'border-cizgi hover:border-lacivert hover:text-lacivert',
-                  kapali && 'cursor-not-allowed opacity-40 hover:border-cizgi hover:text-murekkep',
+                    ? 'border-vurgu bg-lacivert-yuzey font-medium text-white'
+                    : 'border-kenar hover:border-vurgu hover:text-vurgu',
+                  kapali && 'cursor-not-allowed opacity-40 hover:border-kenar hover:text-metin',
                 )}
               >
                 {mahalle.ad}
@@ -83,7 +83,7 @@ export function MahalleSecici({
         </div>
 
         {doluMu ? (
-          <p className="text-murekkep-3 mt-2 text-mikro">
+          <p className="text-metin-3 mt-2 text-mikro">
             En fazla {azami} mahalle karşılaştırılabilir. Başka bir mahalle eklemek için
             seçtiklerinizden birini çıkarın.
           </p>

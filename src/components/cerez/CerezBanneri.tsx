@@ -71,22 +71,22 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
       data-yazdirma="gizle"
       className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4"
     >
-      <div className="border-cizgi-guclu bg-yuzey shadow-kalkik rounded-yumusak mx-auto max-w-3xl border p-5 sm:p-6">
-        <h2 id={basligiId} className="text-lg leading-snug">
+      <div className="border-kenar-guclu bg-yuzey shadow-kalkik rounded-kart mx-auto max-w-3xl border-[0.5px] p-5 sm:p-6">
+        <h2 id={basligiId} className="text-baslik-3 leading-snug">
           Çerez tercihleriniz
         </h2>
 
-        <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
           Sitenin çalışması için gereken çerezler her zaman kullanılır. Bunların dışındaki çerezler{' '}
           <strong className="font-medium">yalnızca siz izin verirseniz</strong> yüklenir — izin
           vermezseniz ilgili betikler sayfaya hiç eklenmez.{' '}
-          <Link href="/cerez-politikasi" className="text-lacivert underline underline-offset-2">
+          <Link href="/cerez-politikasi" className="text-vurgu underline underline-offset-2">
             Çerez politikası
           </Link>
         </p>
 
         {ayrintili ? (
-          <fieldset className="border-cizgi mt-5 flex flex-col gap-3 border-t pt-4">
+          <fieldset className="border-kenar mt-5 flex flex-col gap-3 border-t-[0.5px] pt-4">
             <legend className="yalnizca-okuyucu">Çerez kategorileri</legend>
 
             <KategoriSatiri
@@ -172,9 +172,9 @@ function KategoriSatiri({
         onChange={(olay) => onDegisim?.(olay.target.checked)}
         className="accent-lacivert mt-0.5 size-4.5 shrink-0 disabled:opacity-60"
       />
-      <label htmlFor={id} className="cursor-pointer text-sm leading-snug">
+      <label htmlFor={id} className="cursor-pointer text-govde-kucuk leading-snug">
         <span className="font-medium">{baslik}</span>
-        <span className="text-murekkep-3 block text-mikro">{aciklama}</span>
+        <span className="text-metin-3 block text-mikro">{aciklama}</span>
       </label>
     </div>
   )
@@ -186,7 +186,7 @@ export function CerezTercihleriBaglantisi() {
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(TERCIH_OLAYI))}
-      className="hover:text-murekkep underline-offset-2 hover:underline"
+      className="hover:text-metin underline-offset-2 hover:underline"
     >
       Çerez tercihleri
     </button>

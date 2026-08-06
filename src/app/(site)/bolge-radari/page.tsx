@@ -53,7 +53,7 @@ export default async function BolgeRadariSayfasi() {
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Bölge Radarı</h1>
-        <p className="text-murekkep-2 leading-relaxed">
+        <p className="text-metin-2 leading-relaxed">
           Radar <strong className="font-medium">yeni bir puan üretmez.</strong> Mahalleleri
           birbirine göre tarar ve yalnızca veriyle desteklenen sinyalleri gösterir — her birinin
           arkasındaki rakamla birlikte. Ölçüt Çorlu&apos;nun kendisidir: karşılaştırmalar, verisi
@@ -73,14 +73,14 @@ export default async function BolgeRadariSayfasi() {
         />
       ) : (
         <>
-          <div className="border-cizgi bg-yuzey rounded-yumusak mb-8 border p-5">
-            <p className="text-sm leading-relaxed">
+          <div className="border-kenar bg-yuzey rounded-kart mb-8 border-[0.5px] p-5">
+            <p className="text-govde-kucuk leading-relaxed">
               <strong>{sonuc.veri.taranan} mahalle</strong> tarandı,{' '}
               <strong>{sonuc.veri.sinyaller.length} sinyal</strong> üretildi.
               {sonuc.veri.sinyalsizMahalleler.length > 0 ? (
                 <>
                   {' '}
-                  <span className="text-murekkep-2">
+                  <span className="text-metin-2">
                     {sonuc.veri.sinyalsizMahalleler.join(', ')} için sinyal yok — bu bir eksiklik
                     değil, o mahallelerin Çorlu medyanına yakın durduğu anlamına geliyor.
                   </span>
@@ -107,13 +107,13 @@ export default async function BolgeRadariSayfasi() {
               Sinyaller neye göre hesaplandı?
             </h2>
 
-            <div className="border-cizgi rounded-yumusak mt-4 overflow-x-auto border">
-              <table className="w-full min-w-[26rem] border-collapse text-sm">
+            <div className="border-kenar rounded-kart mt-4 overflow-x-auto border-[0.5px]">
+              <table className="w-full min-w-[26rem] border-collapse text-govde-kucuk">
                 <caption className="yalnizca-okuyucu">
                   Karşılaştırmada kullanılan Çorlu medyanları
                 </caption>
                 <thead>
-                  <tr className="border-cizgi bg-yuzey-2 border-b">
+                  <tr className="border-kenar bg-yuzey-2 border-b-[0.5px]">
                     <th scope="col" className="px-4 py-3 text-left font-medium">
                       Ölçüt
                     </th>
@@ -125,14 +125,14 @@ export default async function BolgeRadariSayfasi() {
                     </th>
                   </tr>
                 </thead>
-                <tbody className="divide-cizgi divide-y">
+                <tbody className="divide-kenar divide-y">
                   {sonuc.veri.olcutler.map((olcut) => (
                     <tr key={olcut.ad}>
                       <td className="px-4 py-3">{olcut.ad}</td>
                       <td className="rakam px-4 py-3 text-right">
                         {olcut.medyan.toLocaleString('tr-TR', { maximumFractionDigits: 1 })}
                       </td>
-                      <td className="rakam text-murekkep-3 px-4 py-3 text-right">
+                      <td className="rakam text-metin-3 px-4 py-3 text-right">
                         {olcut.mahalleSayisi}
                       </td>
                     </tr>
@@ -141,8 +141,8 @@ export default async function BolgeRadariSayfasi() {
               </table>
             </div>
 
-            <h3 className="mt-8 font-sans text-base font-semibold">Eşikler</h3>
-            <ul className="text-murekkep-2 mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+            <h3 className="mt-8 font-sans text-govde font-medium">Eşikler</h3>
+            <ul className="text-metin-2 mt-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
               <li>
                 Kira çarpanı medyanın{' '}
                 <strong>%{Math.round((1 - SAPMA_ESIKLERI.carpanFirsati) * 100)}</strong> altındaysa
@@ -165,14 +165,14 @@ export default async function BolgeRadariSayfasi() {
               </li>
             </ul>
 
-            <p className="text-murekkep-2 mt-6 leading-relaxed">
+            <p className="text-metin-2 mt-6 leading-relaxed">
               Eşikler olmadan radar her mahalle için sinyal üretir ve hiçbir şey söylemez. Bunlar
               Çorlu&apos;ya dair bir ölçüm değil, aracın ilan ettiği metodolojidir.
             </p>
 
-            <div className="border-cizgi bg-pirinc-acik rounded-yumusak mt-6 border p-5">
-              <h3 className="font-sans text-base font-semibold">Radarın söylemedikleri</h3>
-              <ul className="text-murekkep-2 mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+            <div className="border-kenar bg-vurgu-zemin rounded-kart mt-6 border-[0.5px] p-5">
+              <h3 className="font-sans text-govde font-medium">Radarın söylemedikleri</h3>
+              <ul className="text-metin-2 mt-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
                 <li>
                   Sinyaller <strong>geçmiş ölçümlerden</strong> türer; hiçbiri geleceğe dair bir
                   tahmin değildir.
@@ -180,7 +180,7 @@ export default async function BolgeRadariSayfasi() {
                 <li>
                   Fiyat verileri <strong>istenen fiyatlardır</strong>, gerçekleşen satış fiyatı
                   değil. Ayrımı{' '}
-                  <Link href="/endeks-metodolojisi" className="text-lacivert underline">
+                  <Link href="/endeks-metodolojisi" className="text-vurgu underline">
                     endeks metodolojisinde
                   </Link>{' '}
                   ayrıntılı anlattık.
@@ -210,21 +210,21 @@ function SinyalKarti({ sinyal }: { sinyal: Sinyal }) {
   const gorunum = TUR_GORUNUMU[sinyal.tur]
 
   return (
-    <li className={`rounded-yumusak border p-5 ${gorunum.sinif}`}>
+    <li className={`rounded-kart border-[0.5px] p-5 ${gorunum.sinif}`}>
       <div className="flex flex-wrap items-center gap-2">
         <Rozet ton={gorunum.ton}>{gorunum.etiket}</Rozet>
         <Link
           href={`/mahalleler/${sinyal.mahalleSlug}`}
-          className="hover:text-lacivert text-sm font-medium underline-offset-2 hover:underline"
+          className="hover:text-vurgu text-govde-kucuk font-medium underline-offset-2 hover:underline"
         >
           {sinyal.mahalleAd}
         </Link>
       </div>
 
-      <h3 className="mt-2.5 font-sans text-[0.9375rem] leading-snug font-semibold">
+      <h3 className="mt-2.5 font-sans text-[0.9375rem] leading-snug font-medium">
         {sinyal.baslik}
       </h3>
-      <p className="text-murekkep-2 mt-1.5 text-sm leading-relaxed">{sinyal.gerekce}</p>
+      <p className="text-metin-2 mt-1.5 text-govde-kucuk leading-relaxed">{sinyal.gerekce}</p>
     </li>
   )
 }

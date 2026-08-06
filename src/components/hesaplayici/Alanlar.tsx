@@ -54,7 +54,7 @@ export function SayiAlani({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-govde-kucuk font-medium">
         {etiket}
       </label>
 
@@ -74,13 +74,13 @@ export function SayiAlani({
             if (sayi !== null) onDegisim(sayiyiYaz(sayi))
           }}
           className={sinif(
-            'border-cizgi bg-yuzey rounded-yumusak focus:border-lacivert rakam min-h-11 w-full border px-3.5 text-[0.9375rem] transition-colors',
+            'border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu rakam min-h-11 w-full border-[0.5px] px-3.5 text-[0.9375rem] transition-colors',
             birim && 'pr-12',
           )}
         />
         {birim ? (
           <span
-            className="text-murekkep-3 pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-sm"
+            className="text-metin-3 pointer-events-none absolute inset-y-0 right-3.5 flex items-center text-govde-kucuk"
             aria-hidden
           >
             {birim}
@@ -89,7 +89,7 @@ export function SayiAlani({
       </div>
 
       {ipucu ? (
-        <p id={ipucuId} className="text-murekkep-3 text-mikro">
+        <p id={ipucuId} className="text-metin-3 text-mikro">
           {ipucu}
         </p>
       ) : null}
@@ -114,14 +114,14 @@ export function SecimAlani<T extends string>({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-govde-kucuk font-medium">
         {etiket}
       </label>
       <select
         id={id}
         value={deger}
         onChange={(olay) => onDegisim(olay.target.value as T)}
-        className="border-cizgi bg-yuzey rounded-yumusak focus:border-lacivert min-h-11 w-full border px-3 text-[0.9375rem]"
+        className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3 text-[0.9375rem]"
       >
         {secenekler.map((secenek) => (
           <option key={secenek.value} value={secenek.value}>
@@ -129,7 +129,7 @@ export function SecimAlani<T extends string>({
           </option>
         ))}
       </select>
-      {ipucu ? <p className="text-murekkep-3 text-mikro">{ipucu}</p> : null}
+      {ipucu ? <p className="text-metin-3 text-mikro">{ipucu}</p> : null}
     </div>
   )
 }
@@ -154,7 +154,7 @@ export function OnayAlani({
         onChange={(olay) => onDegisim(olay.target.checked)}
         className="accent-lacivert mt-0.5 size-4.5 shrink-0"
       />
-      <label htmlFor={id} className="cursor-pointer text-sm leading-snug">
+      <label htmlFor={id} className="cursor-pointer text-govde-kucuk leading-snug">
         {etiket}
       </label>
     </div>
@@ -177,25 +177,27 @@ export function SonucSatiri({
 }) {
   const tonlar = {
     notr: '',
-    artis: 'text-artis',
-    azalis: 'text-azalis',
+    artis: 'text-basari',
+    azalis: 'text-hata',
   } as const
 
   return (
     <div
       className={sinif(
         'flex items-baseline justify-between gap-4 py-2.5',
-        vurgulu && 'border-cizgi border-t pt-3',
+        vurgulu && 'border-kenar border-t-[0.5px] pt-3',
       )}
     >
       <div className="min-w-0">
-        <dt className={sinif('text-sm', vurgulu ? 'font-medium' : 'text-murekkep-2')}>{etiket}</dt>
-        {aciklama ? <p className="text-murekkep-3 text-mikro">{aciklama}</p> : null}
+        <dt className={sinif('text-govde-kucuk', vurgulu ? 'font-medium' : 'text-metin-2')}>
+          {etiket}
+        </dt>
+        {aciklama ? <p className="text-metin-3 text-mikro">{aciklama}</p> : null}
       </div>
       <dd
         className={sinif(
           'rakam shrink-0 text-right font-medium',
-          vurgulu ? 'text-lg' : 'text-[0.9375rem]',
+          vurgulu ? 'text-baslik-3' : 'text-[0.9375rem]',
           tonlar[ton],
         )}
       >

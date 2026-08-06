@@ -34,19 +34,19 @@ export function YakindaBolumu({
   return (
     <div
       className={sinif(
-        'border-cizgi bg-yuzey-2/50 rounded-yumusak flex flex-col items-center justify-center gap-3 border border-dashed px-6 py-10 text-center',
+        'border-kenar bg-yuzey-2/50 rounded-kart flex flex-col items-center justify-center gap-3 border-[0.5px] border-dashed px-6 py-10 text-center',
         oran,
         sinifAdi,
       )}
     >
       {ikon ? (
-        <span className="text-murekkep-3" aria-hidden>
+        <span className="text-metin-3" aria-hidden>
           {ikon}
         </span>
       ) : null}
       <div className="flex max-w-md flex-col gap-1.5">
-        <p className="text-murekkep-2 text-sm font-medium">{baslik}</p>
-        <p className="text-murekkep-3 text-mikro leading-relaxed">{aciklama}</p>
+        <p className="text-metin-2 text-govde-kucuk font-medium">{baslik}</p>
+        <p className="text-metin-3 text-mikro leading-relaxed">{aciklama}</p>
       </div>
     </div>
   )

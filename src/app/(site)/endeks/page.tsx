@@ -49,13 +49,10 @@ export default async function EndeksSayfasi() {
           <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">
             Çorlu Konut İstenen Fiyat Endeksi
           </h1>
-          <p className="text-murekkep-2 leading-relaxed">
+          <p className="text-metin-2 leading-relaxed">
             Çorlu&apos;da konut fiyatlarının aylık seyri. Tabakalı medyan ve sabit ağırlıklı sepet
             yöntemiyle hesaplanır.{' '}
-            <Link
-              href="/endeks-metodolojisi"
-              className="text-lacivert underline underline-offset-2"
-            >
+            <Link href="/endeks-metodolojisi" className="text-vurgu underline underline-offset-2">
               Metodolojinin tamamı
             </Link>
           </p>
@@ -63,8 +60,8 @@ export default async function EndeksSayfasi() {
           {/* ⚠️ Serinin adında "İstenen Fiyat" geçer ve bu gizlenmez.
               İlan fiyatları pazarlık payı içerir; gerçekleşen satış
               fiyatıyla karıştırmak endeksi sistematik olarak şişirir. */}
-          <div className="border-cizgi bg-uyari-acik rounded-yumusak border p-4">
-            <p className="text-sm leading-relaxed">
+          <div className="border-kenar bg-uyari-zemin rounded-kart border-[0.5px] p-4">
+            <p className="text-govde-kucuk leading-relaxed">
               <strong className="font-medium">Bu bir istenen fiyat endeksidir.</strong> Gözlemler
               ilan fiyatlarına dayanır ve ilan fiyatları pazarlık payı içerir. Gerçekleşen satış
               fiyatları ayrı bir seri olarak tutulur.
@@ -73,11 +70,11 @@ export default async function EndeksSayfasi() {
         </header>
 
         {sonAy ? (
-          <div className="border-cizgi bg-yuzey rounded-yumusak border p-6">
-            <p className="text-murekkep-3 text-mikro font-medium">
+          <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-6">
+            <p className="text-metin-3 text-mikro font-medium">
               {sonAy.ay} · Endeks değeri (baz: {veri.seri.bazAy} = 100)
             </p>
-            <p className="rakam mt-2 text-[2.5rem] leading-none font-semibold">
+            <p className="rakam mt-2 text-[2.5rem] leading-none font-medium">
               {sonAy.endeks?.toLocaleString('tr-TR') ?? '—'}
             </p>
 
@@ -91,11 +88,11 @@ export default async function EndeksSayfasi() {
         ) : null}
 
         {/* Aylık seri — her satırda gözlem sayısı ve taşıma bilgisi */}
-        <div className="border-cizgi rounded-yumusak mt-8 overflow-x-auto border">
-          <table className="w-full min-w-[32rem] border-collapse text-sm">
+        <div className="border-kenar rounded-kart mt-8 overflow-x-auto border-[0.5px]">
+          <table className="w-full min-w-[32rem] border-collapse text-govde-kucuk">
             <caption className="yalnizca-okuyucu">Aylık endeks serisi</caption>
             <thead>
-              <tr className="border-cizgi bg-yuzey-2 border-b">
+              <tr className="border-kenar bg-yuzey-2 border-b-[0.5px]">
                 <th scope="col" className="px-4 py-3 text-left font-medium">
                   Ay
                 </th>
@@ -110,17 +107,17 @@ export default async function EndeksSayfasi() {
                 </th>
               </tr>
             </thead>
-            <tbody className="divide-cizgi divide-y">
+            <tbody className="divide-kenar divide-y">
               {veri.seri.aylar.map((aylik) => (
                 <tr key={aylik.ay}>
                   <td className="rakam px-4 py-2.5">{aylik.ay}</td>
                   <td className="rakam px-4 py-2.5 text-right font-medium">
                     {aylik.endeks?.toLocaleString('tr-TR') ?? '—'}
                   </td>
-                  <td className="rakam text-murekkep-2 px-4 py-2.5 text-right">
+                  <td className="rakam text-metin-2 px-4 py-2.5 text-right">
                     {sayiYaz(aylik.toplamGozlem)}
                   </td>
-                  <td className="rakam text-murekkep-2 px-4 py-2.5 text-right">
+                  <td className="rakam text-metin-2 px-4 py-2.5 text-right">
                     {aylik.tasinanKatmanSayisi > 0 ? aylik.tasinanKatmanSayisi : '—'}
                   </td>
                 </tr>
@@ -134,7 +131,7 @@ export default async function EndeksSayfasi() {
             gozlemSayisi={veri.toplamGozlem}
             kaynak="Kendi gözlem kayıtlarımız (elle toplanmış)"
           />
-          <p className="text-murekkep-3 text-mikro leading-relaxed">
+          <p className="text-metin-3 text-mikro leading-relaxed">
             Bir katmanda ayda {KATMAN_MINIMUM_GOZLEM} gözlemden az varsa o katmanın önceki ay değeri
             taşınır ve bu tabloda açıkça belirtilir. Uydurma değer üretilmez.
           </p>
@@ -145,7 +142,7 @@ export default async function EndeksSayfasi() {
       <Bolum zemin="yuzey">
         <div className="max-w-2xl">
           <h2 className="text-[1.5rem] leading-tight">Veriyi kullanmak isterseniz</h2>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             Bu endeksi atıf şartıyla serbestçe kullanabilirsiniz. Haber, rapor veya akademik
             çalışmada kaynak göstermeniz yeterli. Ham veriye veya ayrıntılı kırılıma ihtiyacınız
             varsa bize yazın.

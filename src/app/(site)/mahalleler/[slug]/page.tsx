@@ -11,7 +11,7 @@ import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat, VeriNotu } from '@/components/ui/Feragat'
 import { GrafikIkon, KonumIkon, OkIkon, WhatsappIkon } from '@/components/ui/Ikon'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { IstatistikIzgarasi, IstatistikKarti } from '@/components/ui/IstatistikKarti'
 import { Rozet } from '@/components/ui/Rozet'
 import { ZenginMetin } from '@/components/ui/ZenginMetin'
 import { carpanYaz, degisimYaz, paraYaz, sayiYaz, whatsappBaglantisi } from '@/lib/bicimlendirme'
@@ -78,12 +78,12 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             {/* 2 ── Yatırım skoru */}
             <section aria-labelledby="skor">
               <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-                <h2 id="skor" className="font-sans text-lg font-semibold">
+                <h2 id="skor" className="font-sans text-baslik-3 font-medium">
                   Yatırım skoru
                 </h2>
                 <Link
                   href="/yatirim-skoru-metodolojisi"
-                  className="text-lacivert text-sm underline underline-offset-2"
+                  className="text-vurgu text-govde-kucuk underline underline-offset-2"
                 >
                   Nasıl hesaplanıyor?
                 </Link>
@@ -104,31 +104,40 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
             {/* 3 ── Temel rakamlar */}
             <section aria-labelledby="rakamlar">
-              <h2 id="rakamlar" className="mb-4 font-sans text-lg font-semibold">
+              <h2 id="rakamlar" className="mb-4 font-sans text-baslik-3 font-medium">
                 Temel rakamlar
               </h2>
 
-              <RakamIzgarasi>
-                <RakamKarti
+              {/*
+                ⚠️ Bunlar GÖZLENMİŞ rakamlar, hesaplanmış değil — bu yüzden
+                `IstatistikKarti` ve gözlem sayısı her kartta görünüyor.
+                "Ortalama m² 42.000 TL" ile "Ortalama m² 42.000 TL (n = 3)"
+                aynı şey değildir ve ikincisini gösteren tek site biz olacağız.
+              */}
+              <IstatistikIzgarasi>
+                <IstatistikKarti
                   etiket="Ortalama m² satış"
                   deger={paraYaz(mahalle.ortalamaM2Satis)}
+                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
                   bosAciklama="Yeterli gözlem birikince yayınlanacak."
                 />
-                <RakamKarti
+                <IstatistikKarti
                   etiket="Ortalama aylık kira"
                   deger={paraYaz(mahalle.ortalamaKira)}
+                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
                   bosAciklama="Yeterli gözlem birikince yayınlanacak."
                 />
-                <RakamKarti
+                <IstatistikKarti
                   etiket="Kira çarpanı"
                   deger={carpanYaz(mahalle.kiraCarpani)}
+                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
                   altBilgi="Kaç yıllık kira, satış fiyatına eşit"
                   bosAciklama="Satış ve kira verisi birlikte gerekiyor."
-                  ton="vurgu"
                 />
-                <RakamKarti
+                <IstatistikKarti
                   etiket="12 aylık değişim"
                   deger={degisimYaz(mahalle.degisim12Ay)}
+                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
                   bosAciklama="En az 12 ay veri gerekiyor."
                   ton={
                     typeof mahalle.degisim12Ay === 'number'
@@ -138,21 +147,17 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                       : 'notr'
                   }
                 />
-              </RakamIzgarasi>
+              </IstatistikIzgarasi>
 
               <div className="mt-4 flex flex-col gap-2">
-                <VeriNotu
-                  gozlemSayisi={mahalle.gozlemSayisi}
-                  kaynak={mahalle.veriKaynagi}
-                  tarih={tarihiYaz(mahalle.verilerinTarihi)}
-                />
+                <VeriNotu kaynak={mahalle.veriKaynagi} tarih={tarihiYaz(mahalle.verilerinTarihi)} />
                 <Feragat ek="Rakamlar istenen fiyat gözlemlerine dayanır; gerçekleşen satış fiyatlarından farklı olabilir." />
               </div>
             </section>
 
             {/* 4 ── Fiyat trendi */}
             <section aria-labelledby="trend">
-              <h2 id="trend" className="mb-4 font-sans text-lg font-semibold">
+              <h2 id="trend" className="mb-4 font-sans text-baslik-3 font-medium">
                 Fiyat trendi
               </h2>
               <YakindaBolumu
@@ -165,7 +170,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
             {/* 5 ── Harita */}
             <section aria-labelledby="harita">
-              <h2 id="harita" className="mb-4 font-sans text-lg font-semibold">
+              <h2 id="harita" className="mb-4 font-sans text-baslik-3 font-medium">
                 Konum ve çevre
               </h2>
               <YakindaBolumu
@@ -178,7 +183,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
             {/* 6 ── 360° tur */}
             <section aria-labelledby="tur">
-              <h2 id="tur" className="mb-4 font-sans text-lg font-semibold">
+              <h2 id="tur" className="mb-4 font-sans text-baslik-3 font-medium">
                 360° sokak turu
               </h2>
               {mahalle.sanalTurUrl ? (
@@ -186,7 +191,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                   href={mahalle.sanalTurUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="text-lacivert underline underline-offset-2"
+                  className="text-vurgu underline underline-offset-2"
                 >
                   Turu yeni sekmede açın
                 </a>
@@ -225,19 +230,19 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
               {mahalle.sikSorulanlar && mahalle.sikSorulanlar.length > 0 ? (
                 <div className="mt-10">
-                  <h3 className="mb-4 font-sans text-lg font-semibold">Sık sorulan sorular</h3>
-                  <div className="border-cizgi divide-cizgi divide-y rounded-yumusak border">
+                  <h3 className="mb-4 font-sans text-baslik-3 font-medium">Sık sorulan sorular</h3>
+                  <div className="border-kenar divide-kenar divide-y rounded-kart border-[0.5px]">
                     {mahalle.sikSorulanlar.map((kayit) => (
                       <details key={kayit.id ?? kayit.soru} className="group px-4 py-3">
                         <summary className="cursor-pointer list-none text-[0.9375rem] font-medium marker:content-none">
                           <span className="flex items-center justify-between gap-3">
                             {kayit.soru}
-                            <span className="text-murekkep-3 transition-transform group-open:rotate-45">
+                            <span className="text-metin-3 transition-transform group-open:rotate-45">
                               +
                             </span>
                           </span>
                         </summary>
-                        <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+                        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
                           {kayit.cevap}
                         </p>
                       </details>
@@ -250,11 +255,11 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
           {/* Yan panel */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="border-cizgi bg-yuzey rounded-yumusak border p-5">
-              <h2 className="font-sans text-base font-semibold">
+            <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
+              <h2 className="font-sans text-govde font-medium">
                 {mahalle.ad} Mahallesi&apos;nde ev sahibi misiniz?
               </h2>
-              <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+              <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
                 Taşınmazınızın bugünkü değerini ve kiraya verilirse ne getireceğini hesaplayalım.
                 Satmayı düşünmeseniz bile bilmek işinize yarar.
               </p>
@@ -273,9 +278,9 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             </div>
 
             {mahalle.nufus ? (
-              <dl className="border-cizgi bg-yuzey rounded-yumusak mt-4 border p-5">
-                <dt className="text-murekkep-3 text-mikro font-medium">Nüfus</dt>
-                <dd className="rakam mt-1 text-xl font-semibold">{sayiYaz(mahalle.nufus)}</dd>
+              <dl className="border-kenar bg-yuzey rounded-kart mt-4 border-[0.5px] p-5">
+                <dt className="text-metin-3 text-mikro font-medium">Nüfus</dt>
+                <dd className="rakam mt-1 text-baslik-3 font-medium">{sayiYaz(mahalle.nufus)}</dd>
               </dl>
             ) : null}
           </aside>
@@ -339,8 +344,8 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
         : null
 
   return (
-    <section className="border-cizgi relative border-b">
-      <div className="bg-lacivert-acik relative aspect-16/9 max-h-[28rem] w-full overflow-hidden sm:aspect-21/9">
+    <section className="border-kenar relative border-b-[0.5px]">
+      <div className="bg-vurgu-zemin relative aspect-16/9 max-h-[28rem] w-full overflow-hidden sm:aspect-21/9">
         {poster?.url ? (
           <>
             <Image
@@ -358,16 +363,16 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
             />
           </>
         ) : (
-          <div className="text-lacivert/30 flex h-full items-center justify-center">
+          <div className="text-vurgu/30 flex h-full items-center justify-center">
             <KonumIkon width={48} height={48} />
           </div>
         )}
 
         <div className="absolute inset-x-0 bottom-0">
           <div className="kapsayici pb-6 sm:pb-8">
-            <nav aria-label="Sayfa yolu" className="mb-3 text-sm">
+            <nav aria-label="Sayfa yolu" className="mb-3 text-govde-kucuk">
               <ol
-                className={`flex flex-wrap items-center gap-1.5 ${poster?.url ? 'text-white/70' : 'text-murekkep-3'}`}
+                className={`flex flex-wrap items-center gap-1.5 ${poster?.url ? 'text-white/70' : 'text-metin-3'}`}
               >
                 <li>
                   <Link href="/" className="underline-offset-2 hover:underline">
@@ -391,7 +396,7 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
 
             {mahalle.ozet ? (
               <p
-                className={`mt-2 max-w-2xl leading-relaxed ${poster?.url ? 'text-white/85' : 'text-murekkep-2'}`}
+                className={`mt-2 max-w-2xl leading-relaxed ${poster?.url ? 'text-white/85' : 'text-metin-2'}`}
               >
                 {mahalle.ozet}
               </p>
@@ -411,7 +416,7 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
       </div>
 
       {!mahalle.droneVideoId ? (
-        <p className="kapsayici text-murekkep-3 py-3 text-mikro">
+        <p className="kapsayici text-metin-3 py-3 text-mikro">
           Bu mahallenin drone videosu henüz çekilmedi. Çekim yapıldığında bu alanda yayınlanacak.
         </p>
       ) : null}
@@ -438,24 +443,24 @@ function KarsilastirmaTablosu({
 
   return (
     // Dar ekranda tablo yatay kayar; sayfa gövdesi kaymaz.
-    <div className="border-cizgi rounded-yumusak overflow-x-auto border">
-      <table className="w-full min-w-[36rem] border-collapse text-sm">
+    <div className="border-kenar rounded-kart overflow-x-auto border-[0.5px]">
+      <table className="w-full min-w-[36rem] border-collapse text-govde-kucuk">
         <caption className="yalnizca-okuyucu">
           {mahalle.ad} Mahallesi&apos;nin diğer mahallelerle karşılaştırması
         </caption>
         <thead>
-          <tr className="border-cizgi bg-yuzey-2 border-b">
-            <th scope="col" className="text-murekkep-3 px-4 py-3 text-left font-medium">
+          <tr className="border-kenar bg-yuzey-2 border-b-[0.5px]">
+            <th scope="col" className="text-metin-3 px-4 py-3 text-left font-medium">
               Gösterge
             </th>
             {hepsi.map((kayit) => (
-              <th key={kayit.id} scope="col" className="px-4 py-3 text-left font-semibold">
+              <th key={kayit.id} scope="col" className="px-4 py-3 text-left font-medium">
                 {kayit.id === mahalle.id ? (
                   kayit.ad
                 ) : (
                   <Link
                     href={`/mahalleler/${kayit.slug}`}
-                    className="hover:text-lacivert underline-offset-2 hover:underline"
+                    className="hover:text-vurgu underline-offset-2 hover:underline"
                   >
                     {kayit.ad}
                   </Link>
@@ -464,17 +469,17 @@ function KarsilastirmaTablosu({
             ))}
           </tr>
         </thead>
-        <tbody className="divide-cizgi divide-y">
+        <tbody className="divide-kenar divide-y">
           {satirlar.map((satir) => (
             <tr key={satir.etiket}>
-              <th scope="row" className="text-murekkep-2 px-4 py-3 text-left font-normal">
+              <th scope="row" className="text-metin-2 px-4 py-3 text-left font-normal">
                 {satir.etiket}
               </th>
               {hepsi.map((kayit) => {
                 const deger = satir.al(kayit)
                 return (
                   <td key={kayit.id} className="rakam px-4 py-3 font-medium">
-                    {deger ?? <span className="text-murekkep-3 font-normal">—</span>}
+                    {deger ?? <span className="text-metin-3 font-normal">—</span>}
                   </td>
                 )
               })}

@@ -52,15 +52,15 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
   return (
     <header
       data-yazdirma="gizle"
-      className="border-cizgi bg-kagit/85 sticky top-0 z-40 border-b backdrop-blur-md"
+      className="border-kenar bg-zemin/85 sticky top-0 z-40 border-b-[0.5px] backdrop-blur-md"
     >
       <div className="kapsayici flex h-16 items-center justify-between gap-4">
         <Link
           href="/"
-          className="font-serif text-lg tracking-tight whitespace-nowrap"
+          className="font-serif text-baslik-3 tracking-tight whitespace-nowrap"
           aria-label={`${SITE_ADI} ana sayfa`}
         >
-          Aslıhan <span className="text-pirinc-koyu">GYD</span>
+          Aslıhan <span className="text-vurgu">GYD</span>
         </Link>
 
         {/* Masaüstü gezinme */}
@@ -72,10 +72,10 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
                   href={oge.adres}
                   aria-current={yolAktifMi(yol, oge.adres) ? 'page' : undefined}
                   className={sinif(
-                    'rounded-yumusak px-3 py-2 text-sm transition-colors',
+                    'rounded-kart px-3 py-2 text-govde-kucuk transition-colors',
                     yolAktifMi(yol, oge.adres)
-                      ? 'text-lacivert bg-lacivert-acik font-medium'
-                      : 'text-murekkep-2 hover:text-murekkep hover:bg-yuzey-2',
+                      ? 'text-vurgu bg-vurgu-zemin font-medium'
+                      : 'text-metin-2 hover:text-metin hover:bg-yuzey-2',
                   )}
                 >
                   {oge.ad}
@@ -91,7 +91,7 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
               href={whatsappAdresi}
               target="_blank"
               rel="noopener noreferrer"
-              className="border-cizgi-guclu rounded-yumusak hover:border-lacivert hover:text-lacivert hidden min-h-11 items-center gap-2 border px-4 text-sm font-medium transition-colors sm:inline-flex"
+              className="border-kenar-guclu rounded-buton hover:border-vurgu hover:text-vurgu hidden min-h-11 items-center gap-2 border-[0.5px] px-4 text-govde-kucuk font-medium transition-colors sm:inline-flex"
             >
               <WhatsappIkon width={16} height={16} />
               WhatsApp
@@ -103,7 +103,7 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
             onClick={() => setAcik((onceki) => !onceki)}
             aria-expanded={acik}
             aria-controls="mobil-gezinme"
-            className="hover:bg-yuzey-2 rounded-yumusak -mr-2 inline-flex size-11 items-center justify-center lg:hidden"
+            className="hover:bg-yuzey-2 rounded-buton -mr-2 inline-flex size-11 items-center justify-center lg:hidden"
           >
             {acik ? <KapatIkon /> : <MenuIkon />}
             <span className="yalnizca-okuyucu">{acik ? 'Menüyü kapat' : 'Menüyü aç'}</span>
@@ -115,20 +115,20 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
       {acik ? (
         <div
           id="mobil-gezinme"
-          className="border-cizgi bg-kagit fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto border-t lg:hidden"
+          className="border-kenar bg-zemin fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto border-t-[0.5px] lg:hidden"
         >
           <nav aria-label="Mobil gezinme" className="kapsayici py-4">
             {/* Mobilde tam ekran menü var; üst menüdeki gibi kısaltmaya
                 gerek yok — tüm sayfalar listelenir. */}
             <ul className="flex flex-col">
               {GORUNUR_GEZINME.map((oge) => (
-                <li key={oge.adres} className="border-cizgi border-b last:border-0">
+                <li key={oge.adres} className="border-kenar border-b-[0.5px] last:border-0">
                   <Link
                     href={oge.adres}
                     aria-current={yolAktifMi(yol, oge.adres) ? 'page' : undefined}
                     className={sinif(
-                      'flex min-h-14 items-center text-base',
-                      yolAktifMi(yol, oge.adres) ? 'text-lacivert font-medium' : 'text-murekkep',
+                      'flex min-h-14 items-center text-govde',
+                      yolAktifMi(yol, oge.adres) ? 'text-vurgu font-medium' : 'text-metin',
                     )}
                   >
                     {oge.ad}
@@ -142,7 +142,7 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
                 href={whatsappAdresi}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="bg-lacivert rounded-yumusak mt-6 flex min-h-13 w-full items-center justify-center gap-2 font-medium text-white"
+                className="bg-lacivert-yuzey rounded-buton mt-6 flex min-h-13 w-full items-center justify-center gap-2 font-medium text-white"
               >
                 <WhatsappIkon width={18} height={18} />
                 WhatsApp&apos;tan yazın
@@ -167,7 +167,7 @@ export function IcerigeAtla() {
   return (
     <a
       href="#icerik"
-      className="bg-lacivert rounded-yumusak sr-only z-50 px-4 py-2 text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
+      className="bg-lacivert-yuzey rounded-kart sr-only z-50 px-4 py-2 text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
     >
       İçeriğe atla
     </a>

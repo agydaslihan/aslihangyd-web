@@ -126,11 +126,11 @@ export default async function DegerlemeRaporu({
       ]}
     >
       <RaporBolumu baslik="Tahmini değer aralığı">
-        <div className="border-cizgi bg-yuzey rounded-yumusak border p-5">
-          <p className="rakam text-[1.5rem] leading-tight font-semibold sm:text-[1.75rem]">
+        <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
+          <p className="rakam text-[1.5rem] leading-tight font-medium sm:text-[1.75rem]">
             {paraYaz(veri.altDeger)} – {paraYaz(veri.ustDeger)}
           </p>
-          <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+          <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
             Güven düzeyi: <strong>{GUVEN_ETIKETLERI[veri.guvenDuzeyi]}</strong>
             {veri.gozlemSayisi !== null ? (
               <>
@@ -142,7 +142,7 @@ export default async function DegerlemeRaporu({
               ' · gözlem sayısı kayıtlı değil'
             )}
           </p>
-          <p className="text-murekkep-3 text-mikro mt-3 leading-relaxed">
+          <p className="text-metin-3 text-mikro mt-3 leading-relaxed">
             Nokta değer değil <strong>aralık</strong> veriyoruz. &quot;Eviniz tam olarak şu kadar
             eder&quot; demek, sahip olmadığımız bir kesinliği iddia etmek olur. Veri azaldıkça
             aralık genişler ve güven düzeyi düşer — bu bir kusur değil, dürüstlüğün gereği.
@@ -182,7 +182,7 @@ export default async function DegerlemeRaporu({
           baslik="Hesaba katılamayan faktörler"
           aciklama="Katsayısı tanımlı olmayan bir faktör 1,00 sayılmaz — bu, ayarlama yapılmış izlenimi verirdi. O faktör hesaba hiç girmez ve burada adıyla belirtilir."
         >
-          <ul className="text-murekkep-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+          <ul className="text-metin-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
             {veri.katilmayanFaktorler.map((faktor) => (
               <li key={faktor}>{faktor}</li>
             ))}
@@ -191,7 +191,7 @@ export default async function DegerlemeRaporu({
       ) : null}
 
       <RaporBolumu baslik="Bu raporun sınırları">
-        <ul className="text-murekkep-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+        <ul className="text-metin-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
           <li>
             <strong>
               Bu tahmin bilgilendirme amaçlıdır; SPK lisanslı gayrimenkul değerleme raporu yerine
@@ -214,8 +214,8 @@ export default async function DegerlemeRaporu({
       </RaporBolumu>
 
       <div className="mt-8" data-yazdirma="gizle">
-        <div className="border-cizgi bg-lacivert-acik rounded-yumusak border p-5">
-          <p className="text-sm leading-relaxed">
+        <div className="border-kenar bg-vurgu-zemin rounded-kart border-[0.5px] p-5">
+          <p className="text-govde-kucuk leading-relaxed">
             Bu aralığı daraltmak için taşınmazı yerinde görmek gerekir: cephe, manzara, iç durum ve
             binanın kendisi rakamı ciddi biçimde değiştirir.
           </p>

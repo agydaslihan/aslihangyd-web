@@ -1190,6 +1190,110 @@ Doğrulama (üretim derlemesi, canlı sunucu):
 
 ---
 
+## E aşaması — Geriye dönük tasarım uyarlaması
+
+Sitedeki tüm sayfalar A'daki tasarım diline taşındı. Çalışan mantığa
+dokunulmadı; değişen yalnızca görünüm ve bileşen seçimi.
+
+### Ne yapıldı
+
+| İş | Sayı |
+| --- | --- |
+| Eski jeton → anlamsal jeton | **448** sınıf |
+| Keyfi/varsayılan yazı boyutu → ölçek jetonu | **175** sınıf |
+| 600/700 ağırlık → 500 | **63** sınıf |
+| `rounded-yumusak` → `rounded-kart` / `rounded-buton` | **91** sınıf |
+| Kalın kenarlık → 0,5px kıl payı | tüm `border` sınıfları |
+
+- **Geçiş jetonları `globals.css`'ten SİLİNDİ.** Artık `bg-kagit`,
+  `text-murekkep`, `bg-pirinc` gibi bir sınıf yazan kişi renksiz bir
+  öğe elde eder — sistemin dışına çıkmanın bedeli görünür.
+- **Disiplin testinin kapsamı tüm arayüze açıldı** (`components` + `app`).
+  177 → 257 test.
+- 4 yeni yükleme iskeleti: `/mahalleler`, `/mahalleler/[slug]`,
+  `/gizli-portfoy`, `/bolge-radari`.
+
+### Kararlar ve gerekçeleri
+
+**`RakamKarti` silinmedi, ikiye AYRILDI.**
+Plan onu `IstatistikKarti` lehine silmekti. Çağrı yerlerine bakınca ayrım
+netleşti: hesaplayıcı sonuçları (kredi taksiti, tapu harcı) bir ölçüm
+değil bir hesap; "kaç gözleme dayanıyor?" sorusunun orada karşılığı yok
+ve zorunlu bir `n` alanı anlamsız gürültü olurdu. Mahalle rakamları ise
+gerçekten gözlenmiş veri.
+
+Sonuç: `HesapKarti` (türetilmiş rakam, `n` yok) ve `IstatistikKarti`
+(gözlenmiş rakam, `n` tip düzeyinde zorunlu). Tek bileşende birleştirmek,
+ya hesaplara sahte bir `n` uydurmak ya da istatistiklerde `n`i isteğe
+bağlı bırakmak demekti; ikincisi zamanla "unutulan alan" olurdu.
+
+**Mahalle sayfasındaki dört rakam `IstatistikKarti`ye taşındı.**
+Gözlem sayısı artık dipnotta değil, her kartın altında.
+
+**Bakır aksan iki eyleme bağlandı — tam olarak ikisine.**
+`gorunum="bakir"` yalnızca iki yerde: ana sayfadaki "Evimi değerlendir"
+ve gizli portföydeki "Erişim talep et". Kart üzerindeki "Erişim talep et"
+bakır METİN (dolu zemin değil); ayrım, gözün "tıklanır" diye okuduğu
+şeyin dolu zemin olması.
+
+**Gizli portföy kendi kart çizimini bıraktı, `KilitliKart`a geçti.**
+Ayrı bir kart çizmek "bunlar farklı bir şey" izlenimi verirdi; oysa aynı
+portföyün paylaşılmamış kısmı. Ayrıca eski kartta bir 🔒 emojisi vardı —
+emoji yasağının kapsamı dışında kalmıştı.
+
+**`themeColor` muaf tutuldu.**
+Tarayıcı meta etiketinde `var()` çözmez; değerler `zemin` jetonuyla
+birebir aynı ve dosyada bu ilişki yorumda yazılı. Harita muaf DEĞİL:
+orada renkler `getComputedStyle` ile çalışma zamanında jetondan okunuyor.
+
+**Form denetimlerinin kenarlığı ayrı jeton.**
+Kart çerçevesi notr-200 kaldı; metin kutuları `kenar-giris` (notr-500)
+kullanıyor — WCAG 1.4.11 bileşen sınırı için 3:1 istiyor ve notr-200
+beyaz üzerinde 1,3:1 veriyordu.
+
+### Kontrol listesi
+
+| Ölçüt | Durum | Nasıl doğrulandı |
+| --- | --- | --- |
+| Ham hex yok | ✅ | `disiplin.test.ts` — tüm `.tsx` taranıyor |
+| Tüm rakamlarda `tabular-nums` | ✅ | gövde seviyesinde, test denetliyor |
+| 600/700 ağırlık yok | ✅ | `disiplin.test.ts` |
+| Bakır yalnızca iki eylemde | ✅ | `disiplin.test.ts`, üst sınır 4 |
+| Boş durum tasarlandı | ✅ | `BosDurum` dört soruya cevap veriyor |
+| İskelet yükleme | ✅ | 5 rota (`/portfoy` + 4 yeni) |
+| Klavye ile gezinilebilir | ✅ | statik denetim: `onClick` taşıyan role'süz öğe yok, href'siz `<a>` yok, alt'sız görsel yok; global `:focus-visible` halkası; 35 dokunma hedefi ≥44px |
+| Kontrast AA | ✅ | `kontrast.test.ts` — 34 kombinasyon × 2 tema |
+| **Mobilde manuel kontrol** | ⚠️ **YAPILAMADI** | Sunucuda tarayıcı yok. Aşağıya bakın. |
+
+### ⚠️ Mobil manuel kontrol yapılamadı
+
+Kontrol listesindeki dokuz maddeden sekizi otomatik doğrulandı. Dokuzuncu
+— "mobilde manuel kontrol edildi" — bu ortamda **yapılamaz**: sunucuda
+tarayıcı yok, dolayısıyla gerçek bir cihazda dokunma, kaydırma ve okuma
+denemesi mümkün değil.
+
+Yerine yapılanlar: mobil öncelikli sınıflar, dokunma hedeflerinin kod
+düzeyinde ≥44px olması, yatay sıranın `ResizeObserver` ile ölçülmesi,
+harita panellerinin alt sayfaya dönmesi. Bunlar mobilde çalışacağını
+**gösterir, kanıtlamaz.**
+
+Bunu kapatmanın yolu Aslıhan'ın telefonundan bakması ya da CI'a görsel
+regresyon testi eklenmesi. SENDEN-BEKLENENLER md. 7'ye eklendi.
+
+### E aşaması ölçümleri (yerel, üretim derlemesi)
+
+| Ölçüm | Değer | Not |
+| --- | --- | --- |
+| `pnpm test` | **829 test / 29 dosya** | A öncesi 493 |
+| Derleme | **91 sn** | 150 sn eşiğinin altında; artış kapsam büyümesi |
+| `/` JS (gzip) | **198,7 kB** | A öncesi 198 kB — uyarlama bütçeye dokunmadı |
+| `/portfoy` JS (gzip) | 206,4 kB | — |
+| `/harita` JS (gzip) | 441,4 kB | 242,7 kB maplibre, `async` |
+| CSS (gzip) | 10,3 kB | jeton sayısı arttı, boyut sabit kaldı |
+| TTFB (12 rota) | 21–108 ms | hepsi 200 |
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

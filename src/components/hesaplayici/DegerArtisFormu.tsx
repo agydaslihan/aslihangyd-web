@@ -5,7 +5,7 @@ import { useId, useMemo, useState } from 'react'
 import { SayiAlani, SonucSatiri, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
 import { ParametreEksikUyarisi } from '@/components/hesaplayici/Kabuk'
 import { BosDurum } from '@/components/ui/BosDurum'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { DogrulanmisIkon } from '@/components/ui/Ikon'
 import { paraYaz, sayiYaz, yuzdeYaz } from '@/lib/bicimlendirme'
 import { degerArtisVergisiHesapla } from '@/lib/hesaplayicilar/degerArtisVergisi'
@@ -56,7 +56,7 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
         />
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={alisId} className="text-sm font-medium">
+          <label htmlFor={alisId} className="text-govde-kucuk font-medium">
             Alış tarihi
           </label>
           <input
@@ -64,14 +64,14 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
             type="date"
             value={alisTarihi}
             onChange={(olay) => setAlisTarihi(olay.target.value)}
-            className="border-cizgi bg-yuzey rounded-yumusak focus:border-lacivert min-h-11 w-full border px-3.5 text-[0.9375rem]"
+            className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3.5 text-[0.9375rem]"
           />
         </div>
 
         <SayiAlani etiket="Satış fiyatı" deger={satisFiyati} onDegisim={setSatisFiyati} birim="₺" />
 
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={satisId} className="text-sm font-medium">
+          <label htmlFor={satisId} className="text-govde-kucuk font-medium">
             Satış tarihi
           </label>
           <input
@@ -79,7 +79,7 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
             type="date"
             value={satisTarihi}
             onChange={(olay) => setSatisTarihi(olay.target.value)}
-            className="border-cizgi bg-yuzey rounded-yumusak focus:border-lacivert min-h-11 w-full border px-3.5 text-[0.9375rem]"
+            className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3.5 text-[0.9375rem]"
           />
         </div>
 
@@ -91,12 +91,12 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
           ipucu="Tapu harcı, komisyon gibi belgelendirilmiş giderler"
         />
 
-        <fieldset className="border-cizgi flex flex-col gap-5 border-t pt-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">
+        <fieldset className="border-kenar flex flex-col gap-5 border-t-[0.5px] pt-5">
+          <legend className="text-metin-3 text-mikro font-medium">
             Enflasyon endekslemesi (Yİ-ÜFE)
           </legend>
 
-          <p className="text-murekkep-3 text-mikro leading-relaxed">
+          <p className="text-metin-3 text-mikro leading-relaxed">
             Bu iki değeri girerseniz alış bedeliniz enflasyona göre güncellenir ve vergi matrahınız
             ciddi biçimde düşer. Değerleri TÜİK&apos;in yayınladığı Yİ-ÜFE tablosundan alabilirsiniz
             — biz burada tutmuyoruz, çünkü her ay değişen bir seriyi eskimiş halde göstermek yanlış
@@ -121,18 +121,18 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
       <div>
         {sonuc.durum === 'hesaplandi' ? (
           sonuc.veri.muafMi ? (
-            <div className="border-artis/30 bg-artis-acik rounded-yumusak border p-6">
+            <div className="border-basari/30 bg-basari-zemin rounded-kart border-[0.5px] p-6">
               <div className="flex items-start gap-3">
-                <DogrulanmisIkon width={24} height={24} className="text-artis mt-0.5 shrink-0" />
+                <DogrulanmisIkon width={24} height={24} className="text-basari mt-0.5 shrink-0" />
                 <div>
-                  <h2 className="text-lg leading-snug">Vergi ödemeniz gerekmiyor</h2>
-                  <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+                  <h2 className="text-baslik-3 leading-snug">Vergi ödemeniz gerekmiyor</h2>
+                  <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
                     Taşınmazı{' '}
                     <strong className="font-medium">{sayiYaz(sonuc.veri.eldeTutmaYili)} yıl</strong>{' '}
                     elinizde tuttuğunuz için değer artış kazancı vergisi doğmuyor. Muafiyet süresi{' '}
                     {sonuc.veri.muafiyetYili} yıl.
                   </p>
-                  <p className="text-murekkep-2 mt-3 text-sm">
+                  <p className="text-metin-2 mt-3 text-govde-kucuk">
                     Kazancınız:{' '}
                     <strong className="rakam font-medium">{paraYaz(sonuc.veri.netKazanc)}</strong>
                   </p>
@@ -142,8 +142,8 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
           ) : (
             <>
               {sonuc.veri.muafiyeteKalanGun !== null && sonuc.veri.muafiyeteKalanGun <= 365 ? (
-                <div className="border-pirinc/40 bg-pirinc-acik rounded-yumusak mb-5 border p-4">
-                  <p className="text-sm leading-relaxed">
+                <div className="border-vurgu/40 bg-vurgu-zemin rounded-kart mb-5 border-[0.5px] p-4">
+                  <p className="text-govde-kucuk leading-relaxed">
                     <strong className="font-medium">Dikkat:</strong> Satışı{' '}
                     <strong className="rakam">{sonuc.veri.muafiyeteKalanGun} gün</strong>{' '}
                     ertelerseniz {sonuc.veri.muafiyetYili} yıllık muafiyet süresi dolar ve bu
@@ -152,26 +152,26 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
                 </div>
               ) : null}
 
-              <RakamIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
-                <RakamKarti
+              <KartIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
+                <HesapKarti
                   etiket="Ödenecek vergi"
                   deger={paraYaz(sonuc.veri.toplamVergi)}
                   ton="azalis"
                 />
-                <RakamKarti
+                <HesapKarti
                   etiket="Etkin vergi oranı"
                   deger={yuzdeYaz(sonuc.veri.etkinOran)}
                   altBilgi="Matraha oranla"
                 />
-                <RakamKarti
+                <HesapKarti
                   etiket="Net kazancınız"
                   deger={paraYaz(sonuc.veri.netKazanc)}
                   altBilgi="Vergi ve giderler sonrası"
                   ton="vurgu"
                 />
-              </RakamIzgarasi>
+              </KartIzgarasi>
 
-              <dl className="border-cizgi bg-yuzey rounded-yumusak mt-5 border px-5 py-2">
+              <dl className="border-kenar bg-yuzey rounded-kart mt-5 border-[0.5px] px-5 py-2">
                 <SonucSatiri etiket="Satış fiyatı" deger={paraYaz(sonuc.veri.satisFiyati)} />
                 <SonucSatiri
                   etiket={

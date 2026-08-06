@@ -34,7 +34,7 @@ export default async function HakkimizdaSayfasi() {
       <div className="kapsayici py-10 sm:py-14">
         <header className="mb-8 flex max-w-2xl flex-col gap-3">
           <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Hakkımızda</h1>
-          <p className="text-murekkep-2 leading-relaxed">
+          <p className="text-metin-2 leading-relaxed">
             Çorlu&apos;da gayrimenkul danışmanlığı yapıyoruz. İşimizin merkezinde ilan değil, karar
             var.
           </p>
@@ -59,11 +59,11 @@ export default async function HakkimizdaSayfasi() {
       <Bolum zemin="yuzey">
         <div className="flex max-w-3xl flex-col gap-4">
           <h2 className="flex items-center gap-2 text-[1.5rem] leading-tight">
-            <DogrulanmisIkon width={22} height={22} className="text-artis shrink-0" />
+            <DogrulanmisIkon width={22} height={22} className="text-basari shrink-0" />
             Yasal bilgiler
           </h2>
 
-          <p className="text-murekkep-2 leading-relaxed">
+          <p className="text-metin-2 leading-relaxed">
             Taşınmaz ticareti Türkiye&apos;de yetki belgesine tabidir. Yayınladığımız her satılık
             ilan, mülk sahibinin e-Devlet üzerinden verdiği EİDS yetkisine dayanır ve ilan
             sayfasında taşınmaz numarasıyla birlikte gösterilir. Yetkisi olmayan bir taşınmazın
@@ -71,14 +71,14 @@ export default async function HakkimizdaSayfasi() {
           </p>
 
           {yasalSatirlar.length > 0 ? (
-            <dl className="border-cizgi bg-yuzey divide-cizgi rounded-yumusak mt-2 divide-y border">
+            <dl className="border-kenar bg-yuzey divide-kenar rounded-kart mt-2 divide-y border-[0.5px]">
               {yasalSatirlar.map((satir) => (
                 <div
                   key={satir.etiket}
                   className="flex flex-col gap-1 px-4 py-3 sm:flex-row sm:items-baseline sm:justify-between sm:gap-4"
                 >
-                  <dt className="text-murekkep-2 text-sm">{satir.etiket}</dt>
-                  <dd className="rakam text-sm font-medium">{satir.deger}</dd>
+                  <dt className="text-metin-2 text-govde-kucuk">{satir.etiket}</dt>
+                  <dd className="rakam text-govde-kucuk font-medium">{satir.deger}</dd>
                 </div>
               ))}
             </dl>

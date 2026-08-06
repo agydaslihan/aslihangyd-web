@@ -47,7 +47,7 @@ export function IlanFiltreleri({ mahalleler }: { mahalleler: Mahalleler[] }) {
       method="get"
       action="/portfoy"
       className={sinif(
-        'border-cizgi bg-yuzey rounded-yumusak border p-4 transition-opacity sm:p-5',
+        'border-kenar bg-yuzey rounded-kart border-[0.5px] p-4 transition-opacity sm:p-5',
         gecisSuruyor && 'opacity-60',
       )}
     >
@@ -57,11 +57,11 @@ export function IlanFiltreleri({ mahalleler }: { mahalleler: Mahalleler[] }) {
           onClick={() => setAcik((onceki) => !onceki)}
           aria-expanded={acik}
           aria-controls={bolgeId}
-          className="inline-flex min-h-11 items-center gap-2 text-sm font-medium"
+          className="inline-flex min-h-11 items-center gap-2 text-govde-kucuk font-medium"
         >
           Filtreler
           {filtreSayisi > 0 ? (
-            <span className="bg-lacivert rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-white">
+            <span className="bg-lacivert-yuzey rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-white">
               {filtreSayisi}
             </span>
           ) : null}
@@ -131,7 +131,7 @@ export function IlanFiltreleri({ mahalleler }: { mahalleler: Mahalleler[] }) {
         <noscript>
           <button
             type="submit"
-            className="bg-lacivert rounded-yumusak min-h-11 px-5 text-sm font-medium text-white"
+            className="bg-lacivert-yuzey rounded-buton min-h-11 px-5 text-govde-kucuk font-medium text-white"
           >
             Filtrele
           </button>
@@ -160,7 +160,7 @@ function Secim({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-murekkep-3 text-mikro font-medium">
+      <label htmlFor={id} className="text-metin-3 text-mikro font-medium">
         {etiket}
       </label>
       <select
@@ -168,7 +168,7 @@ function Secim({
         name={ad}
         value={deger}
         onChange={(olay) => onDegisim(ad, olay.target.value)}
-        className="border-cizgi bg-yuzey rounded-yumusak focus:border-lacivert min-h-11 w-full border px-3 text-sm"
+        className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3 text-govde-kucuk"
       >
         <option value="">{hepsiEtiketi}</option>
         {secenekler.map((secenek) => (

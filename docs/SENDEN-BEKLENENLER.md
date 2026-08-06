@@ -315,8 +315,18 @@ Onay listende koyu tema yoktu. Sitede zaten vardı, kaldırmak gerileme
 olurdu. Senin paletinden türettim (lacivert-950 zemin, lacivert-900
 yüzey) ve aynı kontrast testinden geçiriyorum.
 
-**Senden istediğim:** Telefonunu koyu temaya alıp siteye bak. Beğenmezsen
-koyu temayı tamamen kapatabilirim — tek satırlık iş.
+**Senden istediğim (İKİ ŞEY):**
+
+**1) Telefonundan siteye bak.** Bu benim yapamadığım tek kontrol:
+sunucuda tarayıcı yok, gerçek bir cihazda dokunma ve kaydırma denemesi
+mümkün değil. Kodda dokunma hedeflerini 44px'e sabitledim, mobil öncelikli
+yazdım, ama bunlar "çalışacağını gösterir, kanıtlamaz".
+
+Özellikle şunlara bak: portföy sayfasındaki yatay kaydırmalı sıralar,
+haritadaki alt paneller, formlardaki kutular güneşte görünüyor mu.
+
+**2) Koyu temaya al ve tekrar bak.** Beğenmezsen koyu temayı tamamen
+kapatabilirim — tek satırlık iş.
 
 **Nereye bakacaksın:** Geliştirme ortamında `/stil-rehberi` adresi tüm
 renkleri, yazı boyutlarını ve bileşenleri tek sayfada gösteriyor. Üretimde

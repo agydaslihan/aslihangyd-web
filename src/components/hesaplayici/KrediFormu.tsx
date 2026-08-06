@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { SayiAlani, SonucSatiri, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
 import { BosDurum } from '@/components/ui/BosDurum'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { paraYaz, sayiYaz } from '@/lib/bicimlendirme'
 import { krediHesapla } from '@/lib/hesaplayicilar/kredi'
 
@@ -56,23 +56,23 @@ export function KrediFormu() {
       <div>
         {sonuc.durum === 'hesaplandi' ? (
           <>
-            <RakamIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
-              <RakamKarti
+            <KartIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
+              <HesapKarti
                 etiket="Aylık taksit"
                 deger={paraYaz(sonuc.veri.aylikTaksit)}
                 ton="vurgu"
               />
-              <RakamKarti etiket="Toplam geri ödeme" deger={paraYaz(sonuc.veri.toplamGeriOdeme)} />
-              <RakamKarti
+              <HesapKarti etiket="Toplam geri ödeme" deger={paraYaz(sonuc.veri.toplamGeriOdeme)} />
+              <HesapKarti
                 etiket="Toplam faiz"
                 deger={paraYaz(sonuc.veri.toplamFaiz)}
                 altBilgi={`1 ₺ borç için ${sayiYaz(sonuc.veri.maliyetKatsayisi * 100)} kuruş ödeme`}
                 ton="azalis"
               />
-            </RakamIzgarasi>
+            </KartIzgarasi>
 
-            <div className="border-cizgi bg-uyari-acik rounded-yumusak mt-5 border p-4">
-              <p className="text-sm leading-relaxed">
+            <div className="border-kenar bg-uyari-zemin rounded-kart mt-5 border-[0.5px] p-4">
+              <p className="text-govde-kucuk leading-relaxed">
                 <strong className="font-medium">Bu hesapta yok:</strong> dosya masrafı, hayat
                 sigortası, konut sigortası ve bankaların uyguladığı diğer kesintiler. Gerçek aylık
                 ödemeniz bu rakamın üzerinde olur — bankadan yazılı ödeme planı isteyin.
@@ -84,7 +84,7 @@ export function KrediFormu() {
                 type="button"
                 onClick={() => setPlanAcik((onceki) => !onceki)}
                 aria-expanded={planAcik}
-                className="text-lacivert min-h-11 text-sm font-medium underline underline-offset-2"
+                className="text-vurgu min-h-11 text-govde-kucuk font-medium underline underline-offset-2"
               >
                 {planAcik
                   ? 'Ödeme planını gizle'
@@ -92,11 +92,11 @@ export function KrediFormu() {
               </button>
 
               {planAcik ? (
-                <div className="border-cizgi rounded-yumusak mt-3 max-h-96 overflow-auto border">
-                  <table className="w-full min-w-[32rem] border-collapse text-sm">
+                <div className="border-kenar rounded-kart mt-3 max-h-96 overflow-auto border-[0.5px]">
+                  <table className="w-full min-w-[32rem] border-collapse text-govde-kucuk">
                     <caption className="yalnizca-okuyucu">Aylık ödeme planı</caption>
                     <thead className="bg-yuzey-2 sticky top-0">
-                      <tr className="border-cizgi border-b">
+                      <tr className="border-kenar border-b-[0.5px]">
                         <th scope="col" className="px-3 py-2 text-left font-medium">
                           Ay
                         </th>
@@ -114,16 +114,16 @@ export function KrediFormu() {
                         </th>
                       </tr>
                     </thead>
-                    <tbody className="divide-cizgi divide-y">
+                    <tbody className="divide-kenar divide-y">
                       {sonuc.veri.odemePlani.map((satir) => (
                         <tr key={satir.ay}>
                           <td className="rakam px-3 py-1.5">{satir.ay}</td>
                           <td className="rakam px-3 py-1.5 text-right">{paraYaz(satir.taksit)}</td>
                           <td className="rakam px-3 py-1.5 text-right">{paraYaz(satir.anapara)}</td>
-                          <td className="rakam text-murekkep-2 px-3 py-1.5 text-right">
+                          <td className="rakam text-metin-2 px-3 py-1.5 text-right">
                             {paraYaz(satir.faiz)}
                           </td>
-                          <td className="rakam text-murekkep-2 px-3 py-1.5 text-right">
+                          <td className="rakam text-metin-2 px-3 py-1.5 text-right">
                             {paraYaz(satir.kalanAnapara)}
                           </td>
                         </tr>
@@ -134,7 +134,7 @@ export function KrediFormu() {
               ) : null}
             </div>
 
-            <dl className="border-cizgi bg-yuzey rounded-yumusak mt-6 border px-5 py-2">
+            <dl className="border-kenar bg-yuzey rounded-kart mt-6 border-[0.5px] px-5 py-2">
               <SonucSatiri
                 etiket="İlk taksitte faize giden"
                 deger={paraYaz(sonuc.veri.odemePlani[0]?.faiz ?? 0)}

@@ -20,8 +20,8 @@ export function MahalleKarti({ mahalle }: { mahalle: Mahalleler }) {
   const carpan = carpanYaz(mahalle.kiraCarpani)
 
   return (
-    <article className="group border-cizgi bg-yuzey rounded-yumusak hover:shadow-kart relative flex flex-col overflow-hidden border transition-shadow">
-      <div className="bg-lacivert-acik relative aspect-16/10 overflow-hidden">
+    <article className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col overflow-hidden border-[0.5px] transition-shadow">
+      <div className="bg-vurgu-zemin relative aspect-16/10 overflow-hidden">
         {gorsel?.url ? (
           <Image
             src={gorsel.url}
@@ -31,21 +31,23 @@ export function MahalleKarti({ mahalle }: { mahalle: Mahalleler }) {
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
           />
         ) : (
-          <div className="text-lacivert/40 flex h-full items-center justify-center">
+          <div className="text-vurgu/40 flex h-full items-center justify-center">
             <KonumIkon width={32} height={32} />
           </div>
         )}
       </div>
 
       <div className="flex flex-1 flex-col gap-2.5 p-4 sm:p-5">
-        <h3 className="text-lg leading-tight">
+        <h3 className="text-baslik-3 leading-tight">
           <Link href={`/mahalleler/${mahalle.slug}`} className="after:absolute after:inset-0">
             {mahalle.ad} Mahallesi
           </Link>
         </h3>
 
         {mahalle.ozet ? (
-          <p className="text-murekkep-2 line-clamp-2 text-sm leading-relaxed">{mahalle.ozet}</p>
+          <p className="text-metin-2 line-clamp-2 text-govde-kucuk leading-relaxed">
+            {mahalle.ozet}
+          </p>
         ) : null}
 
         {m2 || carpan ? (

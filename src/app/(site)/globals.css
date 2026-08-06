@@ -176,37 +176,6 @@
   --color-bilgi-zemin: var(--color-lacivert-50);
 
   /* ══════════════════════════════════════════════════════════════════════
-     GEÇİŞ JETONLARI — E aşamasında SİLİNECEK
-
-     Mevcut ~40 bileşen bu adları kullanıyor. Tailwind bilinmeyen bir
-     yardımcı sınıfı sessizce üretmez: adları bir çırpıda değiştirmek,
-     hiçbir derleme hatası vermeden sayfaların renksiz kalmasına yol açardı.
-     Bu yüzden eski adlar korunuyor ama ONAYLANAN palete bağlanıyor — site
-     bugünden itibaren doğru renkleri kullanıyor.
-
-     E aşaması (feature/tasarim-uyarlama) çağrı yerlerini anlamsal jetonlara
-     taşıyıp bu bloğu silecek.
-     ══════════════════════════════════════════════════════════════════════ */
-  --color-kagit: var(--color-zemin);
-  --color-cizgi: var(--color-kenar);
-  --color-cizgi-guclu: var(--color-kenar-guclu);
-  --color-murekkep: var(--color-metin);
-  --color-murekkep-2: var(--color-metin-2);
-  --color-murekkep-3: var(--color-metin-3);
-  --color-lacivert: var(--color-vurgu);
-  --color-lacivert-koyu: var(--color-lacivert-yuzey);
-  --color-lacivert-acik: var(--color-vurgu-zemin);
-  /* Pirinç aksan kaldırıldı: yerini lacivert aldı. Bakır'a bağlanmadı,
-     çünkü bakır artık yalnızca iki eylemin rengi. */
-  --color-pirinc: var(--color-vurgu);
-  --color-pirinc-koyu: var(--color-vurgu);
-  --color-pirinc-acik: var(--color-vurgu-zemin);
-  --color-artis: var(--color-basari);
-  --color-artis-acik: var(--color-basari-zemin);
-  --color-azalis: var(--color-hata);
-  --color-azalis-acik: var(--color-hata-zemin);
-
-  /* ══════════════════════════════════════════════════════════════════════
      TİPOGRAFİ
 
      Inter + Source Serif 4, ikisi de `latin-ext` alt kümesiyle: Türkçe'nin
@@ -244,10 +213,6 @@
   --text-rakam-buyuk: 2rem; /* 32 */
   --text-rakam-buyuk--line-height: 1.05;
 
-  /* GEÇİŞ — E aşamasında silinecek. */
-  --text-kucuk: var(--text-yardimci);
-  --text-kucuk--line-height: 1.5;
-
   /* ══════════════════════════════════════════════════════════════════════
      KÖŞE · KENARLIK · GEÇİŞ
      ══════════════════════════════════════════════════════════════════════ */
@@ -256,8 +221,6 @@
   --radius-buton: 8px;
   --radius-kart: 12px;
   --radius-buyuk: 20px;
-  /* GEÇİŞ — E aşamasında silinecek. */
-  --radius-yumusak: var(--radius-buton);
 
   /**
    * Kenarlık 0.5px. Kalın kenarlık kutuları birbirinden koparır ve sayfayı

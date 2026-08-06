@@ -22,7 +22,7 @@ export default async function MahallelerSayfasi() {
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Çorlu mahalleleri</h1>
-        <p className="text-murekkep-2 leading-relaxed">
+        <p className="text-metin-2 leading-relaxed">
           Bir taşınmazın değerini binadan çok mahallesi belirler. Her mahallenin hangi değer
           sürücüsünden beslendiğini — sanayi, ulaşım, eğitim, sağlık — veriyle anlatıyoruz.
         </p>

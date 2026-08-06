@@ -44,10 +44,10 @@ export default async function TicariSayfasi() {
 
   return (
     <>
-      <section className="border-cizgi border-b">
+      <section className="border-kenar border-b-[0.5px]">
         <div className="kapsayici py-14 sm:py-20">
           <div className="max-w-3xl">
-            <p className="text-pirinc-koyu text-mikro font-semibold tracking-[0.1em] uppercase">
+            <p className="text-vurgu text-mikro font-medium tracking-[0.1em] uppercase">
               Ticari gayrimenkul
             </p>
 
@@ -55,7 +55,7 @@ export default async function TicariSayfasi() {
               Fabrika, depo, sanayi arsası
             </h1>
 
-            <p className="text-murekkep-2 mt-6 max-w-2xl text-lg leading-relaxed">
+            <p className="text-metin-2 mt-6 max-w-2xl text-baslik-3 leading-relaxed">
               Ticari gayrimenkulde karar, konut kararından farklı çalışır. Metrekare fiyatı tek
               başına hiçbir şey söylemez; tavan yüksekliği, vinç kapasitesi, trafo gücü, tır manevra
               alanı ve yola çıkış mesafesi söyler. Bu tarafta ayrı bir dille çalışıyoruz.
@@ -110,16 +110,16 @@ export default async function TicariSayfasi() {
             },
           ].map(({ Ikon, baslik, metin }) => (
             <div key={baslik} className="flex flex-col gap-3">
-              <span className="bg-lacivert-acik text-lacivert rounded-yumusak flex size-11 items-center justify-center">
+              <span className="bg-vurgu-zemin text-vurgu rounded-buton flex size-11 items-center justify-center">
                 <Ikon width={20} height={20} />
               </span>
-              <h3 className="font-sans text-base font-semibold">{baslik}</h3>
-              <p className="text-murekkep-2 text-[0.9375rem] leading-relaxed">{metin}</p>
+              <h3 className="font-sans text-govde font-medium">{baslik}</h3>
+              <p className="text-metin-2 text-[0.9375rem] leading-relaxed">{metin}</p>
             </div>
           ))}
         </div>
 
-        <p className="text-murekkep-3 mt-8 max-w-2xl text-sm leading-relaxed">
+        <p className="text-metin-3 mt-8 max-w-2xl text-govde-kucuk leading-relaxed">
           Bu sayfadaki bölgesel değerlendirmeler genel niteliktedir. Belirli bir parselin imar
           durumu, ruhsat geçmişi ve altyapı kapasitesi yalnızca resmî kayıtlardan doğrulanabilir;
           bir işlem öncesinde bunları birlikte kontrol ediyoruz.
@@ -170,7 +170,7 @@ export default async function TicariSayfasi() {
           <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             <Link
               href="/iletisim?tip=ticari"
-              className="text-lacivert-koyu rounded-yumusak inline-flex min-h-13 items-center justify-center bg-white px-6 font-medium transition-opacity hover:opacity-90"
+              className="text-lacivert-yuzey rounded-buton inline-flex min-h-13 items-center justify-center bg-white px-6 font-medium transition-opacity hover:opacity-90"
             >
               Görüşme talep edin
             </Link>
@@ -179,7 +179,7 @@ export default async function TicariSayfasi() {
                 href={whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-yumusak inline-flex min-h-13 items-center justify-center border border-white/30 px-6 font-medium text-white transition-colors hover:bg-white/10"
+                className="rounded-buton inline-flex min-h-13 items-center justify-center border-[0.5px] border-white/30 px-6 font-medium text-white transition-colors hover:bg-white/10"
               >
                 WhatsApp
               </a>

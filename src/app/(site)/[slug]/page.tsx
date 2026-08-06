@@ -44,8 +44,8 @@ export default async function CmsSayfasi({ params }: SayfaOzellikleri) {
 
   return (
     <div className="kapsayici py-10 sm:py-14">
-      <nav aria-label="Sayfa yolu" className="text-murekkep-3 mb-6 text-sm">
-        <Link href="/" className="hover:text-murekkep underline-offset-2 hover:underline">
+      <nav aria-label="Sayfa yolu" className="text-metin-3 mb-6 text-govde-kucuk">
+        <Link href="/" className="hover:text-metin underline-offset-2 hover:underline">
           Ana sayfa
         </Link>
         <span aria-hidden> / </span>
@@ -56,13 +56,13 @@ export default async function CmsSayfasi({ params }: SayfaOzellikleri) {
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">{sayfa.baslik}</h1>
 
         {sayfa.hukukiMetin ? (
-          <p className="text-murekkep-3 mt-3 text-sm">
+          <p className="text-metin-3 mt-3 text-govde-kucuk">
             Son güncelleme: {tarihiYaz(sayfa.updatedAt)}
           </p>
         ) : null}
 
         {sayfa.ozet ? (
-          <p className="text-murekkep-2 mt-4 text-lg leading-relaxed">{sayfa.ozet}</p>
+          <p className="text-metin-2 mt-4 text-baslik-3 leading-relaxed">{sayfa.ozet}</p>
         ) : null}
 
         {sayfa.icerik ? (
@@ -70,9 +70,9 @@ export default async function CmsSayfasi({ params }: SayfaOzellikleri) {
             <ZenginMetin veri={sayfa.icerik} />
           </div>
         ) : (
-          <div className="border-cizgi bg-yuzey-2/60 rounded-yumusak mt-8 border border-dashed p-6">
-            <h2 className="font-sans text-base font-semibold">Bu metin hazırlanıyor</h2>
-            <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+          <div className="border-kenar bg-yuzey-2/60 rounded-kart mt-8 border-[0.5px] border-dashed p-6">
+            <h2 className="font-sans text-govde font-medium">Bu metin hazırlanıyor</h2>
+            <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
               Bu sayfanın içeriği hukuk danışmanımız tarafından hazırlanıyor. Metin hazır olana
               kadar, bu konudaki sorularınızı doğrudan bize iletebilirsiniz.
             </p>

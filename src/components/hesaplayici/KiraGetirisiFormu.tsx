@@ -4,7 +4,7 @@ import { useMemo, useState } from 'react'
 
 import { SayiAlani, SonucSatiri, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
 import { BosDurum } from '@/components/ui/BosDurum'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { carpanYaz, paraYaz, yilYaz, yuzdeYaz } from '@/lib/bicimlendirme'
 import { kiraGetirisiHesapla } from '@/lib/hesaplayicilar/kiraGetirisi'
 
@@ -61,8 +61,8 @@ export function KiraGetirisiFormu({
           yerTutucu="20.000"
         />
 
-        <fieldset className="border-cizgi flex flex-col gap-5 border-t pt-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">
+        <fieldset className="border-kenar flex flex-col gap-5 border-t-[0.5px] pt-5">
+          <legend className="text-metin-3 text-mikro font-medium">
             İsteğe bağlı — net getiri için
           </legend>
 
@@ -94,26 +94,26 @@ export function KiraGetirisiFormu({
       <div>
         {sonuc.durum === 'hesaplandi' ? (
           <>
-            <RakamIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
-              <RakamKarti
+            <KartIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
+              <HesapKarti
                 etiket="Kira çarpanı"
                 deger={carpanYaz(sonuc.veri.kiraCarpani)}
                 altBilgi="Düşük olması yatırımcı lehinedir"
                 ton="vurgu"
               />
-              <RakamKarti
+              <HesapKarti
                 etiket="Brüt getiri"
                 deger={yuzdeYaz(sonuc.veri.brutGetiri)}
                 altBilgi="Yıllık, giderler hariç"
               />
-              <RakamKarti
+              <HesapKarti
                 etiket="Amortisman"
                 deger={yilYaz(sonuc.veri.amortismanYili)}
                 altBilgi="Kirayla kendini ödeme"
               />
-            </RakamIzgarasi>
+            </KartIzgarasi>
 
-            <dl className="border-cizgi bg-yuzey rounded-yumusak mt-5 border px-5 py-2">
+            <dl className="border-kenar bg-yuzey rounded-kart mt-5 border-[0.5px] px-5 py-2">
               <SonucSatiri
                 etiket="Yıllık brüt kira geliri"
                 deger={paraYaz(sonuc.veri.yillikBrutKira)}

@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { SayiAlani, SonucSatiri, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { paraKisaYaz, paraYaz, yuzdeYaz } from '@/lib/bicimlendirme'
 import { kiraMiSatinAlmaMiHesapla, type YilSatiri } from '@/lib/hesaplayicilar/kiraMiSatinAlmaMi'
 import { raporAdresi } from '@/lib/rapor/parametreler'
@@ -84,7 +84,7 @@ export function KiraMiSatinAlmaMiFormu() {
     <div className="grid gap-8 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-12">
       <form className="flex flex-col gap-6" onSubmit={(olay) => olay.preventDefault()}>
         <fieldset className="flex flex-col gap-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">Satın alma senaryosu</legend>
+          <legend className="text-metin-3 text-mikro font-medium">Satın alma senaryosu</legend>
           <SayiAlani
             etiket="Taşınmazın fiyatı"
             deger={fiyat}
@@ -123,8 +123,8 @@ export function KiraMiSatinAlmaMiFormu() {
           />
         </fieldset>
 
-        <fieldset className="border-cizgi flex flex-col gap-5 border-t pt-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">Kiralama senaryosu</legend>
+        <fieldset className="border-kenar flex flex-col gap-5 border-t-[0.5px] pt-5">
+          <legend className="text-metin-3 text-mikro font-medium">Kiralama senaryosu</legend>
           <SayiAlani
             etiket="Aynı evin aylık kirası"
             deger={kira}
@@ -135,10 +135,10 @@ export function KiraMiSatinAlmaMiFormu() {
           <SayiAlani etiket="Depozito" deger={depozito} onDegisim={setDepozito} birim="₺" />
         </fieldset>
 
-        <fieldset className="border-cizgi flex flex-col gap-5 border-t pt-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">Varsayımlarınız</legend>
+        <fieldset className="border-kenar flex flex-col gap-5 border-t-[0.5px] pt-5">
+          <legend className="text-metin-3 text-mikro font-medium">Varsayımlarınız</legend>
 
-          <p className="text-murekkep-2 bg-yuzey-2/60 rounded-yumusak px-3.5 py-3 text-mikro leading-relaxed">
+          <p className="text-metin-2 bg-yuzey-2/60 rounded-kart px-3.5 py-3 text-mikro leading-relaxed">
             Bu üç oran <strong>sizin beklentiniz</strong>; bizim tahminimiz değil ve bu yüzden
             önceden doldurulmadı. Emin değilseniz birkaç farklı değer deneyin — sonuç ekranındaki{' '}
             <strong>başabaş oranı</strong> zaten tahmin yapmanıza gerek bırakmaz.
@@ -177,8 +177,8 @@ export function KiraMiSatinAlmaMiFormu() {
           />
         </fieldset>
 
-        <fieldset className="border-cizgi flex flex-col gap-5 border-t pt-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">
+        <fieldset className="border-kenar flex flex-col gap-5 border-t-[0.5px] pt-5">
+          <legend className="text-metin-3 text-mikro font-medium">
             İsteğe bağlı — sonucu gerçeğe yaklaştırır
           </legend>
           <SayiAlani
@@ -241,7 +241,7 @@ export function KiraMiSatinAlmaMiFormu() {
             baslik="Karşılaştırma için birkaç bilgi gerekiyor"
             neden="Bu araç aylık taksiti kirayla değil, iki senaryonun süre sonundaki net varlığını karşılaştırır. Eksik olanlar aşağıda."
             eylem={
-              <ul className="text-murekkep-2 list-disc space-y-1 pl-5 text-left text-sm">
+              <ul className="text-metin-2 list-disc space-y-1 pl-5 text-left text-govde-kucuk">
                 {sonuc.eksikler.map((eksik) => (
                   <li key={eksik.anahtar}>{eksik.etiket}</li>
                 ))}
@@ -265,58 +265,58 @@ function Sonuclar({
 
   return (
     <>
-      <div className="border-cizgi bg-yuzey rounded-yumusak border p-5 sm:p-6">
-        <p className="text-murekkep-3 text-mikro font-medium tracking-wide">
+      <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-6">
+        <p className="text-metin-3 text-mikro font-medium tracking-wide">
           {veri.son.yil} YIL SONUNDA
         </p>
-        <p className="mt-1.5 text-[1.375rem] leading-snug font-semibold sm:text-[1.625rem]">
+        <p className="mt-1.5 text-[1.375rem] leading-snug font-medium sm:text-[1.625rem]">
           {satinAlmaOnde ? 'Satın almak' : 'Kiralamak'} önde:{' '}
-          <span className={satinAlmaOnde ? 'text-artis' : 'text-azalis'}>
+          <span className={satinAlmaOnde ? 'text-basari' : 'text-hata'}>
             {paraYaz(Math.abs(veri.son.fark))}
           </span>
         </p>
-        <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
           Bu, iki senaryonun <strong>net varlık</strong> farkıdır — aylık ödeme farkı değil.
           Kiralama senaryosunda peşinat ve aylık tasarrufun yatırımda değerlendiği varsayılır.
         </p>
         {veri.bugunkuParaylaFark !== null ? (
-          <p className="text-murekkep-2 border-cizgi mt-3 border-t pt-3 text-sm">
+          <p className="text-metin-2 border-kenar mt-3 border-t-[0.5px] pt-3 text-govde-kucuk">
             Bugünkü parayla:{' '}
             <strong className="rakam">{paraYaz(Math.abs(veri.bugunkuParaylaFark))}</strong>
           </p>
         ) : (
-          <p className="text-murekkep-3 border-cizgi mt-3 border-t pt-3 text-mikro">
+          <p className="text-metin-3 border-kenar mt-3 border-t-[0.5px] pt-3 text-mikro">
             Bu rakam <strong>{veri.son.yil} yıl sonrasının parasıyladır.</strong> Enflasyon
             beklentinizi girerseniz bugünkü karşılığını da gösterelim.
           </p>
         )}
       </div>
 
-      <RakamIzgarasi sinifAdi="mt-5 sm:grid-cols-3 lg:grid-cols-3">
-        <RakamKarti
+      <KartIzgarasi sinifAdi="mt-5 sm:grid-cols-3 lg:grid-cols-3">
+        <HesapKarti
           etiket="Başabaş değer artışı"
           deger={yuzdeYaz(veri.basabasDegerArtisi)}
           altBilgi="Satın almanın kiralamayı geçmesi için gereken yıllık artış"
           bosAciklama="Bu varsayımlarla, makul hiçbir değer artışı satın almayı öne geçirmiyor."
           ton="vurgu"
         />
-        <RakamKarti
+        <HesapKarti
           etiket="Başabaş yılı"
           deger={veri.basabasYili === null ? null : `${veri.basabasYili}. yıl`}
           altBilgi="Satın almanın öne geçtiği ilk yıl"
           bosAciklama={`${veri.son.yil} yıl içinde satın alma öne geçmiyor.`}
         />
-        <RakamKarti
+        <HesapKarti
           etiket="Aylık taksit"
           deger={paraYaz(veri.aylikTaksit)}
           altBilgi="KKDF/BSMV ve sigorta hariç"
           bosAciklama="Peşin alım — kredi yok."
         />
-      </RakamIzgarasi>
+      </KartIzgarasi>
 
-      <div className="border-cizgi bg-pirinc-acik rounded-yumusak mt-5 border p-5">
-        <h3 className="font-sans text-base font-semibold">Bu tabloyu nasıl okumalı?</h3>
-        <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+      <div className="border-kenar bg-vurgu-zemin rounded-kart mt-5 border-[0.5px] p-5">
+        <h3 className="font-sans text-govde font-medium">Bu tabloyu nasıl okumalı?</h3>
+        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
           {veri.basabasDegerArtisi === null ? (
             <>
               Girdiğiniz alternatif getiri oranı o kadar yüksek ki, konut fiyatı ne kadar artarsa
@@ -337,7 +337,7 @@ function Sonuclar({
         </p>
       </div>
 
-      <dl className="border-cizgi bg-yuzey rounded-yumusak mt-5 border px-5 py-2">
+      <dl className="border-kenar bg-yuzey rounded-kart mt-5 border-[0.5px] px-5 py-2">
         <SonucSatiri
           etiket="Başlangıçta cebinizden çıkan"
           deger={paraYaz(veri.baslangicNakitCikisi)}
@@ -364,8 +364,8 @@ function Sonuclar({
         />
       </dl>
 
-      <details className="border-cizgi mt-5 rounded-yumusak border">
-        <summary className="cursor-pointer list-none px-5 py-3.5 text-sm font-medium marker:content-none">
+      <details className="border-kenar mt-5 rounded-kart border-[0.5px]">
+        <summary className="cursor-pointer list-none px-5 py-3.5 text-govde-kucuk font-medium marker:content-none">
           Yıl yıl karşılaştırma
         </summary>
         <div className="overflow-x-auto px-5 pb-4">
@@ -373,9 +373,9 @@ function Sonuclar({
         </div>
       </details>
 
-      <div className="border-cizgi mt-5 rounded-yumusak border p-5">
-        <h3 className="font-sans text-sm font-semibold">Bu hesaba dahil olmayanlar</h3>
-        <ul className="text-murekkep-2 mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+      <div className="border-kenar mt-5 rounded-kart border-[0.5px] p-5">
+        <h3 className="font-sans text-govde-kucuk font-medium">Bu hesaba dahil olmayanlar</h3>
+        <ul className="text-metin-2 mt-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
           {veri.uyarilar.map((uyari) => (
             <li key={uyari}>{uyari}</li>
           ))}
@@ -399,9 +399,9 @@ function Sonuclar({
 
 function YilTablosu({ yillar }: { yillar: YilSatiri[] }) {
   return (
-    <table className="rakam w-full min-w-[34rem] text-right text-sm">
+    <table className="rakam w-full min-w-[34rem] text-right text-govde-kucuk">
       <thead>
-        <tr className="text-murekkep-3 text-mikro border-cizgi border-b">
+        <tr className="text-metin-3 text-mikro border-kenar border-b-[0.5px]">
           <th scope="col" className="py-2 text-left font-medium">
             Yıl
           </th>
@@ -418,13 +418,13 @@ function YilTablosu({ yillar }: { yillar: YilSatiri[] }) {
       </thead>
       <tbody>
         {yillar.map((satir) => (
-          <tr key={satir.yil} className="border-cizgi/60 border-b last:border-0">
+          <tr key={satir.yil} className="border-kenar/60 border-b-[0.5px] last:border-0">
             <th scope="row" className="py-2 text-left font-normal">
               {satir.yil}
             </th>
             <td className="py-2">{paraKisaYaz(satir.satinAlanNetVarlik)}</td>
             <td className="py-2">{paraKisaYaz(satir.kiraciNetVarlik)}</td>
-            <td className={satir.fark >= 0 ? 'text-artis py-2' : 'text-azalis py-2'}>
+            <td className={satir.fark >= 0 ? 'text-basari py-2' : 'text-hata py-2'}>
               {satir.fark >= 0 ? '+' : '−'}
               {paraKisaYaz(Math.abs(satir.fark))}
             </td>

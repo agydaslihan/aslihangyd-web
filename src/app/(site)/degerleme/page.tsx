@@ -37,7 +37,7 @@ export default async function DegerlemeSayfasi() {
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Evim ne eder?</h1>
-        <p className="text-murekkep-2 leading-relaxed">
+        <p className="text-metin-2 leading-relaxed">
           Satmayı düşünmeseniz bile bilmek işinize yarar. Birkaç bilgi girin, tahmini değer
           aralığını ve nasıl hesapladığımızı görün.{' '}
           <strong className="font-medium">Hiçbir iletişim bilgisi istemiyoruz</strong> — sonucu
@@ -54,8 +54,8 @@ export default async function DegerlemeSayfasi() {
       ) : (
         <>
           {veriliMahalleSayisi === 0 ? (
-            <div className="border-cizgi bg-uyari-acik rounded-yumusak mb-6 border p-4">
-              <p className="text-sm leading-relaxed">
+            <div className="border-kenar bg-uyari-zemin rounded-kart mb-6 border-[0.5px] p-4">
+              <p className="text-govde-kucuk leading-relaxed">
                 <strong className="font-medium">Not:</strong> Henüz hiçbir mahalle için yeterli
                 fiyat gözlemi biriktirmedik. Araç çalışıyor ama tahmin üretemeyecek — bu bilinçli:
                 elimizde veri yokken rakam uydurmuyoruz.

@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { OnayAlani, SayiAlani, SonucSatiri, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
 import { ParametreEksikUyarisi } from '@/components/hesaplayici/Kabuk'
 import { BosDurum } from '@/components/ui/BosDurum'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { paraYaz, yuzdeYaz } from '@/lib/bicimlendirme'
 import { alimMaliyetiHesapla } from '@/lib/hesaplayicilar/alimMaliyeti'
 import type { VergiParametreKumesi } from '@/lib/vergi/parametreler'
@@ -45,23 +45,23 @@ export function AlimMaliyetiFormu({ parametreler }: { parametreler: VergiParamet
       <div>
         {sonuc.durum === 'hesaplandi' ? (
           <>
-            <RakamIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
-              <RakamKarti etiket="İlan fiyatı" deger={paraYaz(sonuc.veri.fiyat)} />
-              <RakamKarti
+            <KartIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
+              <HesapKarti etiket="İlan fiyatı" deger={paraYaz(sonuc.veri.fiyat)} />
+              <HesapKarti
                 etiket="Ek maliyetler"
                 deger={paraYaz(sonuc.veri.ekMaliyetToplami)}
                 altBilgi={`Fiyatın ${yuzdeYaz(sonuc.veri.ekMaliyetOrani)}'i`}
                 ton="azalis"
               />
-              <RakamKarti
+              <HesapKarti
                 etiket="Gerçek maliyet"
                 deger={paraYaz(sonuc.veri.gercekToplamMaliyet)}
                 altBilgi="Cebinizden çıkacak toplam"
                 ton="vurgu"
               />
-            </RakamIzgarasi>
+            </KartIzgarasi>
 
-            <dl className="border-cizgi bg-yuzey rounded-yumusak mt-5 border px-5 py-2">
+            <dl className="border-kenar bg-yuzey rounded-kart mt-5 border-[0.5px] px-5 py-2">
               <SonucSatiri etiket="Satış bedeli" deger={paraYaz(sonuc.veri.fiyat)} />
               {sonuc.veri.kalemler.map((kalem) => (
                 <SonucSatiri
@@ -78,7 +78,7 @@ export function AlimMaliyetiFormu({ parametreler }: { parametreler: VergiParamet
               />
             </dl>
 
-            <p className="text-murekkep-3 mt-4 text-mikro leading-relaxed">
+            <p className="text-metin-3 mt-4 text-mikro leading-relaxed">
               Taşınma, tadilat, abonelik açtırma ve mobilya gibi kalemler bu hesaba dahil değildir.
               Bunlar da bütçenizin gerçek parçasıdır.
             </p>

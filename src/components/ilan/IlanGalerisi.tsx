@@ -19,9 +19,9 @@ export function IlanGalerisi({ ilan }: { ilan: Ilanlar }) {
 
   if (gorseller.length === 0) {
     return (
-      <div className="bg-yuzey-2 border-cizgi rounded-yumusak text-murekkep-3 flex aspect-16/9 flex-col items-center justify-center gap-3 border border-dashed sm:aspect-21/9">
+      <div className="bg-yuzey-2 border-kenar rounded-kart text-metin-3 flex aspect-16/9 flex-col items-center justify-center gap-3 border-[0.5px] border-dashed sm:aspect-21/9">
         <VeriBekleniyorIkon width={36} height={36} />
-        <p className="text-sm">Bu taşınmazın fotoğrafları henüz yüklenmedi.</p>
+        <p className="text-govde-kucuk">Bu taşınmazın fotoğrafları henüz yüklenmedi.</p>
       </div>
     )
   }
@@ -31,7 +31,7 @@ export function IlanGalerisi({ ilan }: { ilan: Ilanlar }) {
 
   return (
     <div className="grid gap-2 sm:grid-cols-[2fr_1fr] sm:gap-3">
-      <div className="bg-yuzey-2 rounded-yumusak relative aspect-4/3 overflow-hidden sm:aspect-3/2">
+      <div className="bg-yuzey-2 rounded-kart relative aspect-4/3 overflow-hidden sm:aspect-3/2">
         <Image
           src={kapak!.url ?? ''}
           alt={kapak!.alt ?? ilan.baslik}
@@ -47,7 +47,7 @@ export function IlanGalerisi({ ilan }: { ilan: Ilanlar }) {
           {yan.map((gorsel) => (
             <div
               key={gorsel.id}
-              className="bg-yuzey-2 rounded-yumusak relative aspect-square overflow-hidden"
+              className="bg-yuzey-2 rounded-kart relative aspect-square overflow-hidden"
             >
               <Image
                 src={gorsel.url ?? ''}
