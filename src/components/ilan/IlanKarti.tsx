@@ -94,7 +94,7 @@ export function IlanKarti({ ilan, oncelikli = false }: { ilan: Ilanlar; oncelikl
             <Rozet>{etiketBul(ODA_SAYILARI, ilan.odaSayisi) ?? ilan.odaSayisi}</Rozet>
           ) : null}
           {m2Yaz(ilan.brutM2) ? <Rozet>{m2Yaz(ilan.brutM2)}</Rozet> : null}
-          {carpan ? <Rozet ton="pirinc">Kira çarpanı {carpan}</Rozet> : null}
+          {carpan ? <Rozet ton="lacivert">Kira çarpanı {carpan}</Rozet> : null}
         </div>
       </div>
     </article>

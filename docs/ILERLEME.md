@@ -769,6 +769,115 @@ kez kodlamak olurdu.
 
 ---
 
+## A aşaması — Tasarım sistemi (onaylanan palet)
+
+Aslıhan renk paletini, tipografi ölçeğini ve bileşen davranışlarını yazılı
+olarak onayladı. Bu aşama o kararları **tek gerçek kaynağa** taşıdı ve
+uyulup uyulmadığını testle bağladı.
+
+### Ne yapıldı
+
+- `src/app/(site)/globals.css` yeniden yazıldı — onaylanan lacivert (11
+  basamak), bakır (7 basamak) ve sıcak nötr rampaları, anlamsal jetonlar,
+  tipografi ölçeği (34/22/19/16/14/13/12/11), köşe yarıçapları, 0,5px
+  kenarlık, geçiş süreleri.
+- `src/lib/tasarim/kontrast.ts` — WCAG kontrast hesabı ve globals.css
+  jeton çözümleyicisi.
+- `src/lib/tasarim/kontrast.test.ts` — **33 renk kombinasyonu × 2 tema**
+  gerçek CSS dosyasına karşı AA'ya göre ölçülüyor. Ayrıca onaylanan
+  rampaların birebir korunduğu doğrulanıyor.
+- `src/lib/tasarim/disiplin.test.ts` — ham hex, 600/700 font ağırlığı ve
+  bakır kuralı kod seviyesinde denetleniyor.
+- Bileşenler: `Buton` (5 görünüm + sebepli pasif), `Rozet` (+ doğrulanmış
+  ilan / yayınlanmayan / yetki süresi), `IstatistikKarti` (gözlem sayısı
+  **zorunlu**), `KilitliKart` (çapraz çizgili doku), `GuvenDuzeyi`,
+  `BosDurum` (ne yok / neden / ne zaman / eylem), `Iskelet`.
+- `/stil-rehberi` — yalnızca geliştirme ortamında açık, üretimde 404,
+  robots.txt'te kapalı.
+
+### Kararlar ve gerekçeleri
+
+**Renk iki katmanlı: rampalar + anlamsal jetonlar.**
+`lacivert-600` her yerde aynı renktir ve temayla değişmez; `--color-vurgu`
+ise role işaret eder ve koyu temada rampanın başka bir basamağına bağlanır.
+Tek katmanlı bir sistemde koyu tema için ya rampanın anlamı bozulur ya da
+her bileşende koşullu sınıf yazılır.
+
+**Eski jeton adları korundu, değerleri değiştirildi.**
+Tailwind bilinmeyen bir yardımcı sınıfı sessizce üretmez — `bg-kagit`'i bir
+çırpıda silmek, hiçbir derleme hatası vermeden ~40 bileşenin rengini
+düşürürdü. Eski adlar onaylanan palete bağlandı: site bugünden doğru
+renkleri kullanıyor, çağrı yerleri E aşamasında taşınacak.
+
+**Pirinç aksan kaldırıldı, yerine bakır GELMEDİ.**
+Eski `pirinc` jetonu veri vurgusu olarak 18 yerde geçiyordu. Bakıra
+bağlansaydı yeni kural daha doğmadan ihlal edilmiş olurdu. Lacivert
+vurguya bağlandı; bakır boş kaldı ve iki eyleme ayrıldı.
+
+**Bakır kuralı testle bağlandı.**
+`bg-bakir-400…700` yalnızca `Buton.tsx` ve stil rehberinde geçebilir;
+`gorunum="bakir"` çağrıları en fazla 4 olabilir. Kural nadirlik üzerine
+kurulu olduğu için kademeli uygulanamaz — bugünden tüm koda uygulanıyor.
+Açık bakır tintler (100/200) kuralın dışında: onlar eylem değil DURUM
+boyar ("yetki N gün sonra bitiyor").
+
+**Şartnamede olmayan `lacivert` buton görünümü eklendi.**
+Şartnamedeki hiyerarşi uygulanınca form içindeki "Gönder" ile "Vazgeç"
+görsel olarak eşitleniyordu. Bakırı üçüncü bir eyleme açmak yerine markanın
+kendi rengi kullanıldı: bakır nadir kaldı, gönderim butonu tıklanabilir
+göründü.
+
+**Pasif buton `disabled` değil `aria-disabled` kullanıyor.**
+`disabled` butonu sekme sırasından çıkarır; klavye ya da ekran okuyucu
+kullanan biri butona hiç ulaşamadığı için SEBEBİNİ de duymaz. Bu projede
+en sık görülecek pasiflik sebebi "EİDS yetkisi eksik" olacak ve tam olarak
+orada susmak kabul edilemezdi.
+
+**`IstatistikKarti.gozlemSayisi` tip düzeyinde zorunlu.**
+İsteğe bağlı olsaydı unutulurdu. Gerçekten bilinmiyorsa `null` geçilir ve
+kart "Gözlem sayısı bilinmiyor" yazar — gizlemek seçenek değil.
+
+**Kilitli kartta doku, bulanık fotoğraf değil.**
+İki gerekçe: (1) bulanıklık "saklıyoruz" der ve ucuz durur, doku "bu bilgi
+henüz size ait değil" der; (2) bulanık görsel yine de indirilir, CSS
+filtresi kaldırılınca ortaya çıkar. Doku hiçbir görsel isteği yapmaz.
+
+### ⚠️ Onaylanan değerlerden sapılan üç nokta
+
+Üçü de erişilebilirlik zorunluluğundan; hiçbiri estetik tercih değil.
+
+| Konu | Onaylanan | Sorun | Yapılan |
+| --- | --- | --- | --- |
+| Uyarı rengi | `#A87A1E` | Beyaz üzerinde **3,87:1** — ikon için yeterli, metin için değil | `--color-uyari` (ikon/kenarlık) ve `--color-uyari-metin` `#7A5714` (6,56:1) ayrıldı |
+| Nötr ramp | 400 ve 500 var, 600 yok | Yardımcı metin notr-500 ile tint yüzeyde **3,93:1**'e düşüyordu — ve yardımcı metin çoğunlukla tam orada duruyor | `--color-notr-600: #5F5C55` eklendi (her iki yüzeyde 5,7:1+) |
+| Form kenarlığı | "0,5px, nötr-200" | notr-200 beyaz üzerinde **1,3:1**; WCAG 1.4.11 bileşen sınırı için 3:1 ister | Dekoratif kart çerçevesi notr-200 kaldı; form denetimleri için `--color-kenar-giris` (notr-500, 4,6:1) |
+
+Ayrıca koyu temada ilerleme çubuğu dolgusu, tint kanalından **1,83:1** ile
+ayrışıyordu — yani görünmüyordu. Kontrast testi yakaladı; `--color-gosterge`
+ayrı bir jeton olarak açıldı.
+
+**Koyu tema değerleri onaylanan listede yoktu.** Mevcut sitede koyu tema
+vardı, sessizce kaldırmak gerileme olurdu; onaylanan paletten türetildi ve
+aynı kontrast testinden geçiriliyor. Onaya sunuldu (SENDEN-BEKLENENLER
+md. 7).
+
+### A aşaması ölçümleri (yerel)
+
+| Ölçüm | Değer | Not |
+| --- | --- | --- |
+| `pnpm typecheck` · `lint` | temiz | — |
+| `pnpm test` | **605 test / 25 dosya** | A öncesi 493 |
+| Derleme (Turbopack) | **79 sn** | 150 sn eşiğinin altında, A öncesiyle aynı |
+| `/` JS (gzip) | **198,5 kB** | A öncesi 198 kB — değişmedi |
+| `/` CSS (gzip) | **10,1 kB** | — |
+| TTFB `/` · `/portfoy` · `/degerleme` | 72 · 48 · 54 ms | üretim derlemesi, demo veri |
+| `/stil-rehberi` (üretim) | **404** | doğrulandı |
+
+Tasarım sistemi performans bütçesine dokunmadı: yeni bileşenler sunucu
+bileşeni, yeni renkler CSS değişkeni, yeni ikonlar elle yazılmış SVG.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

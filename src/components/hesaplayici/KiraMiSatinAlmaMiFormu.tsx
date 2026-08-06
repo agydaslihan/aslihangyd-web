@@ -239,7 +239,7 @@ export function KiraMiSatinAlmaMiFormu() {
         ) : (
           <BosDurum
             baslik="Karşılaştırma için birkaç bilgi gerekiyor"
-            aciklama="Bu araç aylık taksiti kirayla değil, iki senaryonun süre sonundaki net varlığını karşılaştırır. Eksik olanlar aşağıda."
+            neden="Bu araç aylık taksiti kirayla değil, iki senaryonun süre sonundaki net varlığını karşılaştırır. Eksik olanlar aşağıda."
             eylem={
               <ul className="text-murekkep-2 list-disc space-y-1 pl-5 text-left text-sm">
                 {sonuc.eksikler.map((eksik) => (

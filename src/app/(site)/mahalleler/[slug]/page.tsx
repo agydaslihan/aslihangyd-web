@@ -210,7 +210,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
               ) : (
                 <BosDurum
                   baslik="Mahalle analizi yazılıyor"
-                  aciklama="Bu mahallenin değer sürücülerini, ulaşım bağlantılarını ve kimler için uygun olduğunu anlatan ayrıntılı analiz hazırlanıyor. Yüzeysel bir metin yayınlamak yerine, gerçekten işinize yarayacak olanı yazmayı tercih ediyoruz."
+                  neden="Bu mahallenin değer sürücülerini, ulaşım bağlantılarını ve kimler için uygun olduğunu anlatan ayrıntılı analiz hazırlanıyor. Yüzeysel bir metin yayınlamak yerine, gerçekten işinize yarayacak olanı yazmayı tercih ediyoruz."
                   sade
                   eylem={
                     whatsapp ? (
@@ -304,7 +304,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
         ) : (
           <BosDurum
             baslik="Bu mahallede şu an yayında ilanımız yok"
-            aciklama="Portföyümüz sürekli değişiyor. Bu mahallede aradığınız bir taşınmaz varsa bize anlatın; uygun bir seçenek geldiğinde ilk siz haberdar olun."
+            neden="Portföyümüz sürekli değişiyor. Bu mahallede aradığınız bir taşınmaz varsa bize anlatın; uygun bir seçenek geldiğinde ilk siz haberdar olun."
             eylem={
               <Buton href={`/iletisim?mahalle=${mahalle.slug}`} gorunum="ikincil">
                 Aradığınızı anlatın

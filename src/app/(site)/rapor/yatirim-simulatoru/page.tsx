@@ -60,7 +60,7 @@ export default async function YatirimSimulatoruRaporu({
         <div className="mx-auto max-w-2xl">
           <BosDurum
             baslik="Rapor üretilemedi"
-            aciklama="Bu rapor için gereken bilgiler bağlantıda eksik. Simülatöre dönüp bilgileri girdikten sonra rapor bağlantısı yeniden oluşacak."
+            neden="Bu rapor için gereken bilgiler bağlantıda eksik. Simülatöre dönüp bilgileri girdikten sonra rapor bağlantısı yeniden oluşacak."
             eylem={<Buton href={ARAC_ADRESI}>Simülatöre dön</Buton>}
           />
         </div>

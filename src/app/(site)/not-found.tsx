@@ -25,7 +25,7 @@ export default function BulunamadiSayfasi() {
         <Buton href="/mahalleler" gorunum="ikincil">
           Mahalleler
         </Buton>
-        <Buton href="/iletisim" gorunum="sessiz">
+        <Buton href="/iletisim" gorunum="hayalet">
           Bize ulaşın
         </Buton>
       </div>

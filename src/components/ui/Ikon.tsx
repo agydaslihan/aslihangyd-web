@@ -151,6 +151,120 @@ export function IndirIkon(ozellikler: IkonOzellikleri) {
   )
 }
 
+/** Yayınlanmayan portföy — kilitli kart ve rozet. */
+export function KilitIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <rect x="4" y="10" width="16" height="11" rx="2" />
+      <path d="M8 10V7a4 4 0 0 1 8 0v3" />
+    </Govde>
+  )
+}
+
+/** Yetki süresi — "N gün sonra bitiyor" rozeti. */
+export function SaatIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <circle cx="12" cy="12" r="9" />
+      <path d="M12 7v5.5l3.5 2" />
+    </Govde>
+  )
+}
+
+/**
+ * Uyarı.
+ *
+ * ⚠️ WCAG 1.4.1: renk tek başına bilgi taşımaz. Kehribar bir zemin
+ * gördüğünde "uyarı" anlayan göz, renk körlüğünde aynı şeyi anlamaz —
+ * ikon o boşluğu doldurur.
+ */
+export function UyariIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M10.3 3.9 2.4 17.2A2 2 0 0 0 4.1 20.2h15.8a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0Z" />
+      <path d="M12 9v4M12 17h.01" />
+    </Govde>
+  )
+}
+
+/** Dış bağlantı — altbilgideki resmî kaynaklarda zorunlu. */
+export function DisBaglantiIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M14 4h6v6" />
+      <path d="m20 4-8.5 8.5" />
+      <path d="M18 14v5a1.8 1.8 0 0 1-1.8 1.8H5A1.8 1.8 0 0 1 3.2 19V7.8A1.8 1.8 0 0 1 5 6h5" />
+    </Govde>
+  )
+}
+
+/** Yatay kaydırma okları. `yon` ile sağ/sol seçilir. */
+export function ChevronIkon({
+  yon = 'sag',
+  ...ozellikler
+}: IkonOzellikleri & { yon?: 'sol' | 'sag' }) {
+  return (
+    <Govde {...ozellikler}>
+      {yon === 'sag' ? <path d="m9 5 7 7-7 7" /> : <path d="m15 5-7 7 7 7" />}
+    </Govde>
+  )
+}
+
+/**
+ * Trend yönü — artış/azalış.
+ *
+ * Değişim değerinin yanında zorunludur: yeşil/kırmızı ayrımı tek başına
+ * bırakılırsa renk körü bir yatırımcı için sayının işareti kaybolur.
+ */
+export function TrendIkon({ yon, ...ozellikler }: IkonOzellikleri & { yon: 'yukari' | 'asagi' }) {
+  return (
+    <Govde {...ozellikler}>
+      {yon === 'yukari' ? (
+        <>
+          <path d="m4 16 6-6 4 4 6-7" />
+          <path d="M15 7h5v5" />
+        </>
+      ) : (
+        <>
+          <path d="m4 8 6 6 4-4 6 7" />
+          <path d="M15 17h5v-5" />
+        </>
+      )}
+    </Govde>
+  )
+}
+
+/** Harita katman paneli. */
+export function KatmanIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="m12 3 9 4.5-9 4.5-9-4.5z" />
+      <path d="m3 12.5 9 4.5 9-4.5" />
+    </Govde>
+  )
+}
+
+/** Fotoğraf sayacı — ilan kartı rozetinde. */
+export function FotografIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <rect x="3" y="6" width="18" height="14" rx="2" />
+      <circle cx="12" cy="13" r="3.2" />
+      <path d="M8 6l1.4-2h5.2L16 6" />
+    </Govde>
+  )
+}
+
+/** 360° tur rozeti. */
+export function TurIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <ellipse cx="12" cy="12" rx="9" ry="4" />
+      <path d="M8.5 15.5 12 21l3.5-5.5" />
+    </Govde>
+  )
+}
+
 export function MenuIkon(ozellikler: IkonOzellikleri) {
   return (
     <Govde {...ozellikler}>

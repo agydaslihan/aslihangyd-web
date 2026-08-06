@@ -162,7 +162,7 @@ export function KiraGetirisiFormu({
         ) : (
           <BosDurum
             baslik="Fiyat ve kira girin"
-            aciklama="Taşınmazın satış fiyatını ve aylık kira gelirini girdiğinizde kira çarpanı, brüt getiri ve amortisman süresi anında hesaplanır."
+            neden="Taşınmazın satış fiyatını ve aylık kira gelirini girdiğinizde kira çarpanı, brüt getiri ve amortisman süresi anında hesaplanır."
           />
         )}
       </div>

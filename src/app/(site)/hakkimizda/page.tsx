@@ -45,7 +45,7 @@ export default async function HakkimizdaSayfasi() {
         ) : (
           <BosDurum
             baslik="Tanıtım metni hazırlanıyor"
-            aciklama="Bu sayfada kimiz, nasıl çalışıyoruz ve neye göre tavsiye veriyoruz sorularının cevabı yer alacak."
+            neden="Bu sayfada kimiz, nasıl çalışıyoruz ve neye göre tavsiye veriyoruz sorularının cevabı yer alacak."
             sade
             eylem={
               <Buton href="/iletisim" gorunum="ikincil">
@@ -85,7 +85,7 @@ export default async function HakkimizdaSayfasi() {
           ) : (
             <BosDurum
               baslik="Yetki belgesi bilgileri henüz girilmedi"
-              aciklama="Taşınmaz Ticareti Yetki Belgesi numarası ve işletme bilgileri yönetim panelinden girildiğinde bu alanda yayınlanacak. Uydurma bir numara göstermiyoruz."
+              neden="Taşınmaz Ticareti Yetki Belgesi numarası ve işletme bilgileri yönetim panelinden girildiğinde bu alanda yayınlanacak. Uydurma bir numara göstermiyoruz."
               sade
             />
           )}

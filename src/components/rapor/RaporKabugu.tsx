@@ -63,7 +63,7 @@ export function RaporKabugu({
           className="mb-6 flex flex-wrap items-center justify-between gap-3"
           data-yazdirma="gizle"
         >
-          <Buton href={geriAdres} gorunum="sessiz" boyut="kucuk">
+          <Buton href={geriAdres} gorunum="hayalet" boyut="kucuk">
             ← {geriEtiket}
           </Buton>
           <YazdirButonu />

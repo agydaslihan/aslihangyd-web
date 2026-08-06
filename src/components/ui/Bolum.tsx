@@ -16,8 +16,8 @@ export function Bolum({
 }) {
   const zeminler = {
     kagit: '',
-    yuzey: 'bg-yuzey-2/60 border-y border-cizgi',
-    lacivert: 'bg-lacivert-koyu text-white',
+    yuzey: 'bg-yuzey-2/60 border-y-[0.5px] border-kenar',
+    lacivert: 'bg-lacivert-yuzey text-white',
   } as const
 
   return (
@@ -53,14 +53,12 @@ export function BolumBasligi({
     <div className="mb-6 flex flex-col gap-4 sm:mb-8 sm:flex-row sm:items-end sm:justify-between">
       <div className="flex max-w-2xl flex-col gap-2">
         {ustBaslik ? (
-          <span className="text-pirinc-koyu text-mikro font-semibold tracking-[0.08em] uppercase">
+          <span className="text-vurgu text-mikro font-medium tracking-[0.08em] uppercase">
             {ustBaslik}
           </span>
         ) : null}
-        <Baslik className="text-[1.625rem] leading-tight sm:text-[2rem]">{baslik}</Baslik>
-        {aciklama ? (
-          <p className="text-murekkep-2 text-[0.9375rem] leading-relaxed">{aciklama}</p>
-        ) : null}
+        <Baslik className={seviye === 2 ? 'text-baslik-2' : 'text-baslik-3'}>{baslik}</Baslik>
+        {aciklama ? <p className="text-metin-2 text-govde-kucuk olcu">{aciklama}</p> : null}
       </div>
       {yan ? <div className="shrink-0">{yan}</div> : null}
     </div>

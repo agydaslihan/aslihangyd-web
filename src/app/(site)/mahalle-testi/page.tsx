@@ -45,7 +45,7 @@ export default async function MahalleTestiSayfasi() {
         <div className="mx-auto max-w-2xl">
           <BosDurum
             baslik="Test henüz hazır değil"
-            aciklama="Mahalle profilleri girildiğinde bu test çalışmaya başlayacak. O zamana kadar aradığınızı bize doğrudan anlatabilirsiniz."
+            neden="Mahalle profilleri girildiğinde bu test çalışmaya başlayacak. O zamana kadar aradığınızı bize doğrudan anlatabilirsiniz."
             eylem={<Buton href="/iletisim">Bize anlatın</Buton>}
           />
         </div>

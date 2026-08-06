@@ -57,7 +57,7 @@ export default async function KarsilastirmaSayfasi({
       {hepsi.length === 0 ? (
         <BosDurum
           baslik="Karşılaştırılacak mahalle yok"
-          aciklama="Mahalle sayfaları yayına alındığında burada karşılaştırma yapabileceksiniz."
+          neden="Mahalle sayfaları yayına alındığında burada karşılaştırma yapabileceksiniz."
           eylem={
             <Buton href="/mahalleler" gorunum="ikincil">
               Mahalleler
@@ -84,7 +84,7 @@ export default async function KarsilastirmaSayfasi({
             <div className="mt-8">
               <BosDurum
                 baslik="Karşılaştırmak için mahalle seçin"
-                aciklama="Yukarıdaki listeden en az bir mahalle seçtiğinizde rakamlar yan yana görünecek."
+                neden="Yukarıdaki listeden en az bir mahalle seçtiğinizde rakamlar yan yana görünecek."
                 sade
               />
             </div>

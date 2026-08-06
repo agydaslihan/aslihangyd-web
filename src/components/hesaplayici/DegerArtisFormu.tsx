@@ -207,7 +207,7 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
         ) : (
           <BosDurum
             baslik="Alış ve satış bilgilerini girin"
-            aciklama="Elde tutma süresi muafiyet sınırını geçtiyse vergi doğmaz — bunu ilk olarak kontrol ediyoruz. Geçmediyse enflasyon endekslemesiyle gerçek matrahı hesaplıyoruz."
+            neden="Elde tutma süresi muafiyet sınırını geçtiyse vergi doğmaz — bunu ilk olarak kontrol ediyoruz. Geçmediyse enflasyon endekslemesiyle gerçek matrahı hesaplıyoruz."
           />
         )}
       </div>

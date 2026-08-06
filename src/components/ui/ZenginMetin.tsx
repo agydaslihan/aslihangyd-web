@@ -26,16 +26,18 @@ export function ZenginMetin({
   return (
     <div
       className={sinif(
-        'max-w-2xl leading-relaxed',
-        '[&_p]:text-murekkep-2 [&_p]:mb-4 [&_p]:text-[1.0625rem]',
-        '[&_h2]:mt-10 [&_h2]:mb-3 [&_h2]:text-[1.5rem] [&_h2]:leading-tight',
-        '[&_h3]:mt-8 [&_h3]:mb-2 [&_h3]:text-[1.25rem] [&_h3]:leading-tight',
-        '[&_ul]:text-murekkep-2 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5',
-        '[&_ol]:text-murekkep-2 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5',
+        // Ölçü 58ch: uzun mahalle analizlerinde göz satır başını kaybetmesin.
+        'olcu',
+        '[&_p]:text-metin-2 [&_p]:text-govde [&_p]:mb-4',
+        '[&_h2]:text-baslik-2 [&_h2]:mt-10 [&_h2]:mb-3',
+        '[&_h3]:text-baslik-3 [&_h3]:mt-8 [&_h3]:mb-2',
+        '[&_ul]:text-metin-2 [&_ul]:mb-4 [&_ul]:list-disc [&_ul]:pl-5',
+        '[&_ol]:text-metin-2 [&_ol]:mb-4 [&_ol]:list-decimal [&_ol]:pl-5',
         '[&_li]:mb-1.5',
-        '[&_a]:text-lacivert [&_a]:underline [&_a]:underline-offset-2',
-        '[&_strong]:text-murekkep [&_strong]:font-semibold',
-        '[&_blockquote]:border-pirinc [&_blockquote]:text-murekkep-2 [&_blockquote]:my-6 [&_blockquote]:border-l-2 [&_blockquote]:pl-4 [&_blockquote]:italic',
+        '[&_a]:text-vurgu [&_a]:underline [&_a]:underline-offset-2',
+        // Vurgu ağırlıkla değil renkle yapılır: 600 ağırlık sakin tonu bozar.
+        '[&_strong]:text-metin [&_strong]:font-medium',
+        '[&_blockquote]:border-kenar-guclu [&_blockquote]:text-metin-2 [&_blockquote]:my-6 [&_blockquote]:border-l-2 [&_blockquote]:pl-4 [&_blockquote]:italic',
         sinifAdi,
       )}
     >

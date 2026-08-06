@@ -20,11 +20,11 @@ export const metadata: Metadata = {
 
 const TUR_GORUNUMU: Record<
   SinyalTuru,
-  { etiket: string; ton: 'artis' | 'azalis' | 'uyari'; sinif: string }
+  { etiket: string; ton: 'basari' | 'hata' | 'uyari'; sinif: string }
 > = {
-  firsat: { etiket: 'Fırsat', ton: 'artis', sinif: 'border-artis/40 bg-artis-acik' },
-  risk: { etiket: 'Risk', ton: 'azalis', sinif: 'border-azalis/40 bg-azalis-acik' },
-  uyari: { etiket: 'Dikkat', ton: 'uyari', sinif: 'border-cizgi bg-uyari-acik' },
+  firsat: { etiket: 'Fırsat', ton: 'basari', sinif: 'border-basari/40 bg-basari-zemin' },
+  risk: { etiket: 'Risk', ton: 'hata', sinif: 'border-hata/40 bg-hata-zemin' },
+  uyari: { etiket: 'Dikkat', ton: 'uyari', sinif: 'border-kenar bg-uyari-zemin' },
 }
 
 export default async function BolgeRadariSayfasi() {
@@ -59,7 +59,7 @@ export default async function BolgeRadariSayfasi() {
       {sonuc.durum !== 'tarandi' ? (
         <BosDurum
           baslik="Radar henüz tarama yapamıyor"
-          aciklama={`Karşılaştırma yapabilmek için verisi olan en az ${sonuc.gereken} mahalle gerekiyor; şu an ${sonuc.taranan} mahalle var. Daha az mahallenin medyanı "Çorlu ortalaması" diye sunulabilecek bir şey değil — bu yüzden sinyal üretmiyoruz.`}
+          neden={`Karşılaştırma yapabilmek için verisi olan en az ${sonuc.gereken} mahalle gerekiyor; şu an ${sonuc.taranan} mahalle var. Daha az mahallenin medyanı "Çorlu ortalaması" diye sunulabilecek bir şey değil — bu yüzden sinyal üretmiyoruz.`}
           eylem={
             <Buton href="/mahalleler" gorunum="ikincil">
               Mahalleleri gör
@@ -87,7 +87,7 @@ export default async function BolgeRadariSayfasi() {
           {sonuc.veri.sinyaller.length === 0 ? (
             <BosDurum
               baslik="Şu an öne çıkan bir sinyal yok"
-              aciklama="Taranan mahallelerin hiçbiri, sinyal üretmeye yetecek kadar Çorlu medyanından ayrışmıyor. Yeni gözlemler geldikçe bu tablo değişecek."
+              neden="Taranan mahallelerin hiçbiri, sinyal üretmeye yetecek kadar Çorlu medyanından ayrışmıyor. Yeni gözlemler geldikçe bu tablo değişecek."
             />
           ) : (
             <ul className="grid gap-4 sm:grid-cols-2">

@@ -48,7 +48,7 @@ export default async function DegerlemeSayfasi() {
       {mahalleler.length === 0 ? (
         <BosDurum
           baslik="Değerleme aracı henüz hazır değil"
-          aciklama="Mahalle verileri girildiğinde bu araç çalışmaya başlayacak. O zamana kadar taşınmazınızı bize doğrudan sorabilirsiniz."
+          neden="Mahalle verileri girildiğinde bu araç çalışmaya başlayacak. O zamana kadar taşınmazınızı bize doğrudan sorabilirsiniz."
           eylem={<Buton href="/iletisim?tip=degerleme">Bize sorun</Buton>}
         />
       ) : (

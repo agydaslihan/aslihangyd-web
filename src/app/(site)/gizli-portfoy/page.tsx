@@ -106,7 +106,7 @@ export default async function GizliPortfoySayfasi() {
                 </p>
 
                 {kayit.kiraCarpani !== null ? (
-                  <Rozet ton="pirinc">Kira çarpanı ~{carpanYaz(kayit.kiraCarpani)}</Rozet>
+                  <Rozet ton="lacivert">Kira çarpanı ~{carpanYaz(kayit.kiraCarpani)}</Rozet>
                 ) : null}
 
                 {/* Kilitli alanlar — sunucudan hiç gönderilmiyor, burada
@@ -129,7 +129,7 @@ export default async function GizliPortfoySayfasi() {
         ) : (
           <BosDurum
             baslik="Şu anda yayınlanmayan portföyümüz yok"
-            aciklama="Off-market taşınmazlar düzenli olarak değişir. Aradığınız özellikleri bize bırakın; portföyümüze uygun bir taşınmaz girdiğinde ilk siz haberdar olun."
+            neden="Off-market taşınmazlar düzenli olarak değişir. Aradığınız özellikleri bize bırakın; portföyümüze uygun bir taşınmaz girdiğinde ilk siz haberdar olun."
             eylem={<Buton href="/iletisim?tip=alici">Aradığınızı anlatın</Buton>}
           />
         )}

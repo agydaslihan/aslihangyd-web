@@ -81,7 +81,7 @@ export default async function DegerlemeRaporu({
         <div className="mx-auto max-w-2xl">
           <BosDurum
             baslik="Rapor üretilemedi"
-            aciklama={
+            neden={
               sonuc.durum === 'veri_yok' && sonuc.sebep === 'mahalle_verisi_yok'
                 ? 'Bu mahalle için henüz yeterli fiyat gözlemi biriktirmedik. Gerçek gözleme dayanmayan bir rakam üretmiyoruz — bu bilinçli bir kapı.'
                 : 'Bu rapor için gereken bilgiler bağlantıda eksik. Değerleme aracına dönüp bilgileri girdikten sonra rapor bağlantısı yeniden oluşacak.'

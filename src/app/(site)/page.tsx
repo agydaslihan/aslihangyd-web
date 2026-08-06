@@ -49,7 +49,7 @@ export default async function AnaSayfa() {
         ) : (
           <BosDurum
             baslik="Portföy hazırlanıyor"
-            aciklama="Şu anda yayında ilan bulunmuyor. Aradığınız taşınmazı bize anlatın; portföyümüze girdiğinde ilk siz haberdar olun."
+            neden="Şu anda yayında ilan bulunmuyor. Aradığınız taşınmazı bize anlatın; portföyümüze girdiğinde ilk siz haberdar olun."
             eylem={
               <Buton href="/iletisim" gorunum="ikincil">
                 Aradığınızı anlatın
@@ -81,7 +81,7 @@ export default async function AnaSayfa() {
         ) : (
           <BosDurum
             baslik="Mahalle sayfaları hazırlanıyor"
-            aciklama="Pilot mahallelerin analiz metinleri ve rakamları üzerinde çalışıyoruz. Hazır olduğunda burada göreceksiniz."
+            neden="Pilot mahallelerin analiz metinleri ve rakamları üzerinde çalışıyoruz. Hazır olduğunda burada göreceksiniz."
             ikon={<KonumIkon width={32} height={32} />}
           />
         )}

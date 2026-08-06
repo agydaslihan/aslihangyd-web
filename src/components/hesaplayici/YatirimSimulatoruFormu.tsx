@@ -241,7 +241,7 @@ export function YatirimSimulatoruFormu({ parametreler }: { parametreler: VergiPa
         ) : (
           <BosDurum
             baslik="Simülasyon için birkaç bilgi gerekiyor"
-            aciklama="Bu araç tek yılın getirisini değil, yatırımın yıl yıl nasıl geliştiğini gösterir. Eksik olanlar aşağıda."
+            neden="Bu araç tek yılın getirisini değil, yatırımın yıl yıl nasıl geliştiğini gösterir. Eksik olanlar aşağıda."
             eylem={
               <ul className="text-murekkep-2 list-disc space-y-1 pl-5 text-left text-sm">
                 {sonuc.eksikler.map((eksik) => (

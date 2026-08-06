@@ -258,13 +258,44 @@ en az 6 ay veri, 500 gözlem, ağırlığın %70'ini kapsayan katmanlarda her ay
 Elinde Excel/Sheets varsa CSV içe aktarma yazabilirim — **sütun düzenini
 bana gönder**, tahmin edip iki kez yazmak istemiyorum.
 
-### 7. Marka rengi ve tipografi onayın var mı?
+### 7. ✅ Cevaplandı — palet onaylandı, üç noktada onayına ihtiyacım var
 
-**Şu anki durum:** Kendi seçtiğim paletle ilerledim — sıcak kağıt zemini,
-derin lacivert, veri vurguları için pirinç sarısı. Emlak sitelerinin
-kırmızı "ACİL SATILIK" estetiğinden bilinçli olarak uzak durdum.
+Onayladığın lacivert / bakır / sıcak nötr paleti, tipografi ölçeği ve
+bileşen kuralları uygulandı. Değerler `src/app/(site)/globals.css` içinde
+tek gerçek kaynak olarak duruyor ve her derlemede WCAG AA'ya karşı
+ölçülüyor.
 
-Başlıklarda Source Serif 4, arayüzde Inter kullanıyorum.
+**Üç noktada onayladığın değerden saptım. Üçü de erişilebilirlik
+zorunluluğu, estetik tercih değil — ama senin kararın:**
 
-**Senden istediğim:** Siteye bak, beğenmezsen söyle — değiştiririm.
-Logon varsa gönder, yerleştireyim.
+**a) Uyarı rengi metin olarak kullanılamıyor.**
+Onayladığın `#A87A1E`, beyaz üzerinde 3,87:1 kontrast veriyor. WCAG AA
+metin için 4,5:1 istiyor. Rengi ikon ve kenarlıkta aynen tuttum; uyarı
+METNİ için bir tık koyusunu (`#7A5714`) kullanıyorum. Yan yana bakınca
+fark neredeyse görünmüyor ama düşük görme keskinliğinde okunabilirlik
+tamamen değişiyor.
+
+**b) Nötr rampaya bir ara basamak ekledim.**
+Listende nötr 500 var, 600 yok. Yardımcı metinler (gözlem sayısı, tarih,
+kaynak) çoğunlukla açık gri bir yüzeyin üzerinde duruyor ve orada nötr-500
+3,93:1'e düşüyordu. `#5F5C55` ekledim.
+
+**c) Form kutularının kenarlığı daha koyu.**
+"0,5px, nötr-200" kuralı kart çerçevelerinde aynen geçerli. Ama bir metin
+kutusunun sınırı, kutunun kendisini tanımlıyor ve WCAG ayrı bir kural
+koyuyor (3:1). Nötr-200 beyaz üzerinde 1,3:1 — güneşte telefon ekranında
+kutu tamamen kayboluyordu. Form kutularında nötr-500 kullanıyorum.
+
+**d) Koyu tema tonlarını ben türettim.**
+Onay listende koyu tema yoktu. Sitede zaten vardı, kaldırmak gerileme
+olurdu. Senin paletinden türettim (lacivert-950 zemin, lacivert-900
+yüzey) ve aynı kontrast testinden geçiriyorum.
+
+**Senden istediğim:** Telefonunu koyu temaya alıp siteye bak. Beğenmezsen
+koyu temayı tamamen kapatabilirim — tek satırlık iş.
+
+**Nereye bakacaksın:** Geliştirme ortamında `/stil-rehberi` adresi tüm
+renkleri, yazı boyutlarını ve bileşenleri tek sayfada gösteriyor. Üretimde
+bu sayfa kapalı.
+
+**Logon hâlâ bekleniyor** — gelince yerleştiririm.
