@@ -3,14 +3,17 @@ import { Suspense } from 'react'
 
 import { IlanFiltreleri } from '@/components/ilan/IlanFiltreleri'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
+import { SiraOgesi, YataySira } from '@/components/ilan/YataySira'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
+import { KilitliKart } from '@/components/ui/KilitliKart'
 import { Sayfalama } from '@/components/ui/Sayfalama'
 import { sayiYaz } from '@/lib/bicimlendirme'
 import type { IlanKategorisi, IlanTipi } from '@/lib/secenekler'
 import { mutlakAdres } from '@/lib/site'
 import { ilanlariGetir, type IlanFiltresi } from '@/lib/veri/ilanlar'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
+import { temaSiralariniGetir, type TemaSirasi } from '@/lib/veri/portfoy'
 
 export const metadata: Metadata = {
   title: 'Portföy — Çorlu satılık ve kiralık taşınmazlar',
@@ -31,23 +34,47 @@ export default async function PortfoySayfasi({
   const filtre = parametreleriCoz(parametreler)
   const sayfa = sayiCoz(parametreler.sayfa) ?? 1
 
-  const [sonuc, mahalleler] = await Promise.all([ilanlariGetir(filtre, sayfa), mahalleleriGetir()])
+  /**
+   * Tema sıraları yalnızca FİLTRESİZ görünümde gösterilir.
+   *
+   * Filtre uygulandığı anda ziyaretçi aramaya geçmiştir: "yeni eklenenler"
+   * sırası orada sonucun önünü kapatan bir gürültüdür. Süzülmüş görünüm
+   * ızgara + sayfalama olarak kalıyor — arama motorunun tüm portföyü
+   * gezebilmesi de buna bağlı.
+   */
+  const filtresizMi = Object.keys(filtre).every(
+    (anahtar) => filtre[anahtar as keyof IlanFiltresi] === undefined,
+  )
+
+  const [sonuc, mahalleler, siralar] = await Promise.all([
+    ilanlariGetir(filtre, sayfa),
+    mahalleleriGetir(),
+    filtresizMi ? temaSiralariniGetir() : Promise.resolve([]),
+  ])
 
   return (
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex flex-col gap-3">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Portföy</h1>
-        <p className="text-murekkep-2 max-w-2xl leading-relaxed">
+        <h1 className="text-baslik-1">Portföy</h1>
+        <p className="text-metin-2 olcu">
           Çorlu ve çevresindeki taşınmazlarımız. Her ilanda kira çarpanı ve amortisman süresini
           hesaplayıp gösteriyoruz; kira verisi olmayan ilanlarda bu alanları boş bırakıyoruz.
         </p>
       </header>
 
+      {siralar.length > 0 ? (
+        <div className="mb-12 flex flex-col gap-10">
+          {siralar.map((sira) => (
+            <TemaBolumu key={sira.anahtar} sira={sira} />
+          ))}
+        </div>
+      ) : null}
+
       <Suspense fallback={<div className="iskelet h-24" />}>
         <IlanFiltreleri mahalleler={mahalleler} />
       </Suspense>
 
-      <p className="text-murekkep-3 mt-6 mb-4 text-sm" aria-live="polite">
+      <p className="text-metin-3 text-govde-kucuk mt-6 mb-4" aria-live="polite">
         {sonuc.toplam > 0 ? `${sayiYaz(sonuc.toplam)} taşınmaz listeleniyor` : 'Sonuç bulunamadı'}
       </p>
 
@@ -55,7 +82,7 @@ export default async function PortfoySayfasi({
         <>
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {sonuc.ilanlar.map((ilan, sira) => (
-              <IlanKarti key={ilan.id} ilan={ilan} oncelikli={sira < 3} />
+              <IlanKarti key={ilan.id} ilan={ilan} oncelikli={filtresizMi ? false : sira < 3} />
             ))}
           </div>
 
@@ -76,6 +103,58 @@ export default async function PortfoySayfasi({
         />
       )}
     </div>
+  )
+}
+
+/**
+ * Tek bir tema sırası.
+ *
+ * ⚠️ BAŞLIK ÖLÇÜT SÖYLER, EMOJİ TAŞIMAZ. Alt satır "neye göre bu sırada?"
+ * sorusunu cevaplar. Belirsiz bir başlık ("Dikkat çeken ilanlar") merak
+ * değil güvensizlik uyandırır.
+ *
+ * ⚠️ Boş sıra sessizce gizlenmez; sebebi yazılır. Sitenin aylarca kısmi
+ * veriyle çalışacağı düşünülürse, "neden boş" sorusunun cevabı burada
+ * ilanların kendisi kadar önemli.
+ */
+function TemaBolumu({ sira }: { sira: TemaSirasi }) {
+  const dolu = sira.ogeler.length > 0
+
+  return (
+    <section aria-labelledby={`sira-${sira.anahtar}`}>
+      <div className="mb-4 flex flex-col gap-1">
+        <h2 id={`sira-${sira.anahtar}`} className="text-baslik-2">
+          {sira.baslik}
+        </h2>
+        <p className="text-metin-3 text-govde-kucuk olcu">{sira.altBaslik}</p>
+      </div>
+
+      {dolu ? (
+        <YataySira etiket={sira.baslik}>
+          {sira.ogeler.map((oge) => (
+            <SiraOgesi key={oge.anahtar}>
+              {oge.tip === 'kilitli' ? (
+                <KilitliKart
+                  mahalleAdi={oge.kayit.mahalleAdi}
+                  odaSayisi={oge.kayit.odaSayisi}
+                  m2Araligi={oge.kayit.m2Araligi}
+                  fiyatBandi={oge.kayit.fiyatBandi}
+                  kiraCarpani={oge.kayit.kiraCarpani}
+                />
+              ) : (
+                <IlanKarti ilan={oge.ilan} />
+              )}
+            </SiraOgesi>
+          ))}
+        </YataySira>
+      ) : (
+        <BosDurum
+          baslik="Bu sırada şu an taşınmaz yok"
+          neden={sira.bosSebebi ?? 'Ölçüte uyan taşınmaz bulunmuyor.'}
+          sade
+        />
+      )}
+    </section>
   )
 }
 

@@ -21,6 +21,7 @@ import { VergiParametreleri } from '@/collections/VergiParametreleri'
 import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
+import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -77,7 +78,7 @@ export default buildConfig({
     Kullanicilar,
   ],
 
-  globals: [KurumsalBilgiler, DegerlemeAyarlari, EndeksAyarlari],
+  globals: [KurumsalBilgiler, DegerlemeAyarlari, EndeksAyarlari, PortfoyBolumleri],
 
   editor: lexicalEditor(),
 
