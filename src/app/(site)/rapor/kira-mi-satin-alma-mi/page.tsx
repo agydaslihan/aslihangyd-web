@@ -7,6 +7,7 @@ import { paraKisaYaz, paraYaz, yuzdeYaz } from '@/lib/bicimlendirme'
 import { kiraMiSatinAlmaMiHesapla } from '@/lib/hesaplayicilar/kiraMiSatinAlmaMi'
 import { sayiParametresi, type SorguParametreleri } from '@/lib/rapor/parametreler'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 
 export const metadata: Metadata = {
   title: 'Kiralasam mı, Satın Alsam mı? — rapor',
@@ -24,6 +25,10 @@ export default async function KiraMiSatinAlmaMiRaporu({
 }: {
   searchParams: Promise<SorguParametreleri>
 }) {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('raporlar')
+
   const parametreler = await searchParams
 
   const girdi = {

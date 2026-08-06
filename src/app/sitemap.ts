@@ -2,6 +2,8 @@ import type { MetadataRoute } from 'next'
 
 import { ARACLAR } from '@/lib/araclar'
 import { mutlakAdres } from '@/lib/site'
+import { kapaliBolumeAitMi } from '@/lib/siteBolumleri'
+import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { tumIlanSluglari } from '@/lib/veri/ilanlar'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 import { tumSayfaSluglari } from '@/lib/veri/sayfalar'
@@ -14,12 +16,40 @@ import { tumSayfaSluglari } from '@/lib/veri/sayfalar'
  * metinler en düşük. Yalnızca gerçekten yayında olan kayıtlar listelenir —
  * taslak bir sayfayı site haritasına koymak tarama bütçesi israfıdır.
  */
+/**
+ * ⚠️ Site haritası DİNAMİK üretilir.
+ *
+ * Varsayılan davranışta Next bu rotayı derleme anında önceden üretiyordu
+ * ve iki şey birden bozuluyordu:
+ *
+ * 1. Kapalı bölümün adresi haritada kalıyordu — bölüm anahtarının üç
+ *    etkisinden biri (arama motorundan kalkmak) gerçekleşmiyordu.
+ *    Duman testinde yakalandı: `/ticari` kapatıldı, rota 404 döndü,
+ *    altbilgiden düştü, ama site haritasında durmaya devam etti.
+ * 2. Derlemeden sonra eklenen ilan ve mahalle sayfaları haritaya hiç
+ *    girmiyordu; yeni içerik ancak bir sonraki dağıtımda görünüyordu.
+ *
+ * Maliyeti düşük: site haritasını tarayıcı değil, arama motoru ve o da
+ * seyrek ister.
+ */
+export const dynamic = 'force-dynamic'
+
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const [ilanlar, mahalleler, sayfalar] = await Promise.all([
+  const [ilanlar, mahalleler, sayfalar, bolumDurumlari] = await Promise.all([
     tumIlanSluglari().catch(() => []),
     mahalleleriGetir().catch(() => []),
     tumSayfaSluglari().catch(() => []),
+    bolumDurumlariniGetir(),
   ])
+
+  /**
+   * ⚠️ Kapalı bölümün adresi site haritasına GİRMEZ.
+   *
+   * Bölüm kapatmanın üç etkisinden biri "arama motorundan kalkmak".
+   * 404 dönen bir adresi site haritasında bırakmak, tarama bütçesi israfı
+   * ve Search Console'da kalıcı hata demek.
+   */
+  const bolumAcik = (yol: string) => kapaliBolumeAitMi(yol, bolumDurumlari) === null
 
   const sabitler: MetadataRoute.Sitemap = [
     { url: mutlakAdres('/'), changeFrequency: 'weekly', priority: 1 },
@@ -60,12 +90,14 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
       changeFrequency: 'yearly',
       priority: 0.4,
     },
+    // Kapalıyken yukarıdaki filtre bu girişi düşürür.
+    { url: mutlakAdres('/danisman-ol'), changeFrequency: 'monthly', priority: 0.3 },
     { url: mutlakAdres('/hakkimizda'), changeFrequency: 'monthly', priority: 0.5 },
     { url: mutlakAdres('/iletisim'), changeFrequency: 'monthly', priority: 0.6 },
   ]
 
   return [
-    ...sabitler,
+    ...sabitler.filter((giris) => bolumAcik(new URL(giris.url).pathname)),
     ...mahalleler.map((mahalle) => ({
       url: mutlakAdres(`/mahalleler/${mahalle.slug}`),
       lastModified: new Date(mahalle.updatedAt),

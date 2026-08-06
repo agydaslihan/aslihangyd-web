@@ -61,6 +61,19 @@ export const UST_MENU = ANA_GEZINME.filter((oge) => oge.hazir && oge.ustMenude)
 /** Altbilgi — yayında olan her sayfa. */
 export const GORUNUR_GEZINME = ANA_GEZINME.filter((oge) => oge.hazir)
 
+/**
+ * Altbilgide her sayfada görünen feragat.
+ *
+ * ⚠️ Bu metin sabittir ve koşullu render EDİLMEZ. Sitede değerleme
+ * tahmini, yatırım skoru ve getiri hesabı gösteriliyor; feragatin bir
+ * sayfada eksik kalması hem CLAUDE.md kural 5'in hem reklam mevzuatının
+ * ihlali olur.
+ */
+export const ALTBILGI_FERAGATI =
+  'Sitede yer alan değerleme tahminleri, yatırım skorları ve getiri hesaplamaları ' +
+  'bilgilendirme amaçlıdır; yatırım tavsiyesi niteliğinde değildir ve SPK lisanslı ' +
+  'değerleme raporu yerine geçmez. Geçmiş veriler gelecekteki getiriyi garanti etmez.'
+
 /** Altbilgideki hukuki metin bağlantıları. */
 export const HUKUKI_SAYFALAR: readonly GezinmeOgesi[] = [
   { ad: 'KVKK Aydınlatma Metni', adres: '/kvkk' },

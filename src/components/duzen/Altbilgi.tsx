@@ -1,7 +1,8 @@
 import Link from 'next/link'
+import type { ReactNode } from 'react'
 
 import { CerezTercihleriBaglantisi } from '@/components/cerez/CerezBanneri'
-import { PostaIkon, TelefonIkon, WhatsappIkon } from '@/components/ui/Ikon'
+import { DisBaglantiIkon, PostaIkon, TelefonIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import {
   iletisimEpostasi,
@@ -9,86 +10,134 @@ import {
   kurumsalBilgileriGetir,
   whatsappNumarasi,
 } from '@/lib/kurumsal'
-import { GORUNUR_GEZINME, HUKUKI_SAYFALAR, SITE_UNVANI, whatsappMesaji } from '@/lib/site'
+import {
+  ALTBILGI_FERAGATI,
+  GORUNUR_GEZINME,
+  HUKUKI_SAYFALAR,
+  SITE_UNVANI,
+  whatsappMesaji,
+} from '@/lib/site'
+import { altbilgiBaglantilariniGetir, type AltbilgiBaglantisi } from '@/lib/veri/altbilgi'
+import { BOLUMLER } from '@/lib/siteBolumleri'
+import { acikBolumTanimlari } from '@/lib/veri/siteBolumleri'
 
 /**
- * Altbilgi.
+ * Altbilgi — dört sütun, içeriği CMS'ten.
  *
- * Yasal bilgi bloğu burada yaşar: Taşınmaz Ticareti Yetki Belgesi numarası
- * mevzuat gereği sitede görünür olmalıdır. Numara CMS'te boşsa uydurma
- * numara yazılmaz — bunun yerine eksikliği açıkça belirten bir not gösterilir
- * (yalnızca geliştirme ortamında; üretimde blok tamamen gizlenir ki
- * ziyaretçiye iç mesaj sızmasın).
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ İKİ ŞEY HER SAYFADA, KOŞULSUZ GÖRÜNÜR:
+ *
+ * 1. Taşınmaz Ticareti Yetki Belgesi numarası — mevzuat gereği.
+ * 2. Yatırım tavsiyesi feragati — CLAUDE.md kural 5 ve reklam mevzuatı.
+ *
+ * Yetki belgesi numarası CMS'te boşsa numara UYDURULMAZ; bunun yerine
+ * eksikliği söyleyen görünür bir uyarı basılır. Satırı gizlemek,
+ * uyumsuzluğu Aslıhan'dan da saklamak olurdu — ve her sayfada duran bir
+ * uyarı, eksiğin kapanmasının en hızlı yolu.
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * Kapalı site bölümleri buradan kendiliğinden düşer: bağlantı listesi
+ * `acikBolumTanimlari()` üzerinden geliyor.
  */
 export async function Altbilgi() {
-  const kurumsal = await kurumsalBilgileriGetir()
-  const yil = new Date().getFullYear()
+  const [kurumsal, baglantilar, acikBolumler] = await Promise.all([
+    kurumsalBilgileriGetir(),
+    altbilgiBaglantilariniGetir(),
+    acikBolumTanimlari(),
+  ])
 
+  /**
+   * Altbilgi gezinmesi = sabit sayfalar + AÇIK bölümler.
+   *
+   * Kapalı bölümün adresi listeden düşürülüyor; açık olup sabit listede
+   * bulunmayanlar (örn. "Danışman ol") ekleniyor. Böylece bir bölümü
+   * kapatmak/açmak burada ayrıca hatırlanacak bir iş olmuyor.
+   */
+  const acikAdresler = new Set(acikBolumler.map((bolum) => bolum.adres))
+  const kontrolluAdresler = new Set(BOLUMLER.flatMap((bolum) => [bolum.adres, ...bolum.rotalar]))
+
+  const sayfalar = [
+    ...GORUNUR_GEZINME.filter(
+      (oge) => !kontrolluAdresler.has(oge.adres) || acikAdresler.has(oge.adres),
+    ),
+    ...acikBolumler
+      .filter(
+        (bolum) => bolum.gezinmede && !GORUNUR_GEZINME.some((oge) => oge.adres === bolum.adres),
+      )
+      .map((bolum) => ({ ad: bolum.ad, adres: bolum.adres })),
+  ]
+
+  const yil = new Date().getFullYear()
   const telefon = iletisimTelefonu(kurumsal)
   const eposta = iletisimEpostasi(kurumsal)
   const whatsapp = whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())
 
   return (
-    <footer className="border-cizgi bg-yuzey-2/50 mt-auto border-t">
+    <footer className="border-kenar bg-yuzey-2/50 mt-auto border-t-[0.5px]">
       <div className="kapsayici py-12 lg:py-16">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
-          {/* Marka */}
-          <div className="flex flex-col gap-3 lg:col-span-1">
-            <span className="font-serif text-lg tracking-tight">
-              Aslıhan <span className="text-pirinc-koyu">GYD</span>
-            </span>
-            <p className="text-murekkep-2 text-sm leading-relaxed">
-              Çorlu ve çevresinde gayrimenkul danışmanlığı. Kararlarınızı hisle değil, rakamla
-              verin.
-            </p>
-          </div>
+          {/* ── Kurumsal ── */}
+          <Sutun baslik="Kurumsal">
+            <div className="mb-3 flex flex-col gap-2">
+              <span className="font-serif text-baslik-3">
+                Aslıhan <span className="text-vurgu">GYD</span>
+              </span>
+              <p className="text-metin-2 text-govde-kucuk">
+                Çorlu ve çevresinde gayrimenkul danışmanlığı. Kararlarınızı hisle değil, rakamla
+                verin.
+              </p>
+            </div>
 
-          {/* Gezinme */}
-          <nav aria-label="Altbilgi gezinme" className="flex flex-col gap-3">
-            <h2 className="text-mikro font-semibold tracking-[0.08em] uppercase">Site</h2>
-            <ul className="text-murekkep-2 flex flex-col gap-2 text-sm">
-              {GORUNUR_GEZINME.map((oge) => (
-                <li key={oge.adres}>
-                  <Link
-                    href={oge.adres}
-                    className="hover:text-murekkep underline-offset-2 hover:underline"
-                  >
-                    {oge.ad}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
+            <BaglantiListesi baglantilar={baglantilar.kurumsal} />
 
-          {/* Hukuki */}
-          <nav aria-label="Hukuki bilgiler" className="flex flex-col gap-3">
-            <h2 className="text-mikro font-semibold tracking-[0.08em] uppercase">Hukuki</h2>
-            <ul className="text-murekkep-2 flex flex-col gap-2 text-sm">
-              {HUKUKI_SAYFALAR.map((sayfa) => (
+            {/* Site sayfaları — kapalı bölümler kendiliğinden düşer. */}
+            <ul className="text-metin-2 text-govde-kucuk flex flex-col">
+              {sayfalar.map((sayfa) => (
                 <li key={sayfa.adres}>
                   <Link
                     href={sayfa.adres}
-                    className="hover:text-murekkep underline-offset-2 hover:underline"
+                    className="hover:text-metin inline-flex min-h-9 items-center underline-offset-2 hover:underline"
                   >
                     {sayfa.ad}
                   </Link>
                 </li>
               ))}
-              <li>
+            </ul>
+          </Sutun>
+
+          {/* ── Faydalı bağlantılar ── */}
+          <Sutun baslik="Faydalı bağlantılar">
+            <BaglantiListesi baglantilar={baglantilar.faydali} />
+          </Sutun>
+
+          {/* ── Hukuksal metinler ── */}
+          <Sutun baslik="Hukuksal metinler">
+            <ul className="text-metin-2 text-govde-kucuk flex flex-col">
+              {HUKUKI_SAYFALAR.map((sayfa) => (
+                <li key={sayfa.adres}>
+                  <Link
+                    href={sayfa.adres}
+                    className="hover:text-metin inline-flex min-h-9 items-center underline-offset-2 hover:underline"
+                  >
+                    {sayfa.ad}
+                  </Link>
+                </li>
+              ))}
+              <li className="flex min-h-9 items-center">
                 <CerezTercihleriBaglantisi />
               </li>
             </ul>
-          </nav>
+            <BaglantiListesi baglantilar={baglantilar.hukuksal} />
+          </Sutun>
 
-          {/* İletişim */}
-          <div className="flex flex-col gap-3">
-            <h2 className="text-mikro font-semibold tracking-[0.08em] uppercase">İletişim</h2>
-            <ul className="text-murekkep-2 flex flex-col gap-2.5 text-sm">
+          {/* ── İletişim ── */}
+          <Sutun baslik="İletişim">
+            <ul className="text-metin-2 text-govde-kucuk flex flex-col">
               {telefon ? (
                 <li>
                   <a
                     href={`tel:${telefon.replace(/\s/g, '')}`}
-                    className="hover:text-murekkep inline-flex items-center gap-2"
+                    className="hover:text-metin inline-flex min-h-9 items-center gap-2"
                   >
                     <TelefonIkon width={15} height={15} className="shrink-0" />
                     {telefon}
@@ -99,7 +148,7 @@ export async function Altbilgi() {
                 <li>
                   <a
                     href={`mailto:${eposta}`}
-                    className="hover:text-murekkep inline-flex items-center gap-2"
+                    className="hover:text-metin inline-flex min-h-9 items-center gap-2"
                   >
                     <PostaIkon width={15} height={15} className="shrink-0" />
                     {eposta}
@@ -112,7 +161,7 @@ export async function Altbilgi() {
                     href={whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-murekkep inline-flex items-center gap-2"
+                    className="hover:text-metin inline-flex min-h-9 items-center gap-2"
                   >
                     <WhatsappIkon width={15} height={15} className="shrink-0" />
                     WhatsApp
@@ -121,35 +170,88 @@ export async function Altbilgi() {
               ) : null}
             </ul>
 
+            <BaglantiListesi baglantilar={baglantilar.iletisim} />
+
             {kurumsal?.adres ? (
-              <address className="text-murekkep-3 text-mikro leading-relaxed not-italic">
-                {kurumsal.adres}
-              </address>
+              <address className="text-metin-3 text-mikro not-italic">{kurumsal.adres}</address>
             ) : null}
-          </div>
+          </Sutun>
         </div>
 
-        {/* Yasal künye */}
-        <div className="border-cizgi text-murekkep-3 text-mikro mt-10 flex flex-col gap-3 border-t pt-6 sm:flex-row sm:items-center sm:justify-between">
-          <p>
-            © {yil} {kurumsal?.ticaretUnvani || SITE_UNVANI}
-          </p>
-
-          <ul className="flex flex-wrap gap-x-4 gap-y-1">
-            {kurumsal?.yetkiBelgesiNo ? (
-              <li>
-                Taşınmaz Ticareti Yetki Belgesi No:{' '}
-                <span className="rakam">{kurumsal.yetkiBelgesiNo}</span>
-              </li>
-            ) : null}
+        {/* ── Yasal künye — koşulsuz ── */}
+        <div className="border-kenar mt-10 flex flex-col gap-3 border-t-[0.5px] pt-6">
+          <ul className="text-metin-3 text-mikro flex flex-wrap gap-x-4 gap-y-1">
+            <li>
+              Taşınmaz Ticareti Yetki Belgesi No:{' '}
+              {kurumsal?.yetkiBelgesiNo ? (
+                <span className="rakam text-metin-2">{kurumsal.yetkiBelgesiNo}</span>
+              ) : (
+                /* ⚠️ Numara uydurulmaz. Eksikliği görünür kılmak, gizlemekten iyi. */
+                <span className="text-uyari-metin">girilmedi — yönetim panelinden eklenmeli</span>
+              )}
+            </li>
             {kurumsal?.mersisNo ? (
               <li>
-                MERSİS: <span className="rakam">{kurumsal.mersisNo}</span>
+                MERSİS: <span className="rakam text-metin-2">{kurumsal.mersisNo}</span>
               </li>
             ) : null}
           </ul>
+
+          <p className="text-metin-3 text-mikro max-w-4xl">{ALTBILGI_FERAGATI}</p>
+
+          <p className="text-metin-3 text-mikro">
+            © {yil} {kurumsal?.ticaretUnvani || SITE_UNVANI}
+          </p>
         </div>
       </div>
     </footer>
+  )
+}
+
+function Sutun({ baslik, children }: { baslik: string; children: ReactNode }) {
+  return (
+    <nav aria-label={baslik} className="flex flex-col gap-3">
+      <h2 className="text-mikro font-medium tracking-[0.08em] uppercase">{baslik}</h2>
+      {children}
+    </nav>
+  )
+}
+
+/**
+ * CMS'ten gelen bağlantılar.
+ *
+ * ⚠️ Dış bağlantılarda `target="_blank"` ve `rel="noopener noreferrer"`
+ * otomatik eklenir; yanına dış bağlantı ikonu konur. İkon dekoratif değil:
+ * yeni sekmede açılacağını önceden söylemek erişilebilirlik gereği.
+ */
+function BaglantiListesi({ baglantilar }: { baglantilar: readonly AltbilgiBaglantisi[] }) {
+  if (baglantilar.length === 0) return null
+
+  return (
+    <ul className="text-metin-2 text-govde-kucuk flex flex-col">
+      {baglantilar.map((baglanti) => (
+        <li key={baglanti.id}>
+          {baglanti.dahiliMi ? (
+            <Link
+              href={baglanti.url}
+              className="hover:text-metin inline-flex min-h-9 items-center underline-offset-2 hover:underline"
+            >
+              {baglanti.baslik}
+            </Link>
+          ) : (
+            <a
+              href={baglanti.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="hover:text-metin inline-flex min-h-9 items-center gap-1.5 underline-offset-2 hover:underline"
+            >
+              {baglanti.baslik}
+              <DisBaglantiIkon width={12} height={12} className="shrink-0" />
+              <span className="yalnizca-okuyucu">(yeni sekmede açılır)</span>
+            </a>
+          )}
+        </li>
+      ))}
+    </ul>
   )
 }

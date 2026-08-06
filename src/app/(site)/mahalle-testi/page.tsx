@@ -6,6 +6,7 @@ import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { hedefNoktalariniGetir, mahalleProfilleriniGetir } from '@/lib/veri/eslestirme'
 
 export const metadata: Metadata = {
@@ -17,6 +18,10 @@ export const metadata: Metadata = {
 }
 
 export default async function MahalleTestiSayfasi() {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('mahalle_testi')
+
   const [mahalleler, hedefNoktalari, kurumsal] = await Promise.all([
     mahalleProfilleriniGetir(),
     hedefNoktalariniGetir(),

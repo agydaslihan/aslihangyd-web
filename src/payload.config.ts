@@ -7,6 +7,8 @@ import { tr } from '@payloadcms/translations/languages/tr'
 import { buildConfig } from 'payload'
 import sharp from 'sharp'
 
+import { AltbilgiBaglantilari } from '@/collections/AltbilgiBaglantilari'
+import { DanismanBasvurulari } from '@/collections/DanismanBasvurulari'
 import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
 import { Gozlemler } from '@/collections/Gozlemler'
@@ -20,7 +22,9 @@ import { Talepler } from '@/collections/Talepler'
 import { VergiParametreleri } from '@/collections/VergiParametreleri'
 import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
+import { DanismanOl } from '@/globals/DanismanOl'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
+import { SiteBolumleri } from '@/globals/SiteBolumleri'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 
@@ -69,15 +73,17 @@ export default buildConfig({
     Mahalleler,
     IlgiNoktalari,
     Talepler,
+    DanismanBasvurulari,
     Degerlemeler,
     Gozlemler,
     VergiParametreleri,
     Sayfalar,
     Medya,
+    AltbilgiBaglantilari,
     Kullanicilar,
   ],
 
-  globals: [KurumsalBilgiler, DegerlemeAyarlari, EndeksAyarlari],
+  globals: [KurumsalBilgiler, SiteBolumleri, DanismanOl, DegerlemeAyarlari, EndeksAyarlari],
 
   editor: lexicalEditor(),
 

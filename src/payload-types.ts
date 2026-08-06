@@ -71,11 +71,13 @@ export interface Config {
     mahalleler: Mahalleler;
     'ilgi-noktalari': IlgiNoktalari;
     talepler: Talepler;
+    'danisman-basvurulari': DanismanBasvurulari;
     degerlemeler: Degerlemeler;
     gozlemler: Gozlemler;
     'vergi-parametreleri': VergiParametreleri;
     sayfalar: Sayfalar;
     medya: Medya;
+    'altbilgi-baglantilari': AltbilgiBaglantilari;
     kullanicilar: Kullanicilar;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
@@ -88,11 +90,13 @@ export interface Config {
     mahalleler: MahallelerSelect<false> | MahallelerSelect<true>;
     'ilgi-noktalari': IlgiNoktalariSelect<false> | IlgiNoktalariSelect<true>;
     talepler: TaleplerSelect<false> | TaleplerSelect<true>;
+    'danisman-basvurulari': DanismanBasvurulariSelect<false> | DanismanBasvurulariSelect<true>;
     degerlemeler: DegerlemelerSelect<false> | DegerlemelerSelect<true>;
     gozlemler: GozlemlerSelect<false> | GozlemlerSelect<true>;
     'vergi-parametreleri': VergiParametreleriSelect<false> | VergiParametreleriSelect<true>;
     sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
     medya: MedyaSelect<false> | MedyaSelect<true>;
+    'altbilgi-baglantilari': AltbilgiBaglantilariSelect<false> | AltbilgiBaglantilariSelect<true>;
     kullanicilar: KullanicilarSelect<false> | KullanicilarSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
@@ -105,11 +109,15 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
+    'site-bolumleri': SiteBolumleri;
+    'danisman-ol': DanismanOl;
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
+    'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
+    'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
   };
@@ -667,6 +675,40 @@ export interface Talepler {
   createdAt: string;
 }
 /**
+ * Ekibe katılmak isteyenlerin başvuruları. Müşteri taleplerinden ayrı tutulur — farklı veri kategorisi, farklı saklama süresi.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "danisman-basvurulari".
+ */
+export interface DanismanBasvurulari {
+  id: number;
+  durum?: ('yeni' | 'gorusuldu' | 'olumlu' | 'olumsuz') | null;
+  ad: string;
+  telefon: string;
+  email: string;
+  deneyim: 'yok' | '1_3' | '3_arti';
+  /**
+   * Taşınmaz Ticareti / Emlak Danışmanı mesleki yeterlilik belgesi.
+   */
+  mykBelgesi?: boolean | null;
+  mesaj?: string | null;
+  /**
+   * ⚠️ Yalnızca panel kullanıcıları görür. Başvurucuya gösterilmez.
+   */
+  notlar?: string | null;
+  /**
+   * Onay olmadan kayıt oluşturulamaz.
+   */
+  kvkkOnay: boolean;
+  kvkkOnayTarihi?: string | null;
+  /**
+   * Bu tarihten sonra bakım görevi kaydı siler.
+   */
+  saklamaBitis?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Siteden yapılan değerleme talepleri. İletişim bilgisi olmayan kayıtlar da değerlidir: hangi mahallede ne tür taşınmaz sorgulandığını gösterir.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -859,6 +901,29 @@ export interface Sayfalar {
   createdAt: string;
 }
 /**
+ * Altbilgideki dört sütunun içeriği. Sıra numarası küçük olan üstte görünür.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "altbilgi-baglantilari".
+ */
+export interface AltbilgiBaglantilari {
+  id: number;
+  sutun: 'kurumsal' | 'faydali' | 'hukuksal' | 'iletisim';
+  siraNo?: number | null;
+  baslik: string;
+  /**
+   * Site içi bağlantı için "/mahalleler" gibi yol; dış bağlantı için tam adres ("https://…"). Dış bağlantılarda güvenlik öznitelikleri otomatik eklenir.
+   */
+  url: string;
+  /**
+   * İşaretliyse aynı sekmede açılır. İşaretli değilse yeni sekmede açılır ve yanında dış bağlantı ikonu görünür.
+   */
+  dahiliMi?: boolean | null;
+  aktif?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
@@ -899,6 +964,10 @@ export interface PayloadLockedDocument {
         value: number | Talepler;
       } | null)
     | ({
+        relationTo: 'danisman-basvurulari';
+        value: number | DanismanBasvurulari;
+      } | null)
+    | ({
         relationTo: 'degerlemeler';
         value: number | Degerlemeler;
       } | null)
@@ -917,6 +986,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'medya';
         value: number | Medya;
+      } | null)
+    | ({
+        relationTo: 'altbilgi-baglantilari';
+        value: number | AltbilgiBaglantilari;
       } | null)
     | ({
         relationTo: 'kullanicilar';
@@ -1150,6 +1223,25 @@ export interface TaleplerSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "danisman-basvurulari_select".
+ */
+export interface DanismanBasvurulariSelect<T extends boolean = true> {
+  durum?: T;
+  ad?: T;
+  telefon?: T;
+  email?: T;
+  deneyim?: T;
+  mykBelgesi?: T;
+  mesaj?: T;
+  notlar?: T;
+  kvkkOnay?: T;
+  kvkkOnayTarihi?: T;
+  saklamaBitis?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "degerlemeler_select".
  */
 export interface DegerlemelerSelect<T extends boolean = true> {
@@ -1302,6 +1394,20 @@ export interface MedyaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "altbilgi-baglantilari_select".
+ */
+export interface AltbilgiBaglantilariSelect<T extends boolean = true> {
+  sutun?: T;
+  siraNo?: T;
+  baslik?: T;
+  url?: T;
+  dahiliMi?: T;
+  aktif?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kullanicilar_select".
  */
 export interface KullanicilarSelect<T extends boolean = true> {
@@ -1410,6 +1516,78 @@ export interface KurumsalBilgiler {
    * Silme/erişim taleplerinin gönderileceği adres.
    */
   kvkkBasvuruEpostasi?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Bir bölümü kapattığında ana sayfadan, altbilgiden ve arama motorundan aynı anda kalkar; adresine girilirse 404 döner. Verisi silinmez, geri açtığında yerinde olur.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-bolumleri".
+ */
+export interface SiteBolumleri {
+  id: number;
+  /**
+   * Ekibe katılmak isteyen danışmanların başvuru sayfası.
+   */
+  danisman_ol?: boolean | null;
+  /**
+   * İş yeri, depo, fabrika ve arsa odaklı dikey sayfa.
+   */
+  ticari?: boolean | null;
+  /**
+   * Endeks sayfası. ⚠️ Kapalıyken de, açıkken de veri eşiği ayrıca kontrol edilir.
+   */
+  endeks?: boolean | null;
+  /**
+   * Değerleme, simülatör ve kira/satın alma raporlarının yazdırma sayfaları.
+   */
+  raporlar?: boolean | null;
+  /**
+   * İlan verilmeyen taşınmazların maskelenmiş listesi ve erişim talebi.
+   */
+  gizli_portfoy?: boolean | null;
+  /**
+   * Ziyaretçiye uygun mahalleyi öneren kısa test.
+   */
+  mahalle_testi?: boolean | null;
+  /**
+   * Çok yıllı getiri projeksiyonu hesaplayıcısı.
+   */
+  simulator?: boolean | null;
+  /**
+   * Mahalle medyanına göre fırsat ve risk sinyalleri.
+   */
+  bolge_radari?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Sayfanın davet metni. Sayfanın açık/kapalı olması Ayarlar → Site Bölümleri altında.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "danisman-ol".
+ */
+export interface DanismanOl {
+  id: number;
+  /**
+   * Boşsa varsayılan başlık kullanılır.
+   */
+  baslik?: string | null;
+  /**
+   * Davet bloğunda başlığın altında görünür.
+   */
+  aciklama?: string | null;
+  /**
+   * ⚠️ Kazanç vaadi ya da garanti içeren ifade yazma — reklam mevzuatı açısından risklidir. Somut ve doğrulanabilir maddeler kullan.
+   */
+  nedenler?:
+    | {
+        baslik: string;
+        metin?: string | null;
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -1528,6 +1706,41 @@ export interface KurumsalBilgilerSelect<T extends boolean = true> {
   veriSorumlusu?: T;
   verbisKayitNo?: T;
   kvkkBasvuruEpostasi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "site-bolumleri_select".
+ */
+export interface SiteBolumleriSelect<T extends boolean = true> {
+  danisman_ol?: T;
+  ticari?: T;
+  endeks?: T;
+  raporlar?: T;
+  gizli_portfoy?: T;
+  mahalle_testi?: T;
+  simulator?: T;
+  bolge_radari?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "danisman-ol_select".
+ */
+export interface DanismanOlSelect<T extends boolean = true> {
+  baslik?: T;
+  aciklama?: T;
+  nedenler?:
+    | T
+    | {
+        baslik?: T;
+        metin?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

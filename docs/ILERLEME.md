@@ -878,6 +878,130 @@ bileşeni, yeni renkler CSS değişkeni, yeni ikonlar elle yazılmış SVG.
 
 ---
 
+## D aşaması — Site bölümleri, danışman başvurusu, altbilgi
+
+### Ne yapıldı
+
+- `src/lib/siteBolumleri.ts` — sekiz bölümün tanımı, rotaları ve rota
+  eşleştirmesi (saf, testli). 12 birim testi.
+- `src/globals/SiteBolumleri.ts` — Ayarlar → Site Bölümleri paneli.
+- `src/lib/veri/siteBolumleri.ts` — `bolumKapisi()` rota kapısı, istek
+  başına tek sorgu (`cache()`).
+- `/danisman-ol` — sayfa, form, sunucu eylemi, `DanismanBasvurulari`
+  koleksiyonu, `DanismanOl` içerik global'i.
+- `src/lib/guvenlik/` — hız sınırı ve Turnstile (18 test).
+- Altbilgi dört sütuna çevrildi; `AltbilgiBaglantilari` koleksiyonu.
+- Migration `20260806_094944_faz_d_site_bolumleri`.
+
+### Kararlar ve gerekçeleri
+
+**Bölüm listesi kodda, anahtarlar CMS'te.**
+Bir bölümün hangi rotaları kapsadığı yapılandırma değil, uygulamanın
+bilgisi. CMS'te olsaydı yanlış yazılan bir rota sessizce hiçbir şeyi
+kapatmazdı — ve bunu kimse fark etmezdi.
+
+**Rota eşleşmesi sınır karakteri arıyor.**
+`/ticari` kapalıyken `/ticaridukkanlar` diye bir rota açılsa onun da
+kapanmaması gerekiyor. Test bunu koruyor.
+
+**Bölüm kapısı sayfanın EN BAŞINDA.**
+Aşağıda çağrılsaydı veri sorguları boşuna çalışır ve kapalı bölümün
+verisi RSC yüküne girebilirdi.
+
+**Hata durumunda varsayılana düşülüyor, "hepsi kapalı"ya değil.**
+Veritabanı bir an erişilemez olduğunda sitenin yarısının 404 dönmesi,
+geçici bir sorunu kalıcı bir görünürlük kaybına çevirirdi.
+
+**Danışman başvuruları Talepler'e karıştırılmadı.**
+Üç somut sebep: farklı KVKK veri kategorisi ve işleme amacı, farklı
+saklama süresi, ve lead skorlamasının bir iş başvurusunda anlamsız —
+hatta ayrımcılık riski taşıyan — olması.
+
+**Hız sınırı süreç içi, Redis değil.**
+Sınırı bilerek yazıldı: sunucu yeniden başlarsa sayaç sıfırlanır, çok
+örnekli kurulumda paylaşılmaz. Tek kapta çalışan bu proje için yeterli;
+Redis istemcisi bağımlılık, bellek ve bir hata yüzeyi daha demekti.
+Yatay ölçeklendiğimiz gün taşınmalı.
+
+**Turnstile kapalı kapı çalışıyor.**
+Anahtarlar tanımlıysa doğrulama zorunlu: jeton yoksa, geçersizse ya da
+Cloudflare'e ulaşılamıyorsa gönderim reddedilir. "Servise ulaşamadım,
+geçir" davranışı, korumayı kapatmanın en kolay yolunu (Cloudflare'i
+engellemek) saldırgana hediye ederdi. Anahtar yoksa widget hiç render
+edilmez ve doğrulama atlanır — Aslıhan hesabı açana kadar formun hiç
+çalışmaması daha kötü olurdu.
+
+**IP adresi saklanmıyor.**
+Hız sınırı anahtarı olarak bellekte kullanılıyor, pencere dolunca
+siliniyor. Veritabanına, günlüğe ya da e-postaya yazılmıyor.
+
+**⚠️ Davet bloğunda bakır buton YOK — şartnameden bilinçli sapma.**
+Şartname bu blokta bakır buton istiyordu. Bakır kuralı ise iki eylemle
+sınırlı ("Evimi değerlendir", "Erişim talep et") ve kuralın gerekçesi
+"nadir olduğu için işe yarıyor". Üçüncü bir yerde kullanmak ikisini
+birden sıradanlaştırırdı. Blokta sayfa içi bir çapa var; form zaten
+hemen aşağıda.
+
+**Yetki belgesi satırı koşulsuz basılıyor.**
+Numara CMS'te boşsa uydurulmuyor; yerine "girilmedi — yönetim panelinden
+eklenmeli" uyarısı çıkıyor. Satırı gizlemek uyumsuzluğu Aslıhan'dan da
+saklamak olurdu; her sayfada duran bir uyarı, eksiğin kapanmasının en
+hızlı yolu.
+
+**Resmî bağlantılar doğrulandı.**
+`turkiye.gov.tr/tapu-bilgileri-sorgulama` ve `parselsorgu.tkgm.gov.tr`
+HTTP 200 + sayfa başlığıyla doğrulandı. Tahmin ettiğim üçüncü bir adres
+404 döndüğü için listeye ALINMADI — uydurulmuş bir resmî bağlantı,
+sitenin en kolay kaybedeceği güven.
+
+### ⚠️ Duman testinde bulunan ve kapatılan açık
+
+Bölüm anahtarının üç etkisi tek tek denendi. İkisi çalışıyordu, biri
+çalışmıyordu:
+
+| Etki | İlk durum |
+| --- | --- |
+| Rota 404 döner | ✅ |
+| Altbilgiden düşer | ✅ |
+| Site haritasından kalkar | ❌ |
+
+Sebep: `sitemap.ts` Next tarafından **derleme anında önceden üretiliyordu**.
+Bu yalnızca bölüm anahtarını değil, derlemeden sonra eklenen her ilan ve
+mahalle sayfasını da etkiliyordu — yeni içerik ancak bir sonraki
+dağıtımda site haritasına giriyordu. Yani bu, D aşamasının açığa
+çıkardığı ama D'den önce de var olan bir SEO hatasıydı.
+
+`export const dynamic = 'force-dynamic'` eklendi. Maliyeti düşük: site
+haritasını tarayıcı değil, arama motoru ve o da seyrek ister.
+
+Doğrulama (üretim derlemesi, canlı sunucu):
+
+| Bölüm | Rota | Altbilgi | Site haritası |
+| --- | --- | --- | --- |
+| `danisman_ol` açık | 200 | var | var |
+| `danisman_ol` kapalı | 404 | yok | yok |
+| `ticari` kapalı | 404 | yok | yok |
+| `simulator` kapalı | 404 | — | `/araclar` listesinden de düştü |
+
+### D aşaması ölçümleri (yerel, üretim derlemesi)
+
+| Ölçüm | Değer |
+| --- | --- |
+| `pnpm test` | **635 test / 27 dosya** (+30) |
+| Derleme | **85 sn** |
+| Migration | `20260806_094944_faz_d_site_bolumleri` — yalnızca ekleme |
+
+### Bu aşamadan kalan iş
+
+- **`.env.example` düzenlenemedi**: dosya benim izin kapsamımın dışında.
+  `NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI` ve `TURNSTILE_GIZLI_ANAHTAR`
+  satırlarının elle eklenmesi gerekiyor (SENDEN-BEKLENENLER md. 8).
+- **Yeni başvuru e-postası gönderilmiyor**: SMTP yapılandırması yok.
+  Kayıt panele düşüyor, bildirim gitmiyor — mevcut talep formuyla aynı
+  durum ve aynı sebep.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

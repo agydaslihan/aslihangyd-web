@@ -8,6 +8,7 @@ import { Rozet } from '@/components/ui/Rozet'
 import { sayiYaz } from '@/lib/bicimlendirme'
 import { KATMAN_MINIMUM_GOZLEM } from '@/lib/endeks/tipler'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { endeksVerisiniGetir } from '@/lib/veri/endeks'
 
 export const metadata: Metadata = {
@@ -29,6 +30,10 @@ export const metadata: Metadata = {
  * zararı kalıcıdır: bir kez yanlış rakam yayınlanırsa geri almak zordur.
  */
 export default async function EndeksSayfasi() {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('endeks')
+
   const veri = await endeksVerisiniGetir()
 
   if (!veri.yayinIsaretli || !veri.kontrol.yayinlanabilir || !veri.seri) {
