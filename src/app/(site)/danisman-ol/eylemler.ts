@@ -3,7 +3,7 @@
 import { headers } from 'next/headers'
 
 import { danismanBasvuruSemasi, hatalariCoz, type BasvuruDurumu } from '@/lib/danisman/sema'
-import { hizSinirindaMi, istemciAnahtari } from '@/lib/guvenlik/hizSiniri'
+import { hizSinirindaMi, istemciAnahtari, istemciIpsi } from '@/lib/guvenlik/hizSiniri'
 import { turnstileDogrula } from '@/lib/guvenlik/turnstile'
 import { bolumAcikMi } from '@/lib/veri/siteBolumleri'
 import { payloadGetir } from '@/lib/veri/istemci'
@@ -62,19 +62,43 @@ export async function danismanBasvuruGonder(
 
   const basliklar = await headers()
 
-  const sinir = hizSinirindaMi(istemciAnahtari(basliklar, 'danisman'))
-  if (!sinir.gecebilir) {
-    const dakika = Math.ceil(sinir.yenidenDeneSaniye / 60)
-    return {
-      basarili: false,
-      genelHata:
-        `Kısa sürede çok fazla başvuru gönderildi. ${dakika} dakika sonra tekrar ` +
-        'deneyebilirsiniz.',
+  /**
+   * ⚠️ IP belirlenemiyorsa hız sınırı UYGULANMAZ.
+   *
+   * Ortak bir "bilinmeyen" kovasına yazmak, ters vekil yapılandırmasındaki
+   * bir hatayı doğrudan hizmet kesintisine çevirirdi: tüm ziyaretçiler aynı
+   * kovaya düşer ve form beşinci gönderimden sonra herkese kapanır.
+   * Gerekçenin tamamı `src/lib/guvenlik/hizSiniri.ts` içinde.
+   *
+   * Bu durum üretimde hiç olmamalı; olduğunda sunucu günlüğüne yazılıyor.
+   */
+  const sinirAnahtari = istemciAnahtari(basliklar, 'danisman')
+
+  if (sinirAnahtari === null) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(
+        '[guvenlik] İstemci IP başlığı yok — hız sınırı uygulanamadı. ' +
+          'Caddy trusted_proxies / header_up yapılandırmasını kontrol edin ' +
+          '(docs/ISLETME-REHBERI.md §5.5).',
+      )
+    }
+  } else {
+    const sinir = hizSinirindaMi(sinirAnahtari)
+    if (!sinir.gecebilir) {
+      const dakika = Math.ceil(sinir.yenidenDeneSaniye / 60)
+      return {
+        basarili: false,
+        genelHata:
+          `Kısa sürede çok fazla başvuru gönderildi. ${dakika} dakika sonra tekrar ` +
+          'deneyebilirsiniz.',
+      }
     }
   }
 
-  const istemciIp = basliklar.get('x-forwarded-for')?.split(',')[0]?.trim()
-  const turnstile = await turnstileDogrula(veri.turnstileJetonu, istemciIp)
+  const turnstile = await turnstileDogrula(
+    veri.turnstileJetonu,
+    istemciIpsi(basliklar) ?? undefined,
+  )
   if (!turnstile.gecerli) {
     return { basarili: false, genelHata: turnstile.hata ?? undefined }
   }

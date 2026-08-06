@@ -1377,6 +1377,110 @@ satırlık bir dal (`if (!anahtar) return 404`) ve `.env`'den okumanın
 
 ---
 
+## 8443 yayını, Cloudflare origin sertifikası ve gerçek ziyaretçi IP'si
+
+80/443 portları sunucuda başka bir uygulamada. Yayın 8443'e taşındı, TLS
+Cloudflare origin sertifikasıyla sağlanıyor, Let's Encrypt kaldırıldı.
+
+### Ne yapıldı
+
+- `docker/Caddyfile` — `auto_https off`, açık `tls` yolu, 8443 site bloğu,
+  `trusted_proxies` + `client_ip_headers`, `header_up` ile IP aktarımı.
+  HSTS kaldırıldı.
+- `docker/compose.prod.yml` — caddy yalnızca `8443:8443`; `./certs` salt
+  okunur bağlandı; `CADDY_EPOSTA` kaldırıldı.
+- `src/lib/guvenlik/hizSiniri.ts` — istemci IP çözümlemesi yeniden yazıldı.
+- `docs/ISLETME-REHBERI.md` §5.4–5.6 — güvenlik duvarı, TLS, gerçek IP.
+
+### ⚠️ Üç gerçek hata bulundu ve kapatıldı
+
+**1. Hız sınırı atlatılabiliyordu (güvenlik).**
+
+Eski kod `x-forwarded-for` başlığının ilk değerini okuyordu. Caddy o
+başlığa gelen değeri KORUR ve sonuna kendi gördüğünü ekler. Yani
+`X-Forwarded-For: 1.2.3.4` gönderen biri için başlık `1.2.3.4, <gerçek>`
+olur ve ilk sırayı okumak, saldırganın kendi sayaç anahtarını seçmesi
+demekti — her istekte farklı bir değerle sınır tek istekte atlatılıyordu.
+
+Artık yalnızca `CF-Connecting-IP` ve `X-Real-IP` okunuyor; ikisini de
+Caddy `{client_ip}` ile ÜZERİNE YAZIYOR, dolayısıyla istemciden gelen
+değer uygulamaya ulaşmıyor.
+
+**2. IPv6 aralıkları `trusted_proxies` listesinde yoktu (erişilebilirlik).**
+
+Cloudflare origin'e IPv6 üzerinden bağlanırsa ve aralık listede yoksa
+CF-Connecting-IP'ye güvenilmez; tüm ziyaretçiler aynı Cloudflare adresine
+düşer ve form beşinci gönderimden sonra herkese kapanır. Yedi IPv6 aralığı
+eklendi.
+
+**3. Genel adres çalışma zamanında okunmuyordu (SEO).**
+
+`NEXT_PUBLIC_*` değişkenleri Next.js tarafından derleme anında koda
+gömülüyor — sunucu tarafında bile. `compose.prod.yml` içindeki
+`NEXT_PUBLIC_SITE_ADRESI` bu yüzden HİÇ okunmuyordu; üretim imajı
+geliştirme `.env`'iyle derlendiği için site haritası ve kanonik adresler
+`http://localhost:3000` diyordu.
+
+Duman testinde yakalandı: `NEXT_PUBLIC_SERVER_URL` verilerek başlatılan
+üretim derlemesi hâlâ `localhost:3000` üretiyordu. Derlenmiş chunk
+içinde değerin gömülü olduğu doğrulandı.
+
+Çözüm ön eksiz `SITE_ADRESI` değişkeni (gömülmez, çalışma zamanında
+okunur); compose onu `NEXT_PUBLIC_SERVER_URL`'den kopyalıyor, `.env` tek
+satır kalıyor. `robots.ts` ayrıca `force-dynamic` yapıldı — statik üretilen
+bir rota değeri derleme anında dondurur.
+
+### Kararlar ve gerekçeleri
+
+**`auto_https off` — yalnızca sertifika değil, :80 sunucusu da kapanıyor.**
+80 portu başka uygulamada; Caddy oraya yönlendirme sunucusu açmaya
+çalışırsa başlangıçta hata verir.
+
+**HSTS Caddy'den çıkarıldı.** Cloudflare gönderiyor; iki kaynaktan gelen
+`Strict-Transport-Security` çakışır ve HSTS geri alınamaz bir mekanizma —
+belirsizlik kabul edilemez.
+
+**IP belirlenemezse hız sınırı UYGULANMIYOR.** Eski kod bu durumda
+`bilinmeyen` sabitine düşüyordu: vekil yapılandırmasındaki bir hata,
+doğrudan bir hizmet kesintisine dönüşürdü. Açık kapı burada daha az kötü —
+bal küpü ve Turnstile katmanları IP'ye bağlı değil. Durum üretimde
+olursa sunucu günlüğüne yazılıyor.
+
+**`uygulama` servisi 127.0.0.1:3000'e bağlandı.** Bakım cron'u host
+üzerinde çalışıyor ve `/api/bakim`'a ulaşması gerekiyor; Caddy üzerinden
+gitmek işe yaramaz, çünkü güvenlik duvarı kuralı Cloudflare dışındaki
+kaynakları — sunucunun kendisi dahil — 8443'te reddediyor.
+**Bu, bir önceki iş paketinde benim bıraktığım hataydı:** `bakim.sh`
+127.0.0.1:3000'e gidiyordu ama o port hiç yayınlanmıyordu. Yerel
+`pnpm start`'a karşı test ettiğim için fark edilmemişti.
+
+**8443 için güvenlik duvarı kuralı belgelendi.** Docker UFW'yi atlıyor;
+`ufw deny 8443` işe yaramaz. Doğru yer `DOCKER-USER` zinciri — origin
+IP'sini bulan birinin Cloudflare'i (WAF, bot koruması, hız sınırı) atlaması
+engellenmeli.
+
+### Doğrulama
+
+**Caddy yapılandırması** — `caddy validate`: *Valid configuration*.
+`caddy fmt` temiz.
+
+**Gerçek IP zinciri** — gerçek `docker/Caddyfile`, sahte üst sunucuyla,
+yerel Caddy 2.10 üzerinde:
+
+| Senaryo | Uygulamanın gördüğü |
+| --- | --- |
+| Güvenilen vekil, `CF-Connecting-IP: 203.0.113.7` | **203.0.113.7** ✓ |
+| Güvenilmeyen kaynak, sahte `CF-Connecting-IP: 1.2.3.4` | **127.0.0.1** — sahte değer üzerine yazıldı ✓ |
+| Güvenilmeyen kaynak, sahte `X-Forwarded-For: 9.9.9.9` | **127.0.0.1** — yok sayıldı ✓ |
+
+**Adresler** — `SITE_ADRESI` ile başlatılan üretim derlemesi:
+kanonik `https://aslihangyd.com:8443/portfoy`, og:url, site haritası ve
+robots.txt `Host`/`Sitemap` satırları hepsi portlu.
+
+**Kapı** — typecheck · lint temiz, **842 test**, derleme 107 sn.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

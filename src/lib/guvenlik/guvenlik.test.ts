@@ -1,6 +1,12 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { FORM_SINIRI, hizSinirindaMi, hizSinirlariniSifirla, istemciAnahtari } from './hizSiniri'
+import {
+  FORM_SINIRI,
+  hizSinirindaMi,
+  hizSinirlariniSifirla,
+  istemciAnahtari,
+  istemciIpsi,
+} from './hizSiniri'
 import { turnstileDogrula, turnstileEtkinMi } from './turnstile'
 
 describe('hız sınırı', () => {
@@ -52,25 +58,80 @@ describe('hız sınırı', () => {
   })
 })
 
-describe('istemci anahtarı', () => {
-  it('x-forwarded-for içindeki ilk adresi alır', () => {
-    const basliklar = new Headers({ 'x-forwarded-for': '203.0.113.5, 10.0.0.1' })
-    expect(istemciAnahtari(basliklar, 'form')).toBe('form:203.0.113.5')
+describe('istemci IP çözümlemesi', () => {
+  it('CF-Connecting-IP birinci sırada okunur', () => {
+    const basliklar = new Headers({
+      'cf-connecting-ip': '203.0.113.5',
+      'x-real-ip': '198.51.100.9',
+    })
+    expect(istemciIpsi(basliklar)).toBe('203.0.113.5')
   })
 
-  it('x-real-ip yedeğe düşer', () => {
-    expect(istemciAnahtari(new Headers({ 'x-real-ip': '198.51.100.9' }), 'form')).toBe(
-      'form:198.51.100.9',
+  it('CF-Connecting-IP yoksa X-Real-IP okunur', () => {
+    expect(istemciIpsi(new Headers({ 'x-real-ip': '198.51.100.9' }))).toBe('198.51.100.9')
+  })
+
+  /**
+   * ⚠️ EN ÖNEMLİ TEST — hız sınırı atlatma.
+   *
+   * Caddy, X-Forwarded-For'a gelen değeri KORUR ve sonuna kendi gördüğü
+   * adresi ekler. Bu başlığın ilk sırasını okumak, saldırganın kendi
+   * seçtiği hız sınırı anahtarını kullanması demektir: her istekte farklı
+   * bir değer göndererek sınır tek istekte atlatılır.
+   *
+   * Önceki sürüm tam olarak bunu yapıyordu.
+   */
+  it('x-forwarded-for GÜVENİLMEZ ve okunmaz', () => {
+    const sahte = new Headers({ 'x-forwarded-for': '1.2.3.4, 172.68.0.1' })
+    expect(istemciIpsi(sahte)).toBeNull()
+  })
+
+  it('güvenilen başlık varken x-forwarded-for yine yok sayılır', () => {
+    const basliklar = new Headers({
+      'x-forwarded-for': '1.2.3.4',
+      'cf-connecting-ip': '203.0.113.5',
+    })
+    expect(istemciIpsi(basliklar)).toBe('203.0.113.5')
+  })
+
+  it('boş başlık değeri adres sayılmaz', () => {
+    expect(istemciIpsi(new Headers({ 'cf-connecting-ip': '   ' }))).toBeNull()
+  })
+
+  it('hiç başlık yoksa null', () => {
+    expect(istemciIpsi(new Headers())).toBeNull()
+  })
+})
+
+describe('istemci anahtarı', () => {
+  it('ön ek ile IP birleştirilir', () => {
+    expect(istemciAnahtari(new Headers({ 'cf-connecting-ip': '203.0.113.5' }), 'form')).toBe(
+      'form:203.0.113.5',
     )
   })
 
-  it('adres yoksa da bir anahtar üretir', () => {
-    expect(istemciAnahtari(new Headers(), 'form')).toBe('form:bilinmeyen')
+  it('ön ek farklı formları ayırır', () => {
+    const basliklar = new Headers({ 'cf-connecting-ip': '1.2.3.4' })
+    expect(istemciAnahtari(basliklar, 'talep')).not.toBe(istemciAnahtari(basliklar, 'danisman'))
   })
 
-  it('ön ek farklı formları ayırır', () => {
-    const basliklar = new Headers({ 'x-real-ip': '1.2.3.4' })
-    expect(istemciAnahtari(basliklar, 'talep')).not.toBe(istemciAnahtari(basliklar, 'danisman'))
+  /**
+   * ⚠️ IP bilinmiyorsa ORTAK KOVA YOK.
+   *
+   * Eski sürüm `form:bilinmeyen` döndürüyordu. Cloudflare arkasında
+   * başlık yapılandırması bozulsaydı bütün ziyaretçiler o tek kovaya
+   * düşer ve beşinci gönderimden sonra form HERKESE kapanırdı — yani
+   * vekil yapılandırmasındaki bir hata doğrudan hizmet kesintisi olurdu.
+   */
+  it('IP belirlenemezse null döner, ortak kovaya düşmez', () => {
+    expect(istemciAnahtari(new Headers(), 'form')).toBeNull()
+    expect(istemciAnahtari(new Headers({ 'x-forwarded-for': '1.2.3.4' }), 'form')).toBeNull()
+  })
+
+  it('iki farklı ziyaretçi ayrı anahtar alır', () => {
+    const a = istemciAnahtari(new Headers({ 'cf-connecting-ip': '203.0.113.5' }), 'form')
+    const b = istemciAnahtari(new Headers({ 'cf-connecting-ip': '203.0.113.6' }), 'form')
+    expect(a).not.toBe(b)
   })
 })
 

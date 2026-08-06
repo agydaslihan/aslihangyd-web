@@ -100,19 +100,70 @@ export function hizSinirlariniSifirla(): void {
 }
 
 /**
- * İstek başlıklarından kaba bir istemci kimliği üretir.
+ * Ters vekilin yazdığı, güvenilen istemci IP başlıkları.
  *
- * ⚠️ IP adresi kişisel veridir. Burada SAKLANMIYOR: yalnızca bellekteki
- * sayacın anahtarı olarak kullanılıyor ve pencere dolunca siliniyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SIRALAMA VE LİSTE GÜVENLİK KARARIDIR.
+ *
+ * Site Cloudflare arkasında ve 8443 üzerinden yayında. Uzak adres HER
+ * istekte bir Cloudflare IP'si görünür; düzeltilmezse hız sınırlayıcı
+ * bütün ziyaretçileri tek kişi sanar ve siteyi HERKESE kapatır.
+ *
+ * Caddy `trusted_proxies` + `client_ip_headers CF-Connecting-IP` ile
+ * gerçek adresi hesaplar ve bu iki başlığın ÜZERİNE YAZAR
+ * (`header_up`, bkz. docker/Caddyfile). Üzerine yazma kritik: doğrudan
+ * origin'e bağlanıp sahte bir CF-Connecting-IP gönderen birinin değeri
+ * uygulamaya ulaşmaz.
+ *
+ * ⚠️ `x-forwarded-for` BİLİNÇLİ OLARAK LİSTEDE YOK.
+ *
+ * Caddy o başlığa gelen değeri korur ve sonuna kendi gördüğü adresi
+ * ekler. Yani `X-Forwarded-For: 1.2.3.4` gönderen biri için başlık
+ * `1.2.3.4, <gerçek>` olur ve ilk sıradaki değeri okumak, saldırganın
+ * seçtiği anahtarı kullanmak demektir — hız sınırı tek istekle atlatılır.
+ * Eski sürüm tam olarak bunu yapıyordu.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+const GUVENILEN_IP_BASLIKLARI = ['cf-connecting-ip', 'x-real-ip'] as const
+
+/**
+ * İstek başlıklarından istemci IP'sini okur.
+ *
+ * ⚠️ IP adresi kişisel veridir. SAKLANMIYOR: yalnızca bellekteki sayacın
+ * anahtarı olarak kullanılıyor ve pencere dolunca siliniyor.
  * Veritabanına, günlüğe ya da e-postaya yazılmıyor.
  *
- * `x-forwarded-for` istemci tarafından uydurulabilir; ters vekil (Caddy)
- * başlığı kendi gördüğü adresle yeniden yazdığı için üretimde güvenilir.
- * Vekil olmayan bir ortamda hız sınırı atlatılabilir — bu, savunmanın
- * tek katmanı olmamasının bir başka sebebi.
+ * Adres belirlenemezse `null` döner — "bilinmeyen" diye ortak bir kovaya
+ * yazmaz. Gerekçe `istemciAnahtari` üzerinde.
  */
-export function istemciAnahtari(basliklar: Headers, onEk: string): string {
-  const iletilen = basliklar.get('x-forwarded-for')?.split(',')[0]?.trim()
-  const gercek = basliklar.get('x-real-ip')?.trim()
-  return `${onEk}:${iletilen || gercek || 'bilinmeyen'}`
+export function istemciIpsi(basliklar: Headers): string | null {
+  for (const baslik of GUVENILEN_IP_BASLIKLARI) {
+    const deger = basliklar.get(baslik)?.trim()
+    if (deger !== undefined && deger !== '') return deger
+  }
+  return null
+}
+
+/**
+ * Hız sınırı anahtarı. IP belirlenemezse `null`.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ IP BİLİNMİYORSA HIZ SINIRI UYGULANMAZ — bilinçli bir takas.
+ *
+ * Önceki sürüm bu durumda `bilinmeyen` sabitine düşüyordu. Sonuç:
+ * ziyaretçilerin tamamı tek kovada toplanır ve beşinci form gönderiminden
+ * sonra form HERKESE kapanır. Yani vekil yapılandırmasındaki bir hata,
+ * doğrudan bir hizmet kesintisine dönüşür.
+ *
+ * Açık kapı bırakmak burada daha az kötü: form gönderiminde bal küpü ve
+ * (yapılandırıldığında) Turnstile katmanları duruyor, ikisi de IP'ye
+ * bağlı değil. Kapalı kapı ise gerçek kullanıcıları dışarıda bırakır.
+ *
+ * Bu durum üretimde HİÇ olmamalı; olursa `hizSiniriDurumu` ile görünür
+ * kılınır (docs/ISLETME-REHBERI.md §5.5 doğrulama adımı).
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function istemciAnahtari(basliklar: Headers, onEk: string): string | null {
+  const ip = istemciIpsi(basliklar)
+  return ip === null ? null : `${onEk}:${ip}`
 }

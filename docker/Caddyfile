@@ -1,27 +1,71 @@
 # =============================================================================
 # aslihangyd.com — Caddy ters vekil
 #
-# Caddy Let's Encrypt sertifikasını kendi alır ve yeniler; ayrı bir certbot
-# kurulumu gerekmiyor.
+# ⚠️ TLS: Cloudflare origin sertifikası. Let's Encrypt YOK.
+#    80/443 portları sunucuda başka bir uygulamada olduğu için ACME'nin
+#    HTTP-01 doğrulaması zaten çalışamaz. Origin sertifikası 15 yıl
+#    geçerlidir ve yenileme gerektirmez.
+#
+# ⚠️ Yayın portu 8443. Cloudflare'in proxy'lediği HTTPS portlarından biri
+#    (443, 2053, 2083, 2087, 2096, 8443).
+#
+# ⚠️ HSTS BURADA YOK — Cloudflare yönetiyor. İki kaynaktan gönderilen
+#    Strict-Transport-Security başlığı çakışır; tarayıcı hangisini
+#    uygulayacağı belirsiz kalır ve HSTS geri alınamaz bir mekanizmadır.
 # =============================================================================
-
 {
-	email {$CADDY_EPOSTA}
-	# Sunucu kimliğini yanıt başlığında duyurmaya gerek yok.
+	# ⚠️ Otomatik HTTPS TAMAMEN kapalı.
+	#
+	# Üç şeyi birden kapatır: ACME sertifika alımı, sertifika yenileme ve
+	# :80 üzerinde açılan HTTP→HTTPS yönlendirme sunucusu. Sonuncusu önemli:
+	# 80 portu başka bir uygulamada, Caddy oraya bağlanmaya çalışırsa
+	# başlangıçta hata verir.
+	auto_https off
+
 	servers {
-		trusted_proxies static 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22
+		# ─────────────────────────────────────────────────────────────────
+		# ⚠️ GERÇEK ZİYARETÇİ IP'Sİ — bu blok atlanırsa site kilitlenir.
+		#
+		# Cloudflare arkasındayız: uzak adres HER istekte bir Cloudflare
+		# IP'si görünür. Bu düzeltilmezse hız sınırlayıcı bütün
+		# ziyaretçileri tek kişi sanar ve beşinci form gönderiminden sonra
+		# siteyi HERKESE kapatır.
+		#
+		# `trusted_proxies` + `client_ip_headers` ikilisi, isteği yalnızca
+		# listedeki ağlardan geldiyse CF-Connecting-IP başlığına inanmaya
+		# yarar. Doğrudan origin'e bağlanan biri bu başlığı uydurursa
+		# kaynak adresi listede olmadığı için YOK SAYILIR.
+		#
+		# ⚠️ IPv6 aralıkları da listede. Cloudflare origin'e IPv6 üzerinden
+		# bağlanırsa ve aralık listede yoksa başlığa güvenilmez —
+		# tam olarak yukarıdaki kilitlenme yaşanır.
+		#
+		# Liste kaynağı: https://www.cloudflare.com/ips-v4 ve /ips-v6
+		# (6 Ağustos 2026 itibarıyla doğrulandı; nadiren değişir,
+		#  docs/ISLETME-REHBERI.md §5.5'te güncelleme yordamı var)
+		# ─────────────────────────────────────────────────────────────────
+		trusted_proxies static \
+ 173.245.48.0/20 103.21.244.0/22 103.22.200.0/22 103.31.4.0/22 \
+ 141.101.64.0/18 108.162.192.0/18 190.93.240.0/20 188.114.96.0/20 \
+ 197.234.240.0/22 198.41.128.0/17 162.158.0.0/15 104.16.0.0/13 \
+ 104.24.0.0/14 172.64.0.0/13 131.0.72.0/22 \
+ 2400:cb00::/32 2606:4700::/32 2803:f800::/32 2405:b500::/32 \
+ 2405:8100::/32 2a06:98c0::/29 2c0f:f248::/32
+
+		client_ip_headers CF-Connecting-IP
 	}
 }
 
-aslihangyd.com {
+https://aslihangyd.com:8443 {
+	# Cloudflare origin sertifikası — 15 yıl geçerli, yenileme yok.
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+
 	encode zstd gzip
 
 	# ── Güvenlik başlıkları ───────────────────────────────────────────────
 	header {
-		# HTTPS'e kilitle. Alan adı ilk kez yayına alınırken max-age'i
-		# kısa tutup (örn. 300) her şeyin çalıştığını doğruladıktan sonra
-		# uzun değere geçin — HSTS geri alınamaz.
-		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		# ⚠️ Strict-Transport-Security BİLİNÇLİ OLARAK YOK — Cloudflare
+		# gönderiyor. İkisi birden gönderirse başlık çakışır.
 
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "SAMEORIGIN"
@@ -45,6 +89,26 @@ aslihangyd.com {
 	header @degismez Cache-Control "public, max-age=31536000, immutable"
 
 	reverse_proxy uygulama:3000 {
+		# ─────────────────────────────────────────────────────────────────
+		# ⚠️ Gerçek IP uygulamaya bu iki başlıkla geçer.
+		#
+		# `{client_ip}` yukarıdaki trusted_proxies yapılandırmasının
+		# sonucudur: istek Cloudflare'den geldiyse CF-Connecting-IP,
+		# gelmediyse gerçek uzak adres.
+		#
+		# Başlıklar ÜZERİNE YAZILIYOR (`header_up`), eklenmiyor. Sebebi
+		# güvenlik: doğrudan origin'e bağlanıp sahte bir CF-Connecting-IP
+		# gönderen biri, uydurduğu değerin uygulamaya ulaşmasını
+		# sağlayamamalı. Üzerine yazma o değeri siler.
+		#
+		# ⚠️ X-Forwarded-For'a GÜVENİLMİYOR ve uygulama onu okumuyor:
+		# Caddy o başlığa gelen değeri korur ve sonuna ekler, yani
+		# ilk sıradaki değer istemciden gelmiş olabilir.
+		# Ayrıntı: src/lib/guvenlik/hizSiniri.ts
+		# ─────────────────────────────────────────────────────────────────
+		header_up CF-Connecting-IP {client_ip}
+		header_up X-Real-IP {client_ip}
+
 		health_uri /api/saglik
 		health_interval 30s
 		health_timeout 5s
@@ -53,6 +117,11 @@ aslihangyd.com {
 
 # www → kök yönlendirmesi Cloudflare'de de yapılabilir; burada tutmak
 # Cloudflare devre dışı kaldığında da davranışı korur.
-www.aslihangyd.com {
-	redir https://aslihangyd.com{uri} permanent
+#
+# ⚠️ Origin sertifikası bu ada da geçerli olmalı. Cloudflare origin
+# sertifikası üretilirken hem `aslihangyd.com` hem `*.aslihangyd.com`
+# istenmelidir (varsayılan olarak ikisini de sunar).
+https://www.aslihangyd.com:8443 {
+	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+	redir https://aslihangyd.com:8443{uri} permanent
 }

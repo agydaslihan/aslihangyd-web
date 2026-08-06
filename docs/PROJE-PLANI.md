@@ -349,7 +349,7 @@ systemctl restart ssh
 ufw default deny incoming
 ufw default allow outgoing
 ufw allow 2222/tcp      # SSH portunuz
-ufw allow 80,443/tcp
+ufw allow 8443/tcp   # 80/443 başka uygulamada; ayrıca bkz. ISLETME-REHBERI §5.4
 ufw enable
 
 # Otomatik güvenlik güncellemeleri

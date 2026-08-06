@@ -13,12 +13,43 @@ export const SITE_ACIKLAMASI =
   'kira çarpanı ve yatırım analiziyle veriye dayalı karar desteği.'
 
 /**
- * Kanonik adres. Ortam değişkeni yoksa üretim alan adına düşer —
- * sitemap ve OG etiketleri mutlak adres gerektirir.
+ * Kanonik adres. Site haritası, robots.txt ve OG etiketleri mutlak adres
+ * gerektirir.
+ *
+ * ⚠️ ADRES PORT İÇERİR: 80/443 sunucuda başka bir uygulamada, yayın 8443
+ * üzerinden. Portu düşürmek, arama motoruna ulaşılamayan kanonik adresler
+ * bildirmek demek olur.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ `SITE_ADRESI` ÖN EKSİZ VE BU BİLİNÇLİ.
+ *
+ * Next.js `NEXT_PUBLIC_*` değişkenlerini DERLEME ANINDA koda gömer —
+ * sunucu tarafında bile. Yani `docker-compose` içinde çalışma zamanında
+ * verilen bir `NEXT_PUBLIC_SITE_ADRESI` HİÇ OKUNMAZ; imaj hangi değerle
+ * derlendiyse o kalır.
+ *
+ * Bu, kurulumda fark edilene kadar sessizce yanlış çalışıyordu: üretim
+ * imajı geliştirme `.env`'iyle derlendiği için site haritası ve kanonik
+ * adresler `http://localhost:3000` diyordu.
+ *
+ * Çözüm ön eksiz bir değişken: ön eki olmayanlar gömülmez, sunucuda
+ * çalışma zamanında okunur. `.env` yine tek satır tutuyor
+ * (`NEXT_PUBLIC_SERVER_URL`); compose onu bu ada kopyalıyor.
+ *
+ * ⚠️ Bu değeri kullanan rotalar dinamik olmalı. Statik olarak önceden
+ * üretilen bir rota, değeri derleme anında dondurur — `robots.ts` ve
+ * `sitemap.ts` bu yüzden `force-dynamic`.
+ * ─────────────────────────────────────────────────────────────────────────
  */
-export const SITE_ADRESI = (
-  process.env.NEXT_PUBLIC_SITE_ADRESI ?? 'https://aslihangyd.com'
-).replace(/\/$/, '')
+export const SITE_ADRESI =
+  // Çalışma zamanı (üretim) — compose bunu NEXT_PUBLIC_SERVER_URL'den kopyalar.
+  (
+    process.env.SITE_ADRESI ||
+    // Derleme zamanı — geliştirmede ve istemci tarafı ihtiyaçlarında.
+    process.env.NEXT_PUBLIC_SITE_ADRESI ||
+    process.env.NEXT_PUBLIC_SERVER_URL ||
+    'https://aslihangyd.com:8443'
+  ).replace(/\/$/, '')
 
 export function mutlakAdres(yol: string): string {
   return `${SITE_ADRESI}${yol.startsWith('/') ? yol : `/${yol}`}`

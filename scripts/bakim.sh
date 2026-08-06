@@ -29,7 +29,14 @@
 set -Eeuo pipefail
 
 UYGULAMA_DIZINI="${UYGULAMA_DIZINI:-/srv/aslihangyd/app}"
-# Vekil sunucuyu ve dış ağı dolaşmadan doğrudan uygulama kabına gidilir.
+# ⚠️ Doğrudan uygulama kabına gidilir, Caddy'ye DEĞİL.
+#
+# Caddy 8443'te dinliyor ve §5.4'teki güvenlik duvarı kuralı Cloudflare
+# dışındaki kaynakları — sunucunun kendisi dahil — reddediyor. Ayrıca
+# origin sertifikası yalnızca Cloudflare tarafından geçerli sayılır.
+#
+# `uygulama` servisi bunun için 127.0.0.1:3000'e bağlıdır (yalnızca geri
+# döngü; bkz. docker/compose.prod.yml).
 BAKIM_ADRESI="${BAKIM_ADRESI:-http://127.0.0.1:3000/api/bakim}"
 # EİDS görevi 500 ilanı gezebilir; cimri bir zaman aşımı görevi yarıda keser.
 ZAMAN_ASIMI="${ZAMAN_ASIMI:-120}"
