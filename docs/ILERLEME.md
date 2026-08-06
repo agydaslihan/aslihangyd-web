@@ -983,6 +983,89 @@ harita isteğinin doğal bedeli — alternatif özelliği tümden çıkarmak olu
 ⚠️ Lighthouse yerelde ölçülemiyor (sunucuda Chrome yok); CI iş akışında
 raporlanıyor. Gerçek MapTiler verisiyle `/harita` için ayrıca ölçülmeli.
 
+## C aşaması — Portföy listeleme (tema sıraları)
+
+`/portfoy` sayfasının filtresiz görünümü, ölçüte göre gruplanmış yatay
+kaydırmalı sıralara dönüştürüldü.
+
+### Ne yapıldı
+
+- `src/lib/portfoy/bolumler.ts` — ölçüt tanımları ve uygulaması (saf,
+  testli). 21 birim testi.
+- `src/globals/PortfoyBolumleri.ts` — CMS'ten yönetilen sıra düzeni;
+  migration `20260806_093100_portfoy_bolumleri`.
+- `src/lib/veri/portfoy.ts` — sıraların kurulumu, tekrar ayıklama,
+  kilitli kartların araya karıştırılması.
+- `src/components/ilan/YataySira.tsx` — kaydırmalı sıra: ok düğmeleri,
+  ilerleme çubuğu, klavye ile ok tuşu desteği, `ResizeObserver`.
+- `src/components/ilan/IlanKarti.tsx` — şartnameye göre yeniden yazıldı.
+- `/portfoy` — filtresiz görünüm tema sıraları, süzülmüş görünüm ızgara.
+
+### Kararlar ve gerekçeleri
+
+**Ölçüt kodda, metin CMS'te.**
+Yatırım skorunda ve mahalle eşleştirmede uygulanan ayrımın aynısı. Bir
+sıranın hangi ilanları seçtiği metodolojidir ve denetlenebilir olması için
+kodda durur; başlık, alt başlık, adet ve düzen editoryal karardır ve
+panelden yönetilir. Tersini yapmak, "hangi ilanlar öne çıkıyor?"
+sorusunun cevabını bir metin kutusuna hapsederdi.
+
+**⚠️ "İlçe ortalaması" değil "portföy ortalaması".**
+Şartnamedeki örnek alt başlık "Kira çarpanı ilçe ortalamasının altında
+kalan portföyümüz" idi. İlçe ortalaması piyasa verisi gerektirir; bizde
+yok. Elimizdeki portföy ortalamasını ilçe ortalamasıymış gibi sunmak
+doğrulanamayan bir iddia olurdu (CLAUDE.md kural 2). Alt başlık "Kira
+çarpanı **portföy** ortalamasının altında kalan taşınmazlar" oldu ve bir
+test bu ifadenin "ilçe" demediğini koruyor. Çorlu Konut Endeksi yayına
+girdiğinde ölçüt gerçek ilçe medyanına bağlanabilir.
+
+**Ortalama için asgari 4 gözlem.**
+İki ilanın ortalaması bir "portföy ortalaması" değildir. Eşik altında sıra
+gösterilmiyor ve sebebi yazılıyor — dolu görünsün diye üç ilanı "öne
+çıkanlar" diye sunmak, ölçütü süse çevirirdi.
+
+**Kart hiyerarşisi yatırımcının okuma sırasına göre.**
+Fiyat (18px) → **m² fiyatı (11px)** → başlık → mahalle → nitelikler →
+kapanış satırında kira çarpanı. m² fiyatı rakiplerde yok ve yatırımcının
+ilk yaptığı hesap tam olarak bu; kartta olması 15 ilan tararken kafadan
+bölme yapmayı bitiriyor. Kira çarpanı ise kapanış satırında, çünkü kartın
+"bakılmaya değer mi?" sorusunu cevaplayan tek rakamı o.
+
+**m² fiyatı kiralık ilanda hesaplanmıyor.**
+Aylık kirayı m²'ye bölmek, satış m² fiyatıyla aynı satırda göründüğünde
+yanıltıcı bir karşılaştırma üretiyordu.
+
+**Kilitli kartlar hem kendi bölümünde hem araya karışmış.**
+Şartname ikisini birden istiyordu: ayrı bir "Yayınlanmayan portföy"
+bölümü VE "yayınlananların yanında durur, merak doğal oluşsun". İkisini
+birlikte yapmak aynı taşınmazı iki kez göstermek anlamına geleceği için
+(ve bu, tekrar yasağını ihlal edeceği için) ilk iki kilitli kayıt ilk dolu
+yayın sırasına karıştırılıyor, kendi bölümü kalanlarla açılıyor.
+
+**Tekrar ayıklama sıraların tanımlı düzenini izliyor.**
+Yukarıdaki sıra ilanı "kapar". Bu yüzden CMS'teki sıra numarası sadece
+görsel düzen değil, öncelik — panelde bu yazılı.
+
+**Tema sıraları yalnızca filtresiz görünümde.**
+Filtre uygulandığı anda ziyaretçi aramaya geçmiştir; "yeni eklenenler"
+sırası orada sonucun önünü kapatan bir gürültü olurdu. Süzülmüş görünüm
+ızgara + sayfalama olarak kaldı — arama motorunun tüm portföyü gezebilmesi
+de buna bağlı.
+
+**Ok düğmeleri uçta gizlenmiyor, pasifleşiyor.**
+Kaybolan bir düğme odağın sayfada zıplamasına yol açıyor.
+
+### C aşaması ölçümleri (yerel, üretim derlemesi)
+
+| Ölçüm | Değer | Not |
+| --- | --- | --- |
+| `pnpm test` | **626 test / 26 dosya** | +21 bölüm ölçütü testi |
+| Derleme | **82 sn** | eşiğin altında |
+| `/portfoy` JS (gzip) | **206,3 kB** | öncesi ~205 kB — kaydırma bileşeninin maliyeti ~1 kB |
+| `/portfoy` CSS (gzip) | 10,2 kB | — |
+| TTFB `/portfoy` | 117 ms | dört ölçüt sorgusu tek havuzdan süzülüyor |
+| Migration | `20260806_093100_portfoy_bolumleri` | yalnızca ekleme, uygulandı |
+
 ## D aşaması — Site bölümleri, danışman başvurusu, altbilgi
 
 ### Ne yapıldı

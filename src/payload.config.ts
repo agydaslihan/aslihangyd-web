@@ -24,6 +24,7 @@ import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
 import { DanismanOl } from '@/globals/DanismanOl'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
+import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
 import { SiteBolumleri } from '@/globals/SiteBolumleri'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -83,7 +84,14 @@ export default buildConfig({
     Kullanicilar,
   ],
 
-  globals: [KurumsalBilgiler, SiteBolumleri, DanismanOl, DegerlemeAyarlari, EndeksAyarlari],
+  globals: [
+    KurumsalBilgiler,
+    SiteBolumleri,
+    PortfoyBolumleri,
+    DanismanOl,
+    DegerlemeAyarlari,
+    EndeksAyarlari,
+  ],
 
   editor: lexicalEditor(),
 
