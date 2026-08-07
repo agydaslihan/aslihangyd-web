@@ -20,5 +20,16 @@ coverage/
 next-env.d.ts
 
 # Payload medya yükleme dizini (git dışı)
-medya/
+#
+# ⚠️ BAŞTAKİ EĞİK ÇİZGİ ZORUNLU — deponun KÖKÜNDEKİ dizin kastediliyor.
+#
+# Eğik çizgisiz `medya/` deseni HER derinlikteki `medya` klasörünü yutar.
+# 7 Ağustos 2026'da `src/components/medya/` ve `src/lib/medya/` bu yüzden
+# hiç commit edilmedi: dosyalar yerelde diskte olduğu için
+# `pnpm typecheck && lint && test && build` tertemiz geçti, CI ise depoyu
+# o dosyalar olmadan çekip `Cannot find module` ile düştü.
+#
+# Yükleme dizini `src/collections/Medya.ts` içinde `staticDir: 'medya'`,
+# yani çalışma dizinine göre çözülüyor — kökte.
+/medya/
 docker/certs/
