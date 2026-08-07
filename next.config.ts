@@ -3,6 +3,7 @@ import { withPayload } from '@payloadcms/next/withPayload'
 import type { NextConfig } from 'next'
 
 const nextConfig: NextConfig = {
+  allowedDevOrigins: ['192.168.1.113'],
   // Next 16'nın varsayılan derleyicisi Turbopack'tir; bilinçli olarak
   // webpack'e sabitlemiyoruz.
   reactStrictMode: true,
