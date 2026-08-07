@@ -1,20 +1,43 @@
 name: CI
 
-# Her PR ve main/develop push'unda kalite kapısı.
+# Her push ve her PR'da kalite kapısı — hedef dal ne olursa olsun.
 #
 # CLAUDE.md: "Her fazın sonunda pnpm typecheck && lint && test && build →
 # hepsi temiz." Bu iş akışı o kuralı insan disiplinine bırakmaz.
+#
+# ─────────────────────────────────────────────────────────────────────────
+# ⚠️ NEDEN FİLTRE YOK: ZİNCİRLEME PR'LARDA KAPI HİÇ KOŞMADI.
+#
+# Tetik `branches: [main, develop]` iken yalnızca main/develop'ı HEDEFLEYEN
+# PR'lar sınanıyordu. 7 Ağustos 2026'daki on bir PR'lık yığında #10–#16
+# birbirini hedefliyordu; yedisinde de tek bir kontrol koşmadı ve bu
+# GitHub arayüzünde hata olarak değil, sessizce "kontrol yok" diye göründü.
+#
+# Yığının ucu (#19) yeşil olduğu için sonuç kurtuldu; ama bu tesadüftü.
+# Ara dallardan biri bozuk olsaydı, bozukluk main'e ancak uçta — yani en
+# geç ve en pahalı anda — görünecekti.
+#
+# İki tetik birlikte gerekiyor, biri diğerinin yerini tutmuyor:
+#   · push       → dalın UCU doğrulanır (PR açılmamış olsa bile)
+#   · pull_request → dalın main ile BİRLEŞMİŞ HALİ doğrulanır
+# İkincisi olmadan `.gitignore` yutması gibi "yerelde geçer, depoda yok"
+# hataları görünmez; birincisi olmadan PR açılana kadar hiçbir şey sınanmaz.
+# ─────────────────────────────────────────────────────────────────────────
 
 on:
   push:
-    branches: [main, develop]
+    branches: ['**']
   pull_request:
-    branches: [main, develop]
+  workflow_dispatch:
 
 # Aynı dala arka arkaya push gelirse eskisini iptal et — 2 vCPU'luk
 # runner kotasını boşa harcama.
+#
+# ⚠️ Grup anahtarı PR numarasını da içeriyor: aynı commit hem push hem
+# pull_request olayı üretir ve tek anahtar kullanılırsa bunlar birbirini
+# iptal ederdi — kontrol "cancelled" görünür, kimse sebebini anlamazdı.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
