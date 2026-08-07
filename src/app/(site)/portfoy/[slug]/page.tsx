@@ -7,7 +7,7 @@ import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat } from '@/components/ui/Feragat'
 import { KonumIkon, WhatsappIkon } from '@/components/ui/Ikon'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { DogrulanmisIlanRozeti, Rozet } from '@/components/ui/Rozet'
 import { ZenginMetin } from '@/components/ui/ZenginMetin'
 import {
@@ -104,7 +104,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             <h1 className="mt-3 text-[1.875rem] leading-tight sm:text-[2.375rem]">{ilan.baslik}</h1>
 
             {mahalle ? (
-              <p className="text-murekkep-2 mt-3 flex items-center gap-2">
+              <p className="text-metin-2 mt-3 flex items-center gap-2">
                 <KonumIkon width={16} height={16} className="shrink-0" />
                 <Link
                   href={`/mahalleler/${mahalle.slug}`}
@@ -112,7 +112,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
                 >
                   {mahalle.ad} Mahallesi
                 </Link>
-                <span className="text-murekkep-3">
+                <span className="text-metin-3">
                   · {ilan.ilce}, {ilan.il}
                 </span>
               </p>
@@ -121,31 +121,31 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             {/* ── Yatırım göstergeleri ── */}
             {satilik ? (
               <section aria-labelledby="gostergeler" className="mt-10">
-                <h2 id="gostergeler" className="mb-4 font-sans text-lg font-semibold">
+                <h2 id="gostergeler" className="mb-4 font-sans text-baslik-3 font-medium">
                   Yatırım göstergeleri
                 </h2>
 
-                <RakamIzgarasi sinifAdi="lg:grid-cols-3">
-                  <RakamKarti
+                <KartIzgarasi sinifAdi="lg:grid-cols-3">
+                  <HesapKarti
                     etiket="Kira çarpanı"
                     deger={carpanYaz(ilan.kiraCarpani)}
                     altBilgi="Satış fiyatı ÷ yıllık kira"
                     bosAciklama="Tahmini kira bilgisi girilmediği için hesaplanamadı."
                     ton="vurgu"
                   />
-                  <RakamKarti
+                  <HesapKarti
                     etiket="Brüt kira getirisi"
                     deger={yuzdeYaz(ilan.brutGetiri)}
                     altBilgi="Yıllık, giderler hariç"
                     bosAciklama="Tahmini kira bilgisi girilmediği için hesaplanamadı."
                   />
-                  <RakamKarti
+                  <HesapKarti
                     etiket="Amortisman süresi"
                     deger={yilYaz(ilan.amortismanYili)}
                     altBilgi="Kira geliriyle kendini ödeme"
                     bosAciklama="Tahmini kira bilgisi girilmediği için hesaplanamadı."
                   />
-                </RakamIzgarasi>
+                </KartIzgarasi>
 
                 {gostergeVar ? (
                   <Feragat
@@ -162,7 +162,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             {/* ── Açıklama ── */}
             {ilan.aciklama ? (
               <section className="mt-10">
-                <h2 className="mb-3 font-sans text-lg font-semibold">Açıklama</h2>
+                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Açıklama</h2>
                 <ZenginMetin veri={ilan.aciklama} />
               </section>
             ) : null}
@@ -170,7 +170,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             {/* ── Öne çıkan özellikler ── */}
             {ilan.ozellikler && ilan.ozellikler.length > 0 ? (
               <section className="mt-10">
-                <h2 className="mb-3 font-sans text-lg font-semibold">Öne çıkan özellikler</h2>
+                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Öne çıkan özellikler</h2>
                 <ul className="flex flex-wrap gap-2">
                   {ilan.ozellikler.map((ozellik) => (
                     <li key={ozellik.id ?? ozellik.metin}>
@@ -184,24 +184,24 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
           {/* ── Yan panel ── */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="border-cizgi bg-yuzey shadow-kart rounded-yumusak border p-5 sm:p-6">
-              <p className="text-murekkep-3 text-mikro font-medium">
+            <div className="border-kenar bg-yuzey shadow-kart rounded-kart border-[0.5px] p-5 sm:p-6">
+              <p className="text-metin-3 text-mikro font-medium">
                 {satilik ? 'Satış fiyatı' : 'Aylık kira'}
               </p>
-              <p className="rakam mt-1 text-[2rem] leading-none font-semibold">
+              <p className="rakam mt-1 text-[2rem] leading-none font-medium">
                 {paraYaz(ilan.fiyat, paraBirimi) ?? (
-                  <span className="text-murekkep-2 text-xl font-normal">Görüşmeye açık</span>
+                  <span className="text-metin-2 text-baslik-3 font-normal">Görüşmeye açık</span>
                 )}
               </p>
 
               {ilan.aidat ? (
-                <p className="text-murekkep-3 mt-2 text-sm">
+                <p className="text-metin-3 mt-2 text-govde-kucuk">
                   Aidat: {paraYaz(ilan.aidat, paraBirimi)} / ay
                 </p>
               ) : null}
 
               {ilan.pazarlikPayi ? (
-                <p className="text-murekkep-3 mt-1 text-sm">Pazarlık payı var</p>
+                <p className="text-metin-3 mt-1 text-govde-kucuk">Pazarlık payı var</p>
               ) : null}
 
               <div className="mt-5 flex flex-col gap-2">
@@ -222,16 +222,16 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               </div>
 
               {/* Güven bloğu — EİDS doğrulaması */}
-              <div className="border-cizgi mt-5 border-t pt-5">
+              <div className="border-kenar mt-5 border-t-[0.5px] pt-5">
                 <DogrulanmisIlanRozeti tasinmazNo={ilan.tasinmazNo} />
                 {ilan.eidsYetkiBitis ? (
-                  <p className="text-murekkep-3 mt-3 text-mikro leading-relaxed">
+                  <p className="text-metin-3 mt-3 text-mikro leading-relaxed">
                     Mülk sahibinin verdiği ilan yetkisi{' '}
                     <strong className="font-medium">{tarihiYaz(ilan.eidsYetkiBitis)}</strong>{' '}
                     tarihine kadar geçerlidir.
                   </p>
                 ) : null}
-                <p className="text-murekkep-3 mt-2 text-mikro">
+                <p className="text-metin-3 mt-2 text-mikro">
                   Son güncelleme: {tarihiYaz(ilan.updatedAt)}
                 </p>
               </div>
@@ -260,16 +260,16 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
 function KirintiYolu({ ilan, mahalleAdi }: { ilan: Ilanlar; mahalleAdi: string | null }) {
   return (
-    <nav aria-label="Sayfa yolu" className="text-murekkep-3 text-sm">
+    <nav aria-label="Sayfa yolu" className="text-metin-3 text-govde-kucuk">
       <ol className="flex flex-wrap items-center gap-1.5">
         <li>
-          <Link href="/" className="hover:text-murekkep underline-offset-2 hover:underline">
+          <Link href="/" className="hover:text-metin underline-offset-2 hover:underline">
             Ana sayfa
           </Link>
         </li>
         <li aria-hidden>/</li>
         <li>
-          <Link href="/portfoy" className="hover:text-murekkep underline-offset-2 hover:underline">
+          <Link href="/portfoy" className="hover:text-metin underline-offset-2 hover:underline">
             Portföy
           </Link>
         </li>
@@ -280,7 +280,7 @@ function KirintiYolu({ ilan, mahalleAdi }: { ilan: Ilanlar; mahalleAdi: string |
           </>
         ) : null}
         <li aria-hidden>/</li>
-        <li className="text-murekkep-2 truncate" aria-current="page">
+        <li className="text-metin-2 truncate" aria-current="page">
           {ilan.baslik}
         </li>
       </ol>
@@ -312,15 +312,15 @@ function NitelikTablosu({ ilan }: { ilan: Ilanlar }) {
 
   return (
     <section className="mt-10">
-      <h2 className="mb-3 font-sans text-lg font-semibold">Taşınmaz bilgileri</h2>
-      <dl className="border-cizgi grid grid-cols-1 gap-px overflow-hidden rounded-yumusak border bg-cizgi sm:grid-cols-2">
+      <h2 className="mb-3 font-sans text-baslik-3 font-medium">Taşınmaz bilgileri</h2>
+      <dl className="border-kenar grid grid-cols-1 gap-px overflow-hidden rounded-kart border-[0.5px] bg-kenar sm:grid-cols-2">
         {dolu.map((satir) => (
           <div
             key={satir.etiket}
             className="bg-yuzey flex items-baseline justify-between gap-4 px-4 py-3"
           >
-            <dt className="text-murekkep-2 text-sm">{satir.etiket}</dt>
-            <dd className="rakam text-sm font-medium">{satir.deger}</dd>
+            <dt className="text-metin-2 text-govde-kucuk">{satir.etiket}</dt>
+            <dd className="rakam text-govde-kucuk font-medium">{satir.deger}</dd>
           </div>
         ))}
       </dl>

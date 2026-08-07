@@ -36,26 +36,28 @@ export function HesaplayiciKabugu({
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">{baslik}</h1>
-        <p className="text-murekkep-2 leading-relaxed">{aciklama}</p>
+        <p className="text-metin-2 leading-relaxed">{aciklama}</p>
       </header>
 
       {children}
 
-      <div className="border-cizgi mt-10 max-w-2xl border-t pt-6">
+      <div className="border-kenar mt-10 max-w-2xl border-t-[0.5px] pt-6">
         <details className="group">
-          <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium marker:content-none">
-            <BilgiIkon width={16} height={16} className="text-murekkep-3" />
+          <summary className="flex cursor-pointer list-none items-center gap-2 text-govde-kucuk font-medium marker:content-none">
+            <BilgiIkon width={16} height={16} className="text-metin-3" />
             Bu hesap nasıl yapılıyor?
-            <span className="text-murekkep-3 ml-auto transition-transform group-open:rotate-45">
+            <span className="text-metin-3 ml-auto transition-transform group-open:rotate-45">
               +
             </span>
           </summary>
-          <div className="text-murekkep-2 mt-3 space-y-3 text-sm leading-relaxed">{yontem}</div>
+          <div className="text-metin-2 mt-3 space-y-3 text-govde-kucuk leading-relaxed">
+            {yontem}
+          </div>
         </details>
 
         <div className="mt-6 flex flex-col gap-2">
           {parametreTarihi ? (
-            <p className="text-murekkep-3 text-mikro">
+            <p className="text-metin-3 text-mikro">
               Vergi ve harç oranları <strong>{tarihiYaz(parametreTarihi)}</strong> itibarıyla
               güncellenmiştir.
             </p>
@@ -83,10 +85,10 @@ export function HesaplayiciKabugu({
  */
 export function ParametreEksikUyarisi({ eksikler }: { eksikler: EksikBilgi[] }) {
   return (
-    <div className="border-cizgi bg-uyari-acik rounded-yumusak border p-5">
-      <h2 className="font-sans text-base font-semibold">Bu hesaplayıcı henüz hazır değil</h2>
+    <div className="border-kenar bg-uyari-zemin rounded-kart border-[0.5px] p-5">
+      <h2 className="font-sans text-govde font-medium">Bu hesaplayıcı henüz hazır değil</h2>
 
-      <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+      <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
         Hesaplama için gereken güncel oranlar sisteme henüz girilmedi. Tahmini bir rakam göstermek
         yerine beklemeyi tercih ediyoruz — yanlış bir vergi hesabı, hesap yapmamaktan çok daha
         zararlı olur.
@@ -94,7 +96,7 @@ export function ParametreEksikUyarisi({ eksikler }: { eksikler: EksikBilgi[] }) 
 
       <div className="mt-4">
         <p className="text-mikro font-medium">Eksik olanlar:</p>
-        <ul className="text-murekkep-2 mt-1.5 list-disc space-y-1 pl-5 text-sm">
+        <ul className="text-metin-2 mt-1.5 list-disc space-y-1 pl-5 text-govde-kucuk">
           {eksikler.map((eksik) => (
             <li key={eksik.anahtar}>{eksik.etiket}</li>
           ))}

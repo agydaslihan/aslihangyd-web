@@ -104,8 +104,8 @@ export default async function YatirimSimulatoruRaporu({
       ]}
     >
       {veri.vergiHesaplandi ? null : (
-        <div className="border-cizgi bg-uyari-acik rounded-yumusak mt-6 border p-4">
-          <p className="text-sm leading-relaxed">
+        <div className="border-kenar bg-uyari-zemin rounded-kart mt-6 border-[0.5px] p-4">
+          <p className="text-govde-kucuk leading-relaxed">
             <strong>Bu rapor vergi öncesidir.</strong> Kira geliri vergisinin hesaplanması için
             gereken güncel istisna tutarı ve vergi dilimleri sisteme henüz girilmedi. Uydurma bir
             vergi rakamı üretmek yerine kalemi hiç göstermiyoruz; gerçek getiriniz aşağıdakinden
@@ -184,9 +184,9 @@ export default async function YatirimSimulatoruRaporu({
 
       <RaporBolumu baslik="Yıl yıl nakit akışı">
         <div className="overflow-x-auto">
-          <table className="rakam w-full min-w-[34rem] text-right text-sm">
+          <table className="rakam w-full min-w-[34rem] text-right text-govde-kucuk">
             <thead>
-              <tr className="text-murekkep-3 text-mikro border-cizgi border-b">
+              <tr className="text-metin-3 text-mikro border-kenar border-b-[0.5px]">
                 <th scope="col" className="py-2 text-left font-medium">
                   Yıl
                 </th>
@@ -214,7 +214,7 @@ export default async function YatirimSimulatoruRaporu({
             </thead>
             <tbody>
               {veri.yillar.map((satir) => (
-                <tr key={satir.yil} className="border-cizgi/60 border-b last:border-0">
+                <tr key={satir.yil} className="border-kenar/60 border-b-[0.5px] last:border-0">
                   <th scope="row" className="py-1.5 text-left font-normal">
                     {satir.yil}
                   </th>
@@ -240,7 +240,7 @@ export default async function YatirimSimulatoruRaporu({
         baslik="Bu hesaba dahil olmayanlar"
         aciklama="Eksikleri saklamak raporu güvenilir yapmaz; okuyanın kendi fark etmesi tüm rapora olan güveni zedeler."
       >
-        <ul className="text-murekkep-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+        <ul className="text-metin-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
           {veri.uyarilar.map((uyari) => (
             <li key={uyari}>{uyari}</li>
           ))}

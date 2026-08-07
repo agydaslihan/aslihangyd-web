@@ -57,9 +57,9 @@ export function TalepFormu({
   return (
     <form action={gonder} className="flex flex-col gap-5" noValidate>
       <div>
-        <h2 className="text-xl leading-tight">{baslik}</h2>
+        <h2 className="text-baslik-3 leading-tight">{baslik}</h2>
         {aciklama ? (
-          <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">{aciklama}</p>
+          <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">{aciklama}</p>
         ) : null}
       </div>
 
@@ -68,7 +68,7 @@ export function TalepFormu({
           ref={ozetRef}
           tabIndex={-1}
           role="alert"
-          className="border-azalis/30 bg-azalis-acik text-azalis rounded-yumusak border p-4 text-sm"
+          className="border-hata/30 bg-hata-zemin text-hata rounded-kart border-[0.5px] p-4 text-govde-kucuk"
         >
           {durum.genelHata}
         </div>
@@ -108,7 +108,7 @@ export function TalepFormu({
           hata={durum.hatalar?.eposta}
         />
       </div>
-      <p className="text-murekkep-3 -mt-3 text-mikro">
+      <p className="text-metin-3 -mt-3 text-mikro">
         Telefon veya e-postadan en az birini yazmanız yeterli.
       </p>
 
@@ -132,11 +132,7 @@ export function TalepFormu({
         hata={durum.hatalar?.kvkkOnay}
         etiket={
           <>
-            <Link
-              href="/kvkk"
-              target="_blank"
-              className="text-lacivert underline underline-offset-2"
-            >
+            <Link href="/kvkk" target="_blank" className="text-vurgu underline underline-offset-2">
               KVKK aydınlatma metnini
             </Link>{' '}
             okudum; iletişim bilgilerimin bu talep kapsamında işlenmesini kabul ediyorum.
@@ -151,7 +147,7 @@ export function TalepFormu({
 
       <GonderButonu />
 
-      <p className="text-murekkep-3 text-mikro leading-relaxed">
+      <p className="text-metin-3 text-mikro leading-relaxed">
         Verileriniz yalnızca bu talebin karşılanması için kullanılır, üçüncü kişilerle paylaşılmaz
         ve saklama süresi dolduğunda otomatik olarak silinir.
       </p>
@@ -180,11 +176,11 @@ function BasariEkrani() {
   return (
     <div
       role="status"
-      className="border-artis/30 bg-artis-acik rounded-yumusak flex flex-col items-center gap-3 border p-8 text-center"
+      className="border-basari/30 bg-basari-zemin rounded-kart flex flex-col items-center gap-3 border-[0.5px] p-8 text-center"
     >
-      <DogrulanmisIkon width={32} height={32} className="text-artis" />
-      <h2 className="text-xl leading-tight">Talebiniz bize ulaştı</h2>
-      <p className="text-murekkep-2 max-w-md text-sm leading-relaxed">
+      <DogrulanmisIkon width={32} height={32} className="text-basari" />
+      <h2 className="text-baslik-3 leading-tight">Talebiniz bize ulaştı</h2>
+      <p className="text-metin-2 max-w-md text-govde-kucuk leading-relaxed">
         En kısa sürede size döneceğiz. Acele bir konuysa WhatsApp&apos;tan da yazabilirsiniz —
         genellikle oradan daha hızlı yanıt veriyoruz.
       </p>
@@ -217,17 +213,17 @@ function Alan({
   const aciklayanlar = [ipucu ? ipucuId : null, hata ? hataId : null].filter(Boolean).join(' ')
 
   const siniflar = sinif(
-    'w-full rounded-yumusak border bg-yuzey px-3.5 py-2.5 text-[0.9375rem]',
-    'focus:border-lacivert transition-colors',
-    hata ? 'border-azalis' : 'border-cizgi',
+    'w-full rounded-buton border-[0.5px] bg-yuzey px-3.5 py-2.5 text-[0.9375rem]',
+    'focus:border-vurgu transition-colors',
+    hata ? 'border-hata' : 'border-kenar-giris',
   )
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-govde-kucuk font-medium">
         {etiket}
         {gerekli ? (
-          <span className="text-azalis ml-0.5" aria-hidden>
+          <span className="text-hata ml-0.5" aria-hidden>
             *
           </span>
         ) : null}
@@ -255,12 +251,12 @@ function Alan({
       )}
 
       {ipucu ? (
-        <p id={ipucuId} className="text-murekkep-3 text-mikro">
+        <p id={ipucuId} className="text-metin-3 text-mikro">
           {ipucu}
         </p>
       ) : null}
       {hata ? (
-        <p id={hataId} className="text-azalis text-mikro font-medium">
+        <p id={hataId} className="text-hata text-mikro font-medium">
           {hata}
         </p>
       ) : null}
@@ -284,7 +280,7 @@ function SecimAlani({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <label htmlFor={id} className="text-sm font-medium">
+      <label htmlFor={id} className="text-govde-kucuk font-medium">
         {etiket}
       </label>
       <select
@@ -294,8 +290,8 @@ function SecimAlani({
         aria-describedby={hata ? hataId : undefined}
         aria-invalid={hata ? true : undefined}
         className={sinif(
-          'rounded-yumusak bg-yuzey focus:border-lacivert min-h-11 w-full border px-3 text-[0.9375rem]',
-          hata ? 'border-azalis' : 'border-cizgi',
+          'rounded-buton bg-yuzey focus:border-vurgu min-h-11 w-full border-[0.5px] px-3 text-[0.9375rem]',
+          hata ? 'border-hata' : 'border-kenar-giris',
         )}
       >
         {TALEP_TIPLERI.map((secenek) => (
@@ -305,7 +301,7 @@ function SecimAlani({
         ))}
       </select>
       {hata ? (
-        <p id={hataId} className="text-azalis text-mikro font-medium">
+        <p id={hataId} className="text-hata text-mikro font-medium">
           {hata}
         </p>
       ) : null}
@@ -328,12 +324,15 @@ function OnayKutusu({ ad, etiket, hata }: { ad: string; etiket: React.ReactNode;
           aria-invalid={hata ? true : undefined}
           className="accent-lacivert mt-0.5 size-4.5 shrink-0"
         />
-        <label htmlFor={id} className="text-murekkep-2 cursor-pointer text-sm leading-relaxed">
+        <label
+          htmlFor={id}
+          className="text-metin-2 cursor-pointer text-govde-kucuk leading-relaxed"
+        >
           {etiket}
         </label>
       </div>
       {hata ? (
-        <p id={hataId} className="text-azalis ml-7.5 text-mikro font-medium">
+        <p id={hataId} className="text-hata ml-7.5 text-mikro font-medium">
           {hata}
         </p>
       ) : null}

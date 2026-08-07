@@ -1,5 +1,3 @@
-import Link from 'next/link'
-
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
@@ -94,19 +92,18 @@ export default async function AnaSayfa() {
 
 function Kahraman({ whatsapp }: { whatsapp: string | null }) {
   return (
-    <section className="border-cizgi border-b">
+    <section className="border-kenar border-b-[0.5px]">
       <div className="kapsayici py-16 sm:py-20 lg:py-28">
         <div className="max-w-3xl">
-          <p className="text-pirinc-koyu text-mikro font-semibold tracking-[0.1em] uppercase">
+          <p className="text-vurgu text-mikro font-medium tracking-[0.1em] uppercase">
             Çorlu · Tekirdağ
           </p>
 
           <h1 className="mt-4 text-[2.25rem] leading-[1.1] sm:text-[3rem] lg:text-[3.5rem]">
-            Gayrimenkul kararı hisle değil, <span className="text-pirinc-koyu">rakamla</span>{' '}
-            verilir.
+            Gayrimenkul kararı hisle değil, <span className="text-vurgu">rakamla</span> verilir.
           </h1>
 
-          <p className="text-murekkep-2 mt-6 max-w-2xl text-lg leading-relaxed">
+          <p className="text-metin-2 mt-6 max-w-2xl text-baslik-3 leading-relaxed">
             Çorlu&apos;da bir taşınmazın ne kadar ettiğini, kaç yılda kendini ödediğini ve hangi
             mahallenin hangi değer sürücüsünden beslendiğini gösteriyoruz. İlan listelemiyoruz —
             karar veriyoruz.
@@ -128,8 +125,8 @@ function Kahraman({ whatsapp }: { whatsapp: string | null }) {
             )}
           </div>
 
-          <p className="text-murekkep-3 mt-6 flex items-center gap-2 text-sm">
-            <DogrulanmisIkon width={16} height={16} className="text-artis shrink-0" />
+          <p className="text-metin-3 mt-6 flex items-center gap-2 text-govde-kucuk">
+            <DogrulanmisIkon width={16} height={16} className="text-basari shrink-0" />
             Tüm ilanlarımız EİDS doğrulamalıdır ve taşınmaz numarasıyla birlikte yayınlanır.
           </p>
         </div>
@@ -171,11 +168,11 @@ function YaklasimBolumu() {
       <div className="grid gap-6 sm:grid-cols-3 lg:gap-8">
         {YAKLASIMLAR.map(({ Ikon, baslik, metin }) => (
           <div key={baslik} className="flex flex-col gap-3">
-            <span className="bg-lacivert-acik text-lacivert rounded-yumusak flex size-11 items-center justify-center">
+            <span className="bg-vurgu-zemin text-vurgu rounded-buton flex size-11 items-center justify-center">
               <Ikon width={20} height={20} />
             </span>
-            <h3 className="font-sans text-base font-semibold">{baslik}</h3>
-            <p className="text-murekkep-2 text-[0.9375rem] leading-relaxed">{metin}</p>
+            <h3 className="font-sans text-govde font-medium">{baslik}</h3>
+            <p className="text-metin-2 text-[0.9375rem] leading-relaxed">{metin}</p>
           </div>
         ))}
       </div>
@@ -188,31 +185,35 @@ function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
     <Bolum zemin="lacivert">
       <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
-          <h2 className="text-[1.75rem] leading-tight text-white sm:text-[2.25rem]">
+          <h2 className="text-baslik-2 text-white">
             Evinizin bugün ne ettiğini merak ediyor musunuz?
           </h2>
-          <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/75">
+          <p className="text-govde-kucuk mt-3 text-white/80">
             Satmayı düşünmeseniz bile bilmek işinize yarar. Mahalle, metrekare ve bina bilgilerinizi
             paylaşın; size gerçek bir değer aralığı ve nasıl hesapladığımızı anlatalım.
           </p>
         </div>
 
         <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
-          <Link
-            href="/iletisim?tip=degerleme"
-            className="text-lacivert-koyu rounded-yumusak inline-flex min-h-13 items-center justify-center bg-white px-6 font-medium transition-opacity hover:opacity-90"
-          >
-            Değerleme isteyin
-          </Link>
+          {/*
+            ⚠️ Bakır aksanın iki kullanımından BİRİ. Diğeri gizli portföyde
+            "Erişim talep et". Üçüncü bir yerde kullanılırsa ikisi birden
+            sıradanlaşır; kural `src/lib/tasarim/disiplin.test.ts` içinde
+            denetleniyor.
+          */}
+          <Buton href="/degerleme" gorunum="bakir" boyut="buyuk">
+            Evimi değerlendir
+          </Buton>
           {whatsapp ? (
-            <a
+            <Buton
               href={whatsapp}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="rounded-yumusak inline-flex min-h-13 items-center justify-center border border-white/30 px-6 font-medium text-white transition-colors hover:bg-white/10"
+              dis
+              gorunum="ikincil"
+              boyut="buyuk"
+              sinifAdi="!border-white/40 !text-white hover:!bg-white/10"
             >
               WhatsApp
-            </a>
+            </Buton>
           ) : null}
         </div>
       </div>

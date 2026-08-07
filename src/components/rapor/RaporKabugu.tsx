@@ -69,25 +69,25 @@ export function RaporKabugu({
           <YazdirButonu />
         </div>
 
-        <header className="border-cizgi border-b pb-5">
-          <h1 className="text-[1.75rem] leading-tight font-semibold sm:text-[2rem]">{baslik}</h1>
-          <p className="text-murekkep-2 mt-2 leading-relaxed">{altBaslik}</p>
-          <p className="text-murekkep-3 text-mikro mt-3">
+        <header className="border-kenar border-b-[0.5px] pb-5">
+          <h1 className="text-[1.75rem] leading-tight font-medium sm:text-[2rem]">{baslik}</h1>
+          <p className="text-metin-2 mt-2 leading-relaxed">{altBaslik}</p>
+          <p className="text-metin-3 text-mikro mt-3">
             Rapor tarihi: {tarihiYaz(uretimTarihi)} · aslihangyd.com
           </p>
         </header>
 
         {girdiOzeti.length > 0 ? (
           <section className="mt-6">
-            <h2 className="font-sans text-base font-semibold">Girdiğiniz bilgiler</h2>
+            <h2 className="font-sans text-govde font-medium">Girdiğiniz bilgiler</h2>
             <dl className="mt-3 grid gap-x-8 gap-y-2 sm:grid-cols-2">
               {girdiOzeti.map((satir) => (
                 <div
                   key={satir.etiket}
-                  className="border-cizgi/60 flex items-baseline justify-between gap-4 border-b py-1.5"
+                  className="border-kenar/60 flex items-baseline justify-between gap-4 border-b-[0.5px] py-1.5"
                 >
-                  <dt className="text-murekkep-2 text-sm">{satir.etiket}</dt>
-                  <dd className="rakam shrink-0 text-sm font-medium">{satir.deger}</dd>
+                  <dt className="text-metin-2 text-govde-kucuk">{satir.etiket}</dt>
+                  <dd className="rakam shrink-0 text-govde-kucuk font-medium">{satir.deger}</dd>
                 </div>
               ))}
             </dl>
@@ -96,9 +96,9 @@ export function RaporKabugu({
 
         {children}
 
-        <footer className="border-cizgi mt-10 border-t pt-6">
+        <footer className="border-kenar mt-10 border-t-[0.5px] pt-6">
           {parametreTarihi ? (
-            <p className="text-murekkep-3 text-mikro mb-3">
+            <p className="text-metin-3 text-mikro mb-3">
               Vergi ve harç oranları <strong>{tarihiYaz(parametreTarihi)}</strong> itibarıyla
               güncellenmiştir.
             </p>
@@ -112,7 +112,7 @@ export function RaporKabugu({
             }
           />
 
-          <p className="text-murekkep-3 text-mikro mt-4 leading-relaxed">
+          <p className="text-metin-3 text-mikro mt-4 leading-relaxed">
             Bu rapor girdiğiniz bilgilerden anlık olarak üretildi ve hiçbir yere kaydedilmedi.
             Raporu görmek için iletişim bilgisi istemiyoruz.
           </p>
@@ -134,9 +134,9 @@ export function RaporBolumu({
 }) {
   return (
     <section className="mt-8">
-      <h2 className="font-sans text-[1.125rem] leading-tight font-semibold">{baslik}</h2>
+      <h2 className="font-sans text-[1.125rem] leading-tight font-medium">{baslik}</h2>
       {aciklama ? (
-        <p className="text-murekkep-2 mt-1.5 text-sm leading-relaxed">{aciklama}</p>
+        <p className="text-metin-2 mt-1.5 text-govde-kucuk leading-relaxed">{aciklama}</p>
       ) : null}
       <div className="mt-3">{children}</div>
     </section>
@@ -159,17 +159,21 @@ export function RaporSatiri({
     <div
       className={
         vurgulu
-          ? 'border-cizgi flex items-baseline justify-between gap-4 border-t py-2.5'
-          : 'border-cizgi/60 flex items-baseline justify-between gap-4 border-b py-2'
+          ? 'border-kenar flex items-baseline justify-between gap-4 border-t-[0.5px] py-2.5'
+          : 'border-kenar/60 flex items-baseline justify-between gap-4 border-b-[0.5px] py-2'
       }
     >
       <div className="min-w-0">
-        <dt className={vurgulu ? 'text-sm font-semibold' : 'text-murekkep-2 text-sm'}>{etiket}</dt>
-        {aciklama ? <p className="text-murekkep-3 text-mikro">{aciklama}</p> : null}
+        <dt className={vurgulu ? 'text-govde-kucuk font-medium' : 'text-metin-2 text-govde-kucuk'}>
+          {etiket}
+        </dt>
+        {aciklama ? <p className="text-metin-3 text-mikro">{aciklama}</p> : null}
       </div>
       <dd
         className={
-          vurgulu ? 'rakam shrink-0 text-base font-semibold' : 'rakam shrink-0 text-sm font-medium'
+          vurgulu
+            ? 'rakam shrink-0 text-govde font-medium'
+            : 'rakam shrink-0 text-govde-kucuk font-medium'
         }
       >
         {deger ?? '—'}

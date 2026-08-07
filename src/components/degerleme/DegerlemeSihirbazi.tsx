@@ -169,12 +169,12 @@ function SonucEkrani({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="border-cizgi bg-yuzey shadow-kart rounded-yumusak border p-6 sm:p-8">
-        <p className="text-murekkep-3 text-mikro font-medium">Tahmini değer aralığı</p>
+      <div className="border-kenar bg-yuzey shadow-kart rounded-kart border-[0.5px] p-6 sm:p-8">
+        <p className="text-metin-3 text-mikro font-medium">Tahmini değer aralığı</p>
 
-        <p className="rakam mt-2 text-[1.75rem] leading-tight font-semibold sm:text-[2.25rem]">
+        <p className="rakam mt-2 text-[1.75rem] leading-tight font-medium sm:text-[2.25rem]">
           {paraYaz(sonuc.altDeger)}
-          <span className="text-murekkep-3 mx-2 font-normal">–</span>
+          <span className="text-metin-3 mx-2 font-normal">–</span>
           {paraYaz(sonuc.ustDeger)}
         </p>
 
@@ -190,7 +190,7 @@ function SonucEkrani({
         </div>
 
         {sonuc.guvenDuzeyi === 'dusuk' ? (
-          <p className="text-murekkep-2 border-cizgi mt-4 border-t pt-4 text-sm leading-relaxed">
+          <p className="text-metin-2 border-kenar mt-4 border-t-[0.5px] pt-4 text-govde-kucuk leading-relaxed">
             <strong className="font-medium">Bu aralık neden geniş?</strong> Bu mahalle için
             elimizdeki gözlem sayısı henüz az veya bazı özellikler hesaba katılamadı. Dar bir aralık
             verip yanılmaktansa geniş ve dürüst bir aralık vermeyi tercih ediyoruz.
@@ -199,39 +199,37 @@ function SonucEkrani({
       </div>
 
       {/* Yöntem — kara kutu olmasın */}
-      <details className="border-cizgi bg-yuzey rounded-yumusak group border p-5">
-        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium marker:content-none">
-          <BilgiIkon width={16} height={16} className="text-murekkep-3" />
+      <details className="border-kenar bg-yuzey rounded-kart group border-[0.5px] p-5">
+        <summary className="flex cursor-pointer list-none items-center gap-2 text-govde-kucuk font-medium marker:content-none">
+          <BilgiIkon width={16} height={16} className="text-metin-3" />
           Bu tahmin nasıl hesaplandı?
-          <span className="text-murekkep-3 ml-auto transition-transform group-open:rotate-45">
-            +
-          </span>
+          <span className="text-metin-3 ml-auto transition-transform group-open:rotate-45">+</span>
         </summary>
 
-        <dl className="mt-4 flex flex-col gap-2 text-sm">
+        <dl className="mt-4 flex flex-col gap-2 text-govde-kucuk">
           <div className="flex items-baseline justify-between gap-4">
-            <dt className="text-murekkep-2">{mahalle?.ad} mahallesi ortalama m² fiyatı</dt>
+            <dt className="text-metin-2">{mahalle?.ad} mahallesi ortalama m² fiyatı</dt>
             <dd className="rakam font-medium">{paraYaz(mahalle?.m2Fiyati ?? null)}</dd>
           </div>
 
           {sonuc.etkiler.map((etki) => (
             <div key={etki.ad} className="flex items-baseline justify-between gap-4">
-              <dt className="text-murekkep-2">
+              <dt className="text-metin-2">
                 {etki.ad}
-                <span className="text-murekkep-3"> — {etki.aciklama}</span>
+                <span className="text-metin-3"> — {etki.aciklama}</span>
               </dt>
               <dd className="rakam font-medium">× {etki.katsayi.toLocaleString('tr-TR')}</dd>
             </div>
           ))}
 
-          <div className="border-cizgi flex items-baseline justify-between gap-4 border-t pt-2">
+          <div className="border-kenar flex items-baseline justify-between gap-4 border-t-[0.5px] pt-2">
             <dt className="font-medium">Tahmini m² birim fiyatı</dt>
-            <dd className="rakam font-semibold">{paraYaz(sonuc.m2BirimFiyati)}</dd>
+            <dd className="rakam font-medium">{paraYaz(sonuc.m2BirimFiyati)}</dd>
           </div>
         </dl>
 
         {sonuc.katilmayanFaktorler.length > 0 ? (
-          <p className="text-murekkep-3 mt-4 text-mikro leading-relaxed">
+          <p className="text-metin-3 mt-4 text-mikro leading-relaxed">
             <strong className="font-medium">Hesaba katılmayanlar:</strong>{' '}
             {sonuc.katilmayanFaktorler.join(', ')}. Bu faktörlerin katsayıları henüz tanımlanmadığı
             için tahmine dahil edilmedi — varsayım üretmiyoruz.
@@ -240,11 +238,11 @@ function SonucEkrani({
       </details>
 
       {/* Kademeli bağlılık: sonuç zaten görüldü, şimdi derinleşme teklifi */}
-      <div className="border-lacivert/20 bg-lacivert-acik rounded-yumusak border p-5 sm:p-6">
-        <h2 className="font-sans text-base font-semibold">
+      <div className="border-vurgu/20 bg-vurgu-zemin rounded-kart border-[0.5px] p-5 sm:p-6">
+        <h2 className="font-sans text-govde font-medium">
           Bu bir tahmin. Gerçek değerleme daha fazlasını gerektirir.
         </h2>
-        <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
           Yukarıdaki aralık mahalle ortalamalarına dayanıyor. Gerçek değeri; cephe, manzara, bina
           yönetimi, kat planı, aidat ve o an piyasada kaç benzeri olduğu belirler. Taşınmazı yerinde
           görüp size gerçek bir fiyat aralığı ve satış stratejisi sunabiliriz.
@@ -289,10 +287,10 @@ function BeklemeEkrani({
   if (sebep === 'mahalle_verisi_yok' && mahalleSecildi) {
     return (
       <div className="border-kenar bg-uyari-zemin rounded-kart border-[0.5px] p-6">
-        <h2 className="font-sans text-base font-semibold">
+        <h2 className="font-sans text-govde font-medium">
           {mahalleAdi} için henüz yeterli veri yok
         </h2>
-        <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
           Bu mahalle için güvenilir bir ortalama üretecek kadar gözlem toplamadık. Tahmini bir rakam
           göstermek yerine size doğrudan yardımcı olmayı tercih ediyoruz — mahalleyi biliyoruz,
           taşınmazınızı konuşalım.
@@ -305,11 +303,11 @@ function BeklemeEkrani({
   }
 
   return (
-    <div className="border-cizgi bg-yuzey-2/60 rounded-yumusak flex flex-col items-center gap-3 border border-dashed px-6 py-16 text-center">
+    <div className="border-kenar bg-yuzey-2/60 rounded-kart flex flex-col items-center gap-3 border-[0.5px] border-dashed px-6 py-16 text-center">
       <p className="font-medium">
         {mahalleSecildi ? 'Metrekareyi girin' : 'Mahalleyi seçin, sonuç anında belirsin'}
       </p>
-      <p className="text-murekkep-2 max-w-sm text-sm leading-relaxed">
+      <p className="text-metin-2 max-w-sm text-govde-kucuk leading-relaxed">
         Hiçbir iletişim bilgisi istemiyoruz. Sonucu göreceksiniz; devamını isteyip istememek size
         kalmış.
       </p>
@@ -332,13 +330,13 @@ function Secim({
 }) {
   return (
     <div className="flex flex-col gap-1.5">
-      <label className="text-sm font-medium">
+      <label className="text-govde-kucuk font-medium">
         {etiket}
         <select
           value={deger}
           onChange={(olay) => onDegisim(olay.target.value)}
           className={sinif(
-            'border-cizgi bg-yuzey rounded-yumusak focus:border-lacivert mt-1.5 min-h-11 w-full border px-3 text-[0.9375rem] font-normal',
+            'border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu mt-1.5 min-h-11 w-full border-[0.5px] px-3 text-[0.9375rem] font-normal',
           )}
         >
           <option value="">{bosEtiket}</option>

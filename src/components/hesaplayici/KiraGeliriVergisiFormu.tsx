@@ -11,7 +11,7 @@ import {
 } from '@/components/hesaplayici/Alanlar'
 import { ParametreEksikUyarisi } from '@/components/hesaplayici/Kabuk'
 import { BosDurum } from '@/components/ui/BosDurum'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { paraYaz, yuzdeYaz } from '@/lib/bicimlendirme'
 import { kiraGeliriVergisiHesapla, type GiderYontemi } from '@/lib/hesaplayicilar/kiraGeliriVergisi'
 import type { VergiParametreKumesi } from '@/lib/vergi/parametreler'
@@ -90,27 +90,27 @@ export function KiraGeliriVergisiFormu({ parametreler }: { parametreler: VergiPa
       <div>
         {sonuc.durum === 'hesaplandi' ? (
           <>
-            <RakamIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
-              <RakamKarti
+            <KartIzgarasi sinifAdi="sm:grid-cols-3 lg:grid-cols-3">
+              <HesapKarti
                 etiket="Ödenecek vergi"
                 deger={paraYaz(sonuc.veri.toplamVergi)}
                 altBilgi="Yıllık"
                 ton="azalis"
               />
-              <RakamKarti
+              <HesapKarti
                 etiket="Etkin vergi oranı"
                 deger={yuzdeYaz(sonuc.veri.etkinOran)}
                 altBilgi="Matraha oranla"
               />
-              <RakamKarti
+              <HesapKarti
                 etiket="Elinizde kalan"
                 deger={paraYaz(sonuc.veri.netKalan)}
                 altBilgi="Vergi sonrası yıllık"
                 ton="vurgu"
               />
-            </RakamIzgarasi>
+            </KartIzgarasi>
 
-            <dl className="border-cizgi bg-yuzey rounded-yumusak mt-5 border px-5 py-2">
+            <dl className="border-kenar bg-yuzey rounded-kart mt-5 border-[0.5px] px-5 py-2">
               <SonucSatiri
                 etiket="Yıllık kira geliri"
                 deger={paraYaz(sonuc.veri.yillikKiraGeliri)}
@@ -133,12 +133,12 @@ export function KiraGeliriVergisiFormu({ parametreler }: { parametreler: VergiPa
 
             {sonuc.veri.dilimler.length > 0 ? (
               <div className="mt-6">
-                <h3 className="font-sans text-sm font-semibold">Dilim dilim vergi</h3>
-                <p className="text-murekkep-2 mt-1 text-mikro leading-relaxed">
+                <h3 className="font-sans text-govde-kucuk font-medium">Dilim dilim vergi</h3>
+                <p className="text-metin-2 mt-1 text-mikro leading-relaxed">
                   Gelir vergisi artan oranlıdır: matrahın tamamına en yüksek oran uygulanmaz, her
                   dilim kendi oranıyla vergilendirilir.
                 </p>
-                <dl className="border-cizgi bg-yuzey rounded-yumusak mt-3 border px-5 py-2">
+                <dl className="border-kenar bg-yuzey rounded-kart mt-3 border-[0.5px] px-5 py-2">
                   {sonuc.veri.dilimler.map((dilim) => (
                     <SonucSatiri
                       key={`${dilim.altSinir}-${dilim.oran}`}
@@ -160,7 +160,7 @@ export function KiraGeliriVergisiFormu({ parametreler }: { parametreler: VergiPa
               </div>
             ) : null}
 
-            <p className="text-murekkep-3 mt-4 text-mikro leading-relaxed">
+            <p className="text-metin-3 mt-4 text-mikro leading-relaxed">
               Başka gelir unsurlarınız (maaş, ticari kazanç) varsa gerçek verginiz bu rakamın
               üzerinde çıkar; tarife toplam gelirinize uygulanır.
             </p>

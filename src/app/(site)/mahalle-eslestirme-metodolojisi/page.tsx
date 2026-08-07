@@ -35,10 +35,10 @@ export default function EslestirmeMetodolojisiSayfasi() {
           Mahalle Eşleştirme metodolojisi
         </h1>
 
-        <p className="text-murekkep-2 mt-4 text-lg leading-relaxed">
+        <p className="text-metin-2 mt-4 text-baslik-3 leading-relaxed">
           &quot;Size en uygun mahalle Şeyhsinan&quot; cümlesi, arkasındaki hesap gösterilmezse bir
           iddiadan ibarettir. Bu sayfa{' '}
-          <Link href="/mahalle-testi" className="text-lacivert underline">
+          <Link href="/mahalle-testi" className="text-vurgu underline">
             Mahalle Eşleştirme Testi
           </Link>
           &apos;nin nasıl çalıştığını, neyi ölçtüğünü ve neyi ölçmediğini anlatır.
@@ -46,7 +46,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
 
         <section className="mt-10">
           <h2 className="font-sans text-[1.375rem] leading-tight">Önce en önemli iki cümle</h2>
-          <div className="border-cizgi bg-pirinc-acik rounded-yumusak mt-4 border p-5">
+          <div className="border-kenar bg-vurgu-zemin rounded-kart mt-4 border-[0.5px] p-5">
             <p className="leading-relaxed">
               <strong>Eşleştirme, portföyümüzdeki ilanlardan tamamen bağımsızdır.</strong> Bir
               mahallede kaç ilanımız olduğu hesaba hiç girmez. Test, elimizdeki evi satmanın bir
@@ -61,19 +61,19 @@ export default function EslestirmeMetodolojisiSayfasi() {
 
         <section className="mt-10">
           <h2 className="font-sans text-[1.375rem] leading-tight">Dokuz ölçüt</h2>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             Her mahalle dokuz ölçütte 0–100 arası puanlanır. Ağırlıklar cevaplarınıza göre değişir;
             aşağıdaki tablo iki uç profili gösteriyor. Testi çözdüğünüzde{' '}
             <strong>size özel ağırlıklar sonuç ekranında aynen gösterilir.</strong>
           </p>
 
-          <div className="border-cizgi rounded-yumusak mt-5 overflow-x-auto border">
-            <table className="w-full min-w-[32rem] border-collapse text-sm">
+          <div className="border-kenar rounded-kart mt-5 overflow-x-auto border-[0.5px]">
+            <table className="w-full min-w-[32rem] border-collapse text-govde-kucuk">
               <caption className="yalnizca-okuyucu">
                 Eşleştirme ölçütleri ve iki uç profildeki ağırlıkları
               </caption>
               <thead>
-                <tr className="border-cizgi bg-yuzey-2 border-b">
+                <tr className="border-kenar bg-yuzey-2 border-b-[0.5px]">
                   <th scope="col" className="px-4 py-3 text-left font-medium">
                     Ölçüt
                   </th>
@@ -85,12 +85,12 @@ export default function EslestirmeMetodolojisiSayfasi() {
                   </th>
                 </tr>
               </thead>
-              <tbody className="divide-cizgi divide-y">
+              <tbody className="divide-kenar divide-y">
                 {olcutler.map((olcut) => (
                   <tr key={olcut}>
                     <td className="px-4 py-3">
                       <span className="font-medium">{OLCUT_ETIKETLERI[olcut]}</span>
-                      <span className="text-murekkep-3 text-mikro block leading-snug">
+                      <span className="text-metin-3 text-mikro block leading-snug">
                         {OLCUT_ACIKLAMALARI[olcut]}
                       </span>
                     </td>
@@ -106,7 +106,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
             </table>
           </div>
 
-          <p className="text-murekkep-3 text-mikro mt-3 leading-relaxed">
+          <p className="text-metin-3 text-mikro mt-3 leading-relaxed">
             Tablodaki yüzdeler bütçe girildiği varsayımıyla hesaplandı. Bütçe girilmezse o ölçüt
             devre dışı kalır ve kalan ağırlıklar yeniden 100&apos;e normalize edilir.
           </p>
@@ -116,7 +116,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
           <h2 className="font-sans text-[1.375rem] leading-tight">
             Cevaplarınız ağırlıkları nasıl değiştirir?
           </h2>
-          <ul className="text-murekkep-2 mt-3 list-disc space-y-2 pl-5 leading-relaxed">
+          <ul className="text-metin-2 mt-3 list-disc space-y-2 pl-5 leading-relaxed">
             <li>
               <strong>Hanede çocuk varsa</strong> okul erişimi ağırlığı belirgin biçimde artar,
               sosyal donatı bir miktar yükselir.
@@ -143,30 +143,30 @@ export default function EslestirmeMetodolojisiSayfasi() {
 
         <section className="mt-10">
           <h2 className="font-sans text-[1.375rem] leading-tight">Bütçe nasıl puanlanıyor?</h2>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             Mutlak bir eşik <strong>kullanılmıyor</strong>. &quot;70 m² altı yetersizdir&quot;
             demek, bizim uydurduğumuz bir yaşam standardını size dayatmak olurdu. Bunun yerine
             karşılaştırmalı puanlama yapılıyor: bütçenizle en çok m² alabildiğiniz mahalle 100 puan,
             diğerleri ona oranla puanlanır. Kullanılan tek veri mahallelerin gerçek ortalama m²
             fiyatları.
           </p>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             Bütçenizi kaydetmiyoruz. Hesap tarayıcınızda yapılır.
           </p>
         </section>
 
         <section className="mt-10">
           <h2 className="font-sans text-[1.375rem] leading-tight">Veriler nereden geliyor?</h2>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             Dört ölçüt —{' '}
-            <Link href="/yatirim-skoru-metodolojisi" className="text-lacivert underline">
+            <Link href="/yatirim-skoru-metodolojisi" className="text-vurgu underline">
               yatırım skorundan
             </Link>{' '}
             yeniden kullanılır: yatırım potansiyeli, sanayi yakınlığı, ulaşım ve sosyal donatı.
             Kalan dördü (toplu taşıma, okul erişimi, sakinlik, merkeze yakınlık) mahalleyi bilen
             birinin saha değerlendirmesidir ve yönetim panelinden girilir.
           </p>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             <strong>Bu puanların başlangıç değeri yoktur.</strong> Bizim &quot;makul görünen&quot;
             bir sakinlik puanı yazmamız, tahmini veri kılığında sunmak olurdu. Girilmemiş bir
             öznitelik hesaba katılmaz ve sonuç ekranında adıyla belirtilir.
@@ -175,13 +175,13 @@ export default function EslestirmeMetodolojisiSayfasi() {
 
         <section className="mt-10">
           <h2 className="font-sans text-[1.375rem] leading-tight">Ne zaman sonuç üretilmez?</h2>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             Bir mahallenin ölçüt ağırlıklarının en az{' '}
             <strong>%{Math.round(ASGARI_KAPSAM * 100)}&apos;i</strong> dolu değilse o mahalle için
             uyum yüzdesi üretilmez ve listede görünmez. Yarım veriyle &quot;%89 uyum&quot; demek,
             uyum yüzdesini değersizleştirir.
           </p>
-          <p className="text-murekkep-2 mt-3 leading-relaxed">
+          <p className="text-metin-2 mt-3 leading-relaxed">
             Eksik bir ölçüt <strong>sıfır sayılmaz</strong> — bu mahalleyi haksız yere cezalandırır.
             Ortalama da sayılmaz — bu veri uydurmaktır. O ölçüt hesaba hiç girmez ve kalan ölçütler
             kendi içinde normalize edilir; hangi verinin eksik olduğu size söylenir.
@@ -190,7 +190,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
 
         <section className="mt-10">
           <h2 className="font-sans text-[1.375rem] leading-tight">Testin ölçmedikleri</h2>
-          <ul className="text-murekkep-2 mt-3 list-disc space-y-2 pl-5 leading-relaxed">
+          <ul className="text-metin-2 mt-3 list-disc space-y-2 pl-5 leading-relaxed">
             <li>
               <strong>Sürüş süresi ölçülmez.</strong> Mesafeler kuş uçuşudur. Gerçek sürüş süresi
               için yol ağı verisi gerekir ve elimizde yok; &quot;12 dakika&quot; demek bilmediğimiz
@@ -208,7 +208,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
               <strong>Okul kalitesi ölçülmez</strong>, yalnızca okula erişim mesafesi ölçülür.
             </li>
           </ul>
-          <p className="text-murekkep-2 mt-4 leading-relaxed">
+          <p className="text-metin-2 mt-4 leading-relaxed">
             Bu yüzden test size {ONERI_SAYISI} mahalle önerir, bir karar vermez. Önerilen
             mahalleleri yerinde görmeden, tercihen farklı saatlerde, karar vermeyin.
           </p>

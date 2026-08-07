@@ -9,13 +9,13 @@ import { Buton } from '@/components/ui/Buton'
 export default function BulunamadiSayfasi() {
   return (
     <div className="kapsayici flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
-      <p className="text-pirinc-koyu rakam text-mikro font-semibold tracking-[0.1em]">404</p>
+      <p className="text-vurgu rakam text-mikro font-medium tracking-[0.1em]">404</p>
 
       <h1 className="mt-3 text-[1.75rem] leading-tight sm:text-[2.25rem]">
         Aradığınız sayfayı bulamadık
       </h1>
 
-      <p className="text-murekkep-2 mt-4 max-w-md leading-relaxed">
+      <p className="text-metin-2 mt-4 max-w-md leading-relaxed">
         Adres değişmiş veya sayfa kaldırılmış olabilir. Bir ilan arıyorsanız satılmış ya da yayından
         kaldırılmış olabilir — portföyün tamamına göz atın.
       </p>

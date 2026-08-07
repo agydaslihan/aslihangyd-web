@@ -38,8 +38,8 @@ export default async function KarsilastirmaSayfasi({
 
   return (
     <div className="kapsayici py-10 sm:py-14">
-      <nav aria-label="Sayfa yolu" className="text-murekkep-3 mb-6 text-sm">
-        <Link href="/mahalleler" className="hover:text-murekkep underline-offset-2 hover:underline">
+      <nav aria-label="Sayfa yolu" className="text-metin-3 mb-6 text-govde-kucuk">
+        <Link href="/mahalleler" className="hover:text-metin underline-offset-2 hover:underline">
           Mahalleler
         </Link>
         <span aria-hidden> / </span>
@@ -48,7 +48,7 @@ export default async function KarsilastirmaSayfasi({
 
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Mahalle karşılaştırma</h1>
-        <p className="text-murekkep-2 leading-relaxed">
+        <p className="text-metin-2 leading-relaxed">
           En fazla {AZAMI_SECIM} mahalleyi yan yana koyun. Her rakamın yanında kaç gözleme
           dayandığını (n) gösteriyoruz — az gözleme dayanan bir ortalama, ortalama değildir.
         </p>
@@ -126,19 +126,19 @@ function KarsilastirmaTablosu({ mahalleler }: { mahalleler: Mahalleler[] }) {
   ]
 
   return (
-    <div className="border-cizgi rounded-yumusak mt-8 overflow-x-auto border">
-      <table className="w-full min-w-[36rem] border-collapse text-sm">
+    <div className="border-kenar rounded-kart mt-8 overflow-x-auto border-[0.5px]">
+      <table className="w-full min-w-[36rem] border-collapse text-govde-kucuk">
         <caption className="yalnizca-okuyucu">Seçilen mahallelerin karşılaştırması</caption>
         <thead>
-          <tr className="border-cizgi bg-yuzey-2 border-b">
-            <th scope="col" className="text-murekkep-3 px-4 py-3 text-left font-medium">
+          <tr className="border-kenar bg-yuzey-2 border-b-[0.5px]">
+            <th scope="col" className="text-metin-3 px-4 py-3 text-left font-medium">
               Gösterge
             </th>
             {mahalleler.map((mahalle) => (
-              <th key={mahalle.id} scope="col" className="px-4 py-3 text-left font-semibold">
+              <th key={mahalle.id} scope="col" className="px-4 py-3 text-left font-medium">
                 <Link
                   href={`/mahalleler/${mahalle.slug}`}
-                  className="hover:text-lacivert underline-offset-2 hover:underline"
+                  className="hover:text-vurgu underline-offset-2 hover:underline"
                 >
                   {mahalle.ad}
                 </Link>
@@ -146,13 +146,13 @@ function KarsilastirmaTablosu({ mahalleler }: { mahalleler: Mahalleler[] }) {
             ))}
           </tr>
         </thead>
-        <tbody className="divide-cizgi divide-y">
+        <tbody className="divide-kenar divide-y">
           {satirlar.map((satir) => {
             const enIyiId = satir.yon ? enIyiyiBul(mahalleler, satir) : null
 
             return (
               <tr key={satir.etiket}>
-                <th scope="row" className="text-murekkep-2 px-4 py-3 text-left font-normal">
+                <th scope="row" className="text-metin-2 px-4 py-3 text-left font-normal">
                   {satir.etiket}
                 </th>
                 {mahalleler.map((mahalle) => {
@@ -161,10 +161,10 @@ function KarsilastirmaTablosu({ mahalleler }: { mahalleler: Mahalleler[] }) {
                     <td
                       key={mahalle.id}
                       className={`rakam px-4 py-3 ${
-                        enIyiId === mahalle.id ? 'text-artis font-semibold' : 'font-medium'
+                        enIyiId === mahalle.id ? 'text-basari font-medium' : 'font-medium'
                       }`}
                     >
-                      {deger ?? <span className="text-murekkep-3 font-normal">Veri yok</span>}
+                      {deger ?? <span className="text-metin-3 font-normal">Veri yok</span>}
                     </td>
                   )
                 })}
@@ -173,7 +173,7 @@ function KarsilastirmaTablosu({ mahalleler }: { mahalleler: Mahalleler[] }) {
           })}
 
           <tr>
-            <th scope="row" className="text-murekkep-2 px-4 py-3 text-left font-normal">
+            <th scope="row" className="text-metin-2 px-4 py-3 text-left font-normal">
               Veri kaynağı
             </th>
             {mahalleler.map((mahalle) => (

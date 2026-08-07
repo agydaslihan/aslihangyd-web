@@ -5,7 +5,7 @@ import { useMemo, useState } from 'react'
 import { SayiAlani, SecimAlani, SonucSatiri, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
-import { RakamIzgarasi, RakamKarti } from '@/components/ui/RakamKarti'
+import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
 import { carpanYaz, paraKisaYaz, paraYaz, yuzdeYaz } from '@/lib/bicimlendirme'
 import type { GiderYontemi } from '@/lib/hesaplayicilar/kiraGeliriVergisi'
 import { yatirimSimulasyonuYap, type SimulasyonYili } from '@/lib/hesaplayicilar/yatirimSimulatoru'
@@ -88,7 +88,7 @@ export function YatirimSimulatoruFormu({ parametreler }: { parametreler: VergiPa
     <div className="grid gap-8 lg:grid-cols-[22rem_minmax(0,1fr)] lg:gap-12">
       <form className="flex flex-col gap-6" onSubmit={(olay) => olay.preventDefault()}>
         <fieldset className="flex flex-col gap-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">Yatırım</legend>
+          <legend className="text-metin-3 text-mikro font-medium">Yatırım</legend>
           <SayiAlani
             etiket="Taşınmazın alış fiyatı"
             deger={fiyat}
@@ -126,8 +126,8 @@ export function YatirimSimulatoruFormu({ parametreler }: { parametreler: VergiPa
           />
         </fieldset>
 
-        <fieldset className="border-cizgi flex flex-col gap-5 border-t pt-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">İşletme</legend>
+        <fieldset className="border-kenar flex flex-col gap-5 border-t-[0.5px] pt-5">
+          <legend className="text-metin-3 text-mikro font-medium">İşletme</legend>
           <SayiAlani
             etiket="Başlangıç aylık kira"
             deger={kira}
@@ -159,10 +159,10 @@ export function YatirimSimulatoruFormu({ parametreler }: { parametreler: VergiPa
           />
         </fieldset>
 
-        <fieldset className="border-cizgi flex flex-col gap-5 border-t pt-5">
-          <legend className="text-murekkep-3 text-mikro font-medium">Varsayımlarınız</legend>
+        <fieldset className="border-kenar flex flex-col gap-5 border-t-[0.5px] pt-5">
+          <legend className="text-metin-3 text-mikro font-medium">Varsayımlarınız</legend>
 
-          <p className="text-murekkep-2 bg-yuzey-2/60 rounded-yumusak px-3.5 py-3 text-mikro leading-relaxed">
+          <p className="text-metin-2 bg-yuzey-2/60 rounded-kart px-3.5 py-3 text-mikro leading-relaxed">
             Bu oranlar <strong>sizin beklentiniz</strong>; bizim tahminimiz değil ve bu yüzden
             önceden doldurulmadı. Birkaç farklı senaryo deneyin — bu aracın amacı tek bir rakam
             vermek değil, varsayımların sonucu nasıl değiştirdiğini göstermek.
@@ -243,7 +243,7 @@ export function YatirimSimulatoruFormu({ parametreler }: { parametreler: VergiPa
             baslik="Simülasyon için birkaç bilgi gerekiyor"
             neden="Bu araç tek yılın getirisini değil, yatırımın yıl yıl nasıl geliştiğini gösterir. Eksik olanlar aşağıda."
             eylem={
-              <ul className="text-murekkep-2 list-disc space-y-1 pl-5 text-left text-sm">
+              <ul className="text-metin-2 list-disc space-y-1 pl-5 text-left text-govde-kucuk">
                 {sonuc.eksikler.map((eksik) => (
                   <li key={eksik.anahtar}>{eksik.etiket}</li>
                 ))}
@@ -266,8 +266,8 @@ function Sonuclar({
   return (
     <>
       {veri.vergiHesaplandi ? null : (
-        <div className="border-cizgi bg-uyari-acik rounded-yumusak mb-5 border p-4">
-          <p className="text-sm leading-relaxed">
+        <div className="border-kenar bg-uyari-zemin rounded-kart mb-5 border-[0.5px] p-4">
+          <p className="text-govde-kucuk leading-relaxed">
             <strong>Bu projeksiyon vergi öncesidir.</strong> Kira geliri vergisinin hesaplanması
             için gereken güncel istisna tutarı ve vergi dilimleri sisteme henüz girilmedi. Uydurma
             bir vergi rakamı üretmek yerine kalemi hiç göstermiyoruz — gerçek getiriniz
@@ -276,39 +276,39 @@ function Sonuclar({
         </div>
       )}
 
-      <RakamIzgarasi sinifAdi="sm:grid-cols-2 lg:grid-cols-4">
-        <RakamKarti
+      <KartIzgarasi sinifAdi="sm:grid-cols-2 lg:grid-cols-4">
+        <HesapKarti
           etiket="Yıllık getiri (İVO)"
           deger={yuzdeYaz(veri.ircOrani)}
           altBilgi="Nominal, iç verim oranı"
           bosAciklama="Bu varsayımlarla getiri oranı hesaplanamıyor."
           ton="vurgu"
         />
-        <RakamKarti
+        <HesapKarti
           etiket="Reel yıllık getiri"
           deger={yuzdeYaz(veri.reelIrcOrani)}
           altBilgi="Enflasyondan arındırılmış"
           bosAciklama="Enflasyon beklentinizi girin."
           ton={veri.reelIrcOrani !== null && veri.reelIrcOrani < 0 ? 'azalis' : 'artis'}
         />
-        <RakamKarti
+        <HesapKarti
           etiket="Nakit başabaş"
           deger={veri.nakitBasabasYili === null ? null : `${veri.nakitBasabasYili}. yıl`}
           altBilgi="Kiranın giderleri karşıladığı ilk yıl"
           bosAciklama={`${veri.son.yil} yıl boyunca cebinizden para çıkmaya devam ediyor.`}
         />
-        <RakamKarti
+        <HesapKarti
           etiket="Getiri katı"
           deger={carpanYaz(veri.getiriKati)}
           altBilgi={`${paraKisaYaz(veri.baslangicYatirimi)} yatırım → ${paraKisaYaz(veri.sonNetVarlik)}`}
         />
-      </RakamIzgarasi>
+      </KartIzgarasi>
 
-      <div className="border-cizgi bg-pirinc-acik rounded-yumusak mt-5 border p-5">
-        <h3 className="font-sans text-base font-semibold">
+      <div className="border-kenar bg-vurgu-zemin rounded-kart mt-5 border-[0.5px] p-5">
+        <h3 className="font-sans text-govde font-medium">
           Neden İVO, neden &quot;brüt getiri&quot; değil?
         </h3>
-        <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">
+        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
           Brüt getiri tek yılın fotoğrafıdır ve kaldıraçlı bir yatırımı ölçemez. İç verim oranı
           (İVO), paranın <strong>ne zaman</strong> girip çıktığını hesaba katar: peşinatı bugün
           verirsiniz, kirayı yıllara yayarak alırsınız, satış gelirini en sonda. Bu üçünü tek bir
@@ -323,7 +323,7 @@ function Sonuclar({
         </p>
       </div>
 
-      <dl className="border-cizgi bg-yuzey rounded-yumusak mt-5 border px-5 py-2">
+      <dl className="border-kenar bg-yuzey rounded-kart mt-5 border-[0.5px] px-5 py-2">
         <SonucSatiri
           etiket="Başlangıç yatırımı"
           deger={paraYaz(veri.baslangicYatirimi)}
@@ -358,8 +358,8 @@ function Sonuclar({
         ) : null}
       </dl>
 
-      <details className="border-cizgi rounded-yumusak mt-5 border" open>
-        <summary className="cursor-pointer list-none px-5 py-3.5 text-sm font-medium marker:content-none">
+      <details className="border-kenar rounded-kart mt-5 border-[0.5px]" open>
+        <summary className="cursor-pointer list-none px-5 py-3.5 text-govde-kucuk font-medium marker:content-none">
           Yıl yıl nakit akışı
         </summary>
         <div className="overflow-x-auto px-5 pb-4">
@@ -367,9 +367,9 @@ function Sonuclar({
         </div>
       </details>
 
-      <div className="border-cizgi rounded-yumusak mt-5 border p-5">
-        <h3 className="font-sans text-sm font-semibold">Bu hesaba dahil olmayanlar</h3>
-        <ul className="text-murekkep-2 mt-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+      <div className="border-kenar rounded-kart mt-5 border-[0.5px] p-5">
+        <h3 className="font-sans text-govde-kucuk font-medium">Bu hesaba dahil olmayanlar</h3>
+        <ul className="text-metin-2 mt-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
           {veri.uyarilar.map((uyari) => (
             <li key={uyari}>{uyari}</li>
           ))}
@@ -399,9 +399,9 @@ function NakitAkisiTablosu({
   vergiHesaplandi: boolean
 }) {
   return (
-    <table className="rakam w-full min-w-[42rem] text-right text-sm">
+    <table className="rakam w-full min-w-[42rem] text-right text-govde-kucuk">
       <thead>
-        <tr className="text-murekkep-3 text-mikro border-cizgi border-b">
+        <tr className="text-metin-3 text-mikro border-kenar border-b-[0.5px]">
           <th scope="col" className="py-2 text-left font-medium">
             Yıl
           </th>
@@ -429,7 +429,7 @@ function NakitAkisiTablosu({
       </thead>
       <tbody>
         {yillar.map((satir) => (
-          <tr key={satir.yil} className="border-cizgi/60 border-b last:border-0">
+          <tr key={satir.yil} className="border-kenar/60 border-b-[0.5px] last:border-0">
             <th scope="row" className="py-2 text-left font-normal">
               {satir.yil}
             </th>
@@ -437,7 +437,7 @@ function NakitAkisiTablosu({
             <td className="py-2">{paraKisaYaz(satir.isletmeGideri)}</td>
             <td className="py-2">{paraKisaYaz(satir.krediOdemesi)}</td>
             {vergiHesaplandi ? <td className="py-2">{paraKisaYaz(satir.vergi)}</td> : null}
-            <td className={satir.netNakitAkisi >= 0 ? 'text-artis py-2' : 'text-azalis py-2'}>
+            <td className={satir.netNakitAkisi >= 0 ? 'text-basari py-2' : 'text-hata py-2'}>
               {satir.netNakitAkisi >= 0 ? '+' : '−'}
               {paraKisaYaz(Math.abs(satir.netNakitAkisi))}
             </td>

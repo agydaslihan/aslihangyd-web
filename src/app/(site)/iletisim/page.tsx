@@ -49,14 +49,14 @@ export default async function IletisimSayfasi({
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-10 flex max-w-2xl flex-col gap-3">
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">İletişim</h1>
-        <p className="text-murekkep-2 leading-relaxed">
+        <p className="text-metin-2 leading-relaxed">
           Alım, satım, kiralama veya değerleme — hangisi olursa olsun önce sizi dinliyoruz. Formu
           doldurmak zorunda değilsiniz; WhatsApp genellikle en hızlı yol.
         </p>
       </header>
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
-        <div className="border-cizgi bg-yuzey rounded-yumusak border p-5 sm:p-8">
+        <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-8">
           <TalepFormu
             eylem={talepGonder}
             varsayilanTip={varsayilanTip}
@@ -74,8 +74,8 @@ export default async function IletisimSayfasi({
         </div>
 
         <aside className="flex flex-col gap-4">
-          <div className="border-cizgi bg-yuzey rounded-yumusak border p-5">
-            <h2 className="font-sans text-base font-semibold">Doğrudan ulaşın</h2>
+          <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
+            <h2 className="font-sans text-govde font-medium">Doğrudan ulaşın</h2>
 
             <ul className="mt-4 flex flex-col gap-3">
               {whatsapp ? (
@@ -105,23 +105,23 @@ export default async function IletisimSayfasi({
             </ul>
 
             {!whatsapp && !telefon && !eposta ? (
-              <p className="text-murekkep-3 mt-3 text-sm leading-relaxed">
+              <p className="text-metin-3 mt-3 text-govde-kucuk leading-relaxed">
                 İletişim bilgileri yönetim panelinden girildiğinde burada görünecek. O zamana kadar
                 yandaki formu kullanabilirsiniz.
               </p>
             ) : null}
 
             {kurumsal?.calismaSaatleri ? (
-              <p className="text-murekkep-3 mt-4 text-mikro">
+              <p className="text-metin-3 mt-4 text-mikro">
                 Çalışma saatleri: {kurumsal.calismaSaatleri}
               </p>
             ) : null}
           </div>
 
           {kurumsal?.adres ? (
-            <div className="border-cizgi bg-yuzey rounded-yumusak border p-5">
-              <h2 className="font-sans text-base font-semibold">Ofis</h2>
-              <address className="text-murekkep-2 mt-2 text-sm leading-relaxed not-italic">
+            <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
+              <h2 className="font-sans text-govde font-medium">Ofis</h2>
+              <address className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed not-italic">
                 {kurumsal.adres}
               </address>
             </div>

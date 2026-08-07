@@ -110,18 +110,18 @@ export interface Config {
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
     'site-bolumleri': SiteBolumleri;
+    'portfoy-bolumleri': PortfoyBolumleri;
     'danisman-ol': DanismanOl;
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
-    'portfoy-bolumleri': PortfoyBolumleri;
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
     'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
+    'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
     'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
-    'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1565,6 +1565,42 @@ export interface SiteBolumleri {
   createdAt?: string | null;
 }
 /**
+ * Portföy sayfasındaki tema sıraları. Ölçüt kodda tanımlıdır; buradan başlığı, açıklamayı, kaç taşınmaz görüneceğini ve sırayı yönetirsin.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portfoy-bolumleri".
+ */
+export interface PortfoyBolumleri {
+  id: number;
+  /**
+   * Sıralar buradaki düzende gösterilir. ⚠️ Bir taşınmaz yalnızca ilk girdiği sırada görünür — yukarıdaki sıra onu "kapar".
+   */
+  siralar?:
+    | {
+        /**
+         * Hangi taşınmazların bu sıraya gireceğini belirler.
+         */
+        olcut: 'yatirimGetirisi' | 'yeniEklenenler' | 'gizliPortfoy' | 'ticariSanayi';
+        aktif?: boolean | null;
+        /**
+         * Boş bırakılırsa ölçütün varsayılan başlığı kullanılır. ⚠️ Emoji kullanma; başlık ölçüt söylemeli.
+         */
+        baslik?: string | null;
+        /**
+         * Ziyaretçiye "neye göre bu sırada?" sorusunun cevabını verir. Boş bırakılırsa varsayılan açıklama kullanılır.
+         */
+        altBaslik?: string | null;
+        /**
+         * Yatay sıra kaydırmalıdır; 8–12 arası hem doyurucu hem hızlı kalır.
+         */
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Sayfanın davet metni. Sayfanın açık/kapalı olması Ayarlar → Site Bölümleri altında.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1683,42 +1719,6 @@ export interface EndeksAyarlari {
   createdAt?: string | null;
 }
 /**
- * Portföy sayfasındaki tema sıraları. Ölçüt kodda tanımlıdır; buradan başlığı, açıklamayı, kaç taşınmaz görüneceğini ve sırayı yönetirsin.
- *
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "portfoy-bolumleri".
- */
-export interface PortfoyBolumleri {
-  id: number;
-  /**
-   * Sıralar buradaki düzende gösterilir. ⚠️ Bir taşınmaz yalnızca ilk girdiği sırada görünür — yukarıdaki sıra onu "kapar".
-   */
-  siralar?:
-    | {
-        /**
-         * Hangi taşınmazların bu sıraya gireceğini belirler.
-         */
-        olcut: 'yatirimGetirisi' | 'yeniEklenenler' | 'gizliPortfoy' | 'ticariSanayi';
-        aktif?: boolean | null;
-        /**
-         * Boş bırakılırsa ölçütün varsayılan başlığı kullanılır. ⚠️ Emoji kullanma; başlık ölçüt söylemeli.
-         */
-        baslik?: string | null;
-        /**
-         * Ziyaretçiye "neye göre bu sırada?" sorusunun cevabını verir. Boş bırakılırsa varsayılan açıklama kullanılır.
-         */
-        altBaslik?: string | null;
-        /**
-         * Yatay sıra kaydırmalıdır; 8–12 arası hem doyurucu hem hızlı kalır.
-         */
-        adet?: number | null;
-        id?: string | null;
-      }[]
-    | null;
-  updatedAt?: string | null;
-  createdAt?: string | null;
-}
-/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kurumsal-bilgiler_select".
  */
@@ -1761,6 +1761,25 @@ export interface SiteBolumleriSelect<T extends boolean = true> {
   mahalle_testi?: T;
   simulator?: T;
   bolge_radari?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "portfoy-bolumleri_select".
+ */
+export interface PortfoyBolumleriSelect<T extends boolean = true> {
+  siralar?:
+    | T
+    | {
+        olcut?: T;
+        aktif?: T;
+        baslik?: T;
+        altBaslik?: T;
+        adet?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
@@ -1831,25 +1850,6 @@ export interface EndeksAyarlariSelect<T extends boolean = true> {
       };
   agirlikGuncellemeYili?: T;
   tcmbKarsilastirmaNotu?: T;
-  updatedAt?: T;
-  createdAt?: T;
-  globalType?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "portfoy-bolumleri_select".
- */
-export interface PortfoyBolumleriSelect<T extends boolean = true> {
-  siralar?:
-    | T
-    | {
-        olcut?: T;
-        aktif?: T;
-        baslik?: T;
-        altBaslik?: T;
-        adet?: T;
-        id?: T;
-      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

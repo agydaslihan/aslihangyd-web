@@ -165,7 +165,7 @@ export function EslestirmeTesti({
   return (
     <div className="mx-auto max-w-2xl">
       <div className="mb-6">
-        <div className="text-murekkep-3 text-mikro mb-2 flex items-center justify-between">
+        <div className="text-metin-3 text-mikro mb-2 flex items-center justify-between">
           <span>
             Soru {adimNo + 1} / {adimlar.length}
           </span>
@@ -180,16 +180,16 @@ export function EslestirmeTesti({
           aria-label="Test ilerlemesi"
         >
           <div
-            className="bg-lacivert h-full rounded-full transition-[width] duration-300"
+            className="bg-lacivert-yuzey h-full rounded-full transition-[width] duration-300"
             style={{ width: `${Math.max(ilerleme, 4)}%` }}
           />
         </div>
       </div>
 
-      <div className="border-cizgi bg-yuzey rounded-yumusak border p-6 sm:p-8">
-        <h2 className="text-[1.375rem] leading-snug font-semibold sm:text-[1.5rem]">{adim.soru}</h2>
+      <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-6 sm:p-8">
+        <h2 className="text-[1.375rem] leading-snug font-medium sm:text-[1.5rem]">{adim.soru}</h2>
         {adim.yardim ? (
-          <p className="text-murekkep-2 mt-2 text-sm leading-relaxed">{adim.yardim}</p>
+          <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">{adim.yardim}</p>
         ) : null}
 
         <div className="mt-6">
@@ -237,7 +237,7 @@ export function EslestirmeTesti({
         </div>
       </div>
 
-      <p className="text-murekkep-3 text-mikro mt-4 text-center leading-relaxed">
+      <p className="text-metin-3 text-mikro mt-4 text-center leading-relaxed">
         Sonucu görmek için hiçbir iletişim bilgisi gerekmiyor. Cevaplarınız yalnızca tarayıcınızda
         tutulur; siz göndermedikçe bize ulaşmaz.
       </p>
@@ -389,15 +389,17 @@ function KartSecimi<T extends string>({
           aria-pressed={secili === secenek.deger}
           onClick={() => onSec(secenek.deger)}
           className={sinif(
-            'rounded-yumusak flex min-h-13 flex-col justify-center border px-4 py-3 text-left transition-colors',
+            'rounded-buton flex min-h-13 flex-col justify-center border-[0.5px] px-4 py-3 text-left transition-colors',
             secili === secenek.deger
-              ? 'border-lacivert bg-lacivert-acik'
-              : 'border-cizgi hover:border-cizgi-guclu',
+              ? 'border-vurgu bg-vurgu-zemin'
+              : 'border-kenar-guclu hover:border-vurgu',
           )}
         >
           <span className="text-[0.9375rem] font-medium">{secenek.etiket}</span>
           {secenek.aciklama ? (
-            <span className="text-murekkep-2 mt-0.5 text-sm leading-snug">{secenek.aciklama}</span>
+            <span className="text-metin-2 mt-0.5 text-govde-kucuk leading-snug">
+              {secenek.aciklama}
+            </span>
           ) : null}
         </button>
       ))}
@@ -453,10 +455,10 @@ function Sonuclar({
   return (
     <div className="mx-auto max-w-3xl">
       <header className="mb-6 text-center">
-        <h2 className="text-[1.75rem] leading-tight font-semibold sm:text-[2rem]">
+        <h2 className="text-[1.75rem] leading-tight font-medium sm:text-[2rem]">
           Size en uygun {sonuc.eslesmeler.length} mahalle
         </h2>
-        <p className="text-murekkep-2 mx-auto mt-2 max-w-xl text-sm leading-relaxed">
+        <p className="text-metin-2 mx-auto mt-2 max-w-xl text-govde-kucuk leading-relaxed">
           Uyum yüzdesi, cevaplarınızdan çıkan ağırlıklarla mahalle özniteliklerinin birleşiminden
           hesaplandı. Her mahallenin altında kırılımı açabilirsiniz — burada kara kutu bir puan yok.
         </p>
@@ -468,12 +470,12 @@ function Sonuclar({
         ))}
       </ol>
 
-      <details className="border-cizgi rounded-yumusak mt-5 border">
-        <summary className="cursor-pointer list-none px-5 py-3.5 text-sm font-medium marker:content-none">
+      <details className="border-kenar rounded-kart mt-5 border-[0.5px]">
+        <summary className="cursor-pointer list-none px-5 py-3.5 text-govde-kucuk font-medium marker:content-none">
           Cevaplarınız hangi ağırlıkları oluşturdu?
         </summary>
         <div className="px-5 pb-5">
-          <p className="text-murekkep-2 mb-3 text-sm leading-relaxed">
+          <p className="text-metin-2 mb-3 text-govde-kucuk leading-relaxed">
             Aşağıdaki ağırlıklar yalnızca sizin cevaplarınıza göre belirlendi. Bu tablo{' '}
             <strong>portföyümüzden ve elimizdeki ilanlardan tamamen bağımsızdır</strong>; hangi
             mahallede kaç ilanımız olduğu hesaba hiç girmez.
@@ -481,8 +483,8 @@ function Sonuclar({
           <dl className="flex flex-col gap-1">
             {sonuc.agirliklar.map((satir) => (
               <div key={satir.olcut} className="flex items-baseline justify-between gap-4 py-1">
-                <dt className="text-sm">{satir.etiket}</dt>
-                <dd className="rakam text-murekkep-2 shrink-0 text-sm">
+                <dt className="text-govde-kucuk">{satir.etiket}</dt>
+                <dd className="rakam text-metin-2 shrink-0 text-govde-kucuk">
                   {yuzdeYaz(satir.agirlik, 0)}
                 </dd>
               </div>
@@ -507,8 +509,8 @@ function Sonuclar({
       </div>
 
       {cevaplar.zamanUfku === 'yakin' ? (
-        <div className="border-cizgi bg-lacivert-acik rounded-yumusak mt-6 border p-5 text-center">
-          <p className="text-sm leading-relaxed">
+        <div className="border-kenar bg-vurgu-zemin rounded-kart mt-6 border-[0.5px] p-5 text-center">
+          <p className="text-govde-kucuk leading-relaxed">
             Yakın zamanda karar verecekseniz, bu üç mahalledeki güncel portföyü ve henüz
             yayınlanmamış seçenekleri birlikte gözden geçirelim.
           </p>
@@ -533,55 +535,55 @@ function EslesmeKarti({ eslesme, sira }: { eslesme: MahalleEslesmesi; sira: numb
     .sort((a, b) => b.katki - a.katki)
 
   return (
-    <li className="border-cizgi bg-yuzey rounded-yumusak border p-5 sm:p-6">
+    <li className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 className="text-[1.25rem] font-semibold">
-          <span className="text-murekkep-3 mr-2">{sira}.</span>
+        <h3 className="text-[1.25rem] font-medium">
+          <span className="text-metin-3 mr-2">{sira}.</span>
           {eslesme.ad}
         </h3>
-        <p className="rakam text-pirinc-koyu text-[1.5rem] font-semibold">
+        <p className="rakam text-vurgu text-[1.5rem] font-medium">
           {yuzdeYaz(eslesme.uyum, 0)} uyum
         </p>
       </div>
 
       {eslesme.butceyleAlinabilirM2 !== null ? (
-        <p className="text-murekkep-2 mt-2 text-sm">
+        <p className="text-metin-2 mt-2 text-govde-kucuk">
           Bütçenizle bu mahallede yaklaşık{' '}
           <strong className="rakam">{m2Yaz(eslesme.butceyleAlinabilirM2)}</strong> alabilirsiniz
-          <span className="text-murekkep-3"> (ortalama m² fiyatına göre)</span>.
+          <span className="text-metin-3"> (ortalama m² fiyatına göre)</span>.
         </p>
       ) : null}
 
       {eslesme.kapsam < 1 ? (
-        <p className="text-murekkep-3 text-mikro mt-2 leading-relaxed">
+        <p className="text-metin-3 text-mikro mt-2 leading-relaxed">
           Bu mahallede {eslesme.eksikOlcutler.join(', ').toLocaleLowerCase('tr')} verisi henüz yok;
           o ölçütler hesaba katılmadı.
         </p>
       ) : null}
 
       <details className="mt-4">
-        <summary className="text-lacivert cursor-pointer list-none text-sm font-medium marker:content-none">
+        <summary className="text-vurgu cursor-pointer list-none text-govde-kucuk font-medium marker:content-none">
           Neden bu mahalle? ▾
         </summary>
-        <dl className="border-cizgi mt-3 flex flex-col gap-2 border-t pt-3">
+        <dl className="border-kenar mt-3 flex flex-col gap-2 border-t-[0.5px] pt-3">
           {gosterilecek.map((satir) => (
             <div key={satir.olcut} className="flex flex-col gap-1">
               <div className="flex items-baseline justify-between gap-4">
-                <dt className="text-sm font-medium">
+                <dt className="text-govde-kucuk font-medium">
                   {satir.etiket}
-                  <span className="text-murekkep-3 ml-1.5 font-normal">
+                  <span className="text-metin-3 ml-1.5 font-normal">
                     ağırlık {yuzdeYaz(satir.agirlik, 0)}
                   </span>
                 </dt>
-                <dd className="rakam shrink-0 text-sm">{satir.puan}/100</dd>
+                <dd className="rakam shrink-0 text-govde-kucuk">{satir.puan}/100</dd>
               </div>
               <div className="bg-yuzey-2 h-1 w-full overflow-hidden rounded-full">
                 <div
-                  className="bg-lacivert h-full rounded-full"
+                  className="bg-lacivert-yuzey h-full rounded-full"
                   style={{ width: `${satir.puan ?? 0}%` }}
                 />
               </div>
-              <p className="text-murekkep-3 text-mikro leading-snug">{satir.aciklama}</p>
+              <p className="text-metin-3 text-mikro leading-snug">{satir.aciklama}</p>
             </div>
           ))}
         </dl>

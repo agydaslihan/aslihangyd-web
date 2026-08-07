@@ -92,18 +92,18 @@ export default async function KiraMiSatinAlmaMiRaporu({
       ]}
     >
       <RaporBolumu baslik="Sonuç">
-        <div className="border-cizgi bg-yuzey rounded-yumusak border p-5">
-          <p className="text-[1.25rem] leading-snug font-semibold">
+        <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
+          <p className="text-[1.25rem] leading-snug font-medium">
             {veri.son.yil} yıl sonunda {satinAlmaOnde ? 'satın almak' : 'kiralamak'} önde:{' '}
             <span className="rakam">{paraYaz(Math.abs(veri.son.fark))}</span>
           </p>
           {veri.bugunkuParaylaFark !== null ? (
-            <p className="text-murekkep-2 mt-2 text-sm">
+            <p className="text-metin-2 mt-2 text-govde-kucuk">
               Bugünkü parayla:{' '}
               <strong className="rakam">{paraYaz(Math.abs(veri.bugunkuParaylaFark))}</strong>
             </p>
           ) : (
-            <p className="text-murekkep-3 text-mikro mt-2">
+            <p className="text-metin-3 text-mikro mt-2">
               Bu rakam {veri.son.yil} yıl sonrasının parasıyladır; enflasyon beklentisi girilmediği
               için bugünkü karşılığı hesaplanmadı.
             </p>
@@ -116,12 +116,12 @@ export default async function KiraMiSatinAlmaMiRaporu({
         aciklama="Bu eşik, değer artışı tahmininizden bağımsızdır; kira, faiz ve alternatif getiri oranlarından türer."
       >
         {veri.basabasDegerArtisi === null ? (
-          <p className="text-murekkep-2 text-sm leading-relaxed">
+          <p className="text-metin-2 text-govde-kucuk leading-relaxed">
             Girdiğiniz alternatif getiri oranıyla, makul hiçbir değer artışı satın almayı öne
             geçirmiyor.
           </p>
         ) : (
-          <p className="text-sm leading-relaxed">
+          <p className="text-govde-kucuk leading-relaxed">
             Satın almanın kiralamayı geçmesi için konutun{' '}
             <strong className="rakam">yılda en az {yuzdeYaz(veri.basabasDegerArtisi)}</strong>{' '}
             değerlenmesi gerekiyor. Beklentiniz bunun üstündeyse satın almak, altındaysa kiralayıp
@@ -166,9 +166,9 @@ export default async function KiraMiSatinAlmaMiRaporu({
 
       <RaporBolumu baslik="Yıl yıl karşılaştırma">
         <div className="overflow-x-auto">
-          <table className="rakam w-full min-w-[28rem] text-right text-sm">
+          <table className="rakam w-full min-w-[28rem] text-right text-govde-kucuk">
             <thead>
-              <tr className="text-murekkep-3 text-mikro border-cizgi border-b">
+              <tr className="text-metin-3 text-mikro border-kenar border-b-[0.5px]">
                 <th scope="col" className="py-2 text-left font-medium">
                   Yıl
                 </th>
@@ -185,7 +185,7 @@ export default async function KiraMiSatinAlmaMiRaporu({
             </thead>
             <tbody>
               {veri.yillar.map((satir) => (
-                <tr key={satir.yil} className="border-cizgi/60 border-b last:border-0">
+                <tr key={satir.yil} className="border-kenar/60 border-b-[0.5px] last:border-0">
                   <th scope="row" className="py-1.5 text-left font-normal">
                     {satir.yil}
                   </th>
@@ -206,7 +206,7 @@ export default async function KiraMiSatinAlmaMiRaporu({
         baslik="Bu hesaba dahil olmayanlar"
         aciklama="Eksikleri saklamak raporu güvenilir yapmaz; okuyanın kendi fark etmesi tüm rapora olan güveni zedeler."
       >
-        <ul className="text-murekkep-2 list-disc space-y-1.5 pl-5 text-sm leading-relaxed">
+        <ul className="text-metin-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
           {veri.uyarilar.map((uyari) => (
             <li key={uyari}>{uyari}</li>
           ))}

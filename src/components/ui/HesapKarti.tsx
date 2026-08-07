@@ -3,16 +3,29 @@ import type { ReactNode } from 'react'
 import { sinif } from '@/lib/sinif'
 
 /**
- * Rakam kartı — bu sitenin en önemli bileşeni.
+ * Hesap kartı — HESAPLANMIŞ bir rakamı gösterir.
  *
- * Tasarım hedefi: yatırımcı sayfayı 3 saniye tarayınca kira çarpanını
- * görebilmeli. Bu yüzden değer büyük ve hizalı (tabular-nums), etiket küçük
- * ve sakin. Hiyerarşi tersine dönerse kart bir "bilgi kutusu"na dönüşür ve
- * taranabilirliğini kaybeder.
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ `IstatistikKarti` İLE FARKI: GÖZLEM SAYISI.
  *
- * ⚠️ GEÇİŞ BİLEŞENİ. Yerini `IstatistikKarti` alıyor: gözlem sayısını
- * zorunlu kılan sürüm o. E aşamasında çağrı yerleri taşınıp bu dosya
- * silinecek.
+ * · `HesapKarti` — girdiden TÜRETİLEN rakam: kredi taksiti, tapu harcı,
+ *   bir ilanın kira çarpanı. Bunlar bir ölçüm değil, bir hesap; "kaç
+ *   gözleme dayanıyor?" sorusunun karşılığı yok. Zorunlu bir `n` alanı
+ *   burada anlamsız bir gürültü olurdu.
+ *
+ * · `IstatistikKarti` — GÖZLENMİŞ rakam: mahallenin ortalama m² fiyatı,
+ *   kira medyanı. Bunların kaç gözleme dayandığı rakamın kendisi kadar
+ *   bilgidir ve tip düzeyinde zorunludur.
+ *
+ * İkisini tek bileşende birleştirmek, ya hesaplara sahte bir `n`
+ * uydurmak ya da istatistiklerde `n`i isteğe bağlı bırakmak demekti.
+ * İkincisi zamanla "unutulan alan" olurdu.
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * Tasarım hedefi: yatırımcı sayfayı 3 saniye tarayınca aradığı rakamı
+ * görebilmeli. Değer büyük ve hizalı, etiket küçük ve sakin. Hiyerarşi
+ * tersine dönerse kart bir "bilgi kutusu"na dönüşür ve taranabilirliğini
+ * kaybeder.
  *
  * ⚠️ Boş durum bu bileşenin birinci sınıf davranışıdır, kenar durumu değil.
  * Site uzun süre kısmi veriyle çalışacak; `deger` yoksa kart kırık
@@ -28,7 +41,7 @@ const DEGER_TONLARI: Record<Ton, string> = {
   vurgu: 'text-vurgu',
 }
 
-export interface RakamKartiOzellikleri {
+export interface HesapKartiOzellikleri {
   etiket: string
   /** Biçimlendirilmiş değer. `null` ise boş durum gösterilir. */
   deger: string | null
@@ -42,7 +55,7 @@ export interface RakamKartiOzellikleri {
   sinifAdi?: string
 }
 
-export function RakamKarti({
+export function HesapKarti({
   etiket,
   deger,
   altBilgi,
@@ -50,7 +63,7 @@ export function RakamKarti({
   ton = 'notr',
   sade = false,
   sinifAdi,
-}: RakamKartiOzellikleri) {
+}: HesapKartiOzellikleri) {
   const veriVar = deger !== null
 
   return (
@@ -84,8 +97,8 @@ export function RakamKarti({
   )
 }
 
-/** Rakam kartlarını ızgaraya dizer. Mobilde 2, geniş ekranda 4 sütun. */
-export function RakamIzgarasi({ children, sinifAdi }: { children: ReactNode; sinifAdi?: string }) {
+/** Kartları ızgaraya dizer. Mobilde 2, geniş ekranda 4 sütun. */
+export function KartIzgarasi({ children, sinifAdi }: { children: ReactNode; sinifAdi?: string }) {
   return (
     <dl className={sinif('grid grid-cols-2 gap-3 lg:grid-cols-4 lg:gap-4', sinifAdi)}>
       {children}

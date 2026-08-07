@@ -27,13 +27,13 @@ export default function HataSayfasi({
     <div className="kapsayici flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
       <h1 className="text-[1.75rem] leading-tight sm:text-[2.25rem]">Bir şeyler ters gitti</h1>
 
-      <p className="text-murekkep-2 mt-4 max-w-md leading-relaxed">
+      <p className="text-metin-2 mt-4 max-w-md leading-relaxed">
         Sayfayı yüklerken beklenmedik bir sorun oluştu. Genellikle geçicidir — tekrar denemek çoğu
         zaman yeterli oluyor.
       </p>
 
       {error.digest ? (
-        <p className="text-murekkep-3 rakam mt-3 text-mikro">Hata kodu: {error.digest}</p>
+        <p className="text-metin-3 rakam mt-3 text-mikro">Hata kodu: {error.digest}</p>
       ) : null}
 
       <div className="mt-8 flex flex-col gap-3 sm:flex-row">

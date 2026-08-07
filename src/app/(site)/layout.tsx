@@ -63,9 +63,18 @@ export const viewport: Viewport = {
   initialScale: 1,
   // Kullanıcının yakınlaştırmasını engellemek erişilebilirlik ihlalidir.
   maximumScale: 5,
+  /**
+   * Tarayıcı arayüz rengi (mobil adres çubuğu).
+   *
+   * ⚠️ Burada CSS değişkeni kullanılamıyor: `themeColor` HTML meta
+   * etiketine somut renk yazar ve tarayıcı `var()` çözmez. Değerler
+   * onaylanan paletin `zemin` jetonuyla birebir aynı — açık temada
+   * notr-50, koyu temada lacivert-950. Palet değişirse burası da
+   * güncellenmeli; kontrast testi bu iki değeri görmez.
+   */
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fbfaf7' },
-    { media: '(prefers-color-scheme: dark)', color: '#1b1d22' },
+    { media: '(prefers-color-scheme: light)', color: '#f8f7f3' },
+    { media: '(prefers-color-scheme: dark)', color: '#0a1524' },
   ],
 }
 

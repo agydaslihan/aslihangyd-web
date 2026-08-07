@@ -14,21 +14,26 @@ import { describe, expect, it } from 'vitest'
  *   2. 600/700 font ağırlığı yok — sakin ton kalın metinle bozulur.
  *   3. Dolu bakır zemin yalnızca iki eylemde.
  *
- * ⚠️ KAPSAM KASITLI OLARAK DAR BAŞLIYOR. A aşamasında yalnızca tasarım
- * sisteminin kendi yüzeyi (`src/components/ui`) denetleniyor; E aşaması
- * (feature/tasarim-uyarlama) sayfaları uyarladıkça `UYARLANMIS_ALANLAR`
- * listesine ekleyecek. Testi bugün tüm koda açmak, kırmızı bir testle
- * yaşamayı normalleştirirdi — bir kez olduğunda testin uyarı değeri biter.
+ * Kapsam A aşamasında bilinçli olarak dar başladı (`components/ui`) ve
+ * E aşamasında tüm arayüze açıldı. Kademeli açmanın sebebi kırmızı bir
+ * testle yaşamayı normalleştirmemekti: bir kez olduğunda testin uyarı
+ * değeri biter.
  *
- * Bakır kuralı (3) ise bugünden İTİBAREN tüm koda uygulanır: kural nadirlik
+ * Bakır kuralı (3) ise ilk günden tüm koda uygulandı — kural nadirlik
  * üzerine kurulu, kademeli uygulanamaz.
  */
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
 const KOK = path.resolve(dirname, '../..')
 
-/** Tasarım diline uyarlanmış ve denetlenen alanlar. */
-const UYARLANMIS_ALANLAR = ['components/ui', 'app/(site)/stil-rehberi'] as const
+/**
+ * Tasarım diline uyarlanmış ve denetlenen alanlar.
+ *
+ * E aşamasında TÜM arayüz kapsama alındı. Buradan bir yol çıkarmak,
+ * o klasörde ham hex ve 600 ağırlık kullanılabilir demektir — yani
+ * tasarım sisteminden çıkmak.
+ */
+const UYARLANMIS_ALANLAR = ['components', 'app'] as const
 
 interface Dosya {
   yol: string
@@ -75,11 +80,18 @@ describe('kapsam', () => {
 
 describe('ham hex kullanılmıyor', () => {
   /**
-   * Harita, MapLibre'ye stil nesnesi verir; MapLibre CSS değişkeni okumaz,
-   * hex bekler. Tek istisna burasıdır ve B aşamasında harita stilinin
-   * jetonlardan türetilmesiyle kapatılacak.
+   * Muafiyet listesi.
+   *
+   * `layout.tsx` tarayıcının `theme-color` meta etiketini yazar; tarayıcı
+   * orada `var()` çözmez, somut renk ister. Değerler `zemin` jetonuyla
+   * birebir aynı ve dosyada bu ilişki yorumda yazılı.
+   *
+   * ⚠️ Harita MUAF DEĞİL: MapLibre de CSS değişkeni okumuyor ama orada
+   * renkler `getComputedStyle` ile çalışma zamanında jetondan okunuyor
+   * (`src/lib/harita/jetonlar.ts`). Aynı çözüm burada uygulanamıyor
+   * çünkü meta etiketi sunucuda, stil hesaplanmadan önce yazılıyor.
    */
-  const MUAF = new Set<string>([])
+  const MUAF = new Set<string>(['app/(site)/layout.tsx'])
 
   it.each(uyarlanmis.filter((d) => !MUAF.has(d.yol)).map((d) => [d.yol, d] as const))(
     '%s',

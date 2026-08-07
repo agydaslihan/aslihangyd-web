@@ -32,14 +32,14 @@ export default async function MahalleTestiSayfasi() {
     <div className="kapsayici py-10 sm:py-14">
       <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-3 text-center">
         <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Mahalle Eşleştirme Testi</h1>
-        <p className="text-murekkep-2 leading-relaxed">
+        <p className="text-metin-2 leading-relaxed">
           Çorlu&apos;da &quot;hangi mahalle iyi?&quot; sorusunun tek bir cevabı yok — cevap kimin
           sorduğuna göre değişir. 7 soruda önceliklerinizi anlayıp size en uygun üç mahalleyi ve{' '}
           <strong className="font-medium">her birinin neden önerildiğini</strong> gösterelim.
         </p>
-        <p className="text-murekkep-3 text-mikro">
+        <p className="text-metin-3 text-mikro">
           Yöntemin tamamı{' '}
-          <Link href="/mahalle-eslestirme-metodolojisi" className="text-lacivert underline">
+          <Link href="/mahalle-eslestirme-metodolojisi" className="text-vurgu underline">
             metodoloji sayfasında
           </Link>{' '}
           yayınlanır.

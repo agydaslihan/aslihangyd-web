@@ -149,15 +149,13 @@ export function SkorKirilimi({ bilesenler }: { bilesenler: BilesenSonucu[] }) {
       {bilesenler.map((bilesen) => (
         <div key={bilesen.ad} className="flex flex-col gap-1">
           <div className="flex items-baseline justify-between gap-3">
-            <dt className="text-sm font-medium">
+            <dt className="text-govde-kucuk font-medium">
               {bilesen.etiket}
-              <span className="text-murekkep-3 ml-1.5 font-normal">
-                (ağırlık %{bilesen.agirlik})
-              </span>
+              <span className="text-metin-3 ml-1.5 font-normal">(ağırlık %{bilesen.agirlik})</span>
             </dt>
-            <dd className="rakam shrink-0 text-sm font-semibold">
+            <dd className="rakam shrink-0 text-govde-kucuk font-medium">
               {bilesen.hamPuan === null ? (
-                <span className="text-murekkep-3 font-normal">Veri yok</span>
+                <span className="text-metin-3 font-normal">Veri yok</span>
               ) : (
                 `${bilesen.hamPuan} / 100`
               )}
@@ -169,13 +167,13 @@ export function SkorKirilimi({ bilesenler }: { bilesenler: BilesenSonucu[] }) {
           <div className="bg-yuzey-2 h-1.5 overflow-hidden rounded-full">
             {bilesen.hamPuan === null ? null : (
               <div
-                className="bg-lacivert h-full rounded-full"
+                className="bg-lacivert-yuzey h-full rounded-full"
                 style={{ width: `${bilesen.hamPuan}%` }}
               />
             )}
           </div>
 
-          <p className="text-murekkep-3 text-mikro leading-snug">{bilesen.aciklama}</p>
+          <p className="text-metin-3 text-mikro leading-snug">{bilesen.aciklama}</p>
         </div>
       ))}
     </dl>
