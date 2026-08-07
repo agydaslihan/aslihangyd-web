@@ -21,14 +21,26 @@ name: Üretim imajı
 # PR'da imaj derleniyor.
 
 on:
+  # ⚠️ Tetikler CI ile bilinçli olarak FARKLI — ikisi aynı işi yapmıyor.
+  #
+  # `pull_request` filtresi kaldırıldı: zincirleme PR'larda imajın hiç
+  # derlenmemesi, `public/` dizini eksikliği gibi yalnızca imaj derlemesinde
+  # görünen hataların yığın boyunca gizlenmesi demekti.
+  #
+  # `push` ise main'de kalıyor. Sebep: bu iş akışının push'taki İŞİ
+  # yayımlamak ve yalnızca main yayımlanıyor (aşağıdaki `if` koşuluna bak).
+  # Her özellik dalının her push'unda ~4 dakikalık bir Docker derlemesi
+  # koşturmak, hiçbir yere gitmeyen bir imaj üretirdi; dalın kendisi zaten
+  # CI ile ve PR açıldığında bu iş akışıyla doğrulanıyor.
   push:
     branches: [main]
   pull_request:
-    branches: [main]
   workflow_dispatch:
 
+# ⚠️ PR numarası anahtara dahil: aynı commit'in push ve pull_request
+# olayları tek anahtarla birbirini iptal ederdi.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 env:

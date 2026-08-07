@@ -12,10 +12,19 @@ name: Lighthouse
 # skorlar yayına girecek halin skorları değil. Gerçek içerik ve medya
 # geldiğinde eşikler zorunlu hale getirilecek (bkz. docs/ILERLEME.md).
 
+# ⚠️ `pull_request` filtresi kaldırıldı: zincirleme PR'larda ölçüm hiç
+# koşmuyordu. `push` tetiği bilinçli olarak YOK — ölçüm ~3 dakika sürüyor,
+# raporlayıcı olduğu için dal ucunda tekrarı bilgi katmıyor ve tetiklendiği
+# yer PR, yani skorun tartışılacağı yer. Dal ucunda ölçüm gerekirse
+# `workflow_dispatch` ile elle çalıştırılabilir.
 on:
   pull_request:
-    branches: [main]
   workflow_dispatch:
+
+# Aynı PR'a arka arkaya push gelirse eskisini iptal et.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   olcum:
