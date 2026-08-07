@@ -878,6 +878,111 @@ bileşeni, yeni renkler CSS değişkeni, yeni ikonlar elle yazılmış SVG.
 
 ---
 
+## B aşaması — 3B harita sayfası
+
+`/harita` tam ekran bir gösteri parçasına dönüştürüldü: mahalle merkezlerinde
+seçili veri kipine göre yükselen sütunlar, üstte kontrol şeridi, iki dar yan
+panel, sol altta gösterge.
+
+### Ne yapıldı
+
+- `src/lib/harita/sutunlar.ts` — sütun geometrisi ve ölçekleme (saf, test
+  edilebilir). 20 birim testi.
+- `src/lib/harita/jetonlar.ts` — harita renklerini `getComputedStyle` ile
+  tasarım jetonlarından okur.
+- `src/components/harita/Harita3B.tsx` — MapLibre `fill-extrusion` sütunlar,
+  kâğıt tonuna çevrilmiş taban harita, katman görünürlüğü, 2B/3B geçişi,
+  seçim vurgusu, Türkçeleştirilmiş MapLibre arayüzü.
+- `src/components/harita/HaritaSahnesi.tsx` — tam ekran düzen, kontrol
+  şeridi, katman paneli (132px), mahalle detay paneli (186px), gösterge,
+  mobil alt sayfalar, metin listesi.
+- Eski `Harita.tsx` ve `HaritaBolumu.tsx` **silindi** — yeni sayfadan sonra
+  hiçbir yerden çağrılmıyorlardı ve ham hex kullanıyorlardı. İki harita
+  uygulamasını yan yana tutmak, ikisinin ayrışması demekti.
+
+### Kararlar ve gerekçeleri
+
+**deck.gl değil, MapLibre `fill-extrusion`.**
+Şartname ikisine de izin veriyordu. deck.gl `ColumnLayer` daha zengin ama
+~130 kB gzip daha getiriyor ve kendi render döngüsünü MapLibre'ninkiyle
+senkronlamak gerekiyor. `fill-extrusion` zaten MapLibre'nin içinde: ek bayt
+yok, kamera ve ışıklandırma haritanınkiyle aynı. Sunucu 3,2 GB RAM / 2 vCPU.
+
+**Sütunlar tek renk, ölçek sıfırdan başlıyor.**
+Fiyatı hem yükseklikle hem renkle kodlamak haritayı rengarenk yapardı.
+Ayrıca ölçeğin alt sınırı en küçük değere çekilmiyor: 42.000 ile 44.000
+arası fark küçük görünüyor, çünkü küçük. Eksen kırpma bir yatırım
+sitesinde doğrudan yanıltmadır — test bunu koruyor.
+
+**Harita renkleri CSS jetonundan okunuyor.**
+MapLibre CSS değişkeni anlamaz; ilk sürümde bu, elle yazılmış `#3b5a8a`
+gibi renklere yol açmıştı. `getComputedStyle` ile jetonu çalışma zamanında
+okumak üç şeyi birden çözdü: tek gerçek kaynak korunuyor, harita koyu
+temaya kendiliğinden uyuyor, palet değişince harita da değişiyor.
+
+**Taban harita katman ADINA değil TÜRÜNE göre soluklaştırılıyor.**
+Satıcı stilinin katman adlarına bağlanmak, MapTiler stili güncellendiğinde
+sessizce kırılırdı. Katman türüne ve genel ad kalıplarına bakılıyor; hiçbir
+şey eşleşmezse satıcı stili olduğu gibi kalıyor — harita şartnamedeki kadar
+sade olmaz ama çalışır.
+
+**Açılışta yalnızca iki katman açık.**
+Fiyat sütunları ve mahalle sınırları. Binalar, okul/sağlık, sanayi,
+portföy ve projeler kapalı. Emlak haritalarının tipik hatası her şeyi açık
+başlatmak; harita nokta bulutuna dönüyor. Binalar ayrıca mobilde kare
+düşürüyor ve trafiğin ~%75'i mobil.
+
+**Verisi olmayan katman gizlenmiyor, pasif gösteriliyor.**
+Gizlemek "böyle bir katman yok" der; pasif göstermek "var ama verisi
+girilmedi" der. "Projeler" katmanı bugün sıfır öğeyle, sebebi yazılı
+duruyor.
+
+**Kaydırma tek başına yakınlaştırmıyor (`cooperativeGestures`).**
+Tam ekran haritada `scrollZoom`u tümden kapatmak yakınlaştırmayı düğmelere
+hapsederdi; açık bırakmak sayfayı kaydırmak isteyeni haritanın içinde
+tutardı. Ctrl/⌘ ile kaydırma ikisini de çözüyor.
+
+**MapLibre arayüzü Türkçeleştirildi.**
+Kütüphane varsayılan olarak İngilizce konuşuyor. "Zoom in" yazan bir düğme,
+çevirisi unutulmuş bir arayüzün en görünür işareti.
+
+### ⚠️ Duman testinde bulunan ve kapatılan açık
+
+İlk sürümde merkez koordinatı girilmemiş mahalleler veri kümesinden tümden
+düşürülüyordu. Demo veride hiçbir mahallenin `merkez` alanı dolu olmadığı
+için sayfa **komple boş duruma** düşüyordu: kontrol şeridi, katman paneli,
+mahalle listesi ve gösterge hiç görünmüyordu.
+
+Hata, iki farklı eksikliği tek şeymiş gibi ele almaktı:
+
+| Eksik olan | Doğru davranış |
+| --- | --- |
+| Merkez koordinatı | Sütun çizilmez, mahalle listede ve panelde **kalır** |
+| Seçili kipteki değer | Sütun çizilmez, sınır **kesikli** çizilir |
+
+İkisi artık ayrı ayrı izleniyor ve gösterge her ikisini de sayıyla
+bildiriyor ("3 mahallenin merkez koordinatı girilmedi; haritada yer almıyor
+ama listede duruyor").
+
+### B aşaması ölçümleri (yerel, üretim derlemesi)
+
+| Ölçüm | Değer | Not |
+| --- | --- | --- |
+| `pnpm test` | **625 test / 26 dosya** | A sonu 605 |
+| Derleme | **80 sn** | 150 sn eşiğinin altında |
+| `/` JS (gzip) | **198,6 kB** | **değişmedi** — maplibre ana pakete girmedi |
+| `/harita` JS (gzip) | 441,1 kB | 242,7 kB'ı maplibre, `async` etiketiyle |
+| `/harita` CSS (gzip) | 20,4 kB | 10 kB'ı maplibre-gl.css |
+| TTFB `/` · `/harita` | 46 · 88 ms | demo veri |
+
+**maplibre `async` yükleniyor ve ilk boyamayı engellemiyor.** Sunucu,
+kontrol şeridini ve iskeleti HTML'de gönderiyor; LCP adayı bu, harita
+tuvali değil. Yine de `/harita` sitenin en ağır rotası ve bu, gerçek bir
+harita isteğinin doğal bedeli — alternatif özelliği tümden çıkarmak olurdu.
+
+⚠️ Lighthouse yerelde ölçülemiyor (sunucuda Chrome yok); CI iş akışında
+raporlanıyor. Gerçek MapTiler verisiyle `/harita` için ayrıca ölçülmeli.
+
 ## C aşaması — Portföy listeleme (tema sıraları)
 
 `/portfoy` sayfasının filtresiz görünümü, ölçüte göre gruplanmış yatay
