@@ -348,9 +348,24 @@ Yaklaşan yetki bitişleri fark edilmez. Yasal ihlal doğmaz, çünkü
 olur ve yetki yenileme fırsatı kaçar. Birkaç gün ertelenebilir.
 
 ⚠️ Bu görev bugün **e-posta göndermiyor**: SMTP yapılandırması yok.
-Çıktısı yalnızca `/srv/aslihangyd/logs/bakim.log` dosyasına yazılıyor.
-SMTP bilgileri gelene kadar bu günlüğü haftada bir gözle taramak gerekiyor
-(`docs/SENDEN-BEKLENENLER.md`).
+Çıktısı `/srv/aslihangyd/logs/bakim.log` dosyasına yazılıyor.
+
+✅ **Artık günlüğü taramak zorunda değilsin.** Görevlerin son durumu
+veritabanına da yazılıyor ve **yönetim panelinin ana ekranında** kalıcı bir
+şeritte görünüyor: bir görev 26 saatten uzun süredir koşmadıysa, hiç
+koşmadıysa ya da hata döndürdüyse panel bunu açıkça söylüyor.
+
+Şerit ayrıca yaklaşan EİDS yetki bitişlerini, yetkisi dolmuş ama hâlâ
+yayında görünen ilanları ve eksik yetki belgesi numarasını da gösteriyor.
+Yasal olanlar her zaman en üstte.
+
+⚠️ Şerit **kapatılamaz**. Bildirim, sebebi ortadan kalkınca kendiliğinden
+kaybolur — tek susturma yolu sorunu çözmektir. Aynı sebeple *Bakım Durumu*
+ekranı salt okunurdur: "son çalışma" tarihi elle ileri alınıp yasal bir
+uyarı susturulamaz.
+
+Günlük dosyası yine de duruyor: panel *ne olduğunu* söylüyor, günlük
+*neden* olduğunu — hata mesajının tamamı orada.
 
 ### 6.3 ⚠️ Neden üç ayrı cron satırı
 

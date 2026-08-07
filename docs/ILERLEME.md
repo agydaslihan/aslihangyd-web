@@ -1595,6 +1595,130 @@ Aynı sınıftan başka hata **yok**.
 
 ---
 
+## 2. aşama — Uyarılar görünür yere (panel bildirim şeridi)
+
+**Dal:** `feature/panel-bildirimleri`
+
+### Sorun
+
+EİDS yetki bitişi ve bakım görevlerinin aksaması yasal sonuç doğuruyor.
+SMTP bilgileri girilmediği için e-posta gönderilemiyor; geriye kalan tek
+kanal `/srv/aslihangyd/logs/bakim.log` idi.
+
+O dosyanın iki kusuru var:
+
+1. **Kimse bakmıyor.** Uyarı, işin yapıldığı yerde görünmezse yok sayılır.
+2. **Cron hiç kurulmadıysa dosya hiç oluşmuyor.** Yani "görev hiç
+   çalışmadı" durumu, kimsenin bakmadığı bir dosyanın *yokluğuyla*
+   temsil ediliyordu — tespit edilemez bir arıza.
+
+### Yapılan
+
+| Parça | Dosya |
+| --- | --- |
+| Bildirim motoru (saf) | `src/lib/bildirim/motor.ts` |
+| Motorun birim testleri (21) | `src/lib/bildirim/motor.test.ts` |
+| Sayım katmanı | `src/lib/veri/bildirimler.ts` |
+| Sayımların entegrasyon testleri (8) | `src/lib/veri/bildirimler.entegrasyon.test.ts` |
+| Bakım durumu global'i | `src/globals/BakimDurumu.ts` |
+| Görev künyesi (saf) | `src/lib/bakim/kunye.ts` |
+| Panel şeridi | `src/components/panel/BildirimSeridi.tsx` |
+| Göç | `src/migrations/20260807_112409_bakim_durumu.ts` |
+
+### Üretilen bildirimler
+
+| Anahtar | Öncelik | Koşul |
+| --- | --- | --- |
+| `eids-dolmus-yayinda` | Yasal | Yetkisi dolmuş ilan hâlâ yayında |
+| `eids-bitiyor` | Yasal | 15 gün içinde yetkisi bitecek yayındaki ilan |
+| `bakim-hic-*` | Yasal / Önemli | Görev hiç çalışmamış |
+| `bakim-gecikti-*` | Yasal / Önemli | Görev 26 saatten uzun süredir koşmamış |
+| `bakim-hata-*` | Yasal / Önemli | Görev çalıştı ama hata döndürdü |
+| `yetki-belgesi-yok` | Yasal | Yetki belgesi numarası girilmemiş |
+| `ilgisiz-portfoy` | Bilgi | 60 gündür hiç talep almamış yayındaki ilan |
+| `gozlemsiz-mahalle` | Bilgi | 45 gündür gözlem girilmemiş yayındaki mahalle |
+
+Sıralama önceliğe göre; **yasal olanlar her zaman en üstte**. Bir portföyün
+ilgi görmemesi ticari bir sorun, yetkisi dolmuş ilanın yayında kalması
+idari yaptırım — ikisini aynı görsel ağırlıkta göstermek ikincisini
+görünmez kılardı.
+
+### Karar: şerit kapatılamaz
+
+"Anladım, gizle" düğmesi **yok**. Gizlenen uyarı kapatıldığı gün çözülmüş
+sayılır ve bir daha hatırlanmaz. Bildirim, sebebi ortadan kalkınca
+kendiliğinden kaybolur; tek susturma yolu sorunu çözmektir.
+
+Aynı gerekçeyle `bakim-durumu` global'inin tüm alanları **salt okunur**:
+biri "son çalışma"yı elle ileri alıp yasal bir uyarıyı susturamasın.
+
+### Karar: eşik 24 değil 26 saat
+
+Cron günde bir kez koşuyor. Saat kayması, yeniden başlatma ya da uzun
+süren bir görev yüzünden 24 saat birkaç dakika aşılabilir. 24'e sabitlemek
+**her gün yanlış alarm** üretirdi — ve yanlış alarm veren bir uyarı kısa
+sürede görmezden gelinir. 26 saat, gerçek aksama ile normal sapmayı ayırır.
+
+Aynı sebeple 48 saatin altı "dün çalışmadı" diye yazılıyor, "1 gündür
+çalışmıyor" diye değil: tek kaçırılmış bir koşuyu süregelen bir arıza gibi
+sunmak, uyarının güvenilirliğini düşürür.
+
+### Bulunan hata: göç fotoğraf zinciri kopmuş
+
+`payload migrate:create` yeni göçe `portfoy_bolumleri` ve
+`portfoy_bolumleri_siralar` tablolarını da yazdı — oysa onlar
+`20260806_093100_portfoy_bolumleri` göçünde zaten oluşturuluyor.
+
+**Sebep:** Payload göç farkını canlı veritabanına değil, bir önceki göçün
+yanındaki `.json` şema fotoğrafına bakarak hesaplıyor. C aşaması (portföy
+bölümleri) ve D aşaması (site bölümleri) ayrı dallarda geliştirildi; D dalı
+C'den önce ayrıldığı için D'nin fotoğrafında `portfoy_bolumleri` yok.
+Dallar birleşince fotoğraf zinciri koptu.
+
+**Bırakılsaydı:** temiz bir veritabanında 8 numaralı göç tabloyu oluşturur,
+yeni göç aynı tabloyu ikinci kez oluşturmaya çalışır ve
+`relation already exists` hatasıyla düşerdi — **üretimin ilk kurulumu
+kırılırdı.**
+
+**Düzeltme:** göç dosyası elle sadeleştirildi (gerekçesi dosyanın başında
+yazılı). Yanındaki `.json` fotoğrafı doğru; zincir buradan itibaren
+kendini onarıyor.
+
+**Doğrulandı:** boş bir veritabanı (`aslihangyd_gockontrol`,
+`template_postgis`'ten) oluşturulup **dokuz göçün tamamı sıfırdan
+çalıştırıldı** — 41 tablo, hatasız. Bu, üretim ilk kurulum yolunun ilk
+gerçek sınavı; `docs/DURUM.md`'de "yazıldı ama hiç çalıştırılmadı"
+işaretliydi.
+
+### Duman testi
+
+Geliştirme sunucusuna karşı, gerçek tarayıcı isteğiyle:
+
+| Durum | Sonuç |
+| --- | --- |
+| **Oturumsuz** `/admin` | Şerit yok, bildirim metni sızmıyor (0 eşleşme) |
+| **Oturumlu** `/admin` | Şerit görünüyor, 3 bildirim, sıralama yasal → önemli → bilgi |
+
+⚠️ Oturum kapısı (`if (!user) return null`) bilinçli ve gerekli: Payload
+oturumsuz ziyaretçiye giriş ekranını gösterir ama **bileşenin gövdesi yine
+de çalışır** (sihirbaz görünümünde aynı sızıntı duman testiyle
+yakalanmıştı). Kapı olmadan portföy ve ilan sayıları sunucu bileşeni
+yükünde dışarı sızardı.
+
+### Yan iş: `server-only` çakışması
+
+`BakimDurumu` global'i görev listesini `gorevler.ts`ten okuyordu; o dosya
+`import 'server-only'` taşıyor ve `payload generate:types` (tsx ile koşuyor)
+o bayrağı çözemeyip hata fırlattı.
+
+Künye — görevlerin adı, sıklığı, yasal olup olmadığı — sunucuya özel bir
+bilgi değil. `src/lib/bakim/kunye.ts` olarak ayrıldı; çalıştırıcılar
+`gorevler.ts`te kaldı. `Record<GorevAnahtari, …>` kullanıldı: künyeye yeni
+bir görev eklenip çalıştırıcısı yazılmazsa **derleme kırılır**, görev
+sessizce atlanmaz.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)
