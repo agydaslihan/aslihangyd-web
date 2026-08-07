@@ -120,12 +120,29 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 - [ ] **Anthropic API anahtarı** (Faz 4 — AI doğal dil arama)
       Nereye: `.env` → `ANTHROPIC_API_KEY`
 
-- [ ] **Bakım anahtarı ve cron kurulumu** (Faz 1.10 — ZORUNLU)
-      `.env` → `BAKIM_ANAHTARI=$(openssl rand -hex 32)`
-      Cron kurulumu: `docs/ISLETME-REHBERI.md` bölüm 6
+- [x] ~~**Bakım anahtarı**~~ — `.env`'e eklendi.
+
+- [ ] **Cron kurulumu — sunucuda kalan tek adım** ⚠️ ZORUNLU
+      Komutlar hazır: `docs/ISLETME-REHBERI.md` bölüm 6.4 ve 6.5.
+      Üç satır kopyalanıp `/etc/cron.d/aslihangyd-bakim` dosyasına
+      konacak, `sudo systemctl restart cron` çalıştırılacak.
+
+      ⚠️ **Anahtarı `.env`'e ekledikten sonra uygulama kabını yeniden
+      başlatmayı unutma** — Docker ortam değişkenlerini yalnızca
+      başlangıçta okur. Başlatmazsan uç 404 döner ve hiçbir görev
+      çalışmaz:
+      `docker compose -f docker/compose.prod.yml up -d --force-recreate uygulama`
+
+      Kurulumdan sonra doğrulama (bölüm 6.7):
+      `sudo -u deploy /srv/aslihangyd/app/scripts/bakim.sh eids-kaldir`
+
       Olmazsa: Yetkisi dolan ilanlar **otomatik yayından kalkmaz** ve
-      saklama süresi dolan kişisel veriler silinmez. Bu iki iş de yasal
-      yükümlülük — kurulumu atlanmamalı.
+      saklama süresi dolan kişisel veriler silinmez. Her ikisi de yasal
+      yükümlülük.
+
+- [ ] **SMTP** — "yetkisi bitecek" uyarısı bugün yalnızca günlüğe yazılıyor
+      SMTP gelene kadar `/srv/aslihangyd/logs/bakim.log` dosyasını haftada
+      bir taraman gerekiyor; gelince e-posta olarak sana düşecek.
 
 ---
 

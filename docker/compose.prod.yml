@@ -7,6 +7,16 @@
 # ulaşır. Docker'ın port yayınlaması UFW kurallarını atladığı için
 # `ports` eklemek veritabanını internete açmak demektir.
 #
+# ⚠️ YAYIN PORTU 8443. 80 ve 443 sunucuda başka bir uygulamada.
+# Cloudflare 8443'ü proxy'lediği için bu çalışır; TLS Cloudflare origin
+# sertifikasıyla sağlanır, Let's Encrypt kullanılmaz.
+#
+# ⚠️ 8443 tüm arayüzlerde yayınlanır ve Docker UFW'yi atlar — yani origin
+# IP'sini bilen biri Cloudflare'i atlayıp doğrudan bağlanabilir.
+# Bunu kapatmak için host güvenlik duvarında DOCKER-USER zincirine
+# Cloudflare aralıkları dışını reddeden kural gerekir.
+# Yordam: docs/ISLETME-REHBERI.md §5.4
+#
 # Kullanım:
 #   docker compose --env-file .env -f docker/compose.prod.yml up -d
 # =============================================================================
@@ -26,10 +36,34 @@ services:
       REDIS_URL: redis://redis:6379
       MEDYA_DIZINI: /uygulama/medya
       BAKIM_ANAHTARI: ${BAKIM_ANAHTARI:-}
-      NEXT_PUBLIC_SITE_ADRESI: ${NEXT_PUBLIC_SITE_ADRESI:-https://aslihangyd.com}
+      # ⚠️ Genel adres artık portu içeriyor. Kanonik URL'ler, site haritası
+      # ve OG etiketleri bu değerden üretilir; portsuz bırakılırsa arama
+      # motoruna ulaşılamayan adresler bildirilir.
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://aslihangyd.com:8443}
+      # ⚠️ ÖN EKSİZ KOPYA — asıl okunan değişken bu.
+      #
+      # Next.js `NEXT_PUBLIC_*` değişkenlerini DERLEME ANINDA gömer; burada
+      # verilen değer sunucu tarafında bile okunmaz. Ön eksiz ad çalışma
+      # zamanında okunur, böylece imajı yeniden derlemeden adres
+      # değiştirilebilir. Gerekçenin tamamı src/lib/site.ts içinde.
+      SITE_ADRESI: ${NEXT_PUBLIC_SERVER_URL:-https://aslihangyd.com:8443}
       NEXT_PUBLIC_WHATSAPP_NUMARA: ${NEXT_PUBLIC_WHATSAPP_NUMARA:-}
       NEXT_PUBLIC_UMAMI_URL: ${NEXT_PUBLIC_UMAMI_URL:-}
       NEXT_PUBLIC_UMAMI_SITE_ID: ${NEXT_PUBLIC_UMAMI_SITE_ID:-}
+
+    # ⚠️ YALNIZCA GERİ DÖNGÜ (127.0.0.1). Dışarıya açık değil.
+    #
+    # Bakım cron'u host üzerinde çalışıyor ve /api/bakim'a ulaşması
+    # gerekiyor. Caddy üzerinden gitmek işe yaramaz: §5.4'teki güvenlik
+    # duvarı kuralı Cloudflare dışındaki kaynakları — sunucunun kendisi
+    # dahil — 8443'te reddediyor.
+    #
+    # 127.0.0.1'e bağlamak güvenli: Docker'ın UFW'yi atlama sorunu
+    # 0.0.0.0 yayınları içindir, geri döngü arayüzü dışarıdan erişilemez.
+    # Ayrıca `curl localhost:3000/api/saglik` ile sunucudan doğrudan
+    # sağlık kontrolü yapılabiliyor.
+    ports:
+      - '127.0.0.1:3000:3000'
 
     volumes:
       - medya:/uygulama/medya
@@ -50,16 +84,21 @@ services:
     restart: unless-stopped
 
     # Dışarıya açılan TEK servis budur.
+    #
+    # ⚠️ 80 ve 443 YAYINLANMIYOR — o portlar sunucuda başka bir uygulamada.
+    # QUIC/HTTP3 (443/udp) de kaldırıldı: Cloudflare origin'e HTTP/2 ile
+    # bağlanıyor, 8443 üzerinde UDP dinlemenin karşılığı yok.
     ports:
-      - '80:80'
-      - '443:443'
-      - '443:443/udp'
+      - '8443:8443'
 
-    environment:
-      CADDY_EPOSTA: ${CADDY_EPOSTA:?Let\'s Encrypt bildirimleri icin e-posta gerekli}
+    # ⚠️ CADDY_EPOSTA kaldırıldı: yalnızca Let's Encrypt bildirimleri
+    # içindi ve ACME tamamen kapalı.
 
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # ⚠️ Cloudflare origin sertifikası. Salt okunur bağlanır; anahtar
+      # dosyası kabın içinde değiştirilemez. `docker/certs/` .gitignore'da.
+      - ./certs:/etc/caddy/certs:ro
       - caddy_veri:/data
       - caddy_yapilandirma:/config
 
@@ -75,6 +114,8 @@ services:
     restart: unless-stopped
 
     # ⚠️ `ports` YOK ve eklenmeyecek. Yukarıdaki güvenlik notunu okuyun.
+    # (Geliştirme dosyasında 127.0.0.1'e bağlıdır; üretimde hiç
+    #  yayınlanmaz — daha sıkı olan bu.)
 
     environment:
       POSTGRES_USER: ${POSTGRES_USER:?tanimli olmali}
@@ -107,6 +148,8 @@ services:
     image: redis:7-alpine
     container_name: aslihangyd-redis
     restart: unless-stopped
+
+    # ⚠️ `ports` YOK. Postgres ile aynı gerekçe.
 
     command:
       - redis-server

@@ -1294,6 +1294,193 @@ regresyon testi eklenmesi. SENDEN-BEKLENENLER md. 7'ye eklendi.
 
 ---
 
+## Bakım cron kurulumu
+
+`BAKIM_ANAHTARI` sunucudaki `.env`'e eklendi; cron tarafı tamamlandı.
+
+### Ne yapıldı
+
+- `src/lib/bakim/gorevler.ts` — görev kaydı (`GOREV_KAYDI`): her görevin
+  anahtarı, sıklığı, **başarısızlık sonucu** ve yasal bayrağı. 7 birim testi.
+- `/api/bakim?gorev=…` — görevler tek tek çağrılabiliyor.
+- `scripts/bakim.sh` — cron çağırıcısı; anahtarı `.env`'den okur, anlamlı
+  çıkış kodu döner.
+- `docs/ISLETME-REHBERI.md §6` baştan yazıldı: görev tablosu, cron dosyası,
+  nöbetçi satırı, doğrulama adımları, arıza tablosu.
+
+### ⚠️ Belgedeki cron satırı ÇALIŞMIYORDU
+
+Önceki §6 şu satırı öneriyordu:
+
+```cron
+0 4 * * * deploy curl -H "Authorization: Bearer ${BAKIM_ANAHTARI}" https://…
+```
+
+`/etc/cron.d` dosyaları uygulamanın `.env`'ini okumaz. `${BAKIM_ANAHTARI}`
+boş genişler, uç 401 döner ve **hiçbir bakım görevi hiç çalışmaz.** Üstelik
+sessizce: `curl -fsS` çıktısını bir günlüğe yazıyordu, o günlüğü de kimse
+okumuyordu.
+
+Anahtarı cron dosyasının içine yazmak alternatif değildi — `/etc/cron.d`
+altındaki dosyalar herkes tarafından okunabilir. Çözüm `scripts/bakim.sh`:
+anahtarı `750` izinli bir betik `.env`'den okuyor.
+
+### Kararlar ve gerekçeleri
+
+**Üç ayrı cron satırı, tek çağrı değil — arıza yalıtımı.**
+KVKK silme görevi bozulsaydı uç her gece hata döner, cron her gece uyarı
+üretirdi. İşletmecinin en olası tepkisi cron satırını susturmaktır — ve
+yasal riski olan EİDS kontrolü onunla birlikte susardı. Ayrı satırlar
+bunu imkânsız kılıyor.
+
+**`CRON_TZ=Europe/Istanbul` zorunlu.**
+Sunucu UTC ise "03:10" saat 06:10 İstanbul demektir. Uygulamanın tarih
+mantığı zaten Europe/Istanbul'a sabitli (`src/lib/tarih.ts`); kayan tek
+şey cron'un saatiydi.
+
+**Betik `curl -f` kullanmıyor.**
+`-f` yanıt gövdesini atar; hangi görevin neden başarısız olduğunu söyleyen
+JSON kaybolur. Durum kodu ayrıca okunuyor.
+
+**"Çalışmazsa ne olur" metni koda taşındı.**
+`GOREV_KAYDI` içindeki `calismazsaSonuc` alanı zorunlu ve bir test
+uzunluğunu denetliyor. Belgeye kopyalanan bir cümle güncellenmeyi
+unutturur; kaynağı kodda olan cümle, görevi değiştiren kişiyi sonucunu da
+güncellemeye zorlar.
+
+**Nöbetçi cron satırı eklendi.**
+Sessiz aksama bu işin en tehlikeli hali. Her sabah 09:00'da günlükte o
+güne ait `TAMAM (eids-kaldir)` satırı aranıyor; yoksa günlüğe `UYARI`
+yazılıyor. Dört senaryoda denendi: bugünkü satır var / yalnızca dünkü var
+/ hata satırı var ama TAMAM yok / başka görevin TAMAM'ı var.
+
+### Doğrulama (üretim derlemesi, canlı sunucu)
+
+| Senaryo | Sonuç |
+| --- | --- |
+| Anahtarsız istek | 401 |
+| Yanlış anahtar | 401 |
+| Geçersiz görev adı | 400 + geçerli görev listesi |
+| `?gorev=eids-kaldir` · `eids-uyar` · `kvkk-sil` | 200, tek tek |
+| Tüm görevler | 200 |
+| `bakim.sh` başarı | çıkış 0 |
+| `bakim.sh` yanlış anahtar | çıkış 1 + açıklama |
+| `bakim.sh` anahtar boş | çıkış 1 + "hiçbir görev çalışmaz" uyarısı |
+| `bakim.sh` uca ulaşılamıyor | çıkış 3 |
+| `bakim.sh` geçersiz görev | çıkış 2 |
+
+⚠️ **Denenemeyen tek yol:** `BAKIM_ANAHTARI` sunucuda hiç tanımlı değilken
+ucun 404 dönmesi. `.env` artık anahtarı içerdiği için Next onu her koşulda
+okuyor ve kabuktan `env -u` ile gizlemek işe yaramıyor. Bu, kodda üç
+satırlık bir dal (`if (!anahtar) return 404`) ve `.env`'den okumanın
+çalıştığı bu koşuda zaten kanıtlandı.
+
+---
+
+## 8443 yayını, Cloudflare origin sertifikası ve gerçek ziyaretçi IP'si
+
+80/443 portları sunucuda başka bir uygulamada. Yayın 8443'e taşındı, TLS
+Cloudflare origin sertifikasıyla sağlanıyor, Let's Encrypt kaldırıldı.
+
+### Ne yapıldı
+
+- `docker/Caddyfile` — `auto_https off`, açık `tls` yolu, 8443 site bloğu,
+  `trusted_proxies` + `client_ip_headers`, `header_up` ile IP aktarımı.
+  HSTS kaldırıldı.
+- `docker/compose.prod.yml` — caddy yalnızca `8443:8443`; `./certs` salt
+  okunur bağlandı; `CADDY_EPOSTA` kaldırıldı.
+- `src/lib/guvenlik/hizSiniri.ts` — istemci IP çözümlemesi yeniden yazıldı.
+- `docs/ISLETME-REHBERI.md` §5.4–5.6 — güvenlik duvarı, TLS, gerçek IP.
+
+### ⚠️ Üç gerçek hata bulundu ve kapatıldı
+
+**1. Hız sınırı atlatılabiliyordu (güvenlik).**
+
+Eski kod `x-forwarded-for` başlığının ilk değerini okuyordu. Caddy o
+başlığa gelen değeri KORUR ve sonuna kendi gördüğünü ekler. Yani
+`X-Forwarded-For: 1.2.3.4` gönderen biri için başlık `1.2.3.4, <gerçek>`
+olur ve ilk sırayı okumak, saldırganın kendi sayaç anahtarını seçmesi
+demekti — her istekte farklı bir değerle sınır tek istekte atlatılıyordu.
+
+Artık yalnızca `CF-Connecting-IP` ve `X-Real-IP` okunuyor; ikisini de
+Caddy `{client_ip}` ile ÜZERİNE YAZIYOR, dolayısıyla istemciden gelen
+değer uygulamaya ulaşmıyor.
+
+**2. IPv6 aralıkları `trusted_proxies` listesinde yoktu (erişilebilirlik).**
+
+Cloudflare origin'e IPv6 üzerinden bağlanırsa ve aralık listede yoksa
+CF-Connecting-IP'ye güvenilmez; tüm ziyaretçiler aynı Cloudflare adresine
+düşer ve form beşinci gönderimden sonra herkese kapanır. Yedi IPv6 aralığı
+eklendi.
+
+**3. Genel adres çalışma zamanında okunmuyordu (SEO).**
+
+`NEXT_PUBLIC_*` değişkenleri Next.js tarafından derleme anında koda
+gömülüyor — sunucu tarafında bile. `compose.prod.yml` içindeki
+`NEXT_PUBLIC_SITE_ADRESI` bu yüzden HİÇ okunmuyordu; üretim imajı
+geliştirme `.env`'iyle derlendiği için site haritası ve kanonik adresler
+`http://localhost:3000` diyordu.
+
+Duman testinde yakalandı: `NEXT_PUBLIC_SERVER_URL` verilerek başlatılan
+üretim derlemesi hâlâ `localhost:3000` üretiyordu. Derlenmiş chunk
+içinde değerin gömülü olduğu doğrulandı.
+
+Çözüm ön eksiz `SITE_ADRESI` değişkeni (gömülmez, çalışma zamanında
+okunur); compose onu `NEXT_PUBLIC_SERVER_URL`'den kopyalıyor, `.env` tek
+satır kalıyor. `robots.ts` ayrıca `force-dynamic` yapıldı — statik üretilen
+bir rota değeri derleme anında dondurur.
+
+### Kararlar ve gerekçeleri
+
+**`auto_https off` — yalnızca sertifika değil, :80 sunucusu da kapanıyor.**
+80 portu başka uygulamada; Caddy oraya yönlendirme sunucusu açmaya
+çalışırsa başlangıçta hata verir.
+
+**HSTS Caddy'den çıkarıldı.** Cloudflare gönderiyor; iki kaynaktan gelen
+`Strict-Transport-Security` çakışır ve HSTS geri alınamaz bir mekanizma —
+belirsizlik kabul edilemez.
+
+**IP belirlenemezse hız sınırı UYGULANMIYOR.** Eski kod bu durumda
+`bilinmeyen` sabitine düşüyordu: vekil yapılandırmasındaki bir hata,
+doğrudan bir hizmet kesintisine dönüşürdü. Açık kapı burada daha az kötü —
+bal küpü ve Turnstile katmanları IP'ye bağlı değil. Durum üretimde
+olursa sunucu günlüğüne yazılıyor.
+
+**`uygulama` servisi 127.0.0.1:3000'e bağlandı.** Bakım cron'u host
+üzerinde çalışıyor ve `/api/bakim`'a ulaşması gerekiyor; Caddy üzerinden
+gitmek işe yaramaz, çünkü güvenlik duvarı kuralı Cloudflare dışındaki
+kaynakları — sunucunun kendisi dahil — 8443'te reddediyor.
+**Bu, bir önceki iş paketinde benim bıraktığım hataydı:** `bakim.sh`
+127.0.0.1:3000'e gidiyordu ama o port hiç yayınlanmıyordu. Yerel
+`pnpm start`'a karşı test ettiğim için fark edilmemişti.
+
+**8443 için güvenlik duvarı kuralı belgelendi.** Docker UFW'yi atlıyor;
+`ufw deny 8443` işe yaramaz. Doğru yer `DOCKER-USER` zinciri — origin
+IP'sini bulan birinin Cloudflare'i (WAF, bot koruması, hız sınırı) atlaması
+engellenmeli.
+
+### Doğrulama
+
+**Caddy yapılandırması** — `caddy validate`: *Valid configuration*.
+`caddy fmt` temiz.
+
+**Gerçek IP zinciri** — gerçek `docker/Caddyfile`, sahte üst sunucuyla,
+yerel Caddy 2.10 üzerinde:
+
+| Senaryo | Uygulamanın gördüğü |
+| --- | --- |
+| Güvenilen vekil, `CF-Connecting-IP: 203.0.113.7` | **203.0.113.7** ✓ |
+| Güvenilmeyen kaynak, sahte `CF-Connecting-IP: 1.2.3.4` | **127.0.0.1** — sahte değer üzerine yazıldı ✓ |
+| Güvenilmeyen kaynak, sahte `X-Forwarded-For: 9.9.9.9` | **127.0.0.1** — yok sayıldı ✓ |
+
+**Adresler** — `SITE_ADRESI` ile başlatılan üretim derlemesi:
+kanonik `https://aslihangyd.com:8443/portfoy`, og:url, site haritası ve
+robots.txt `Host`/`Sitemap` satırları hepsi portlu.
+
+**Kapı** — typecheck · lint temiz, **842 test**, derleme 107 sn.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

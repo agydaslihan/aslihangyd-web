@@ -21,7 +21,26 @@ import { bugununAnahtari, tarihiYaz } from '@/lib/tarih'
  * diğerlerini engellememelidir.
  */
 
+/**
+ * Görev anahtarları.
+ *
+ * ⚠️ Görevlerin AYRI AYRI çağrılabilmesi bir kolaylık değil, arıza
+ * yalıtımı.
+ *
+ * Üçü tek çağrıda koşsaydı ve KVKK silme görevi bozulsaydı (bir veritabanı
+ * kısıtı, bir şema değişikliği), uç her gece 500 dönerdi. Bu durumda
+ * işletmecinin en olası tepkisi cron satırını susturmak olurdu — ve
+ * EİDS kontrolü de onunla birlikte susardı. Yasal riski olan görevin,
+ * olmayan bir görevin arızasıyla düşmesi kabul edilemez.
+ *
+ * Ayrı anahtarlar ayrıca tanı için gerekli: "sadece EİDS'i şimdi çalıştır"
+ * demek mümkün oluyor.
+ */
+export type GorevAnahtari = 'eids-kaldir' | 'eids-uyar' | 'kvkk-sil'
+
 export interface GorevRaporu {
+  /** Makine tarafından okunabilir kimlik — nöbetçi betiği bunu arar. */
+  anahtar: GorevAnahtari
   ad: string
   islenen: number
   detay: string[]
@@ -42,6 +61,7 @@ export interface BakimRaporu {
  */
 export async function yetkisiDolanlariKaldir(payload: Payload): Promise<GorevRaporu> {
   const rapor: GorevRaporu = {
+    anahtar: 'eids-kaldir',
     ad: 'EİDS — yetkisi dolan ilanları yayından kaldır',
     islenen: 0,
     detay: [],
@@ -91,6 +111,7 @@ export async function yetkisiDolanlariKaldir(payload: Payload): Promise<GorevRap
  */
 export async function yetkisiBitecekleriBildir(payload: Payload): Promise<GorevRaporu> {
   const rapor: GorevRaporu = {
+    anahtar: 'eids-uyar',
     ad: `EİDS — ${YETKI_UYARI_ESIGI_GUN} gün içinde yetkisi bitecekler`,
     islenen: 0,
     detay: [],
@@ -129,6 +150,7 @@ export async function yetkisiBitecekleriBildir(payload: Payload): Promise<GorevR
  */
 export async function saklamaSuresiDolanlariSil(payload: Payload): Promise<GorevRaporu> {
   const rapor: GorevRaporu = {
+    anahtar: 'kvkk-sil',
     ad: 'KVKK — saklama süresi dolan kayıtları sil',
     islenen: 0,
     detay: [],
@@ -169,14 +191,102 @@ export async function saklamaSuresiDolanlariSil(payload: Payload): Promise<Gorev
   return rapor
 }
 
-export async function gunlukBakimiCalistir(payload: Payload): Promise<BakimRaporu> {
-  // Sırayla çalıştırılıyor: 3.2 GB RAM'li sunucuda üç ağır sorguyu aynı anda
-  // açmak bellek baskısı yaratır ve kazanç ihmal edilebilir.
-  const gorevler = [
-    await yetkisiDolanlariKaldir(payload),
-    await yetkisiBitecekleriBildir(payload),
-    await saklamaSuresiDolanlariSil(payload),
-  ]
+/* ══════════════════════════════════════════════════════════════════════════
+   Görev kaydı
+   ══════════════════════════════════════════════════════════════════════════ */
+
+export interface GorevTanimi {
+  anahtar: GorevAnahtari
+  ad: string
+  /** Cron'da önerilen sıklık — belgeye ve panele aynı yerden yansır. */
+  siklik: string
+  /**
+   * ⚠️ Bu görev çalışmazsa NE OLUR. Belgeye kopyalanan değil, kaynağı
+   * burada olan cümle: görevi değiştiren kişi sonucunu da güncellemek
+   * zorunda kalsın.
+   */
+  calismazsaSonuc: string
+  /** Yasal yükümlülük mü? Öyleyse aksaması ertelenemez. */
+  yasal: boolean
+  calistir: (payload: Payload) => Promise<GorevRaporu>
+}
+
+export const GOREV_KAYDI: readonly GorevTanimi[] = [
+  {
+    anahtar: 'eids-kaldir',
+    ad: 'EİDS — yetkisi dolan ilanları yayından kaldır',
+    siklik: 'Her gün 03:10 (Europe/Istanbul)',
+    calismazsaSonuc:
+      'Yetki belgesi süresi dolmuş ilan yayında kalır. Bu, Taşınmaz Ticareti ' +
+      'Hakkında Yönetmelik kapsamında yetkisiz ilan yayını sayılır; idari yaptırım ' +
+      've ilan kaldırma riski doğar. Kancalar yalnızca KAYDETME anında çalıştığı ' +
+      'için hiç kimse ilana dokunmazsa yetki sessizce dolar — bu görev o boşluğu ' +
+      'kapatan tek mekanizmadır.',
+    yasal: true,
+    calistir: yetkisiDolanlariKaldir,
+  },
+  {
+    anahtar: 'eids-uyar',
+    ad: `EİDS — ${YETKI_UYARI_ESIGI_GUN} gün içinde yetkisi bitecekler`,
+    siklik: 'Her gün 08:10 (Europe/Istanbul)',
+    calismazsaSonuc:
+      'Yaklaşan yetki bitişleri fark edilmez. Yasal ihlal doğurmaz — çünkü ' +
+      '"eids-kaldir" ilanı zaten yayından alır — ama portföy sessizce görünmez ' +
+      'olur ve yetki yenileme fırsatı kaçar. Etkisi ticari, yasal değil.',
+    yasal: false,
+    calistir: yetkisiBitecekleriBildir,
+  },
+  {
+    anahtar: 'kvkk-sil',
+    ad: 'KVKK — saklama süresi dolan kayıtları sil',
+    siklik: 'Her gün 03:40 (Europe/Istanbul)',
+    calismazsaSonuc:
+      'Saklama süresi dolmuş kişisel veri (talepler ve danışman başvuruları) ' +
+      'silinmeden kalır. KVKK md. 7 ve md. 12 kapsamında ihlal; veri sahibinin ' +
+      'başvurusu ya da denetim halinde yaptırım riski. Gecikme her gün büyür, ' +
+      'kendiliğinden düzelmez.',
+    yasal: true,
+    calistir: saklamaSuresiDolanlariSil,
+  },
+]
+
+export function gorevTanimi(anahtar: GorevAnahtari): GorevTanimi {
+  const tanim = GOREV_KAYDI.find((aday) => aday.anahtar === anahtar)
+  if (tanim === undefined) throw new Error(`Bilinmeyen bakım görevi: ${anahtar}`)
+  return tanim
+}
+
+export function gecerliGorevMi(deger: string): deger is GorevAnahtari {
+  return GOREV_KAYDI.some((gorev) => gorev.anahtar === deger)
+}
+
+/**
+ * Verilen görevleri sırayla çalıştırır.
+ *
+ * Sırayla: 3,2 GB RAM'li sunucuda üç ağır sorguyu aynı anda açmak bellek
+ * baskısı yaratır ve kazanç ihmal edilebilir.
+ *
+ * Görevler hata fırlatmaz, rapor döner — birinin başarısızlığı
+ * diğerlerini durdurmaz.
+ */
+export async function bakimCalistir(
+  payload: Payload,
+  anahtarlar?: readonly GorevAnahtari[],
+): Promise<BakimRaporu> {
+  const secilenler =
+    anahtarlar === undefined
+      ? GOREV_KAYDI
+      : GOREV_KAYDI.filter((gorev) => anahtarlar.includes(gorev.anahtar))
+
+  const gorevler: GorevRaporu[] = []
+  for (const gorev of secilenler) {
+    gorevler.push(await gorev.calistir(payload))
+  }
 
   return { calistigiAn: new Date().toISOString(), gorevler }
+}
+
+/** Tüm görevleri çalıştırır — elle tam bakım için. */
+export async function gunlukBakimiCalistir(payload: Payload): Promise<BakimRaporu> {
+  return bakimCalistir(payload)
 }
