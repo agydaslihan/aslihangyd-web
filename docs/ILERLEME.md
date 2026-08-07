@@ -1808,6 +1808,155 @@ görmez), tersi değildir. Şemayı geri almak gerekiyorsa yedekten dönülür.
 
 ---
 
+## 4. aşama — Eksik modüller
+
+**Dal:** `feature/eksik-moduller`
+
+### 4.1 CRM eşleştirme motoru
+
+`src/lib/crm/eslestirme.ts` (saf) + `src/lib/veri/crmEslestirme.ts` (sorgu) +
+talep kaydında "Eşleşen portföy" sekmesi.
+
+**Sert eleme ile puanlama ayrı.** Kiralık arayan birine satılık ilan
+göstermek "zayıf eşleşme" değil, **yanlış** eşleşme. Puanla ifade
+edilseydi listenin ortasında "%40 uyumlu" diye dururdu. Eleyen kurallar:
+tip uyumsuzluğu, talebin geldiği ilan, bütçenin iki katından pahalı.
+
+**Eksik bilgi cezalandırılmaz.** Bütçesini yazmayan talep, bütçesi
+uymayan talep değildir; değerlendirilemeyen ölçüt paydaya girmez.
+Ağırlıklar yeniden ölçeklenmeseydi hiç bilgi vermemiş bir talep her
+ilanla düşük puan alır ve motor sessizce işe yaramaz hale gelirdi.
+
+**Ağırlıklar:** bütçe 40, mahalle 30, oda 20, büyüklük 10. Bütçe en ağır —
+ödenemeyecek ev, ne kadar uygun olursa olsun uygun değildir. Mahalle
+ikinci: konum gayrimenkulde geri alınamayan tek özellik.
+
+#### Duman testinde çıkan iki hata
+
+| Bulgu | Düzeltme |
+| --- | --- |
+| **Fiyatı girilmemiş ilan en ağır ölçütten bedava geçiyordu** — bütçe ölçütü tamamen atlandığı için bütçeye TAM UYAN bir ilanı geçmişti (84'e 69) | Talep bütçe verdiyse ama ilanda fiyat yoksa ölçüt 0,5 ile kuruluyor ve açıklama boşluğu görünür kılıyor. "Eksik bilgi cezalandırılmaz" kuralı TALEBİN eksiklerini korumak için var; ilanın fiyatsızlığı bizim veri boşluğumuz |
+| **Gerekçe metni gerçeğin tersini söylüyordu**: istenen 3+1, ilan 4+1 iken panelde "4+1 istendi" yazıyordu | `4+1 (3+1 istenmişti)`. Yanlış bir gerekçe, gerekçe olmaktan çıkar |
+
+⚠️ Motor öneri üretir, eylem üretmez: otomatik mesaj göndermez, talebi
+elemez, ilanı ziyaretçiye göstermez. Yalnızca panelde çalışır.
+
+### 4.2 Sosyal medya materyali
+
+`/admin/sosyal-materyal` — her yayındaki ilan için iki görsel biçimi
+(1080×1080 gönderi, 1080×1920 hikâye), metin taslağı, etiketler ve UTM'li
+bağlantı. "Tümünü indir" iki dosyayı indirir.
+
+⚠️ **Otomatik yayın yok ve eklenmeyecek.** Hiçbir hesaba bağlanılmaz,
+hiçbir gönderi zamanlanmaz. Gerekçe teknik değil: bir danışmanın
+hesabından çıkan her cümle onun sözüdür ve ilan metni yasal sonuç
+doğurur.
+
+⚠️ **Uydurma rakam yok** (kural 2): metin yalnızca kayıtta gerçekten var
+olan alanları kullanır. Fiyat girilmemişse fiyat cümlesi hiç kurulmaz;
+"cazip fiyatlı" gibi doldurma ifade üretilmez. Yatırım tavsiyesi feragati
+metnin **içinde** — gönderi kopyalanıp taşındığında feragat de gitsin.
+
+#### Bulunan hata: görsel üretimi çalışma anında Google'a çıkıyordu
+
+`next/og` (Satori), gömülü fontta bulunmayan bir glif görünce **çalışma
+anında** Google Fonts'tan font indirmeye çalışıyor. ₺ (U+20BA) Geist'te
+yok; istek 400 döndü ve görsel üretimi 500 ile düştü.
+
+Asıl tehlike hata değil, **sessiz başarı**: internet erişimi olan bir
+makinede font iner ve her şey çalışır görünür. Üretim kabının dışarı
+çıkışı yoksa aynı kod orada sessizce bozulur — ya da her görsel isteği
+Google'a bir tur atar.
+
+Bu, PDF üretimindeki pdf-lib Türkçe font sorunuyla **aynı sınıftan** bir
+hata; o zaman kütüphane yolundan tamamen vazgeçilmişti.
+
+**Çözüm:** görselde `₺` yerine `TL` yazılıyor (site arayüzünde ₺
+kullanılmaya devam ediyor — orada tarayıcının fontu var).
+`gorsel.entegrasyon.test.ts` `fetch` çağrılarını kaydediyor ve uzak bir
+adrese çıkılırsa test düşüyor.
+
+✅ Türkçe karakterler doğrulandı: ğ ü ş ı ö ç İ hepsi üretilen PNG'de
+doğru render oldu, hiçbir çalışma anı font indirmesi olmadan.
+
+### 4.3 Medya altyapısı
+
+`DroneVideo` (Bunny Stream) ve `SanalTur` bileşenleri; mahalle ve ilan
+sayfalarına bağlandı.
+
+⚠️ **Çerçeve baştan yüklenmez** — "tıkla-oynat" (facade) düzeni. Sayfa
+açılışında bir video iframe'i gömmek üç şeyi birden bozar: LCP hedefi
+(2,5 sn), mobil kullanıcının verisi (trafiğin ~%75'i mobil) ve gizlilik
+(ziyaretçi henüz hiçbir şey istemedi). Oynatıcı ancak dokunulduğunda
+oluşuyor; `autoplay=false`, `preload=false`.
+
+⚠️ Video kimliği UUID olarak doğrulanıyor: CMS'e tam adres yapıştırmak
+çok olası ve doğrulama olmasaydı ziyaretçi boş bir çerçeve görürdü —
+hata da vermezdi. Ayar eksikse "oynatıcı yapılandırılmadı" denir, kırık
+bir çerçeve gösterilmez.
+
+#### ⚠️ Yapılmayan: Pannellum ile kendi barındırdığımız 360° panoramalar
+
+Brief'te Pannellum adı geçiyordu; **yapılmadı**. Sebep veri modeli:
+`sanalTurUrl` alanı bir ADRES tutuyor, panorama görseli değil. Pannellum
+eş dörtgen (equirectangular) bir görsel ister; bu da yeni bir yükleme
+alanı, yeni bir göç ve gerçek bir 360° görselle doğrulama demek — elimde
+test edilecek panorama yok ve doğrulanmamış bir görüntüleyici eklemek,
+kırık olduğu ilk gerçek kullanımda anlaşılacak bir şey eklemektir.
+
+Bugünkü `SanalTur` bileşeni dış tur adreslerini (Matterport, Kuula vb.)
+aynı tıkla-aç düzeniyle gömüyor ve `https` zorunlu tutuyor. Panorama
+alanı istenirse ayrı bir işte eklenir.
+
+### 4.4 Turnstile değişken adları
+
+Zaten kesinleşmişti; 3. aşamada `.env.example` ve
+`.env.production.example` içine gerekçeleriyle yazıldı:
+
+| Değişken | Nerede |
+| --- | --- |
+| `NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI` | İstemci — görünür, gizli değil |
+| `TURNSTILE_GIZLI_ANAHTAR` | ⚠️ Sunucu — `NEXT_PUBLIC_` ön eki ALMAZ |
+
+⚠️ Turnstile alan adına **8443 portu yazılmaz**; yalnızca ana makine adı
+(`aslihangyd.com`). İkisi de boşsa doğrulama katmanı devre dışı kalır ve
+form bal küpü + hız sınırıyla korunmaya devam eder.
+
+### 4.5 CI paket eşiği
+
+`scripts/paket-olcumu.mjs` + CI adımı. Ana sayfa istemci JS'i 220 kB
+gzip'i aşarsa **uyarı** düşer; koşu başarısız olmaz. Paket boyutu bir
+kalite kapısı değil trend göstergesi — testleri geçen bir PR'ı birkaç
+kilobayt yüzünden bloklamak, eşiği yükseltme alışkanlığı doğurur.
+
+| Rota | Sıkıştırılmamış | gzip |
+| --- | ---: | ---: |
+| `/` | 656,7 kB | **198,2 kB** |
+| `/portfoy` | 677,0 kB | 205,9 kB |
+| `/harita` | 1592,8 kB | 440,1 kB |
+
+198,2 kB, belgelenen 198,7 kB referansıyla örtüşüyor.
+
+#### ⚠️ Ölçüm `.next` manifest'lerine bakmıyor
+
+Turbopack `app-build-manifest.json` üretmiyor ve kalanların biçimi Next
+sürümleri arasında değişiyor — ölçüm sessizce yanlışlaşır ya da bir gün
+sıfır döner. Betik bunun yerine sunucuyu ayağa kaldırıp **gerçekten
+yüklenen sayfayı** okuyor.
+
+#### Bulunan hata: ölçüm geliştirme paketini saymıştı
+
+İlk koşuda 804,7 kB çıktı — gerçek değerin dört katı. Sebep: 3000
+portunda unutulmuş bir `pnpm dev` vardı, `next start` "adres kullanımda"
+deyip düştü ve ölçüm dev paketini saydı (`next-devtools` tek başına
+211,9 kB).
+
+Rakam inandırıcı olmadığı için fark edildi. **%10 sapsaydı fark
+edilmez** ve eşik kalıcı olarak yanlış bir zemine otururdu. Betiğe
+geliştirme paketini tanıyıp düşen bir koruma eklendi.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

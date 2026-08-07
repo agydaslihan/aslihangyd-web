@@ -117,3 +117,25 @@ jobs:
         env:
           # Eşik 90 → 150 sn'ye çekildi (Faz 2B+). Gerekçe docs/ILERLEME.md.
           DERLEME_ESIGI_SN: '150'
+
+      # İstemciye inen JavaScript ölçülüp iş özetine yazılıyor.
+      #
+      # ⚠️ Eşik aşıldığında koşu BAŞARISIZ OLMAZ, uyarı düşer. Paket boyutu
+      # bir kalite kapısı değil, bir trend göstergesi; testleri geçen bir
+      # PR'ı birkaç kilobayt yüzünden bloklamak, eşiği yükseltme
+      # alışkanlığı doğurur. Amaç sessizce iki katına çıkmasını engellemek.
+      #
+      # Ölçüm sunucuyu ayağa kaldırıp gerçekten yüklenen sayfayı okuyor;
+      # `.next` manifest'lerine bakmıyor. Gerekçe betiğin başında.
+      - name: İstemci JS ölçümü
+        run: |
+          pnpm start &
+          sunucu=$!
+          for i in $(seq 1 40); do
+            if curl -sf -o /dev/null --max-time 3 http://127.0.0.1:3000/; then break; fi
+            sleep 1
+          done
+          node scripts/paket-olcumu.mjs http://127.0.0.1:3000 / /portfoy /harita
+          kill "$sunucu"
+        env:
+          NEXT_TELEMETRY_DISABLED: '1'

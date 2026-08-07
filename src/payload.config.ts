@@ -11,6 +11,7 @@ import { AltbilgiBaglantilari } from '@/collections/AltbilgiBaglantilari'
 import { DanismanBasvurulari } from '@/collections/DanismanBasvurulari'
 import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
+import { SOSYAL_YOLU } from '@/components/sosyal/yol'
 import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
 import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
@@ -73,10 +74,25 @@ export default buildConfig({
           Component: '@/components/sihirbaz/SihirbazGorunumu#default',
           path: SIHIRBAZ_YOLU,
         },
+
+        /**
+         * Sosyal medya materyali.
+         *
+         * ⚠️ Bu ekran hiçbir şey YAYINLAMAZ; görsel ve metin taslağı
+         * üretir. Otomatik paylaşım bilinçli olarak yok — hesaptan çıkan
+         * her cümle Aslıhan'ın sözü ve ilan metni yasal sonuç doğuruyor.
+         */
+        sosyalMateryal: {
+          Component: '@/components/sosyal/SosyalGorunumu#default',
+          path: SOSYAL_YOLU,
+        },
       },
       // Sihirbaz bir koleksiyon olmadığı için otomatik menüde görünmez;
       // görünmeyen bir araç, olmayan bir araçtır.
-      afterNavLinks: ['@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi'],
+      afterNavLinks: [
+        '@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi',
+        '@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi',
+      ],
     },
   },
 

@@ -55,8 +55,21 @@ jobs:
       - run: pnpm payload migrate
 
       # Boş bir siteyi ölçmek anlamsız; demo veri sayfaları doldurur.
-      # (Betik üretim ortamında çalışmayı reddeder, burada güvenli.)
+      #
+      # ⚠️ NODE_ENV BURADA ZORUNLU — ve yalnızca bu adımda.
+      #
+      # `scripts/seed.ts` kara listeden (`!== 'production'`) beyaz listeye
+      # (`=== 'development'`) çevrildi: üretim veritabanına bağlı bir kabukta
+      # NODE_ENV tanımsızken `pnpm seed` yazmak siteye [DEMO] kayıt basıyordu.
+      # Bu iş akışı o değişiklikle birlikte güncellenmedi; adım "yalnızca
+      # NODE_ENV=development ile çalışır" diyerek düştü ve Lighthouse ölçümü
+      # aylarca hiç KOŞMADI. Üstteki "raporlayıcıdır" notu doğruydu ama iş
+      # kırmızı görünüyordu, çünkü kırılan Lighthouse değil tohumlamaydı.
+      #
+      # Sonraki adımlara taşınmıyor: `next build` üretim derlemesi olmalı.
       - run: pnpm seed
+        env:
+          NODE_ENV: development
 
       - run: pnpm build
 
