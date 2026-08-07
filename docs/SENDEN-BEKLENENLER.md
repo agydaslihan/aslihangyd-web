@@ -258,6 +258,30 @@ en az 6 ay veri, 500 gözlem, ağırlığın %70'ini kapsayan katmanlarda her ay
 Elinde Excel/Sheets varsa CSV içe aktarma yazabilirim — **sütun düzenini
 bana gönder**, tahmin edip iki kez yazmak istemiyorum.
 
+### 6b. Portföy bölümlerini kendin düzenleyebilirsin
+
+**Nerede:** Payload admin → Ayarlar → **Portföy Bölümleri**
+
+Portföy sayfasındaki tema sıralarının başlığını, açıklamasını, kaç
+taşınmaz görüneceğini ve düzenini buradan yönetiyorsun. Hiç dokunmazsan
+dört sıra varsayılan düzende çalışır.
+
+**⚠️ Bir şeyi bilerek değiştirdim.** Şartnamede alt başlık örneği "Kira
+çarpanı **ilçe ortalamasının** altında kalan portföyümüz" idi. İlçe
+ortalamasını bilmiyoruz — o piyasa verisi ve bizde yok. Elimizdeki
+portföy ortalamasını ilçe ortalamasıymış gibi yazmak, doğrulanamayan bir
+iddia olurdu. Şu an "**portföy** ortalamasının altında kalan taşınmazlar"
+yazıyor.
+
+Çorlu Konut Endeksi yayına girdiğinde (6. ay) gerçek ilçe medyanını
+kullanabiliriz ve ifadeyi düzeltirim.
+
+**Ayrıca:** sıra numarası sadece görsel düzen değil, **öncelik**. Bir
+taşınmaz yalnızca ilk girdiği sırada görünür; yukarıdaki sıra onu "kapar".
+Aynı daireyi üç sırada göstermek portföyü olduğundan küçük gösterir.
+
+---
+
 ### 7. ✅ Cevaplandı — palet onaylandı, üç noktada onayına ihtiyacım var
 
 Onayladığın lacivert / bakır / sıcak nötr paleti, tipografi ölçeği ve
