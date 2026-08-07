@@ -8,6 +8,7 @@ import { Rozet } from '@/components/ui/Rozet'
 import { carpanYaz, sayiYaz } from '@/lib/bicimlendirme'
 import { etiketBul, ILAN_KATEGORILERI, ILAN_TIPLERI, ODA_SAYILARI } from '@/lib/secenekler'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { gizliPortfoySayisi, gizliPortfoyuGetir } from '@/lib/veri/gizliPortfoy'
 
 export const metadata: Metadata = {
@@ -22,6 +23,10 @@ export const metadata: Metadata = {
 }
 
 export default async function GizliPortfoySayfasi() {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('gizli_portfoy')
+
   const [kayitlar, sayi] = await Promise.all([gizliPortfoyuGetir(), gizliPortfoySayisi()])
 
   return (

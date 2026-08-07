@@ -129,23 +129,38 @@ export async function yetkisiBitecekleriBildir(payload: Payload): Promise<GorevR
  */
 export async function saklamaSuresiDolanlariSil(payload: Payload): Promise<GorevRaporu> {
   const rapor: GorevRaporu = {
-    ad: 'KVKK — saklama süresi dolan talepleri sil',
+    ad: 'KVKK — saklama süresi dolan kayıtları sil',
     islenen: 0,
     detay: [],
   }
 
   try {
     const bugun = bugununAnahtari()
+    const kosul = { saklamaBitis: { less_than: `${bugun}T00:00:00.000Z` } }
 
-    const sonuc = await payload.delete({
-      collection: 'talepler',
-      where: { saklamaBitis: { less_than: `${bugun}T00:00:00.000Z` } },
-    })
+    /**
+     * ⚠️ Danışman başvuruları da silinir.
+     *
+     * Ayrı bir koleksiyon olması, KVKK yükümlülüğünün ayrı olması demek
+     * değil — aksine, ayrı olduğu için burada AYRICA hatırlanması gerekiyor.
+     * Yeni bir kişisel veri koleksiyonu eklendiğinde bu listeye eklenmezse
+     * veriler süresiz saklanır.
+     */
+    const [talepler, basvurular] = await Promise.all([
+      payload.delete({ collection: 'talepler', where: kosul }),
+      payload.delete({ collection: 'danisman-basvurulari', where: kosul }),
+    ])
 
-    rapor.islenen = sonuc.docs.length
-    if (rapor.islenen > 0) {
-      // Yalnızca sayı — ad, telefon, e-posta kesinlikle yazılmaz.
-      rapor.detay.push(`${rapor.islenen} talep kaydı saklama süresi dolduğu için silindi`)
+    rapor.islenen = talepler.docs.length + basvurular.docs.length
+
+    // Yalnızca sayı — ad, telefon, e-posta kesinlikle yazılmaz.
+    if (talepler.docs.length > 0) {
+      rapor.detay.push(`${talepler.docs.length} talep kaydı saklama süresi dolduğu için silindi`)
+    }
+    if (basvurular.docs.length > 0) {
+      rapor.detay.push(
+        `${basvurular.docs.length} danışman başvurusu saklama süresi dolduğu için silindi`,
+      )
     }
   } catch (hata) {
     rapor.hata = hata instanceof Error ? hata.message : 'Bilinmeyen hata'

@@ -12,6 +12,7 @@ import {
   type SorguParametreleri,
 } from '@/lib/rapor/parametreler'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { vergiParametreleriniGetir } from '@/lib/veri/vergiParametreleri'
 
 export const metadata: Metadata = {
@@ -29,6 +30,10 @@ export default async function YatirimSimulatoruRaporu({
 }: {
   searchParams: Promise<SorguParametreleri>
 }) {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('raporlar')
+
   const [parametreler, vergiParametreleri] = await Promise.all([
     searchParams,
     vergiParametreleriniGetir(),

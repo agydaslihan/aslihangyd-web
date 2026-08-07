@@ -6,6 +6,7 @@ import * as migration_20260804_080414_faz2c_gozlemler from './20260804_080414_fa
 import * as migration_20260804_082730_faz4_yatirim_skoru from './20260804_082730_faz4_yatirim_skoru';
 import * as migration_20260804_091230_faz2b_eslestirme_profili from './20260804_091230_faz2b_eslestirme_profili';
 import * as migration_20260806_093100_portfoy_bolumleri from './20260806_093100_portfoy_bolumleri';
+import * as migration_20260806_094944_faz_d_site_bolumleri from './20260806_094944_faz_d_site_bolumleri';
 
 export const migrations = [
   {
@@ -47,5 +48,10 @@ export const migrations = [
     up: migration_20260806_093100_portfoy_bolumleri.up,
     down: migration_20260806_093100_portfoy_bolumleri.down,
     name: '20260806_093100_portfoy_bolumleri'
+  },
+  {
+    up: migration_20260806_094944_faz_d_site_bolumleri.up,
+    down: migration_20260806_094944_faz_d_site_bolumleri.down,
+    name: '20260806_094944_faz_d_site_bolumleri'
   },
 ];

@@ -10,6 +10,7 @@ import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
 import { TICARI_KATEGORILER } from '@/lib/secenekler'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { ilanlariGetir } from '@/lib/veri/ilanlar'
 
 export const metadata: Metadata = {
@@ -21,6 +22,10 @@ export const metadata: Metadata = {
 }
 
 export default async function TicariSayfasi() {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('ticari')
+
   const [sonuclar, kurumsal] = await Promise.all([
     Promise.all(TICARI_KATEGORILER.map((kategori) => ilanlariGetir({ kategori }, 1, 6))),
     kurumsalBilgileriGetir(),

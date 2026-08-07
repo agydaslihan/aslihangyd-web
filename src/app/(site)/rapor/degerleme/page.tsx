@@ -19,6 +19,7 @@ import {
   type SorguParametreleri,
 } from '@/lib/rapor/parametreler'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { degerlemeKatsayilariniGetir } from '@/lib/veri/degerleme'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 
@@ -46,6 +47,10 @@ export default async function DegerlemeRaporu({
 }: {
   searchParams: Promise<SorguParametreleri>
 }) {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('raporlar')
+
   const [parametreler, mahalleler, katsayilar] = await Promise.all([
     searchParams,
     mahalleleriGetir(),

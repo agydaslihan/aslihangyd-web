@@ -8,6 +8,7 @@ import { Rozet } from '@/components/ui/Rozet'
 import { KATMAN_MINIMUM_GOZLEM } from '@/lib/endeks/tipler'
 import { bolgeyiTara, SAPMA_ESIKLERI, type Sinyal, type SinyalTuru } from '@/lib/radar/motor'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 
 export const metadata: Metadata = {
@@ -28,6 +29,10 @@ const TUR_GORUNUMU: Record<
 }
 
 export default async function BolgeRadariSayfasi() {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('bolge_radari')
+
   const mahalleler = await mahalleleriGetir()
 
   const sonuc = bolgeyiTara(

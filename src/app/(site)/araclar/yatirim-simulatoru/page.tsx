@@ -3,6 +3,7 @@ import type { Metadata } from 'next'
 import { HesaplayiciKabugu } from '@/components/hesaplayici/Kabuk'
 import { YatirimSimulatoruFormu } from '@/components/hesaplayici/YatirimSimulatoruFormu'
 import { mutlakAdres } from '@/lib/site'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 import { vergiParametreleriniGetir } from '@/lib/veri/vergiParametreleri'
 
 export const metadata: Metadata = {
@@ -14,6 +15,10 @@ export const metadata: Metadata = {
 }
 
 export default async function YatirimSimulatoruSayfasi() {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın
+  // ve kapalı bölümün verisi RSC yüküne girmesin.
+  await bolumKapisi('simulator')
+
   const parametreler = await vergiParametreleriniGetir()
 
   return (

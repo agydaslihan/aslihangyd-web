@@ -5,6 +5,8 @@ import { Rozet } from '@/components/ui/Rozet'
 import { Feragat } from '@/components/ui/Feragat'
 import { OkIkon } from '@/components/ui/Ikon'
 import { ARACLAR } from '@/lib/araclar'
+import { BOLUMLER } from '@/lib/siteBolumleri'
+import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { vergiParametreleriniGetir } from '@/lib/veri/vergiParametreleri'
@@ -18,7 +20,22 @@ export const metadata: Metadata = {
 }
 
 export default async function AraclarSayfasi() {
-  const parametreler = await vergiParametreleriniGetir()
+  const [parametreler, bolumDurumlari] = await Promise.all([
+    vergiParametreleriniGetir(),
+    bolumDurumlariniGetir(),
+  ])
+
+  /**
+   * Kapalı bir bölüme ait araç listeden düşer.
+   *
+   * ⚠️ Bunu atlamak, kapalı bölümün rotası 404 dönerken buradan ona giden
+   * bir bağlantı bırakmak olurdu — "kapattım ama site hâlâ gösteriyor"
+   * durumunun tam olarak kendisi.
+   */
+  const kapaliAdresler = new Set(
+    BOLUMLER.filter((bolum) => !bolumDurumlari[bolum.anahtar]).flatMap((bolum) => bolum.rotalar),
+  )
+  const gorunenAraclar = ARACLAR.filter((arac) => !kapaliAdresler.has(arac.adres))
 
   const parametreVar = (aracVergiGerektirir: boolean) =>
     !aracVergiGerektirir || Object.keys(parametreler.sayilar).length > 0
@@ -35,7 +52,7 @@ export default async function AraclarSayfasi() {
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
-        {ARACLAR.map((arac) => {
+        {gorunenAraclar.map((arac) => {
           const hazir = parametreVar(arac.vergiParametresiGerekli)
 
           return (
