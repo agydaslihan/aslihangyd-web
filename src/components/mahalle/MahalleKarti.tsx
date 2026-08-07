@@ -13,8 +13,31 @@ import type { Mahalleler } from '@/payload-types'
  * çünkü mahalle sayfasının asıl değeri metin analizinde. "Veri bekleniyor"
  * yazısı karta konmuyor; kartın işi tıklatmak, dürüstlük beyanı ise
  * mahalle sayfasında rakamların yanında yapılıyor.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ `baslikSeviyesi` GÖRÜNÜM DEĞİL, BELGE YAPISI AYARI.
+ *
+ * Başlık seviyesi karta gömülü kalamaz çünkü doğru seviye karta değil
+ * kartın BULUNDUĞU SAYFAYA bağlı:
+ *   · Anasayfa   → h1 · h2 (bölüm başlığı) · h3 (kart)  ✓
+ *   · /mahalleler → h1 · h3 (kart)                       ✗ seviye atlıyor
+ *
+ * İkincisi WCAG 2.4.6 ihlali: ekran okuyucu kullanıcısı başlık listesinde
+ * gezerken atlanan seviyeyi "bir şeyi kaçırdım mı?" diye okur. Lighthouse
+ * bunu `/mahalleler` sayfasında yakaladı (Accessibility 98).
+ *
+ * Görsel boyut `text-baslik-3` ile sabit kalıyor — seviye değişince kart
+ * büyümesin. Anlam ile görünüm burada bilerek ayrı.
+ * ─────────────────────────────────────────────────────────────────────────
  */
-export function MahalleKarti({ mahalle }: { mahalle: Mahalleler }) {
+export function MahalleKarti({
+  mahalle,
+  baslikSeviyesi = 3,
+}: {
+  mahalle: Mahalleler
+  baslikSeviyesi?: 2 | 3
+}) {
+  const Baslik = baslikSeviyesi === 2 ? 'h2' : 'h3'
   const gorsel = typeof mahalle.kapakGorseli === 'object' ? mahalle.kapakGorseli : null
   const m2 = paraYaz(mahalle.ortalamaM2Satis)
   const carpan = carpanYaz(mahalle.kiraCarpani)
@@ -38,11 +61,11 @@ export function MahalleKarti({ mahalle }: { mahalle: Mahalleler }) {
       </div>
 
       <div className="flex flex-1 flex-col gap-2.5 p-4 sm:p-5">
-        <h3 className="text-baslik-3 leading-tight">
+        <Baslik className="text-baslik-3 leading-tight">
           <Link href={`/mahalleler/${mahalle.slug}`} className="after:absolute after:inset-0">
             {mahalle.ad} Mahallesi
           </Link>
-        </h3>
+        </Baslik>
 
         {mahalle.ozet ? (
           <p className="text-metin-2 line-clamp-2 text-govde-kucuk leading-relaxed">

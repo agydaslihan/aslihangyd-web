@@ -30,8 +30,12 @@ export default async function MahallelerSayfasi() {
 
       {mahalleler.length > 0 ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+          {/*
+            ⚠️ Bu sayfada araya bölüm başlığı girmiyor: h1 doğrudan kartlara
+            bağlanıyor. Kart varsayılanı h3 olduğu için seviye atlanıyordu.
+          */}
           {mahalleler.map((mahalle) => (
-            <MahalleKarti key={mahalle.id} mahalle={mahalle} />
+            <MahalleKarti key={mahalle.id} mahalle={mahalle} baslikSeviyesi={2} />
           ))}
         </div>
       ) : (
