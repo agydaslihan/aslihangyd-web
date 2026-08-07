@@ -87,18 +87,58 @@ jobs:
           pnpm start &
           npx --yes wait-on http://localhost:3000/api/saglik --timeout 60000
 
+      # ⚠️ ÜÇ KOŞUM VE İKİ CİHAZ — ikisi de bilinçli, ikisi de bedeli var.
+      #
+      # ÜÇ KOŞUM: aynı kod tabanı dört ayrı koşumda anasayfa için 100, 96,
+      # 81 ve 77 üretti. Fark koddan değil runner hızından geliyordu; TBT
+      # eşiğin kenarında oturuyor ve benchmarkIndex %5 oynayınca skor 20
+      # puan sıçrıyor. Tek koşumluk sayıyla "bu PR yavaşlattı" demek, o gün
+      # hangi makineye düştüğümüzü tartışmaktan ibaretti.
+      #
+      # İKİ CİHAZ: trafiğin ~%75'i mobil (CLAUDE.md). Yalnızca masaüstü
+      # ölçmek, kullanıcıların dörtte birine bakıp hepsi hakkında konuşmaktı.
+      # Mobil preset 4x CPU yavaşlatma ve 4G kısıtı uygular; sayılar
+      # masaüstünden belirgin düşük çıkar — düşük olması hata değil, gerçek.
+      #
+      # Maliyet: 3 sayfa × 2 cihaz × 3 koşum = 18 ölçüm, ~6 dk. `timeout-minutes`
+      # 25'te; sayfa eklenirse bu sınır gözden geçirilmeli.
+      #
+      # Ölçüm başarısız olursa koşu DÜŞMEZ, uyarı düşer — Lighthouse hâlâ
+      # raporlayıcı. Ama hiçbir rapor üretilmediyse bir sonraki adım bunu
+      # yakalar; sessizce boş özet basmak, ölçüm koşmuyorken yeşil görünmenin
+      # ta kendisiydi.
       - name: Lighthouse çalıştır
         run: |
           mkdir -p lighthouse-raporlari
-          for yol in "" "portfoy" "mahalleler"; do
-            ad="${yol:-anasayfa}"
-            npx --yes lighthouse "http://localhost:3000/${yol}" \
-              --output=json --output=html \
-              --output-path="lighthouse-raporlari/${ad}" \
-              --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
-              --preset=desktop \
-              --quiet || echo "::warning::${ad} ölçülemedi"
+          for cihaz in masaustu mobil; do
+            if [ "$cihaz" = "masaustu" ]; then ayar="--preset=desktop"; else ayar=""; fi
+            for yol in "" "portfoy" "mahalleler"; do
+              ad="${yol:-anasayfa}"
+              for kosum in 1 2 3; do
+                npx --yes lighthouse "http://localhost:3000/${yol}" \
+                  --output=json --output=html \
+                  --output-path="lighthouse-raporlari/${cihaz}-${ad}-${kosum}" \
+                  --chrome-flags="--headless=new --no-sandbox --disable-gpu" \
+                  $ayar \
+                  --quiet || echo "::warning::${cihaz}/${ad} koşum ${kosum} ölçülemedi"
+              done
+            done
           done
+
+      # ⚠️ Hiç rapor üretilmediyse bu adım düşer.
+      #
+      # Özet betiği boş dizinde "Rapor üretilemedi" yazıp çıkış 0 veriyor;
+      # tek başına bırakılırsa ölçüm hiç koşmamışken iş yeşil görünür. Bu
+      # projede tam olarak o oldu: tohumlama kırıldığı için Lighthouse'a
+      # hiç sıra gelmiyordu ve kırmızı, ölçümün kendisi sanılıyordu.
+      - name: Rapor üretildiğini doğrula
+        run: |
+          adet=$(find lighthouse-raporlari -name '*.report.json' | wc -l)
+          echo "Üretilen rapor: $adet"
+          if [ "$adet" -eq 0 ]; then
+            echo "::error::Hiç Lighthouse raporu üretilmedi — ölçüm koşmadı."
+            exit 1
+          fi
 
       - name: Skorları özetle
         if: always()

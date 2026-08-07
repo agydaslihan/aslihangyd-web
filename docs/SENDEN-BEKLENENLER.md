@@ -76,6 +76,38 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       Puanları neye göre verdiğini "Profil notu" alanına yaz — bir ziyaretçi
       "neden bu mahalle önerildi?" diye sorduğunda cevabın hazır olsun.
 
+- [ ] **Site simgesi (favicon) — marka işareti**
+
+      Sitenin şu an hiç favicon'u yok. Tarayıcı her sayfa açılışında
+      `/favicon.ico` istiyor, 404 alıyor ve konsola hata düşüyor. Bunun
+      ölçülebilir bir bedeli var: **Lighthouse "En iyi uygulamalar"
+      skorumuz üç sayfada da 100 yerine 96** ve tek sebebi bu. Logo gelene
+      kadar 96'da kalacak.
+
+      Bunu bilerek uydurmadım. Favicon bir marka işaretidir; geçici bir
+      şekil koymak, sekmede haftalarca "bizim logomuz" gibi duran ve sonra
+      değişen bir işaret bırakırdı. CLAUDE.md marka tercihlerini sana
+      sormamı söylüyor.
+
+      **Ne gerekiyor:**
+
+      | Ne | Değer |
+      | --- | --- |
+      | Biçim | SVG (tercih) — tek dosya her boyutta keskin durur |
+      | SVG olmazsa | PNG, 512×512, kayıpsız |
+      | Güvenli alan | İşaret kenarlara değmesin; kenarda ~%10 boşluk bırak |
+      | Arka plan | **Saydam DEĞİL, dolu olsun.** Açık ve koyu sekme temasında da okunması gerekiyor; saydam bir işaret koyu temada kaybolur |
+      | Renk | Onaylanan laciverti kullan: `#0F1E33` zemin, `#F8F7F3` işaret. ⚠️ Bakır kullanılmayacak — bakır yalnızca "Evimi değerlendir" ve "Erişim talep et" eylemlerine ait |
+      | Okunabilirlik | 16×16 pikselde ne olduğu anlaşılmalı. İnce çizgi ve küçük yazı bu boyutta kaybolur; tek harf ya da sade bir geometrik işaret en güvenlisi |
+
+      **Nereye konacak:** `src/app/icon.svg` (PNG ise `src/app/icon.png`).
+      Next.js bu dosyayı görünce `<link rel="icon">` etiketini kendisi
+      basar; ayrıca bir şey yapılması gerekmiyor. Dosyayı bana ver ya da
+      doğrudan bu yola koy.
+
+      **Aynı dosyadan türeyecekler** (logo gelince ben hallederim):
+      Apple dokunmatik simgesi ve paylaşım görselinin köşe işareti.
+
 ## Sonra (fazlar geldiğinde gerekecek)
 
 - [ ] **MapTiler API anahtarı** (Faz 2)
