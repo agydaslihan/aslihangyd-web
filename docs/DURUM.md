@@ -65,8 +65,8 @@ hesaplandığını gösterir; bir dağıtım betiğinin çalıştığını yaln�
 | PDF rapor (yazdırma yolu) | **yazıldı-ama-hiç-çalıştırılmadı** | Rotalar 200 dönüyor; **hiçbir rapor gerçekten yazdırılmadı / PDF'e kaydedilmedi** | `@media print` çıktısı bozuk olabilir, Türkçe karakter iddiası denenmedi |
 | Portföy giriş sihirbazı | **bitti** | Entegrasyon testi (Local API, `overrideAccess: false`) | — |
 | Lead skorlama | **bitti** | Birim testi; kanca her kaydetmede çalışıyor | — |
-| **CRM eşleştirme motoru** | **eksik** | `src/lib/crm/` içinde yalnızca `skorlama.ts` var. "uyan müşteriler", "uyan portföyler", kanban, "bugün aranacaklar" — **hiçbiri yok** | Aslıhan yeni ilan girince kime haber vereceğini elle bulacak |
-| **Sosyal medya materyali** | **eksik** | `ImageResponse` / `next/og` kullanımı yok, Instagram ile ilgili hiçbir kod yok | Paylaşım görselleri elle hazırlanacak |
+| **CRM eşleştirme motoru** | **kısmen** | ✅ `src/lib/crm/eslestirme.ts` (26 birim testi) + talep kaydında "Eşleşen portföy" sekmesi; panelde duman testiyle doğrulandı. Sert eleme ile puanlama ayrı; eksik bilgi cezalandırılmaz | Ters yön ("bu ilana kim uyar?"), kanban ve "bugün aranacaklar" **hâlâ yok**. Aslıhan yeni ilan girince kime haber vereceğini elle bulacak |
+| **Sosyal medya materyali** | **kısmen** | ✅ `/admin/sosyal-materyal`: 1080×1080 ve 1080×1920 görsel, metin taslağı, etiket, UTM'li bağlantı, "Tümünü indir". Türkçe karakterler üretilen PNG'de doğrulandı; çalışma anı font indirmesi teste bağlandı | **Instagram grid'i yok** — hesap erişim jetonu gerekiyor. ⚠️ Otomatik yayın bilinçli olarak yok ve eklenmeyecek |
 
 ---
 
@@ -238,8 +238,12 @@ otomatik çalışmıyor. Kod hazır, cron dosyası sunucuya konmadı.
 
 Hiç yazılmamış olanlar:
 
-- CRM eşleştirme motoru (Faz 2B) — kanban, uyum listeleri, "bugün aranacaklar"
-- Sosyal medya materyal üretimi (Faz 2B) — OG görselleri, Instagram grid
+- CRM'in kalanı (Faz 2B) — kanban, ters yön eşleştirme, "bugün aranacaklar".
+  Talep→portföy eşleştirmesi 4. aşamada yapıldı.
+- Instagram grid'i (Faz 2B) — hesap erişim jetonu bekliyor. Görsel ve metin
+  üretimi 4. aşamada yapıldı.
+- Pannellum ile kendi barındırdığımız 360° panoramalar — panorama yükleme
+  alanı ve göç gerekiyor; test edilecek gerçek 360° görsel yok.
 - Bunny Stream oynatıcı bileşeni (Faz 3)
 - Pannellum 360° görüntüleyici (Faz 3)
 - GitHub Actions deploy iş akışı + imaj üretimi

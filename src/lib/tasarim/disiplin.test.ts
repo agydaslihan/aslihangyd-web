@@ -91,7 +91,21 @@ describe('ham hex kullanılmıyor', () => {
    * (`src/lib/harita/jetonlar.ts`). Aynı çözüm burada uygulanamıyor
    * çünkü meta etiketi sunucuda, stil hesaplanmadan önce yazılıyor.
    */
-  const MUAF = new Set<string>(['app/(site)/layout.tsx'])
+  /**
+   * ⚠️ Sosyal medya görsel rotası da MUAF — ama denetimsiz değil.
+   *
+   * `next/og` bir tarayıcı değil: Satori ne `globals.css` yüklüyor ne de
+   * `var(--...)` çözüyor. Jeton adı yazmak, görselin renksiz üretilmesine
+   * yol açardı.
+   *
+   * Bu muafiyetin bedeli aşağıdaki "onaylı palete eşit" testiyle
+   * ödeniyor: hex'ler serbest değil, onaylanan rampanın birebir aynısı
+   * olmak zorunda. Muafiyet "istediğini yaz" demek değil.
+   */
+  const MUAF = new Set<string>([
+    'app/(site)/layout.tsx',
+    'app/(site)/api/sosyal/gorsel/[bicim]/[id]/route.tsx',
+  ])
 
   it.each(uyarlanmis.filter((d) => !MUAF.has(d.yol)).map((d) => [d.yol, d] as const))(
     '%s',
@@ -169,5 +183,45 @@ describe('rakamlar hizalı', () => {
 
     // İstisna yok kuralı: bir bileşen unutulsa bile gövde doğru davranmalı.
     expect(govde).toContain('font-variant-numeric: tabular-nums')
+  })
+})
+
+/**
+ * Muaf tutulan sosyal medya görselinin renkleri, onaylanan paletin
+ * birebir aynısı olmak zorunda.
+ *
+ * ⚠️ Bu test muafiyetin bedeli. Ham hex yazma izni verilen tek yerin
+ * serbest bırakılması, paletin sessizce ikiye ayrılması demek olurdu:
+ * sitede bir lacivert, paylaşılan görselde başka bir lacivert.
+ */
+describe('sosyal medya görseli onaylı palete bağlı', () => {
+  // KOK zaten `src`e işaret ediyor.
+  const ROTA = 'app/(site)/api/sosyal/gorsel/[bicim]/[id]/route.tsx'
+
+  /** Onaylanan rampadan birebir alınan değerler. */
+  const IZINLI = new Set(['#0F1E33', '#F8F7F3', '#A3BFD9', '#1D4270'])
+
+  it('yalnızca onaylanan rampa değerlerini kullanır', () => {
+    const kaynak = readFileSync(path.join(KOK, ROTA), 'utf8')
+    const bulunan = yorumsuz(kaynak).match(/#[0-9a-fA-F]{3,8}\b/g) ?? []
+
+    expect(bulunan.length).toBeGreaterThan(0)
+    const kacak = bulunan.filter((hex) => !IZINLI.has(hex.toUpperCase()))
+    expect(
+      kacak,
+      `Onaylı palette olmayan renk: ${kacak.join(', ')}. ` +
+        'Görsel ile site aynı laciverti kullanmalı.',
+    ).toEqual([])
+  })
+
+  /**
+   * ⚠️ Bakır kuralı — pazarlığa kapalı. Bakır yalnızca "Evimi değerlendir"
+   * ve "Erişim talep et" eylemlerinde kullanılır; bir ilan görseli
+   * bunların hiçbiri değil.
+   */
+  it('bakır kullanmaz', () => {
+    const kaynak = readFileSync(path.join(KOK, ROTA), 'utf8')
+    const BAKIR = /#(F7E6D9|EFCBB2|E3A981|D68551|C4682F|A85529|8A4423)\b/gi
+    expect(yorumsuz(kaynak).match(BAKIR) ?? []).toEqual([])
   })
 })

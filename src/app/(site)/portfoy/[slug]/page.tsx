@@ -3,6 +3,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { IlanGalerisi } from '@/components/ilan/IlanGalerisi'
+import { DroneVideo } from '@/components/medya/DroneVideo'
+import { SanalTur } from '@/components/medya/SanalTur'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat } from '@/components/ui/Feragat'
@@ -164,6 +166,31 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               <section className="mt-10">
                 <h2 className="mb-3 font-sans text-baslik-3 font-medium">Açıklama</h2>
                 <ZenginMetin veri={ilan.aciklama} />
+              </section>
+            ) : null}
+
+            {/*
+              ── Drone videosu ──
+
+              ⚠️ Galerinin ALTINDA. Galeri LCP öğesini taşıyor; oynatıcıyı
+              yukarı almak 2,5 sn hedefini bozardı. Zaten tıkla-oynat:
+              çerçeve ancak dokununca yükleniyor.
+
+              Alan boşsa bölüm HİÇ gösterilmiyor — "video yok" yazan bir
+              başlık, olmayan bir şeyi vaat etmektir.
+            */}
+            {ilan.droneVideoId ? (
+              <section className="mt-10">
+                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Drone videosu</h2>
+                <DroneVideo videoId={ilan.droneVideoId} baslik={`${ilan.baslik} drone videosu`} />
+              </section>
+            ) : null}
+
+            {/* ── 360° sanal tur ── */}
+            {ilan.sanalTurUrl ? (
+              <section className="mt-10">
+                <h2 className="mb-3 font-sans text-baslik-3 font-medium">360° sanal tur</h2>
+                <SanalTur adres={ilan.sanalTurUrl} baslik={`${ilan.baslik} 360° turu`} />
               </section>
             ) : null}
 

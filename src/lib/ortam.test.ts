@@ -41,6 +41,8 @@ const MUAF: Record<string, string> = {
   MEDYA_DIZINI: 'compose.prod.yml sabit değer veriyor.',
   TEMIZLE: 'Yalnızca `pnpm seed` bayrağı; tohumlama üretimde zaten çalışmaz.',
   NEXT_PUBLIC_SITE_ADRESI: 'SITE_ADRESI için derleme zamanı yedeği; ikisi birlikte belgeleniyor.',
+  GITHUB_ACTIONS: 'GitHub Actions koşumu tarafından verilir; .env ile ilgisi yok.',
+  GITHUB_STEP_SUMMARY: 'GitHub Actions koşumu tarafından verilir; .env ile ilgisi yok.',
 }
 
 function kaynakDosyalari(dizin: string, biriktir: string[] = []): string[] {

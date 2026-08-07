@@ -4,6 +4,8 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { IlanKarti } from '@/components/ilan/IlanKarti'
+import { DroneVideo } from '@/components/medya/DroneVideo'
+import { SanalTur } from '@/components/medya/SanalTur'
 import { MahalleSkoru } from '@/components/skor/MahalleSkoru'
 import { YakindaBolumu } from '@/components/mahalle/YakindaBolumu'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
@@ -187,14 +189,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                 360° sokak turu
               </h2>
               {mahalle.sanalTurUrl ? (
-                <a
-                  href={mahalle.sanalTurUrl}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-vurgu underline underline-offset-2"
-                >
-                  Turu yeni sekmede açın
-                </a>
+                <SanalTur adres={mahalle.sanalTurUrl} baslik={`${mahalle.ad} 360° turu`} />
               ) : (
                 <YakindaBolumu
                   oran="aspect-16/9"
@@ -415,11 +410,22 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
         </div>
       </div>
 
-      {!mahalle.droneVideoId ? (
+      {/*
+        ⚠️ Oynatıcı hero'nun ALTINDA, içinde değil.
+
+        Hero LCP öğesini taşıyor; oraya bir video çerçevesi koymak 2,5 sn
+        hedefini doğrudan bozardı. Oynatıcı zaten tıkla-oynat: kapak
+        görünür, çerçeve ancak dokununca yüklenir.
+      */}
+      {mahalle.droneVideoId ? (
+        <div className="kapsayici py-4">
+          <DroneVideo videoId={mahalle.droneVideoId} baslik={`${mahalle.ad} drone videosu`} />
+        </div>
+      ) : (
         <p className="kapsayici text-metin-3 py-3 text-mikro">
           Bu mahallenin drone videosu henüz çekilmedi. Çekim yapıldığında bu alanda yayınlanacak.
         </p>
-      ) : null}
+      )}
     </section>
   )
 }

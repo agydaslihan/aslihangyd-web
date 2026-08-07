@@ -227,6 +227,24 @@ export const Talepler: CollectionConfig = {
         },
 
         {
+          label: 'Eşleşen portföy',
+          description:
+            'Bu talebe uyabilecek yayındaki ilanlar. Sıralamadır, karar değil — ' +
+            'buradan otomatik hiçbir şey yapılmaz.',
+          fields: [
+            {
+              name: 'eslesenPortfoy',
+              type: 'ui',
+              admin: {
+                components: {
+                  Field: '@/components/panel/TalepEslesmeleri#default',
+                },
+              },
+            },
+          ],
+        },
+
+        {
           label: 'KVKK',
           description:
             'Bu alanlar kaydın hukuki dayanağıdır. Otomatik doldurulur ve sonradan değiştirilemez.',

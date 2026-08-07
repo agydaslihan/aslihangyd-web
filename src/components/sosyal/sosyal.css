@@ -1,0 +1,168 @@
+/**
+ * Sosyal medya materyali ekranı.
+ *
+ * Payload'ın tema değişkenleri kullanılıyor; sitenin tasarım jetonları
+ * admin'e yüklenmiyor ve sabit renk yazmak koyu temada okunmaz bir ekran
+ * üretirdi.
+ */
+
+.sosyal {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.sosyal-baslik {
+  margin: 0 0 1rem;
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--theme-text, #111);
+}
+
+/**
+ * ⚠️ Uyarı kutusu ekranın en üstünde ve kapatılamaz.
+ *
+ * "Buradan hiçbir şey yayınlanmaz" cümlesi bir dipnot değil, aracın
+ * çalışma biçiminin kendisi. Aşağı kaydırılınca kaybolan bir uyarı,
+ * okunmayan bir uyarıdır.
+ */
+.sosyal-uyari {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  border-left: 3px solid var(--theme-warning-500, #a87a1e);
+  border-radius: 6px;
+  background: var(--theme-elevation-50, #fafafa);
+}
+
+.sosyal-uyari p {
+  margin: 0;
+  max-width: 58ch;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-elevation-700, #555);
+}
+
+.sosyal-uyari p + p {
+  margin-top: 0.5rem;
+}
+
+.sosyal-ozet,
+.sosyal-bos {
+  margin: 0 0 1.25rem;
+  max-width: 58ch;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-elevation-600, #666);
+  font-variant-numeric: tabular-nums;
+}
+
+.sosyal-bos {
+  padding: 1.25rem;
+  border: 1px dashed var(--theme-elevation-200, #ddd);
+  border-radius: 6px;
+}
+
+.sosyal-izgara {
+  display: grid;
+  gap: 1.25rem;
+  grid-template-columns: repeat(auto-fill, minmax(20rem, 1fr));
+}
+
+.sosyal-kart {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--theme-elevation-150, #e2e2e2);
+  border-radius: 8px;
+  background: var(--theme-elevation-0, #fff);
+}
+
+.sosyal-kart-baslik {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--theme-text, #111);
+}
+
+.sosyal-kart-onizleme {
+  display: flex;
+  gap: 0.75rem;
+  align-items: flex-start;
+}
+
+.sosyal-onizleme {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-decoration: none;
+}
+
+.sosyal-onizleme img {
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  border: 1px solid var(--theme-elevation-150, #e2e2e2);
+}
+
+.sosyal-onizleme-kare {
+  flex: 0 0 55%;
+}
+
+.sosyal-onizleme-hikaye {
+  flex: 0 0 31%;
+}
+
+.sosyal-onizleme-etiket {
+  font-size: 0.6875rem;
+  color: var(--theme-elevation-600, #666);
+  font-variant-numeric: tabular-nums;
+}
+
+.sosyal-kart-eylemler {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.sosyal-kart-eylemler button {
+  /* 44px dokunma hedefi (WCAG 2.5.8). */
+  min-height: 2.75rem;
+  padding: 0 0.875rem;
+  border: 1px solid var(--theme-elevation-250, #ccc);
+  border-radius: 6px;
+  background: var(--theme-elevation-0, #fff);
+  color: var(--theme-text, #111);
+  font-size: 0.8125rem;
+  cursor: pointer;
+}
+
+.sosyal-kart-eylemler button:hover:not(:disabled) {
+  background: var(--theme-elevation-50, #fafafa);
+}
+
+.sosyal-kart-eylemler button:disabled {
+  opacity: 0.6;
+  cursor: default;
+}
+
+/**
+ * Metin görünür duruyor: kopyalanan ile görülen aynı olsun (pano
+ * çalışmazsa elle seçilebilsin) ve yayınlamadan önce gerçekten okunsun.
+ */
+.sosyal-kart-metin {
+  margin: 0;
+  padding: 0.75rem;
+  max-height: 14rem;
+  overflow: auto;
+  border: 1px solid var(--theme-elevation-100, #f0f0f0);
+  border-radius: 6px;
+  background: var(--theme-elevation-50, #fafafa);
+  font-size: 0.75rem;
+  line-height: 1.7;
+  white-space: pre-wrap;
+  word-break: break-word;
+  color: var(--theme-elevation-800, #333);
+}

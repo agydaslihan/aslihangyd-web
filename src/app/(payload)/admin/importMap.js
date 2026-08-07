@@ -21,9 +21,12 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/components/panel/TalepEslesmeleri'
 import { SihirbazNavBaglantisi as SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d } from '@/components/sihirbaz/SihirbazNavBaglantisi'
+import { SosyalNavBaglantisi as SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2 } from '@/components/sosyal/SosyalNavBaglantisi'
 import { default as default_ac4995af7e2bbcdcd73ea0a7c441a293 } from '@/components/panel/BildirimSeridi'
 import { default as default_1aab0adce7828f318eceac0ff9d4de43 } from '@/components/sihirbaz/SihirbazGorunumu'
+import { default as default_da503fe49822663a0dcf59383a7ad931 } from '@/components/sosyal/SosyalGorunumu'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -51,8 +54,11 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/components/panel/TalepEslesmeleri#default": default_1e93637515c2cbbab351072f38d704e3,
   "@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi": SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d,
+  "@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi": SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2,
   "@/components/panel/BildirimSeridi#default": default_ac4995af7e2bbcdcd73ea0a7c441a293,
   "@/components/sihirbaz/SihirbazGorunumu#default": default_1aab0adce7828f318eceac0ff9d4de43,
+  "@/components/sosyal/SosyalGorunumu#default": default_da503fe49822663a0dcf59383a7ad931,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }
