@@ -18,9 +18,23 @@ set -Eeuo pipefail
 
 # Hata olursa hangi satırda olduğunu günlüğe yaz — sessiz başarısızlık,
 # yedeklemede en tehlikeli davranıştır.
-trap 'echo "[$(date -Is)] HATA: satır $LINENO, çıkış kodu $?" >&2' ERR
+# ⚠️ `$?` ÖNCE okunuyor.
+#
+# İlk hali `echo "[$(date -Is)] … çıkış kodu $?"` idi ve HER ZAMAN 0 yazıyordu:
+# `$(date -Is)` komut ikamesi `$?` genişletilmeden önce koşuyor ve çıkış
+# kodunu sıfırlıyor. Yani hata mesajı "başarılı" diyordu. Gerçek bir geri
+# yükleme gecesinde en yanıltıcı çıktı bu olurdu.
+trap 'KOD=$?; echo "[$(date -Is)] HATA: satır $LINENO, çıkış kodu $KOD" >&2' ERR
 
 UYGULAMA_DIZINI="${UYGULAMA_DIZINI:-/srv/aslihangyd/app}"
+
+# ⚠️ Kap adları değişken: sabit yazıldığında betik YALNIZCA üretimde
+# çalışabiliyordu — yani hiç denenemiyordu. "Test edilmemiş yedek, yedek
+# değildir" uyarısını dosyanın başına yazıp betiği test edilemez bırakmak
+# tutarsızdı. Varsayılanlar üretim adları; geliştirmede üzerine yazılır.
+POSTGRES_KABI="${POSTGRES_KABI:-aslihangyd-postgres}"
+UYGULAMA_KABI="${UYGULAMA_KABI:-aslihangyd-uygulama}"
+
 GECICI_DIZIN="$(mktemp -d)"
 trap 'rm -rf "$GECICI_DIZIN"' EXIT
 
@@ -45,7 +59,7 @@ DOKUM="$GECICI_DIZIN/veritabani-$DAMGA.sql.gz"
 echo "[$(date -Is)] Veritabanı dökümü alınıyor…"
 
 # --clean --if-exists: geri yüklemede mevcut nesneler çakışma çıkarmasın.
-docker exec aslihangyd-postgres \
+docker exec "$POSTGRES_KABI" \
   pg_dump -U "$POSTGRES_USER" -d "$POSTGRES_DB" --clean --if-exists \
   | gzip -9 > "$DOKUM"
 
@@ -59,7 +73,7 @@ echo "[$(date -Is)] Döküm hazır ($((BOYUT / 1024)) KB). Medya dosyaları çı
 
 MEDYA_DIZINI="$GECICI_DIZIN/medya"
 mkdir -p "$MEDYA_DIZINI"
-docker cp aslihangyd-uygulama:/uygulama/medya/. "$MEDYA_DIZINI/" 2>/dev/null || \
+docker cp "$UYGULAMA_KABI":/uygulama/medya/. "$MEDYA_DIZINI/" 2>/dev/null || \
   echo "[$(date -Is)] Not: medya dizini boş veya erişilemedi, atlanıyor."
 
 echo "[$(date -Is)] restic deposuna gönderiliyor…"

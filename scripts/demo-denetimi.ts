@@ -58,7 +58,21 @@ for (const { koleksiyon, alan } of KONTROLLER) {
 if (bulunan > 0) {
   console.error('')
   console.error(`✗ Toplam ${bulunan} demo/yük-testi kaydı bulundu. YAYINA ÇIKILMAMALI.`)
-  console.error('  Temizlemek için: NODE_ENV=development TEMIZLE=1 pnpm seed')
+  console.error('')
+  console.error('  Geliştirme veritabanında:  TEMIZLE=1 pnpm seed')
+  console.error('')
+  /**
+   * ⚠️ Üretimde tohum betiği ÖNERİLMEZ.
+   *
+   * Önceki metin "NODE_ENV=development TEMIZLE=1 pnpm seed" diyordu.
+   * O satır, tohumlamayı üretimde engellemek için konmuş korumayı
+   * ELLE DEVRE DIŞI BIRAKMAYI öğretiyordu — üretim veritabanına karşı
+   * çalıştırılırsa demo kayıtları silmekle kalmaz, yerine yenilerini
+   * yazar. Bir denetim aracının önerdiği ilk çözüm, korumayı aşmak
+   * olmamalı.
+   */
+  console.error('  Üretimde: kayıtları yönetim panelinden elle silin.')
+  console.error('  (Tohum betiğini üretimde çalıştırmayın — demo veriyi yeniden yazar.)')
   process.exit(1)
 }
 

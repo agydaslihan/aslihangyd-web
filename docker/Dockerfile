@@ -36,6 +36,43 @@ ENV PAYLOAD_SECRET=derleme_aninda_kullanilan_gecici_deger
 
 RUN pnpm build
 
+# ── 3. Göçmen ────────────────────────────────────────────────────────────────
+#
+# ⚠️ AYRI BİR İMAJ GEREKİYOR, ÇÜNKÜ ÜRETİM İMAJINDA GÖÇ ÇALIŞTIRILAMAZ.
+#
+# Çalıştırma imajı Next'in `standalone` çıktısı: içinde ne kaynak kodu,
+# ne `payload` CLI'ı, ne de `src/migrations` var. `payload.config.ts`
+# içindeki `migrationDir` derlenmiş paketin içine çözülüyor ve orada göç
+# dosyası bulunmuyor.
+#
+# 7 Ağustos 2026'ya kadar bu fark edilmemişti: işletme rehberi üretimde
+# göçün nasıl koşacağını hiç yazmıyordu, `compose.prod.yml` de böyle bir
+# yol sunmuyordu. Yani şema değişikliği içeren ilk dağıtım, uygulamayı
+# eski şemaya karşı başlatacaktı.
+#
+# Bu aşama `.next` taşımıyor — yalnızca bağımlılıklar ve kaynak. Göç
+# dışında hiçbir işi yok ve `up -d` ile başlamaz (compose'da `gocmen`
+# profili altında).
+FROM node:${NODE_SURUMU} AS gocmen
+WORKDIR /uygulama
+
+RUN corepack enable
+
+COPY --from=bagimliliklar /uygulama/node_modules ./node_modules
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml tsconfig.json ./
+COPY src ./src
+
+# ⚠️ `scripts` de gerekiyor: yayın öncesi kontrol listesi (§6b) demo veri
+# denetimini `payload run scripts/demo-denetimi.ts` ile koşuyor ve sunucuda
+# pnpm bulunan tek yer burası. Dizin unutulunca komut
+# `ERR_MODULE_NOT_FOUND` veriyor — belgede yazılı bir kontrolün sessizce
+# çalışmaması, kontrolün hiç olmamasından kötü.
+COPY scripts ./scripts
+
+# Varsayılan komut göçü UYGULAR. Yalnızca durum görmek için:
+#   docker compose ... run --rm gocmen pnpm payload migrate:status
+CMD ["pnpm", "payload", "migrate"]
+
 # ── 3. Çalıştırma ────────────────────────────────────────────────────────────
 FROM node:${NODE_SURUMU} AS calistirici
 WORKDIR /uygulama

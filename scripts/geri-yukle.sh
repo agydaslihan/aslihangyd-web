@@ -13,7 +13,13 @@
 #   HEDEF_VERITABANI=deneme ./geri-yukle.sh latest   # test veritabanına
 
 set -Eeuo pipefail
-trap 'echo "[$(date -Is)] HATA: satır $LINENO, çıkış kodu $?" >&2' ERR
+# ⚠️ `$?` ÖNCE okunuyor.
+#
+# İlk hali `echo "[$(date -Is)] … çıkış kodu $?"` idi ve HER ZAMAN 0 yazıyordu:
+# `$(date -Is)` komut ikamesi `$?` genişletilmeden önce koşuyor ve çıkış
+# kodunu sıfırlıyor. Yani hata mesajı "başarılı" diyordu. Gerçek bir geri
+# yükleme gecesinde en yanıltıcı çıktı bu olurdu.
+trap 'KOD=$?; echo "[$(date -Is)] HATA: satır $LINENO, çıkış kodu $KOD" >&2' ERR
 
 ANLIK_GORUNTU="${1:-}"
 if [ -z "$ANLIK_GORUNTU" ]; then
@@ -25,6 +31,11 @@ if [ -z "$ANLIK_GORUNTU" ]; then
 fi
 
 UYGULAMA_DIZINI="${UYGULAMA_DIZINI:-/srv/aslihangyd/app}"
+
+# Kap adları değişken — gerekçesi yedekle.sh içinde.
+POSTGRES_KABI="${POSTGRES_KABI:-aslihangyd-postgres}"
+UYGULAMA_KABI="${UYGULAMA_KABI:-aslihangyd-uygulama}"
+
 cd "$UYGULAMA_DIZINI"
 
 if [ -f .env ]; then
@@ -67,15 +78,36 @@ if [ -z "$DOKUM" ]; then
 fi
 
 echo "[$(date -Is)] Bulunan döküm: $(basename "$DOKUM")"
+
+# ─────────────────────────────────────────────────────────────────────────
+# ⚠️ HEDEF VERİTABANI YOKSA OLUŞTURULUR.
+#
+# Bu satır olmadan betiğin BAŞLIĞINDA önerilen aylık tatbikat
+# (`HEDEF_VERITABANI=deneme ./geri-yukle.sh latest`) hiçbir zaman
+# çalışmıyordu: psql "database does not exist" diyip düşüyordu. Tatbikatı
+# öneren belge, tatbikatın yapılamayacağını da yazıyordu farkında olmadan.
+#
+# `template_postgis` kullanılıyor: dökümdeki PostGIS tipleri (geometry,
+# geography) uzantı yüklü olmayan bir veritabanına geri yüklenemez.
+# ─────────────────────────────────────────────────────────────────────────
+if ! docker exec "$POSTGRES_KABI" \
+     psql -U "$POSTGRES_USER" -d postgres -tAc \
+     "SELECT 1 FROM pg_database WHERE datname = '$HEDEF'" | grep -q 1; then
+  echo "[$(date -Is)] '$HEDEF' veritabanı yok, oluşturuluyor (template_postgis)…"
+  docker exec "$POSTGRES_KABI" \
+    psql -U "$POSTGRES_USER" -d postgres \
+    -c "CREATE DATABASE \"$HEDEF\" TEMPLATE template_postgis"
+fi
+
 echo "[$(date -Is)] '$HEDEF' veritabanına geri yükleniyor…"
 
-gunzip -c "$DOKUM" | docker exec -i aslihangyd-postgres \
+gunzip -c "$DOKUM" | docker exec -i "$POSTGRES_KABI" \
   psql -U "$POSTGRES_USER" -d "$HEDEF" -v ON_ERROR_STOP=1
 
 echo "[$(date -Is)] Medya dosyaları geri yükleniyor…"
 MEDYA_KAYNAK="$(find "$GECICI_DIZIN" -type d -name medya | head -1)"
 if [ -n "$MEDYA_KAYNAK" ] && [ "$HEDEF" = "$POSTGRES_DB" ]; then
-  docker cp "$MEDYA_KAYNAK/." aslihangyd-uygulama:/uygulama/medya/
+  docker cp "$MEDYA_KAYNAK/." "$UYGULAMA_KABI":/uygulama/medya/
 else
   echo "[$(date -Is)] Medya atlandı (test geri yüklemesi veya dosya yok)."
 fi

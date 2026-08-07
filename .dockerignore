@@ -1,0 +1,66 @@
+# =============================================================================
+# aslihangyd.com — derleme bağlamı dışında kalanlar
+#
+# ⚠️ BU DOSYA BİR GÜVENLİK SINIRIDIR, HIZ AYARI DEĞİL.
+#
+# Yokken ölçüldü (7 Ağustos 2026):
+#
+#   · `.env` (4658 bayt, 4 sır: veritabanı şifresi, PAYLOAD_SECRET,
+#     BAKIM_ANAHTARI, SMTP) `derleyici` katmanına KOPYALANIYORDU.
+#     Çok aşamalı derleme son imajı temiz tutuyor ama ara katman diskte
+#     kalıyor ve derleme önbelleği dışa aktarılırsa (CI'da yaygın) sırlar
+#     onunla birlikte gidiyor.
+#
+#   · Ana makinenin 975 MB'lık `node_modules` dizini, `COPY . .` ile
+#     imajda YENİ KURULMUŞ olanın ÜZERİNE yazılıyordu. Aynı platformda
+#     çalıştığı için fark edilmiyordu; farklı bir mimaride derlenen
+#     (`sharp`, `libpq`) ikili dosyalar sessizce yanlış olurdu.
+#
+#   · Geliştirme `.next` çıktısı (784 MB) ve `.git` (7,8 MB) da bağlama
+#     giriyordu. Derleme bağlamı toplam ~1,8 GB aktarılıyordu.
+#
+# `.gitignore` bunun yerine geçmez: Docker onu okumaz.
+# =============================================================================
+
+# ── Sırlar — ilk sırada, en önemlisi ────────────────────────────────────────
+.env
+.env.*
+!.env.example
+!.env.production.example
+docker/certs/
+
+# ── Bağımlılıklar: imajda yeniden kurulur ───────────────────────────────────
+node_modules
+.pnpm-store
+
+# ── Derleme çıktıları: imajda yeniden üretilir ──────────────────────────────
+.next
+out
+dist
+*.tsbuildinfo
+
+# ── Sürüm denetimi ve düzenleyici ───────────────────────────────────────────
+.git
+.gitignore
+.github
+.vscode
+.idea
+
+# ── Test ve geliştirme artıkları ────────────────────────────────────────────
+coverage
+.turbo
+*.log
+npm-debug.log*
+
+# ── Belgeler: imajda işe yaramaz ────────────────────────────────────────────
+docs
+# ⚠️ Yalnızca KÖKTEKİ .md dosyaları. `*.md` yazılırsa `public/OKUBENI.md`
+# de elenir ve `public/` bağlamda boş kalır — Dockerfile'ın o dizini
+# kopyalayan satırı yine düşer. Aynı hatanın ikinci hali.
+/*.md
+!/README.md
+
+# ⚠️ `src/migrations` HARİÇ TUTULMAZ.
+# Göçler uygulamanın bir parçası; `payload migrate` üretim kabında
+# koşuyor. Bunları dışarıda bırakmak, şemayı güncelleyemeyen bir imaj
+# üretirdi.
