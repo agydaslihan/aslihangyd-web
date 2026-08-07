@@ -1481,6 +1481,120 @@ robots.txt `Host`/`Sitemap` satırları hepsi portlu.
 
 ---
 
+## 1. aşama — Acil hatalar
+
+### 1.2 `/portfoy` performansı — N+1 HİPOTEZİ YANLIŞ ÇIKTI
+
+Sorgu sayısı PostgreSQL sunucu günlüğünden sayıldı (`log_statement=all`).
+
+⚠️ İlk sayım yöntemim hatalıydı: yalnızca `statement:` satırlarını arıyordum
+ve **0 sorgu** görünüyordu. Payload parametreli sorgu kullanıyor; PostgreSQL
+bunları genişletilmiş protokolde `execute` satırı olarak yazıyor.
+
+| İlan sayısı | `/portfoy` sorgu | Ortanca süre |
+| --- | --- | --- |
+| 6 | **15** | 0,84 sn (geliştirme) |
+| 50 | **16** | 0,28 sn |
+| 200 | **16** | 0,25 sn |
+
+**Sorgu sayısı sabit — N+1 yok.** Payload'ın postgres adaptörü ilişkileri
+ayrı sorgularla değil birleştirmelerle çözüyor.
+
+### Yine de gerçek bir israf vardı
+
+`/portfoy` her istekte **200 ilanı `depth: 1` ile** çekip bunların ~32'sini
+gösteriyordu. `depth: 1`, 200 kaydın her biri için mahalle, görsel ve
+danışman ilişkilerini çözüyordu.
+
+İki aşamalı yapıya geçildi:
+
+1. Ölçütlerin ihtiyacı olan **dört alan**, `depth: 0` ile 200 kayıt için
+   (ölçütler yalnızca kategori, kira çarpanı ve tarihe bakıyor).
+2. Yalnızca **seçilen ~32 kayıt** için tam belge, `depth: 1` ile, tek
+   `in` sorgusuyla.
+
+200 ilanla 8 istek, üretim derlemesi:
+
+| | En hızlı | Ortanca | En yavaş |
+| --- | --- | --- | --- |
+| Önce (tek aşamalı) | 0,156 sn | 0,254 sn | **0,707 sn** |
+| Sonra (iki aşamalı) | 0,169 sn | **0,214 sn** | **0,354 sn** |
+
+⚠️ **Kazanç mütevazı, abartmıyorum.** Ortanca %16 iyileşti; asıl fark uç
+gecikmede (%50) ve tutarlılıkta. İlk tek örnekte gördüğüm 1,48 sn soğuk
+başlangıç sapmasıydı — sekiz örnekli ölçüm onu düzeltti.
+
+Asıl gerekçe yapısal: ağır sorgu artık **gösterilen kart sayısıyla**
+sınırlı, portföy büyüklüğüyle değil. 200'de fark küçük, 2000'de büyük olur.
+
+### Geliştirmedeki 1–13 saniye — yeniden üretilemedi
+
+Çalışan geliştirme sunucusunda ölçtüm:
+
+| Rota | 1. istek | 2. istek | 3. istek |
+| --- | --- | --- | --- |
+| `/portfoy` | 0,83 sn | 0,82 sn | 0,67 sn |
+| `/mahalleler` | 0,19 sn | 0,24 sn | — |
+| `/` | 0,28 sn | 0,36 sn | — |
+
+Bildirilen 1–13 sn **yeniden üretilemedi**; muhtemelen Turbopack'in ilk
+derleme davranışıydı. Ama bildirilen asıl belirti doğrulandı: `/portfoy`
+tekrar isteklerde hızlanmıyor ve diğer rotalardan ~4 kat yavaş kalıyor.
+İki aşamalı yapı bunu da hafifletiyor.
+
+### 1.1 `allowedDevOrigins`
+
+Sabit IP koddan çıkarıldı, `DEV_IZINLI_KAYNAKLAR` ortam değişkenine
+taşındı. Liste boşken geliştirmede terminale uyarı basılıyor — sessiz
+başarısızlık (sunucu 200, sayfa beyaz) teşhisi en zor arıza türü.
+
+⚠️ **Düzenlemem ilk denemede sessizce uygulanmamıştı**: özgün satırın
+sonunda sekme karakteri vardı, eşleşme tutmadı ve `typecheck`/`lint`
+temiz döndüğü için fark edilmedi. Dosyayı okuyarak doğruladım.
+
+### 1.3 DEMO verisi
+
+- Seed koruması **kara listeden beyaz listeye** çevrildi. Önceki sürüm
+  yalnızca `NODE_ENV === 'production'` ise duruyordu; `NODE_ENV` tanımsızsa
+  — kabuktan elle çalıştırırken en yaygın durum — çalışıyordu.
+- `scripts/demo-denetimi.ts` eklendi: hedef veritabanında `[DEMO]` / `[YUK]`
+  önekli kayıt varsa 1 ile çıkar. Yük veritabanına karşı denendi, 204 kayıt
+  buldu ve durdu.
+- CI'da karşılığı `src/lib/tohum.test.ts`: korumanın yerinde olduğunu
+  kaynak okuyarak doğrular (betiği çalıştırmaz — çalıştırmak demo veri
+  yazmak olurdu).
+
+### 1.4 Metin denetimi — bir gerçek bulgu
+
+Yatırım skoru metodoloji sayfası mahallenin değişimini "**Çorlu
+ortalamasıyla karşılaştırıyoruz**" diyordu. Sistem böyle bir hesap
+**yapmıyor**: `fiyatTrendiPuani()` hiçbir yerden çağrılmıyor, CMS doğrudan
+0–100 puan istiyor, karşılaştırmayı danışman yapıyor.
+
+Metin gerçeğe uyduruldu ve karşılaştırmayı kimin yaptığı açıkça yazıldı.
+Bölge radarı zaten aynı ilkeyi uyguluyordu (az mahallenin medyanını "Çorlu
+ortalaması" diye sunmayı reddediyor); tutarlılık sağlandı.
+
+Diğer taramalar temiz: "piyasa ortalaması", "Türkiye ortalaması", "garanti"
+gibi sahip olmadığımız veriye atıf yapan ifade bulunmadı.
+
+### 1.5 Statik üretim taraması
+
+Üretim derlemesinde statik üretilen **tek rota `/_not-found`** ve o
+`SITE_ADRESI` kullanmıyor.
+
+| Aday | Durum |
+| --- | --- |
+| `sitemap.ts` | ✅ `force-dynamic` (önceki turda düzeltildi) |
+| `robots.ts` | ✅ `force-dynamic` (önceki turda düzeltildi) |
+| OG görsel üretimi | Rota yok |
+| RSS / feed | Rota yok |
+| `generateStaticParams` | Hiçbir rotada kullanılmıyor |
+
+Aynı sınıftan başka hata **yok**.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

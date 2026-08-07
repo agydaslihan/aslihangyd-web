@@ -24,6 +24,21 @@ export type SiraOgesiVerisi =
   | { tip: 'ilan'; anahtar: string; ilan: Ilanlar }
   | { tip: 'kilitli'; anahtar: string; kayit: GizliKayit }
 
+/**
+ * Kurulum sırasında kullanılan ara biçim.
+ *
+ * Ölçütler yalnızca kimlik seçer; tam belgeler tekrar ayıklama BİTTİKTEN
+ * sonra tek sorguda çekilir. Erken çekmek, ayıklamayla düşecek kayıtların
+ * ilişkilerini de boşuna çözmek olurdu.
+ */
+type AraOge =
+  | { tip: 'kimlik'; anahtar: string; id: number }
+  | { tip: 'kilitli'; anahtar: string; kayit: GizliKayit }
+
+interface AraSira extends Omit<TemaSirasi, 'ogeler'> {
+  ogeler: AraOge[]
+}
+
 export interface TemaSirasi {
   anahtar: string
   baslik: string
@@ -91,16 +106,39 @@ async function ayarlariOku(): Promise<AyarSirasi[]> {
 }
 
 /**
- * Sıraların ilan havuzu.
+ * Sıraların ilan havuzu — İKİ AŞAMALI.
  *
- * Tek sorguyla çekilip bellekte süzülüyor: dört ayrı sorgu atmak hem
- * daha yavaş hem de ortalama kira çarpanını yine tüm portföyden hesaplamak
- * gerektiği için kaçınılmaz olarak beşinci bir sorgu doğururdu. Portföy
- * ölçeği (yüzlerce ilan) bunu rahatça kaldırıyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ İlk sürüm 200 ilanı `depth: 1` ile çekiyordu ve bunların ~32'sini
+ * gösteriyordu. Ölçüm (docs/ILERLEME.md):
+ *
+ *   · Sorgu sayısı 6 / 50 / 200 kayıtta SABİT 16 — yani N+1 YOKTU.
+ *   · Ama süre 200 kayıtta 0,28 → 1,48 sn'ye çıkıyordu (ilk istek).
+ *
+ * Sorun sorgu SAYISI değil, sorgu AĞIRLIĞIydı: `depth: 1`, 200 ilanın
+ * her biri için mahalle, görsel ve danışman ilişkilerini çözüyor.
+ *
+ * Çözüm iki aşama:
+ *   1. Ölçütlerin ihtiyacı olan DÖRT alan, `depth: 0` ile 200 kayıt için.
+ *      Ölçütler yalnızca kategori, kira çarpanı ve tarihe bakıyor.
+ *   2. Yalnızca SEÇİLEN ~32 kayıt için tam belge, `depth: 1` ile.
+ *
+ * Böylece ağır sorgu 200 satır yerine gösterilen kadar satır işliyor ve
+ * portföy büyüdükçe maliyet artmıyor — sıra başına gösterilen kart sayısı
+ * sabit olduğu için.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 const HAVUZ_SINIRI = 200
 
-async function havuzuGetir(): Promise<Ilanlar[]> {
+/** Ölçütlerin karar vermek için ihtiyaç duyduğu asgari alanlar. */
+interface HavuzKaydi {
+  id: number
+  kategori: string
+  kiraCarpani: number | null
+  createdAt: string
+}
+
+async function olcutHavuzuGetir(): Promise<HavuzKaydi[]> {
   try {
     const payload = await payloadGetir()
     const sonuc = await payload.find({
@@ -113,19 +151,51 @@ async function havuzuGetir(): Promise<Ilanlar[]> {
       },
       sort: '-createdAt',
       limit: HAVUZ_SINIRI,
+      // ⚠️ İlişki çözülmüyor: ölçütler ilişkilere bakmıyor.
+      depth: 0,
+      select: { id: true, kategori: true, kiraCarpani: true, createdAt: true },
+      ...ZIYARETCI,
+    })
+
+    return sonuc.docs.map((ilan) => ({
+      id: ilan.id,
+      kategori: ilan.kategori,
+      kiraCarpani: ilan.kiraCarpani ?? null,
+      createdAt: ilan.createdAt,
+    }))
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Seçilen ilanların tam belgeleri — tek sorguda.
+ *
+ * Sıra başına ayrı sorgu atmak N+1 üretirdi; tüm sıraların kimlikleri
+ * birleştirilip tek `in` sorgusuyla çekiliyor.
+ */
+async function secilenleriGetir(kimlikler: readonly number[]): Promise<Map<number, Ilanlar>> {
+  if (kimlikler.length === 0) return new Map()
+
+  try {
+    const payload = await payloadGetir()
+    const sonuc = await payload.find({
+      collection: 'ilanlar',
+      where: { id: { in: [...kimlikler] } },
+      limit: kimlikler.length,
       depth: 1,
       ...ZIYARETCI,
     })
-    return sonuc.docs
+    return new Map(sonuc.docs.map((ilan) => [ilan.id, ilan]))
   } catch {
-    return []
+    return new Map()
   }
 }
 
 export async function temaSiralariniGetir(): Promise<TemaSirasi[]> {
   const [ayarlar, havuz, gizli] = await Promise.all([
     ayarlariOku(),
-    havuzuGetir(),
+    olcutHavuzuGetir(),
     gizliPortfoyuGetir(),
   ])
 
@@ -137,14 +207,10 @@ export async function temaSiralariniGetir(): Promise<TemaSirasi[]> {
   const karistirilan = kilitliBolumVar ? Math.min(ARAYA_GIREN_KILITLI, gizli.length) : 0
   const karistirilanlar = gizli.slice(0, karistirilan)
 
-  const olcutGirdileri = havuz.map((ilan) => ({
-    id: ilan.id,
-    kategori: ilan.kategori,
-    kiraCarpani: ilan.kiraCarpani ?? null,
-    createdAt: ilan.createdAt,
-  }))
+  // Havuz zaten ölçüt girdisi biçiminde geliyor.
+  const olcutGirdileri = havuz
 
-  const siralar: TemaSirasi[] = ayarlar.map((ayar, sira) => {
+  const siralar: AraSira[] = ayarlar.map((ayar, sira) => {
     const tanim = olcutTanimi(ayar.olcut)
 
     if (tanim.kilitli) {
@@ -171,28 +237,19 @@ export async function temaSiralariniGetir(): Promise<TemaSirasi[]> {
       }
     }
 
-    const sonuc = olcutUygula(
-      ayar.olcut,
-      havuz.map((ilan) => ({
-        id: ilan.id,
-        kategori: ilan.kategori,
-        kiraCarpani: ilan.kiraCarpani ?? null,
-        createdAt: ilan.createdAt,
-        kayit: ilan,
-      })),
-      olcutGirdileri,
-      ayar.adet,
-    )
+    const sonuc = olcutUygula(ayar.olcut, havuz, olcutGirdileri, ayar.adet)
 
     return {
       anahtar: `${ayar.olcut}-${sira}`,
       baslik: ayar.baslik ?? tanim.varsayilanBaslik,
       altBaslik: ayar.altBaslik ?? tanim.varsayilanAltBaslik,
       kilitli: false,
+      // Kimlikler şimdilik yer tutuyor; tam belgeler aşağıda tek sorguda
+      // çekilip yerlerine konuyor.
       ogeler: sonuc.ilanlar.map((secilen) => ({
-        tip: 'ilan' as const,
+        tip: 'kimlik' as const,
         anahtar: `ilan-${secilen.id}`,
-        ilan: secilen.kayit,
+        id: secilen.id,
       })),
       bosSebebi: sonuc.bosSebebi,
     }
@@ -206,7 +263,7 @@ export async function temaSiralariniGetir(): Promise<TemaSirasi[]> {
   const ilanSiralari = siralar
     .filter((sira) => !sira.kilitli)
     .map((sira) => ({
-      ilanlar: sira.ogeler.flatMap((oge) => (oge.tip === 'ilan' ? [{ id: oge.ilan.id, oge }] : [])),
+      ilanlar: sira.ogeler.flatMap((oge) => (oge.tip === 'kimlik' ? [{ id: oge.id, oge }] : [])),
       hedef: sira,
     }))
 
@@ -229,5 +286,25 @@ export async function temaSiralariniGetir(): Promise<TemaSirasi[]> {
     )
   }
 
-  return siralar
+  /**
+   * ⚠️ Tam belgeler EN SONDA, tek sorguda.
+   *
+   * Tekrar ayıklama ve kilitli kart karıştırma bittikten sonra çekiliyor:
+   * ayıklamayla düşen kayıtların ilişkilerini çözmek boşa iş olurdu.
+   */
+  const kimlikler = siralar.flatMap((sira) =>
+    sira.ogeler.flatMap((oge) => (oge.tip === 'kimlik' ? [oge.id] : [])),
+  )
+  const belgeler = await secilenleriGetir(kimlikler)
+
+  return siralar.map((sira) => ({
+    ...sira,
+    ogeler: sira.ogeler.flatMap((oge): SiraOgesiVerisi[] => {
+      if (oge.tip === 'kilitli') return [oge]
+      const ilan = belgeler.get(oge.id)
+      // Belge arada silinmişse kart hiç gösterilmez — boş kart göstermek,
+      // olmayan bir taşınmazı varmış gibi sunmak olurdu.
+      return ilan === undefined ? [] : [{ tip: 'ilan', anahtar: oge.anahtar, ilan }]
+    }),
+  }))
 }

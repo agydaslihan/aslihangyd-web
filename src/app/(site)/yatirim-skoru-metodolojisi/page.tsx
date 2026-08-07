@@ -102,9 +102,26 @@ export default function SkorMetodolojisiSayfasi() {
             her mahalleye yüksek puan verirdik ve skor hiçbir şey ayırt etmezdi.
           </p>
           <p className="text-metin-2 mt-3 leading-relaxed">
-            Bunun yerine mahallenin değişimini{' '}
-            <strong className="text-metin font-medium">Çorlu ortalamasıyla</strong>{' '}
-            karşılaştırıyoruz. Ortalamayla aynıysa 50 puan; üstündeyse yüksek, altındaysa düşük.
+            Bunun yerine mahallenin değişimi{' '}
+            <strong className="text-metin font-medium">diğer Çorlu mahalleleriyle</strong>{' '}
+            karşılaştırılarak puanlanır: benzer performansta 50 puan, üstünde yüksek, altında düşük.
+          </p>
+          {/*
+            ⚠️ Buradaki ifade bilinçli olarak "karşılaştırıyoruz" değil
+            "karşılaştırılarak puanlanır".
+
+            Sistem şu an bir "Çorlu ortalaması" HESAPLAMIYOR: karşılaştırmayı
+            danışman yapıyor ve sonucu 0–100 olarak giriyor. Bunu
+            "karşılaştırıyoruz" diye yazmak, yapmadığımız bir hesabı
+            yaptığımızı iddia etmek olurdu.
+
+            Ortalamayı otomatik hesaplamak için yeterli mahalle verisi yok;
+            aynı ilkeyi bölge radarı da uyguluyor ve az sayıda mahallenin
+            medyanını "Çorlu ortalaması" diye sunmayı reddediyor.
+          */}
+          <p className="text-metin-3 text-govde-kucuk mt-3">
+            Bu karşılaştırmayı şu an danışman yapıyor; sistem kendiliğinden bir Çorlu ortalaması
+            hesaplamıyor. Yeterli mahalle verisi biriktiğinde otomatikleşecek.
           </p>
         </section>
 

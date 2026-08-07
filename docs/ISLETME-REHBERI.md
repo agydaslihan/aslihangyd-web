@@ -487,6 +487,34 @@ Günlük dosyası büyür; aylık döndürün (`/etc/logrotate.d/aslihangyd`):
 
 ---
 
+## 6b. ⚠️ Yayın öncesi kontrol listesi
+
+Her üretim dağıtımından **önce**, üretim `.env`'iyle:
+
+```bash
+# 1. Demo / yük-testi verisi kalmamış mı?
+pnpm payload run scripts/demo-denetimi.ts     # çıkış 0 bekleniyor
+```
+
+Çıkış 1 ise veritabanında `[DEMO]` ya da `[YUK]` önekli kayıt var ve
+**yayına çıkılmamalı** — bu kayıtlar ana sayfada ve portföyde görünür.
+
+```bash
+# 2. Genel adres portu içeriyor mu?
+grep NEXT_PUBLIC_SERVER_URL .env              # https://aslihangyd.com:8443
+
+# 3. Bakım anahtarı tanımlı mı?
+grep -q '^BAKIM_ANAHTARI=.\+' .env && echo tamam || echo EKSİK
+
+# 4. Yetki belgesi numarası girilmiş mi?
+#    Girilmemişse altbilgide her sayfada uyarı görünür.
+```
+
+⚠️ Seed betiği artık yalnızca `NODE_ENV=development` ile çalışır. Üretim
+veritabanına bağlı bir kabukta `pnpm seed` yazmak artık mümkün değil.
+
+---
+
 ## 7. Yedekleme
 
 ```bash
