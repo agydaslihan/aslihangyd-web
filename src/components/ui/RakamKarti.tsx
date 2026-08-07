@@ -10,6 +10,10 @@ import { sinif } from '@/lib/sinif'
  * ve sakin. Hiyerarşi tersine dönerse kart bir "bilgi kutusu"na dönüşür ve
  * taranabilirliğini kaybeder.
  *
+ * ⚠️ GEÇİŞ BİLEŞENİ. Yerini `IstatistikKarti` alıyor: gözlem sayısını
+ * zorunlu kılan sürüm o. E aşamasında çağrı yerleri taşınıp bu dosya
+ * silinecek.
+ *
  * ⚠️ Boş durum bu bileşenin birinci sınıf davranışıdır, kenar durumu değil.
  * Site uzun süre kısmi veriyle çalışacak; `deger` yoksa kart kırık
  * görünmez, "veri bekleniyor" der ve nedenini açıklar.
@@ -18,10 +22,10 @@ import { sinif } from '@/lib/sinif'
 type Ton = 'notr' | 'artis' | 'azalis' | 'vurgu'
 
 const DEGER_TONLARI: Record<Ton, string> = {
-  notr: 'text-murekkep',
-  artis: 'text-artis',
-  azalis: 'text-azalis',
-  vurgu: 'text-pirinc-koyu',
+  notr: 'text-metin',
+  artis: 'text-basari',
+  azalis: 'text-hata',
+  vurgu: 'text-vurgu',
 }
 
 export interface RakamKartiOzellikleri {
@@ -53,36 +57,27 @@ export function RakamKarti({
     <div
       className={sinif(
         'flex flex-col gap-1',
-        !sade && 'border-cizgi bg-yuzey rounded-yumusak border p-4 sm:p-5',
+        !sade && 'bg-yuzey rounded-kart border-[0.5px] border-kenar p-4 sm:p-5',
         sinifAdi,
       )}
     >
-      <dt className="text-murekkep-3 text-mikro leading-tight font-medium tracking-wide">
-        {etiket}
-      </dt>
+      <dt className="text-metin-3 text-mikro leading-tight">{etiket}</dt>
 
       {veriVar ? (
         <>
-          <dd
-            className={sinif(
-              'rakam text-[1.75rem] leading-none font-semibold sm:text-[2rem]',
-              DEGER_TONLARI[ton],
-            )}
-          >
-            {deger}
-          </dd>
+          <dd className={sinif('rakam text-rakam font-medium', DEGER_TONLARI[ton])}>{deger}</dd>
           {altBilgi ? (
-            <dd className="text-murekkep-3 text-mikro mt-0.5 leading-snug">{altBilgi}</dd>
+            <dd className="text-metin-3 text-mikro mt-0.5 leading-snug">{altBilgi}</dd>
           ) : null}
         </>
       ) : (
         <dd className="mt-1 flex flex-col gap-1">
           {/* Boş durum, değerle aynı dikey alanı kaplar: veri gelince
               düzen zıplamaz (CLS hedefi < 0.1). */}
-          <span className="text-murekkep-3 text-[1.25rem] leading-none font-medium" aria-hidden>
+          <span className="text-metin-pasif text-baslik-2 leading-none" aria-hidden>
             —
           </span>
-          <span className="text-murekkep-3 text-mikro leading-snug">{bosAciklama}</span>
+          <span className="text-metin-3 text-mikro leading-snug">{bosAciklama}</span>
         </dd>
       )}
     </div>

@@ -37,7 +37,7 @@ export default async function MahallelerSayfasi() {
       ) : (
         <BosDurum
           baslik="Mahalle sayfaları hazırlanıyor"
-          aciklama="Pilot mahallelerin analiz metinleri üzerinde çalışıyoruz. Bir mahalle sayfasını yayına almadan önce, o mahalleyi gerçekten anlatan özgün bir metnin hazır olmasını bekliyoruz — yarım içerik yayınlamıyoruz."
+          neden="Pilot mahallelerin analiz metinleri üzerinde çalışıyoruz. Bir mahalle sayfasını yayına almadan önce, o mahalleyi gerçekten anlatan özgün bir metnin hazır olmasını bekliyoruz — yarım içerik yayınlamıyoruz."
           ikon={<KonumIkon width={32} height={32} />}
           eylem={
             <Buton href="/iletisim" gorunum="ikincil">

@@ -41,7 +41,7 @@ export default function HataSayfasi({
         <Buton href="/" gorunum="ikincil">
           Ana sayfaya dönün
         </Buton>
-        <Buton href="/iletisim" gorunum="sessiz">
+        <Buton href="/iletisim" gorunum="hayalet">
           Bize bildirin
         </Buton>
       </div>

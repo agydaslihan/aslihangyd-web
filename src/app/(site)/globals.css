@@ -3,104 +3,326 @@
 /* ==========================================================================
    aslihangyd.com — Tasarım sistemi
    --------------------------------------------------------------------------
-   Yön: emlak sitelerinin kırmızı "ACİL SATILIK" estetiğinin tam tersi.
-   Sakin, veri odaklı, pahalı. Referans: Stripe'ın netliği, Linear'ın
-   disiplini, Bloomberg'in veri yoğunluğu — ama sıcak ve insani.
+   ⚠️ BU DOSYA TEK GERÇEK KAYNAKTIR.
 
-   Renk kararları:
-   - Zemin saf beyaz değil, hafif sıcak kağıt tonu. Saf beyaz ekranda
-     klinik ve ucuz durur.
-   - Marka rengi derin lacivert: güven ve kurumsallık, dikkat çalmadan.
-   - Vurgu rengi pirinç sarısı. Yalnızca VERİ vurgularında kullanılır
-     (rakam, rozet, grafik) — dekorasyon için değil.
-   - Artı/eksi değişim renkleri kısık tonda. Parlak yeşil/kırmızı borsa
-     ekranı hissi verir; burada güven aranıyor, adrenalin değil.
+   Renk, tipografi ölçeği, köşe yarıçapı ve geçiş süreleri YALNIZCA burada
+   tanımlanır. Bileşenlerde ham hex kullanılmaz; `src/lib/tasarim/disiplin.
+   test.ts` bunu kod seviyesinde denetler.
 
-   Tüm renkler OKLCH: açıklık değeri algısal olarak doğrusal, bu yüzden
-   kontrast oranlarını tahmin etmek yerine hesaplamak mümkün.
+   Yön: emlak sitelerinin kırmızı/turuncu "ACİL SATILIK" estetiğinin tam
+   tersi. Sakin, veri odaklı, gözü yormayan. Ziyaretçi 3 saniyede aradığı
+   rakamı bulabilmeli.
+
+   Renk sistemi iki katmanlıdır ve bu ayrım bilinçlidir:
+
+   1. RAMPALAR (lacivert-*, bakir-*, notr-*) — mutlak değerlerdir, temaya
+      göre DEĞİŞMEZ. "lacivert-600" her yerde aynı renktir.
+   2. ANLAMSAL JETONLAR (zemin, yuzey, metin, vurgu…) — role işaret eder ve
+      temaya göre rampanın farklı basamağına bağlanır.
+
+   Bileşenler kural olarak anlamsal jetonu kullanır. Rampaya doğrudan
+   başvurmak, o rengin koyu temada da doğru olduğunu iddia etmek demektir;
+   bu iddia yalnızca kontrast testinde kanıtlanmışsa yapılır.
    ========================================================================== */
 
 @theme {
-  /* ── Yüzeyler ── */
-  --color-kagit: oklch(0.986 0.004 85);
-  --color-yuzey: oklch(1 0 0);
-  --color-yuzey-2: oklch(0.968 0.006 85);
-  --color-cizgi: oklch(0.9 0.008 85);
-  --color-cizgi-guclu: oklch(0.82 0.012 85);
+  /* ══════════════════════════════════════════════════════════════════════
+     RAMPA — Lacivert (ana renk)
+     Güven ve kurumsallık, dikkat çalmadan. Sitenin taşıyıcı rengi.
+     ══════════════════════════════════════════════════════════════════════ */
+  --color-lacivert-50: #f2f7fa;
+  --color-lacivert-100: #e4edf4;
+  --color-lacivert-200: #cbdce9;
+  --color-lacivert-300: #a3bfd9;
+  --color-lacivert-400: #6e9ac6;
+  --color-lacivert-500: #3a73ac;
+  --color-lacivert-600: #26588f;
+  --color-lacivert-700: #1d4270;
+  --color-lacivert-800: #16304f;
+  --color-lacivert-900: #0f1e33;
+  --color-lacivert-950: #0a1524;
 
-  /* ── Metin ── */
-  --color-murekkep: oklch(0.24 0.018 250);
-  --color-murekkep-2: oklch(0.46 0.016 250);
-  --color-murekkep-3: oklch(0.6 0.014 250);
+  /* ══════════════════════════════════════════════════════════════════════
+     RAMPA — Bakır (aksan)
 
-  /* ── Marka ── */
-  --color-lacivert: oklch(0.36 0.072 248);
-  --color-lacivert-koyu: oklch(0.27 0.062 250);
-  --color-lacivert-acik: oklch(0.95 0.016 248);
+     ⚠️ KULLANIM KURALI — pazarlığa kapalı
+     Dolu bakır zemin (bakir-600) YALNIZCA iki eylemde kullanılır:
+       · "Evimi değerlendir"      · "Erişim talep et"
+     Başka hiçbir yerde geçmez. Nadir olduğu için işe yarıyor; üçüncü bir
+     yerde kullanıldığı anda ikisi de sıradanlaşır.
 
-  /* ── Vurgu (yalnızca veri) ── */
-  --color-pirinc: oklch(0.72 0.115 78);
-  --color-pirinc-koyu: oklch(0.52 0.095 72);
-  --color-pirinc-acik: oklch(0.955 0.03 88);
+     Açık bakır tonları (bakir-100/200) bu kuralın dışındadır: bunlar eylem
+     değil DURUM boyar (örn. "yetki N gün sonra bitiyor"). Ayrım, gözün
+     "tıklanır" diye okuduğu şeyin dolu zemin olmasıdır.
 
-  /* ── Durum ── */
-  --color-artis: oklch(0.5 0.09 155);
-  --color-artis-acik: oklch(0.955 0.028 155);
-  --color-azalis: oklch(0.52 0.115 32);
-  --color-azalis-acik: oklch(0.96 0.024 32);
-  --color-uyari-acik: oklch(0.96 0.04 85);
+     Kural `src/lib/tasarim/disiplin.test.ts` içinde denetlenir.
+     ══════════════════════════════════════════════════════════════════════ */
+  --color-bakir-100: #f7e6d9;
+  --color-bakir-200: #efcbb2;
+  --color-bakir-300: #e3a981;
+  --color-bakir-400: #d68551;
+  --color-bakir-500: #c4682f;
+  --color-bakir-600: #a85529;
+  --color-bakir-700: #8a4423;
 
-  /* ── Tipografi ── */
+  /* ══════════════════════════════════════════════════════════════════════
+     RAMPA — Sıcak nötr
+     Zemin saf beyaz değil, hafif sıcak kağıt tonu. Saf beyaz ekranda
+     klinik ve ucuz durur.
+     ══════════════════════════════════════════════════════════════════════ */
+  --color-notr-50: #f8f7f3;
+  --color-notr-100: #efede7;
+  --color-notr-200: #e0ddd5;
+  --color-notr-300: #c4c1b8;
+  --color-notr-400: #9c998f;
+  --color-notr-500: #78756d;
+  /**
+   * ⚠️ 600 basamağı onaylanan listede YOKTU, erişilebilirlik için eklendi.
+   * Yardımcı metin rengi notr-500 seçildiğinde beyaz üzerinde 4,6:1 ile
+   * AA'yı geçiyor ama tint yüzey (notr-100) üzerinde 3,93:1'e düşüp
+   * kalıyordu — ve yardımcı metin çoğu zaman tam olarak orada duruyor.
+   * Bu ara basamak her iki yüzeyde de 5,7:1 ve üstünü veriyor.
+   */
+  --color-notr-600: #5f5c55;
+  --color-notr-700: #45433e;
+  --color-notr-900: #1a1917;
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ANLAMSAL — Yüzeyler ve metin
+     ══════════════════════════════════════════════════════════════════════ */
+  --color-zemin: var(--color-notr-50);
+  --color-yuzey: #ffffff;
+  --color-yuzey-2: var(--color-notr-100);
+  --color-kenar: var(--color-notr-200);
+  --color-kenar-guclu: var(--color-notr-300);
+  /**
+   * Form denetimlerinin kenarlığı ayrı bir jetondur.
+   *
+   * Dekoratif kart çerçevesi notr-200 olabilir (WCAG 1.4.11 kart
+   * çerçevesini kapsamaz), ama bir metin kutusunun sınırı bileşenin
+   * KENDİSİNİ tanımlar ve 3:1 ister. notr-200 beyaz üzerinde 1,3:1 —
+   * kutu, ışık yansıyan bir telefon ekranında kayboluyordu.
+   */
+  --color-kenar-giris: var(--color-notr-500);
+
+  --color-metin: var(--color-notr-900);
+  --color-metin-2: var(--color-notr-700);
+  --color-metin-3: var(--color-notr-600);
+  /**
+   * ⚠️ notr-400 beyaz üzerinde 2,9:1 verir — okunabilir metin için AA'yı
+   * geçmez. Bu yüzden ayrı bir jeton: yalnızca DEVRE DIŞI öğelerde kullanılır
+   * (WCAG 1.4.3 pasif bileşenleri kontrast şartından muaf tutar). Anlam
+   * taşıyan yardımcı metin için `metin-3` kullanılır.
+   */
+  --color-metin-pasif: var(--color-notr-400);
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ANLAMSAL — Marka rolleri
+
+     Üç ayrı rol, üç ayrı jeton. Tek bir "lacivert" jetonu hem metin hem
+     dolu zemin için kullanılamaz: koyu temada birinin doğru olduğu değer
+     diğerinde kontrastı düşürür.
+     ══════════════════════════════════════════════════════════════════════ */
+  /** Lacivert METİN — açık zemin üzerinde. */
+  --color-vurgu: var(--color-lacivert-700);
+  /** Lacivert TİNT ZEMİN — üzerine `vurgu` yazılır. */
+  --color-vurgu-zemin: var(--color-lacivert-100);
+  /** DOLU lacivert zemin — üzerine daima beyaz yazılır (WhatsApp, şerit). */
+  --color-lacivert-yuzey: var(--color-lacivert-800);
+  /**
+   * Grafik ve ilerleme çubuğu dolgusu.
+   *
+   * `lacivert-yuzey`ten ayrı bir jeton, çünkü ikisinin zemini farklı:
+   * dolu buton SAYFA zemininin üzerinde durur, çubuk dolgusu ise TİNT
+   * kanalın (yuzey-2) üzerinde. Koyu temada ikisi aynı değere bağlıyken
+   * çubuk kanalından 1,83:1 ile ayrışıyordu — yani görünmüyordu.
+   * Kontrast testi yakaladı.
+   */
+  --color-gosterge: var(--color-lacivert-600);
+  /** Bakır METİN — "Erişim talep et →" gibi bağlantılarda. */
+  --color-bakir-metin: var(--color-bakir-700);
+  /**
+   * "Yetki N gün sonra bitiyor" rozeti.
+   *
+   * Kehribar uyarı renginden ayrı tutuldu: bu bir hata değil, takvim
+   * bilgisi. Bakır tinti "yaklaşan bir tarih var" der, kehribar ise
+   * "bir şey yanlış" der. İkisi aynı sayfada karışmamalı.
+   */
+  --color-yetki-zemin: var(--color-bakir-100);
+  --color-yetki-metin: var(--color-bakir-700);
+
+  /* ══════════════════════════════════════════════════════════════════════
+     ANLAMSAL — Durum renkleri (doygunluğu düşük)
+
+     Parlak yeşil/kırmızı borsa ekranı hissi verir; burada güven aranıyor,
+     adrenalin değil.
+
+     ⚠️ Renk tek başına bilgi taşımaz. Her durum renginin yanında ikon veya
+     metin bulunur (WCAG 1.4.1).
+     ══════════════════════════════════════════════════════════════════════ */
+  --color-basari: #2f6b4f;
+  --color-basari-zemin: #eaf2ed;
+  /**
+   * ⚠️ Onaylanan uyarı rengi #A87A1E beyaz üzerinde 3,87:1 verir — ikon,
+   * kenarlık ve gösterge için yeterli (WCAG 1.4.11: 3:1), METİN için değil.
+   * Bu yüzden uyarı iki jetona ayrıldı. Ayrıntı: docs/ILERLEME.md.
+   */
+  --color-uyari: #a87a1e;
+  --color-uyari-metin: #7a5714;
+  --color-uyari-zemin: #faf3e4;
+  --color-hata: #a33a32;
+  --color-hata-zemin: #fbedec;
+  --color-bilgi: var(--color-lacivert-600);
+  --color-bilgi-zemin: var(--color-lacivert-50);
+
+  /* ══════════════════════════════════════════════════════════════════════
+     GEÇİŞ JETONLARI — E aşamasında SİLİNECEK
+
+     Mevcut ~40 bileşen bu adları kullanıyor. Tailwind bilinmeyen bir
+     yardımcı sınıfı sessizce üretmez: adları bir çırpıda değiştirmek,
+     hiçbir derleme hatası vermeden sayfaların renksiz kalmasına yol açardı.
+     Bu yüzden eski adlar korunuyor ama ONAYLANAN palete bağlanıyor — site
+     bugünden itibaren doğru renkleri kullanıyor.
+
+     E aşaması (feature/tasarim-uyarlama) çağrı yerlerini anlamsal jetonlara
+     taşıyıp bu bloğu silecek.
+     ══════════════════════════════════════════════════════════════════════ */
+  --color-kagit: var(--color-zemin);
+  --color-cizgi: var(--color-kenar);
+  --color-cizgi-guclu: var(--color-kenar-guclu);
+  --color-murekkep: var(--color-metin);
+  --color-murekkep-2: var(--color-metin-2);
+  --color-murekkep-3: var(--color-metin-3);
+  --color-lacivert: var(--color-vurgu);
+  --color-lacivert-koyu: var(--color-lacivert-yuzey);
+  --color-lacivert-acik: var(--color-vurgu-zemin);
+  /* Pirinç aksan kaldırıldı: yerini lacivert aldı. Bakır'a bağlanmadı,
+     çünkü bakır artık yalnızca iki eylemin rengi. */
+  --color-pirinc: var(--color-vurgu);
+  --color-pirinc-koyu: var(--color-vurgu);
+  --color-pirinc-acik: var(--color-vurgu-zemin);
+  --color-artis: var(--color-basari);
+  --color-artis-acik: var(--color-basari-zemin);
+  --color-azalis: var(--color-hata);
+  --color-azalis-acik: var(--color-hata-zemin);
+
+  /* ══════════════════════════════════════════════════════════════════════
+     TİPOGRAFİ
+
+     Inter + Source Serif 4, ikisi de `latin-ext` alt kümesiyle: Türkçe'nin
+     ş ğ ı İ ç ö ü karakterleri temel `latin` kümesinde YOK.
+
+     ⚠️ Ağırlık yalnızca 400 (gövde) ve 500 (başlık). 600/700 kullanılmaz —
+     kalın metin sakin tonu bozar ve ekranda bağırır. Denetim:
+     `src/lib/tasarim/disiplin.test.ts`.
+     ══════════════════════════════════════════════════════════════════════ */
   --font-sans: var(--yazi-arayuz), ui-sans-serif, system-ui, -apple-system, 'Segoe UI', sans-serif;
   --font-serif: var(--yazi-baslik), ui-serif, Georgia, 'Times New Roman', serif;
 
-  /* Ölçek: mobil öncelikli, başlıklar clamp ile akıcı büyür. */
-  --text-mikro: 0.75rem;
-  --text-mikro--line-height: 1.4;
-  --text-kucuk: 0.8125rem;
+  /* Ölçek sabittir, clamp yok: akıcı tipografi ölçek içindeki oranları
+     ekran genişliğine göre bozuyor ve hiyerarşi ekrandan ekrana değişiyordu. */
+  --text-baslik-1: 2.125rem; /* 34 — sayfa başlığı */
+  --text-baslik-1--line-height: 1.15;
+  --text-baslik-2: 1.375rem; /* 22 — bölüm */
+  --text-baslik-2--line-height: 1.25;
+  --text-baslik-3: 1.1875rem; /* 19 — alt bölüm */
+  --text-baslik-3--line-height: 1.3;
+  --text-govde: 1rem; /* 16 — gövde */
+  --text-govde--line-height: 1.7;
+  --text-govde-kucuk: 0.875rem; /* 14 */
+  --text-govde-kucuk--line-height: 1.6;
+  --text-yardimci: 0.8125rem; /* 13 */
+  --text-yardimci--line-height: 1.5;
+  --text-mikro: 0.75rem; /* 12 */
+  --text-mikro--line-height: 1.45;
+  --text-minik: 0.6875rem; /* 11 */
+  --text-minik--line-height: 1.4;
+
+  /* Büyük rakam gösterimi — istatistik kartlarının değeri. */
+  --text-rakam: 1.625rem; /* 26 */
+  --text-rakam--line-height: 1.1;
+  --text-rakam-buyuk: 2rem; /* 32 */
+  --text-rakam-buyuk--line-height: 1.05;
+
+  /* GEÇİŞ — E aşamasında silinecek. */
+  --text-kucuk: var(--text-yardimci);
   --text-kucuk--line-height: 1.5;
 
-  /* ── Yumuşak gölgeler ── Sert gölge ucuz durur. */
-  --shadow-kart: 0 1px 2px oklch(0.24 0.018 250 / 0.04), 0 4px 16px oklch(0.24 0.018 250 / 0.04);
-  --shadow-kalkik: 0 2px 4px oklch(0.24 0.018 250 / 0.05), 0 12px 32px oklch(0.24 0.018 250 / 0.07);
+  /* ══════════════════════════════════════════════════════════════════════
+     KÖŞE · KENARLIK · GEÇİŞ
+     ══════════════════════════════════════════════════════════════════════ */
+  --radius-rozet: 4px;
+  --radius-kucuk: 6px;
+  --radius-buton: 8px;
+  --radius-kart: 12px;
+  --radius-buyuk: 20px;
+  /* GEÇİŞ — E aşamasında silinecek. */
+  --radius-yumusak: var(--radius-buton);
 
-  --radius-yumusak: 0.625rem;
+  /**
+   * Kenarlık 0.5px. Kalın kenarlık kutuları birbirinden koparır ve sayfayı
+   * ızgaraya benzetir; kıl payı çizgi ayrımı yapar ama gürültü üretmez.
+   */
+  --kenarlik-ince: 0.5px;
+
+  --gecis-hizli: 150ms;
+  --gecis: 200ms;
+  --gecis-yavas: 250ms;
+  --gecis-egri: cubic-bezier(0.2, 0, 0, 1);
+
+  /* Yumuşak gölgeler — sert gölge ucuz durur. */
+  --shadow-kart: 0 1px 2px rgb(26 25 23 / 0.04), 0 4px 16px rgb(26 25 23 / 0.05);
+  --shadow-kalkik: 0 2px 4px rgb(26 25 23 / 0.05), 0 12px 32px rgb(26 25 23 / 0.08);
 }
 
 /* ==========================================================================
    Koyu tema
-   Sistem tercihine saygı gösterilir. Koyu temada pirinç vurgusu bir tık
-   parlatılır; koyu zeminde aynı ton söner ve kontrast AA'nın altına düşer.
+
+   ⚠️ Koyu tema değerleri Aslıhan'ın onayladığı listede YOK; onaylanan
+   paletten türetildi (docs/SENDEN-BEKLENENLER.md'de onaya sunuldu). Mevcut
+   sitede koyu tema vardı, sessizce kaldırmak gerileme olurdu.
+
+   Yalnızca ANLAMSAL jetonlar değişir; rampalar sabit kalır. Tüm
+   kombinasyonlar `src/lib/tasarim/kontrast.test.ts` içinde AA'ya karşı
+   ölçülür — göz kararı değil, hesap.
    ========================================================================== */
 
 @media (prefers-color-scheme: dark) {
   @theme {
-    --color-kagit: oklch(0.19 0.014 250);
-    --color-yuzey: oklch(0.23 0.016 250);
-    --color-yuzey-2: oklch(0.27 0.016 250);
-    --color-cizgi: oklch(0.32 0.016 250);
-    --color-cizgi-guclu: oklch(0.42 0.018 250);
+    --color-zemin: var(--color-lacivert-950);
+    --color-yuzey: var(--color-lacivert-900);
+    --color-yuzey-2: var(--color-lacivert-800);
+    --color-kenar: var(--color-lacivert-800);
+    --color-kenar-guclu: var(--color-lacivert-700);
+    --color-kenar-giris: var(--color-notr-400);
 
-    --color-murekkep: oklch(0.95 0.006 85);
-    --color-murekkep-2: oklch(0.78 0.01 250);
-    --color-murekkep-3: oklch(0.64 0.012 250);
+    --color-metin: var(--color-notr-50);
+    --color-metin-2: var(--color-notr-300);
+    --color-metin-3: var(--color-notr-400);
+    --color-metin-pasif: var(--color-notr-500);
 
-    --color-lacivert: oklch(0.72 0.075 248);
-    --color-lacivert-koyu: oklch(0.82 0.06 248);
-    --color-lacivert-acik: oklch(0.3 0.04 248);
+    --color-vurgu: var(--color-lacivert-300);
+    --color-vurgu-zemin: var(--color-lacivert-800);
+    /* Koyu temada dolu zemin bir basamak açılır: lacivert-800 sayfa
+       zeminine çok yakın kalıp butonu yüzeyden ayırmıyordu. */
+    --color-lacivert-yuzey: var(--color-lacivert-600);
+    --color-gosterge: var(--color-lacivert-400);
+    --color-bakir-metin: var(--color-bakir-300);
+    --color-yetki-zemin: #3a2413;
+    --color-yetki-metin: var(--color-bakir-300);
 
-    --color-pirinc: oklch(0.79 0.12 82);
-    --color-pirinc-koyu: oklch(0.86 0.1 85);
-    --color-pirinc-acik: oklch(0.3 0.045 80);
+    --color-basari: #7bc29c;
+    --color-basari-zemin: #16382a;
+    --color-uyari: #e0b45c;
+    --color-uyari-metin: #e0b45c;
+    --color-uyari-zemin: #3a2e12;
+    --color-hata: #e58c84;
+    --color-hata-zemin: #3d1d1a;
+    --color-bilgi: var(--color-lacivert-300);
+    --color-bilgi-zemin: var(--color-lacivert-800);
 
-    --color-artis: oklch(0.75 0.13 155);
-    --color-artis-acik: oklch(0.28 0.05 155);
-    --color-azalis: oklch(0.72 0.13 32);
-    --color-azalis-acik: oklch(0.29 0.055 32);
-    --color-uyari-acik: oklch(0.3 0.045 85);
-
-    --shadow-kart: 0 1px 2px oklch(0 0 0 / 0.3), 0 4px 16px oklch(0 0 0 / 0.25);
-    --shadow-kalkik: 0 2px 4px oklch(0 0 0 / 0.35), 0 12px 32px oklch(0 0 0 / 0.35);
+    --shadow-kart: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.25);
+    --shadow-kalkik: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.35);
   }
 }
 
@@ -111,8 +333,7 @@
 @layer base {
   :root {
     color-scheme: light dark;
-    /* Tarayıcı yerel arayüzlerini (odak halkası, seçim) markaya bağlar. */
-    accent-color: var(--color-lacivert);
+    accent-color: var(--color-vurgu);
   }
 
   html {
@@ -123,21 +344,44 @@
   }
 
   body {
-    background-color: var(--color-kagit);
-    color: var(--color-murekkep);
+    background-color: var(--color-zemin);
+    color: var(--color-metin);
     font-family: var(--font-sans);
-    /* Metinde eski usul rakam yerine hizalı rakam: tablolar kaymaz. */
+    font-size: var(--text-govde);
+    line-height: 1.7;
+    /**
+     * ⚠️ TÜM RAKAMLARDA hizalı rakam. İstisna yok: fiyat listelerinde
+     * orantılı rakamlar sütunları kaydırır ve tabloyu okunamaz hale getirir.
+     * Gövdede tanımlanır ki bir bileşen unutulduğunda da doğru davransın.
+     */
     font-variant-numeric: tabular-nums;
     text-rendering: optimizeLegibility;
   }
 
   h1,
   h2,
-  h3 {
+  h3,
+  h4 {
     font-family: var(--font-serif);
-    font-weight: 400;
-    letter-spacing: -0.015em;
+    /* 500'den kalın başlık yok. */
+    font-weight: 500;
+    letter-spacing: -0.01em;
     text-wrap: balance;
+  }
+
+  h1 {
+    font-size: var(--text-baslik-1);
+    line-height: 1.15;
+  }
+
+  h2 {
+    font-size: var(--text-baslik-2);
+    line-height: 1.25;
+  }
+
+  h3 {
+    font-size: var(--text-baslik-3);
+    line-height: 1.3;
   }
 
   p {
@@ -147,7 +391,7 @@
   /* Klavye ile gezinenler için her zaman görünür odak halkası.
      `:focus-visible` kullanılıyor ki fare tıklamasında halka çıkmasın. */
   :focus-visible {
-    outline: 2px solid var(--color-lacivert);
+    outline: 2px solid var(--color-vurgu);
     outline-offset: 2px;
     border-radius: 2px;
   }
@@ -241,10 +485,23 @@
   }
 }
 
-/** Büyük rakamlar için: hizalı, sıkı, dikkat çeken. */
+/**
+ * Okuma genişliği. 58ch'den uzun satırlarda göz satır başını kaybeder;
+ * uzun metin bloklarında bu sınır zorunludur.
+ */
+@utility olcu {
+  max-width: 58ch;
+}
+
+/** Kıl payı kenarlık — sistemin standart çerçevesi. */
+@utility cerceve {
+  border: var(--kenarlik-ince) solid var(--color-kenar);
+}
+
+/** Büyük rakamlar için: hizalı, sıkı, ağırlığı 500. */
 @utility rakam {
   font-variant-numeric: tabular-nums;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.01em;
   font-feature-settings: 'ss01';
 }
 
@@ -257,12 +514,12 @@
   background: linear-gradient(
     90deg,
     var(--color-yuzey-2) 25%,
-    var(--color-cizgi) 37%,
+    var(--color-kenar) 37%,
     var(--color-yuzey-2) 63%
   );
   background-size: 400% 100%;
   animation: iskelet-parla 1.4s ease infinite;
-  border-radius: var(--radius-yumusak);
+  border-radius: var(--radius-kucuk);
 }
 
 @keyframes iskelet-parla {
@@ -272,6 +529,23 @@
   100% {
     background-position: 0 50%;
   }
+}
+
+/**
+ * Kilitli portföy dokusu.
+ *
+ * ⚠️ Bulanıklaştırılmış fotoğraf DEĞİL. Bulanıklık "saklıyoruz" der, ucuz
+ * durur ve teknik olarak da yanlıştır — bulanık görsel yine de indirilir.
+ * Çapraz çizgili doku "bu bilgi henüz size ait değil" der; ayrıca hiçbir
+ * görsel isteği yapılmaz.
+ */
+@utility doku-kilit {
+  background-color: var(--color-yuzey-2);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 6px,
+    var(--color-kenar) 6px 7px
+  );
 }
 
 /** Ekran okuyucuya görünür, göze görünmez. */

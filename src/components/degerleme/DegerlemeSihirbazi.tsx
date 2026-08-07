@@ -162,9 +162,9 @@ function SonucEkrani({
   raporBaglantisi: string
 }) {
   const guvenTonlari = {
-    yuksek: 'artis',
+    yuksek: 'basari',
     orta: 'uyari',
-    dusuk: 'azalis',
+    dusuk: 'hata',
   } as const
 
   return (
@@ -288,7 +288,7 @@ function BeklemeEkrani({
   // değil "elimizde veri yok" durumudur ve öyle söylenmelidir.
   if (sebep === 'mahalle_verisi_yok' && mahalleSecildi) {
     return (
-      <div className="border-cizgi bg-uyari-acik rounded-yumusak border p-6">
+      <div className="border-kenar bg-uyari-zemin rounded-kart border-[0.5px] p-6">
         <h2 className="font-sans text-base font-semibold">
           {mahalleAdi} için henüz yeterli veri yok
         </h2>

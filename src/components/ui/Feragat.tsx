@@ -26,12 +26,7 @@ export function Feragat({
   sinifAdi?: string
 }) {
   return (
-    <p
-      className={sinif(
-        'text-murekkep-3 flex items-start gap-2 text-mikro leading-relaxed',
-        sinifAdi,
-      )}
-    >
+    <p className={sinif('text-metin-3 text-mikro olcu flex items-start gap-2', sinifAdi)}>
       <BilgiIkon width={14} height={14} className="mt-0.5 shrink-0" />
       <span>
         {metin}
@@ -66,5 +61,5 @@ export function VeriNotu({
 
   if (parcalar.length === 0) return null
 
-  return <p className={sinif('text-murekkep-3 text-mikro', sinifAdi)}>{parcalar.join(' · ')}</p>
+  return <p className={sinif('text-metin-3 text-mikro', sinifAdi)}>{parcalar.join(' · ')}</p>
 }

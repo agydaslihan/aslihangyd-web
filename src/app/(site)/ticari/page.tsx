@@ -142,7 +142,7 @@ export default async function TicariSayfasi() {
         ) : (
           <BosDurum
             baslik="Ticari portföyümüz görüşmeye açık"
-            aciklama="Ticari taşınmazların önemli bir kısmını yayınlamıyoruz — malik tarafı çoğu zaman ilanın açık olmasını istemiyor. Aradığınız özellikleri anlatın, portföyümüzden ve ağımızdan uygun olanları size özel derleyelim."
+            neden="Ticari taşınmazların önemli bir kısmını yayınlamıyoruz — malik tarafı çoğu zaman ilanın açık olmasını istemiyor. Aradığınız özellikleri anlatın, portföyümüzden ve ağımızdan uygun olanları size özel derleyelim."
             ikon={<AlanIkon width={32} height={32} />}
             eylem={<Buton href="/iletisim?tip=ticari">İhtiyacınızı anlatın</Buton>}
           />

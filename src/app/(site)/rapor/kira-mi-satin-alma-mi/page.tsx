@@ -52,7 +52,7 @@ export default async function KiraMiSatinAlmaMiRaporu({
         <div className="mx-auto max-w-2xl">
           <BosDurum
             baslik="Rapor üretilemedi"
-            aciklama="Bu rapor için gereken bilgiler bağlantıda eksik. Hesaplayıcıya dönüp bilgileri girdikten sonra rapor bağlantısı yeniden oluşacak."
+            neden="Bu rapor için gereken bilgiler bağlantıda eksik. Hesaplayıcıya dönüp bilgileri girdikten sonra rapor bağlantısı yeniden oluşacak."
             eylem={<Buton href={ARAC_ADRESI}>Hesaplayıcıya dön</Buton>}
           />
         </div>

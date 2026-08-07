@@ -163,7 +163,14 @@ function GonderButonu() {
   const { pending } = useFormStatus()
 
   return (
-    <Buton type="submit" boyut="buyuk" disabled={pending} tamGenislik>
+    <Buton
+      type="submit"
+      gorunum="lacivert"
+      boyut="buyuk"
+      pasif={pending}
+      pasifSebebi={pending ? 'Talebiniz gönderiliyor, sayfayı kapatmayın.' : undefined}
+      tamGenislik
+    >
       {pending ? 'Gönderiliyor…' : 'Talebi gönder'}
     </Buton>
   )

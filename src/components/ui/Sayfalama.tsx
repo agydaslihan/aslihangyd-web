@@ -29,7 +29,7 @@ export function Sayfalama({
         <Link
           href={adresUret(mevcutSayfa - 1)}
           rel="prev"
-          className="border-cizgi hover:border-lacivert hover:text-lacivert rounded-yumusak inline-flex min-h-11 items-center border px-4 text-sm"
+          className="border-kenar-guclu hover:border-vurgu hover:text-vurgu rounded-buton text-govde-kucuk inline-flex min-h-11 items-center border-[0.5px] px-4"
         >
           Önceki
         </Link>
@@ -38,7 +38,7 @@ export function Sayfalama({
       <ul className="flex items-center gap-1.5">
         {sayfalar.map((sayfa, sira) =>
           sayfa === null ? (
-            <li key={`bosluk-${sira}`} className="text-murekkep-3 px-1" aria-hidden>
+            <li key={`bosluk-${sira}`} className="text-metin-3 px-1" aria-hidden>
               …
             </li>
           ) : (
@@ -48,10 +48,10 @@ export function Sayfalama({
                 aria-current={sayfa === mevcutSayfa ? 'page' : undefined}
                 aria-label={`Sayfa ${sayfa}`}
                 className={sinif(
-                  'rakam rounded-yumusak inline-flex size-11 items-center justify-center border text-sm',
+                  'rakam rounded-buton text-govde-kucuk inline-flex size-11 items-center justify-center border-[0.5px]',
                   sayfa === mevcutSayfa
-                    ? 'border-lacivert bg-lacivert font-medium text-white'
-                    : 'border-cizgi hover:border-lacivert hover:text-lacivert',
+                    ? 'bg-lacivert-yuzey border-transparent font-medium text-white'
+                    : 'border-kenar-guclu hover:border-vurgu hover:text-vurgu',
                 )}
               >
                 {sayfa}
@@ -65,7 +65,7 @@ export function Sayfalama({
         <Link
           href={adresUret(mevcutSayfa + 1)}
           rel="next"
-          className="border-cizgi hover:border-lacivert hover:text-lacivert rounded-yumusak inline-flex min-h-11 items-center border px-4 text-sm"
+          className="border-kenar-guclu hover:border-vurgu hover:text-vurgu rounded-buton text-govde-kucuk inline-flex min-h-11 items-center border-[0.5px] px-4"
         >
           Sonraki
         </Link>

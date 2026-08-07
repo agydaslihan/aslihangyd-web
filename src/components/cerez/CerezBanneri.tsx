@@ -124,7 +124,7 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
 
           {ayrintili ? (
             <Buton
-              gorunum="sessiz"
+              gorunum="hayalet"
               onClick={() => kaydet({ analitik, pazarlama })}
               sinifAdi="sm:mr-auto"
               tamGenislik
@@ -133,7 +133,7 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
             </Buton>
           ) : (
             <Buton
-              gorunum="sessiz"
+              gorunum="hayalet"
               onClick={() => setAyrintili(true)}
               sinifAdi="sm:mr-auto"
               tamGenislik

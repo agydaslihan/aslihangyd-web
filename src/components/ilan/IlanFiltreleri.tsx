@@ -68,7 +68,7 @@ export function IlanFiltreleri({ mahalleler }: { mahalleler: Mahalleler[] }) {
         </button>
 
         {filtreSayisi > 0 ? (
-          <Buton href="/portfoy" gorunum="sessiz" boyut="kucuk">
+          <Buton href="/portfoy" gorunum="hayalet" boyut="kucuk">
             Temizle
           </Buton>
         ) : null}

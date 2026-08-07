@@ -69,7 +69,7 @@ export function HaritaBolumu({
     return (
       <BosDurum
         baslik="Harita verisi henüz girilmedi"
-        aciklama="Okul, sağlık, market, park, sanayi ve ulaşım noktaları ile mahalle sınırları yönetim panelinden girildiğinde harita burada çalışmaya başlayacak."
+        neden="Okul, sağlık, market, park, sanayi ve ulaşım noktaları ile mahalle sınırları yönetim panelinden girildiğinde harita burada çalışmaya başlayacak."
         ikon={<KonumIkon width={32} height={32} />}
         eylem={
           <Buton href="/mahalleler" gorunum="ikincil">

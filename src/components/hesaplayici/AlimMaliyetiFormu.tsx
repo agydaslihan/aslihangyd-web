@@ -86,7 +86,7 @@ export function AlimMaliyetiFormu({ parametreler }: { parametreler: VergiParamet
         ) : (
           <BosDurum
             baslik="Taşınmazın fiyatını girin"
-            aciklama="İlan fiyatının üzerine gelen tapu harcı, döner sermaye, sigorta ve komisyon kalemlerini tek tek gösterelim."
+            neden="İlan fiyatının üzerine gelen tapu harcı, döner sermaye, sigorta ve komisyon kalemlerini tek tek gösterelim."
           />
         )}
       </div>

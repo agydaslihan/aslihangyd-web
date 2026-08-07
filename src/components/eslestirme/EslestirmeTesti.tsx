@@ -202,23 +202,34 @@ export function EslestirmeTesti({
           />
         </div>
 
-        <div className="border-cizgi mt-8 flex items-center justify-between gap-3 border-t pt-5">
+        <div className="border-kenar mt-8 flex items-start justify-between gap-3 border-t-[0.5px] pt-5">
           <Buton
-            gorunum="sessiz"
+            gorunum="hayalet"
             boyut="kucuk"
             onClick={() => setAdimNo(Math.max(adimNo - 1, 0))}
-            disabled={adimNo === 0}
+            pasif={adimNo === 0}
+            pasifSebebi={adimNo === 0 ? 'İlk adımdasınız.' : undefined}
           >
             Geri
           </Buton>
 
           <div className="flex gap-2">
             {adim.atlanabilir ? (
-              <Buton gorunum="sessiz" boyut="kucuk" onClick={ilerle}>
+              <Buton gorunum="hayalet" boyut="kucuk" onClick={ilerle}>
                 Atla
               </Buton>
             ) : null}
-            <Buton boyut="kucuk" onClick={ilerle} disabled={!cevaplandi && !adim.atlanabilir}>
+            <Buton
+              gorunum="lacivert"
+              boyut="kucuk"
+              onClick={ilerle}
+              pasif={!cevaplandi && !adim.atlanabilir}
+              pasifSebebi={
+                !cevaplandi && !adim.atlanabilir
+                  ? 'Devam etmek için bir seçenek işaretleyin.'
+                  : undefined
+              }
+            >
               {adimNo + 1 >= adimlar.length ? 'Sonucu gör' : 'Devam'}
               <OkIkon width={16} height={16} />
             </Buton>
@@ -412,7 +423,7 @@ function Sonuclar({
       <div className="mx-auto max-w-2xl">
         <BosDurum
           baslik="Henüz eşleştirme yapamıyoruz"
-          aciklama={
+          neden={
             sonuc.durum === 'cevap_eksik'
               ? 'Eşleştirme için en az ne aradığınızı bilmemiz gerekiyor.'
               : 'Mahallelerin eşleştirme profilleri henüz doldurulmadı. Yarım veriyle "%89 uyum" demek, o yüzdeyi anlamsız kılardı — bu yüzden sonuç üretmiyoruz.'
@@ -490,7 +501,7 @@ function Sonuclar({
         <Buton href="/mahalleler/karsilastir" gorunum="ikincil" boyut="orta">
           Mahalleleri karşılaştır
         </Buton>
-        <Buton onClick={onBastanBasla} gorunum="sessiz" boyut="orta">
+        <Buton onClick={onBastanBasla} gorunum="hayalet" boyut="orta">
           Testi tekrar çöz
         </Buton>
       </div>
@@ -580,7 +591,7 @@ function EslesmeKarti({ eslesme, sira }: { eslesme: MahalleEslesmesi; sira: numb
         <Buton href={`/mahalleler/${eslesme.slug}`} gorunum="ikincil" boyut="kucuk">
           {eslesme.ad} sayfasına git
         </Buton>
-        <Buton href={`/portfoy?mahalle=${eslesme.slug}`} gorunum="sessiz" boyut="kucuk">
+        <Buton href={`/portfoy?mahalle=${eslesme.slug}`} gorunum="hayalet" boyut="kucuk">
           Bu mahalledeki portföy
         </Buton>
       </div>

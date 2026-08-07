@@ -64,7 +64,7 @@ export default async function PortfoySayfasi({
       ) : (
         <BosDurum
           baslik="Bu kriterlere uyan taşınmaz yok"
-          aciklama="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
+          neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
           eylem={
             <div className="flex flex-col gap-2 sm:flex-row">
               <Buton href="/portfoy" gorunum="ikincil">

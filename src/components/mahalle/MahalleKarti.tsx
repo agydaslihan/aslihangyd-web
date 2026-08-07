@@ -51,7 +51,7 @@ export function MahalleKarti({ mahalle }: { mahalle: Mahalleler }) {
         {m2 || carpan ? (
           <div className="mt-auto flex flex-wrap gap-2 pt-2">
             {m2 ? <Rozet>Ort. m²: {m2}</Rozet> : null}
-            {carpan ? <Rozet ton="pirinc">Kira çarpanı {carpan}</Rozet> : null}
+            {carpan ? <Rozet ton="lacivert">Kira çarpanı {carpan}</Rozet> : null}
           </div>
         ) : null}
       </div>

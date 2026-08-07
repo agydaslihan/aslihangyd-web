@@ -168,7 +168,7 @@ export function KiraGeliriVergisiFormu({ parametreler }: { parametreler: VergiPa
         ) : (
           <BosDurum
             baslik="Aylık kira gelirinizi girin"
-            aciklama="İstisna, gider ve vergi dilimlerini adım adım göstererek yıllık vergi yükünüzü hesaplayalım."
+            neden="İstisna, gider ve vergi dilimlerini adım adım göstererek yıllık vergi yükünüzü hesaplayalım."
           />
         )}
       </div>

@@ -149,7 +149,7 @@ export function KrediFormu() {
         ) : (
           <BosDurum
             baslik="Kredi bilgilerini girin"
-            aciklama="Tutar, aylık faiz oranı ve vadeyi girdiğinizde aylık taksit, toplam geri ödeme ve tam ödeme planı hesaplanır."
+            neden="Tutar, aylık faiz oranı ve vadeyi girdiğinizde aylık taksit, toplam geri ödeme ve tam ödeme planı hesaplanır."
           />
         )}
       </div>
