@@ -131,23 +131,38 @@ komut şüphelidir.**
 
 | Parça | Durum | Kanıt | Risk |
 | --- | --- | --- | --- |
-| `docker/Dockerfile` | **yazıldı-ama-hiç-çalıştırılmadı** | Dosya var; **bir kez bile `docker build` çalıştırılmadı** | İmaj hiç üretilmedi. Standalone çıktı, non-root kullanıcı, sharp bağımlılığı — hiçbiri denenmedi |
-| `docker/compose.prod.yml` | **yazıldı-ama-hiç-çalıştırılmadı** | YAML geçerliliği doğrulandı; **`docker compose up` hiç çalışmadı** | Servisler birbirini bulur mu, healthcheck geçer mi bilinmiyor |
+| `docker/Dockerfile` | **bitti** | ✅ 7 Ağu 2026: ilk derlemede **kırık çıktı** (`public/` dizini yok). Düzeltildi; 452 MB imaj derlendi, kap çalıştırıldı, `/api/saglik` 200, healthcheck **healthy**. Son imajda `.env`/`.git` yok, `node_modules` 58 MB | Gerçek üretim donanımında (3,2 GB RAM) derlenmedi — imaj CI'da derleniyor, sunucuda derlenmeyecek |
+| `docker/compose.prod.yml` | **kısmen** | `config` doğrulaması geçiyor; `gocmen` profil izolasyonu sınandı (profilsiz görünmüyor). Uygulama kabı **elle** çalıştırılıp doğrulandı | Tüm yığın (Caddy + postgres + redis + uygulama) birlikte hiç ayağa kalkmadı; sertifika ve 8443 gerçek ortamda denenmedi |
 | `docker/Caddyfile` | **kısmen** | `caddy validate` → *Valid configuration*; gerçek IP zinciri **yerel Caddy 2.10 ile sahte üst sunucuya karşı denendi ve çalıştı** | Gerçek sertifikayla, gerçek Cloudflare arkasında denenmedi |
-| **GitHub Actions deploy iş akışı** | **eksik** | `.github/workflows/` içinde yalnızca `ci.yml` ve `lighthouse.yml` var. **Deploy iş akışı hiç yazılmadı** | `compose.prod.yml` `ghcr.io/...:latest` imajını çekiyor ama **o imajı üreten hiçbir şey yok** — `docker compose pull` başarısız olur |
+| **İmaj iş akışı** | **bitti** | ✅ `.github/workflows/imaj.yml` yazıldı: uygulama + göçmen imajlarını derler ve GHCR'a yayımlar, PR'da yalnızca derler. Her iki hedef de yerelde derlenip çalıştırıldı | ⚠️ İş akışının GitHub'da koştuğu **henüz görülmedi** — ilk koşu bu PR'da. **Dağıtım yapmaz**, bilinçli: göçün ne zaman koşacağına insan karar verir |
 | `/srv/aslihangyd` dizin yapısı | **yazıldı-ama-hiç-çalıştırılmadı** | Yalnızca belgede komut olarak var | — |
 | `deploy` kullanıcısı | **yazıldı-ama-hiç-çalıştırılmadı** | Belgede geçiyor, oluşturulmadı | — |
-| Migration üretim yolu | **kısmen** | ✅ 7 Ağustos 2026: boş bir veritabanında (`template_postgis`'ten) **dokuz göçün tamamı sıfırdan koştu** — 41 tablo, hatasız. Zincir artık kanıtlı. | Kap başlarken migration otomatik koşmuyor; elle adım gerekiyor ve bu yazılı değil — 3. aşamada belgelenecek. ⚠️ Bu sınavda C ve D dallarının birleşmesinden kalan bozuk bir şema fotoğrafı bulundu; düzeltilmeseydi üretimin **ilk kurulumu** `relation already exists` ile kırılacaktı (bkz. ILERLEME.md, 2. aşama) |
-| `scripts/yedekle.sh` | **yazıldı-ama-hiç-çalıştırılmadı** | **Bir kez bile çalışmadı.** `restic` kurulu mu bilinmiyor | Yedek alınmıyor olabilir ve kimse fark etmez |
-| `scripts/geri-yukle.sh` | **yazıldı-ama-hiç-çalıştırılmadı** | **Bir kez bile çalışmadı** | ⚠️ Test edilmemiş yedek, yedek değildir |
-| `.env` konumu | **hatalı** | `compose.prod.yml` `docker/` altında; compose varsayılan olarak `.env`'i **compose dosyasının yanında** arar, dosya ise kökte | Belgedeki komutlar `--env-file .env` ile çalışır, o bayrak unutulursa `${...:?}` değişkenleri patlar |
-| `.env.production.example` | **eksik** | Yalnızca `.env.example` var | Üretimde neyin farklı olması gerektiği yazılı değil |
+| Migration üretim yolu | **bitti** | ✅ Boş veritabanında dokuz göç sıfırdan koştu (41 tablo). ⚠️ Üretim imajında göç **çalıştırılamıyordu** — standalone çıktıda ne kaynak ne CLI var. Ayrı `gocmen` imajı eklendi, `migrate` ve `migrate:status` kapta çalıştırılarak doğrulandı; §5.2–5.3'e yazıldı | ⚠️ C ve D dallarının birleşmesinden kalan bozuk şema fotoğrafı da burada bulundu; düzeltilmeseydi ilk kurulum `relation already exists` ile kırılırdı |
+| `scripts/yedekle.sh` | **bitti** | ✅ Gerçek restic deposuna karşı çalıştırıldı: döküm + `forget --prune` + `check` hepsi geçti | ⚠️ `restic` **sunucuda kurulu değil** olabilir; §7'nin ilk adımı budur. Uzak depo (S3/B2/sftp) hiç denenmedi — yerel depoyla sınandı |
+| `scripts/geri-yukle.sh` | **bitti** | ✅ Tam döngü: yedek al → ayrı veritabanına geri yükle → doğrula. **41 tablonun tamamında satır sayıları birebir aynı**, PostGIS geometrisi (SRID 4326) bozulmadan geldi. İlk koşuda iki hata çıktı (hedef veritabanı oluşturulmuyordu; hata tuzağı çıkış kodunu hep 0 yazıyordu), düzeltildi | Medya dosyalarının geri yüklenmesi denenmedi (geliştirmede yüklü medya yok) |
+| `.env` konumu | **bitti** | ✅ Davranış kanıtlandı: `--env-file` olmadan `config` bile `required variable POSTGRES_DB is missing` ile düşüyor. Rehberde bayrağı unutan **4 komut** vardı, hepsi düzeltildi | Konum değişmedi (kökte); her komut `--env-file .env` taşımak zorunda |
+| `.env.production.example` | **bitti** | ✅ Yazıldı; her satır ⚠️ FARKLI / ✅ AYNI / 🆕 YALNIZCA ÜRETİM olarak işaretli. `src/lib/ortam.test.ts` kodun okuduğu her değişkenin belgelendiğini sınıyor — denetimde 8 belgesiz değişken ve bir yanlış ad (`..._NUMARASI` ↔ `..._NUMARA`) çıkmıştı | — |
 
-### Bu makinede denenebilenler
+### ✅ Bu makinede denendi — 7 Ağustos 2026
 
-Docker CLI **mevcut** (29.7.1). Yani Dockerfile derlemesi, compose ayağa
-kaldırma, yedekleme ve geri yükleme **bu makinede denenebilir** — 3. adımda
-yapılacak.
+Docker CLI mevcut (29.7.1). 3. aşamada Dockerfile derlemesi, kap
+çalıştırma, yedekleme ve geri yükleme **gerçekten koşturuldu.**
+
+Sonuç: bu bölümdeki "yazıldı-ama-hiç-çalıştırılmadı" satırlarının
+çoğu **bitti**'ye döndü — ama bedava değil. Altı gerçek hata çıktı ve
+ikisi dağıtımı ilk adımında durduracak cinstendi (imaj hiç derlenmiyordu;
+göç üretimde çalıştırılamıyordu). Ayrıntı: `docs/ILERLEME.md` → "3. aşama".
+
+**Hâlâ denenmemiş olanlar:**
+
+- Tüm yığının (Caddy + postgres + redis + uygulama) birlikte ayağa kalkması
+- Gerçek Cloudflare origin sertifikasıyla 8443 yayını
+- `DOCKER-USER` güvenlik duvarı kuralları
+- Uzak restic deposu (S3/B2/sftp) — yerel depoyla sınandı
+- `/srv/aslihangyd` dizin yapısı ve `deploy` kullanıcısı
+- İmaj iş akışının GitHub'da koşması
+
+Bunlar gerçek sunucu olmadan denenemez.
 
 ---
 

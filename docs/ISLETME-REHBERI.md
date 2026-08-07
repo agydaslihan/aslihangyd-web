@@ -89,8 +89,12 @@ sudo mkdir -p /srv/aslihangyd/{app,logs}
 sudo chown -R deploy:deploy /srv/aslihangyd
 cd /srv/aslihangyd/app
 git clone <depo> .
-cp .env.example .env
-# .env dosyasını doldurun — özellikle PAYLOAD_SECRET ve POSTGRES_PASSWORD
+# ⚠️ ÜRETİM örneği — `.env.example` GELİŞTİRME içindir.
+# Farkları tek tek işaretli: hangi değer değişmek zorunda, hangisi
+# yalnızca üretimde var. `.env.example` kopyalanırsa BAKIM_ANAHTARI ve
+# RESTIC_* eksik kalır — EİDS kontrolü ve yedekleme çalışmaz.
+cp .env.production.example .env
+# Ardından "AslihanTarafindanDoldurulacak" yazan her satırı doldurun.
 ```
 
 `PAYLOAD_SECRET` üretmek için:
@@ -125,26 +129,95 @@ chmod 700 /srv/aslihangyd/app/docker/certs
 chmod 600 /srv/aslihangyd/app/docker/certs/origin.*
 ```
 
-### 5.2 Çalıştırma
+### 5.2 İlk çalıştırma
+
+⚠️ Sıra önemli: **veritabanı → şema → uygulama.** Uygulamayı boş şemaya
+karşı başlatmak, panelin hata vermesine ve ilk isteklerin 500 dönmesine
+yol açar.
 
 ```bash
+cd /srv/aslihangyd/app
+
+# 1. Önce yalnızca veritabanı ve önbellek.
+docker compose --env-file .env -f docker/compose.prod.yml up -d postgres redis
+
+# 2. Şemayı kur. (Göçmen imajı hakkında aşağıdaki uyarıyı okuyun.)
+docker compose --env-file .env -f docker/compose.prod.yml \
+  --profile gocmen run --rm gocmen
+
+# 3. Uygulama ve Caddy.
 docker compose --env-file .env -f docker/compose.prod.yml up -d
-docker compose --env-file .env -f docker/compose.prod.yml run --rm uygulama \
-  node -e "require('payload').getPayload" # şema kontrolü
 ```
 
 Site **8443** üzerinden yayında: <https://aslihangyd.com:8443>
+
+#### ⚠️ Göç neden ayrı bir imajda koşuyor
+
+Uygulama imajı Next'in `standalone` çıktısı: içinde **ne kaynak kodu, ne
+`payload` CLI'ı, ne de `src/migrations` var.** `payload.config.ts`
+içindeki `migrationDir` derlenmiş paketin içine çözülüyor ve orada göç
+dosyası bulunmuyor.
+
+Bu yüzden aynı depodan ikinci bir imaj derleniyor (`:gocmen`) ve compose'da
+`gocmen` profili altında duruyor. Profil bilinçli: profil verilmeden
+hiçbir compose komutu onu başlatmaz. Göçün **ne zaman** koşacağına insan
+karar vermeli — kap her yeniden başladığında şema değiştiren bir kurulum,
+geri alınamaz bir değişikliği gece yarısı bir yeniden başlatmayla
+tetikleyebilirdi.
+
+Neyin bekleyeceğini görmek için (hiçbir şeyi değiştirmez):
+
+```bash
+docker compose --env-file .env -f docker/compose.prod.yml \
+  --profile gocmen run --rm gocmen pnpm payload migrate:status
+```
 
 ### 5.3 Güncelleme
 
 ```bash
 cd /srv/aslihangyd/app
-git pull
+
+# 1. Yeni imajları çek. Göçmen imajı `--profile` ile ayrıca çekilir.
 docker compose --env-file .env -f docker/compose.prod.yml pull
+docker compose --env-file .env -f docker/compose.prod.yml --profile gocmen pull gocmen
+
+# 2. Bekleyen göç var mı — UYGULAMADAN ÖNCE bak.
+docker compose --env-file .env -f docker/compose.prod.yml \
+  --profile gocmen run --rm gocmen pnpm payload migrate:status
+
+# 3. Varsa uygula. Yoksa bu adımı atlayın.
+docker compose --env-file .env -f docker/compose.prod.yml \
+  --profile gocmen run --rm gocmen
+
+# 4. Uygulamayı yenile.
 docker compose --env-file .env -f docker/compose.prod.yml up -d --no-deps uygulama
+
+# 5. Doğrula.
+curl -f https://aslihangyd.com:8443/api/saglik
+
+# 6. Eski imajları temizle — 3.2 GB'lık sunucuda disk gerçek bir kısıt.
 docker image prune -f
-curl -f https://aslihangyd.com/api/saglik
 ```
+
+⚠️ `git pull` **gerekmiyor**: uygulama artık depoyu değil, GHCR'daki imajı
+kullanıyor. Depoyu yine de güncel tutmak isterseniz zararı yok, ama
+çalışan sürümü belirleyen `UYGULAMA_IMAJI` değişkenidir.
+
+#### Geri dönüş
+
+`latest` hangi kodun çalıştığını söylemez. Her imaj commit SHA'sıyla da
+etiketleniyor; `.env` içinde sabitleyip kabı yeniden başlatın:
+
+```bash
+# GitHub → Packages → aslihangyd-web → etiket listesi
+echo 'UYGULAMA_IMAJI=ghcr.io/agydaslihan/aslihangyd-web:<sha>' >> .env
+docker compose --env-file .env -f docker/compose.prod.yml up -d --no-deps uygulama
+```
+
+⚠️ **Şema geri alınmaz.** Göç ileri doğru tasarlandı; eski bir uygulama
+sürümünü yeni bir şemaya karşı çalıştırmak genelde sorunsuzdur (yeni
+sütunları görmez), tersi değildir. Şemayı geri almak gerekiyorsa yoldan
+gidilmez, **yedekten dönülür** (§7).
 
 ### 5.4 Ağ güvenliği ⚠️
 
@@ -262,12 +335,12 @@ Dağıtımdan sonra **mutlaka** kontrol edin:
 ```bash
 # 1. Cloudflare üzerinden — kendi genel IP'nizi görmelisiniz
 curl -s https://aslihangyd.com:8443/api/saglik -o /dev/null -w '%{http_code}\n'
-docker compose -f docker/compose.prod.yml logs --tail 20 caddy | grep client_ip
+docker compose --env-file .env -f docker/compose.prod.yml logs --tail 20 caddy | grep client_ip
 ```
 
 ```bash
 # 2. Uygulama günlüğünde bu satır OLMAMALI
-docker compose -f docker/compose.prod.yml logs uygulama | grep "İstemci IP başlığı yok"
+docker compose --env-file .env -f docker/compose.prod.yml logs uygulama | grep "İstemci IP başlığı yok"
 ```
 
 Bu satır çıkıyorsa Caddy yapılandırması bozuk demektir. Uygulama o durumda
@@ -288,7 +361,7 @@ curl -s https://www.cloudflare.com/ips-v6
 farklıysa güncelleyip Caddy'yi yeniden yükleyin:
 
 ```bash
-docker compose -f docker/compose.prod.yml exec caddy caddy reload \
+docker compose --env-file .env -f docker/compose.prod.yml exec caddy caddy reload \
   --config /etc/caddy/Caddyfile
 ```
 
@@ -386,7 +459,7 @@ Anahtar `.env` içinde olmalı. Yoksa üretin:
 ```bash
 cd /srv/aslihangyd/app
 echo "BAKIM_ANAHTARI=$(openssl rand -hex 32)" >> .env
-docker compose -f docker/compose.prod.yml up -d --force-recreate uygulama
+docker compose --env-file .env -f docker/compose.prod.yml up -d --force-recreate uygulama
 ```
 
 ⚠️ `.env` değişince **kabı yeniden başlatmak zorunlu** — Docker ortam
@@ -508,7 +581,11 @@ Her üretim dağıtımından **önce**, üretim `.env`'iyle:
 
 ```bash
 # 1. Demo / yük-testi verisi kalmamış mı?
-pnpm payload run scripts/demo-denetimi.ts     # çıkış 0 bekleniyor
+#
+# ⚠️ Sunucuda `pnpm` yok — uygulama imajı standalone çıktı. Betik göçmen
+# imajında koşar; kaynak kodu orada duruyor.
+docker compose --env-file .env -f docker/compose.prod.yml --profile gocmen \
+  run --rm gocmen pnpm payload run scripts/demo-denetimi.ts   # çıkış 0 bekleniyor
 ```
 
 Çıkış 1 ise veritabanında `[DEMO]` ya da `[YUK]` önekli kayıt var ve
@@ -532,10 +609,21 @@ veritabanına bağlı bir kabukta `pnpm seed` yazmak artık mümkün değil.
 
 ## 7. Yedekleme
 
-```bash
-# İlk kurulum
-restic -r "$RESTIC_REPOSITORY" init
+⚠️ Önce `.env` içinde `RESTIC_REPOSITORY` ve `RESTIC_PASSWORD` tanımlı
+olmalı — yoksa betik ilk satırda durur. Değerler
+`.env.production.example` içinde açıklanıyor.
 
+```bash
+cd /srv/aslihangyd/app
+
+# İlk kurulum — depoyu bir kez oluştur.
+# `set -a` ile .env okunuyor: RESTIC_* değişkenleri restic'in kendisine
+# de gerekiyor, yalnızca betiğe değil.
+set -a; . ./.env; set +a
+restic init
+```
+
+```bash
 # Cron: /etc/cron.d/aslihangyd-yedek
 0 3 * * * deploy /srv/aslihangyd/app/scripts/yedekle.sh >> /srv/aslihangyd/logs/yedek.log 2>&1
 ```
@@ -548,13 +636,54 @@ Saklama: 7 gün, 4 hafta, 12 ay, 3 yıl.
 Test edilmemiş yedek, yedek değildir.
 
 ```bash
-# Ayrı bir test veritabanına geri yükle — üretime dokunmaz
-docker exec aslihangyd-postgres createdb -U <kullanici> geri_yukleme_testi
+cd /srv/aslihangyd/app
 HEDEF_VERITABANI=geri_yukleme_testi ./scripts/geri-yukle.sh latest
 ```
 
+Test veritabanını **elle oluşturmanız gerekmez**; betik yoksa
+`template_postgis`'ten oluşturur. (Düz `createdb` ile oluşturmayın:
+PostGIS uzantısı olmayan bir veritabanına `geometry` tipli döküm geri
+yüklenemez.)
+
 Üretim veritabanının üzerine yazmak için betik açık onay ister
 (`EVET, USTUNE YAZ` yazmanız gerekir).
+
+#### Geri yükleme başarılı mı — sayı saymak yetmez
+
+Betiğin "✓ tamamlandı" demesi veriyi doğrulamaz. En az bunlara bakın:
+
+```bash
+# Tüm tablolarda satır sayısı karşılaştırması
+SORGU="select string_agg(t.tablename||'='||(xpath('/row/c/text()',
+  query_to_xml('select count(*) c from public.'||quote_ident(t.tablename),
+  false,true,'')))[1]::text::int, E'\n' order by t.tablename)
+  from pg_tables t where t.schemaname='public'"
+
+for db in <uretim_db> geri_yukleme_testi; do
+  docker exec aslihangyd-postgres psql -U <kullanici> -d "$db" -tAc "$SORGU" > "/tmp/$db.txt"
+done
+diff /tmp/<uretim_db>.txt /tmp/geri_yukleme_testi.txt && echo "✓ tüm tablolar aynı"
+
+# PostGIS geometrileri sağ salim mi (en sinsi kayıp burada olur)
+docker exec aslihangyd-postgres psql -U <kullanici> -d geri_yukleme_testi -tAc \
+  "select count(*) filter (where merkez is not null) || ' mahalle konumu, srid=' ||
+   coalesce(max(st_srid(merkez))::text,'yok') from mahalleler"
+```
+
+### ✅ Bu tatbikat yapıldı — 7 Ağustos 2026
+
+Betikler o güne kadar **hiç çalıştırılmamıştı**. İlk koşuda üç hata çıktı
+ve düzeltildi:
+
+| Bulgu | Sonucu ne olurdu |
+| --- | --- |
+| Geri yükleme betiği hedef veritabanını oluşturmuyordu | Belgede önerilen aylık tatbikat hiçbir zaman çalışmazdı — `database does not exist` |
+| Hata tuzağı çıkış kodunu **her zaman 0** yazıyordu | Başarısız bir yedekleme günlüğe "çıkış kodu 0" diye düşerdi; gerçek bir felaket gecesinde en yanıltıcı çıktı |
+| Kap adları koda gömülüydü | Betik yalnızca üretimde koşabiliyordu, yani hiç denenemiyordu — "test edilmemiş yedek, yedek değildir" uyarısını taşıyan dosya kendi kendini test edilemez kılmıştı |
+
+Düzeltmelerden sonra tam döngü koşturuldu: yedek al → ayrı veritabanına
+geri yükle → **41 tablonun tamamında satır sayıları birebir aynı**,
+PostGIS geometrisi (`POINT(27.7997 41.1592)`, SRID 4326) bozulmadan geldi.
 
 ---
 

@@ -1719,6 +1719,95 @@ sessizce atlanmaz.
 
 ---
 
+## 3. aşama — Üretim yolu
+
+**Dal:** `feature/uretim-yolu`
+
+> ⚠️ Bu aşamada üretim sunucusuna **hiçbir şey dağıtılmadı.** Yapılandırma
+> hazırlandı, komutlar yerel ortamda gerçekten çalıştırılarak doğrulandı.
+> Sunucudaki adımları Aslıhan çalıştıracak.
+
+### Bulunan altı hata
+
+`docs/DURUM.md` üretim yolunu "yazıldı ama hiç çalıştırılmadı" diye
+işaretlemişti. Çalıştırıldı; altı hata çıktı ve hepsi düzeltildi.
+
+| # | Bulgu | Bırakılsaydı ne olurdu |
+| --- | --- | --- |
+| 1 | **Üretim imajı hiç derlenemiyordu.** Dockerfile `public/` dizinini kopyalıyor, dizin depoda yok | `compose.prod.yml` var olmayan bir imajı çekiyordu; dağıtım ilk adımında dururdu |
+| 2 | **`.dockerignore` yoktu.** `.env` (4658 bayt, 4 sır) derleme katmanına kopyalanıyordu; ana makinenin 975 MB `node_modules`'ü imajdakinin üzerine yazıyordu | Derleme önbelleği dışa aktarılırsa sırlar onunla gider. Farklı mimaride derlenmiş ikili dosyalar (`sharp`) sessizce yanlış olurdu |
+| 3 | **Göç üretimde çalıştırılamıyordu.** Uygulama imajı `standalone`: ne kaynak, ne `payload` CLI, ne `src/migrations` var | Şema değişikliği içeren ilk dağıtım, uygulamayı ESKİ şemaya karşı başlatırdı |
+| 4 | **Geri yükleme betiği hedef veritabanını oluşturmuyordu** | Betiğin kendi başlığında önerilen aylık tatbikat hiçbir zaman çalışmazdı |
+| 5 | **Hata tuzağı çıkış kodunu her zaman 0 yazıyordu.** `$(date -Is)` komut ikamesi `$?` genişletilmeden önce koşup sıfırlıyordu | Başarısız bir yedekleme günlüğe "çıkış kodu 0" diye düşerdi |
+| 6 | **`.env.example` koddan sapmıştı.** Kod `NEXT_PUBLIC_WHATSAPP_NUMARA` okuyor, belge `..._NUMARASI` yazıyordu; 8 değişken hiç belgelenmemişti | Belgeyi harfiyen izleyen biri WhatsApp düğmesini boş numarayla yayına alırdı; `BAKIM_ANAHTARI` ve `RESTIC_*` eksik kalınca EİDS kontrolü ve yedekleme çalışmazdı |
+
+### Yedekleme tatbikatı — ilk kez yapıldı
+
+Yerel bir restic deposu ve geliştirme veritabanı kullanılarak tam döngü:
+**yedek al → ayrı veritabanına geri yükle → doğrula.**
+
+| Doğrulama | Sonuç |
+| --- | --- |
+| Tüm tablolarda satır sayısı | **41 tablonun tamamı birebir aynı** |
+| İlan içerik özeti (id, başlık, durum, yetki bitişi, fiyat) | md5 aynı |
+| PostGIS geometrisi | `POINT(27.7997 41.1592)`, SRID 4326 — bozulmadan geldi |
+
+⚠️ İlk denemede geometri sütunları boştu, yani karşılaştırma hiçbir şey
+kanıtlamıyordu. Gerçek bir geometri yazılıp döngü tekrarlandı — boş bir
+sütunun "eşleşmesi" doğrulama değildir.
+
+### Üretim imajı — ilk kez derlendi ve çalıştırıldı
+
+| Ölçüm | Değer |
+| --- | --- |
+| Uygulama imajı | 452 MB |
+| Göçmen imajı | 1,54 GB (yalnızca göç için, `up -d` ile başlamaz) |
+| Son imajda `.env` / `.git` | yok (doğrulandı) |
+| Son imajda `node_modules` | 58 MB (standalone budaması çalışıyor) |
+
+Kap geliştirme veritabanına karşı çalıştırıldı: `/api/saglik` **200**,
+kap sağlık durumu **healthy**, yedi rota 200 (`/` 0,50 sn · `/portfoy`
+0,20 sn · `/mahalleler` 0,06 sn · `/harita` 0,08 sn · `/admin/login`
+0,57 sn · `/sitemap.xml` · `/robots.txt`).
+
+✅ **`SITE_ADRESI` düzeltmesi de kanıtlandı:** site haritası, imaja
+gömülen derleme zamanı adresini değil, kaba çalışma zamanında verilen
+adresi yazdı. Bu, 8443 aşamasında yapılan ön eksiz değişken düzeltmesinin
+gerçekten işe yaradığının ilk canlı kanıtı.
+
+### Eklenenler
+
+| Dosya | Ne yapar |
+| --- | --- |
+| `.github/workflows/imaj.yml` | Uygulama ve göçmen imajlarını derler, GHCR'a yayımlar. **Dağıtım yapmaz.** PR'da yalnızca derler |
+| `.dockerignore` | Sır ve gereksiz dosyaları derleme bağlamının dışında tutar |
+| `.env.production.example` | Üretim değişkenleri; her satır ⚠️ FARKLI / ✅ AYNI / 🆕 YALNIZCA ÜRETİM olarak işaretli |
+| `src/lib/ortam.test.ts` | Kodun okuduğu her değişkenin belgelenmiş olduğunu sınar |
+| `public/OKUBENI.md` | Dizini var eder (imaj bu olmadan derlenmiyordu) ve neyin buraya konup konmayacağını yazar |
+| Dockerfile `gocmen` aşaması | Üretimde göç çalıştırmanın tek yolu |
+| compose `gocmen` servisi | `profiles: [gocmen]` — `up -d` ile başlamaz |
+
+### Karar: dağıtımı iş akışı tetiklemez
+
+İş akışı imajı derleyip yayımlar, orada durur. Sunucudaki
+`docker compose pull && up -d` komutunu insan çalıştırır.
+
+Gerekçe: dağıtım anı, veritabanı göçünün ne zaman koşacağına karar
+verilen tek an. Otomatik dağıtım, geri alınamaz bir şema değişikliğini
+gece yarısı bir merge ile başlatabilirdi. Aynı sebeple göçmen servisi
+compose profili arkasında: profil verilmeden hiçbir komut onu çağırmaz.
+
+### Karar: geri dönüş imajda, şemada değil
+
+Her imaj `latest` yanında commit SHA'sıyla da etiketleniyor; `.env`
+içindeki `UYGULAMA_IMAJI` ile eski bir sürüme dönülebilir.
+
+⚠️ Şema geri alınmaz. Göç ileri doğru tasarlandı; eski bir uygulama
+sürümünü yeni şemaya karşı çalıştırmak genelde sorunsuzdur (yeni sütunları
+görmez), tersi değildir. Şemayı geri almak gerekiyorsa yedekten dönülür.
+
+---
+
 ## Ölçümler
 
 ### Sunucu yanıt süresi (üretim derlemesi, yerel, demo veriyle)

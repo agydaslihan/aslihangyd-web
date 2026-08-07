@@ -108,6 +108,42 @@ services:
 
     networks: [ic]
 
+  # ⚠️ GÖÇMEN — `up -d` ile BAŞLAMAZ, elle çağrılır.
+  #
+  # Üretim imajı Next'in `standalone` çıktısı; içinde ne kaynak kodu ne de
+  # `payload` CLI'ı var, yani şema göçü orada çalıştırılamaz. Bu servis
+  # aynı depodan derlenen ayrı bir imajı (`:gocmen`) kullanıyor.
+  #
+  # ⚠️ `profiles` bilinçli: profil verilmeden hiçbir compose komutu bu
+  # servisi başlatmaz. Göçün NE ZAMAN koşacağına insan karar vermeli —
+  # kap her yeniden başladığında şema değiştiren bir kurulum, geri
+  # alınamaz bir değişikliği gece yarısı bir yeniden başlatmayla
+  # tetikleyebilirdi.
+  #
+  # Kullanım (docs/ISLETME-REHBERI.md §5.3):
+  #   docker compose --env-file .env -f docker/compose.prod.yml \
+  #     --profile gocmen run --rm gocmen pnpm payload migrate:status
+  #   docker compose --env-file .env -f docker/compose.prod.yml \
+  #     --profile gocmen run --rm gocmen
+  gocmen:
+    image: ${GOCMEN_IMAJI:-ghcr.io/agydaslihan/aslihangyd-web:gocmen}
+    profiles: [gocmen]
+
+    environment:
+      NODE_ENV: production
+      DATABASE_URI: postgres://${POSTGRES_USER}:${POSTGRES_PASSWORD}@postgres:5432/${POSTGRES_DB}
+      PAYLOAD_SECRET: ${PAYLOAD_SECRET:?PAYLOAD_SECRET tanimli olmali}
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+    # Göç kısa sürer ama şema değişikliği bellek isteyebilir; uygulamayla
+    # aynı sınıfta tutuluyor.
+    mem_limit: 700m
+
+    networks: [ic]
+
   postgres:
     image: postgis/postgis:17-3.5
     container_name: aslihangyd-postgres
