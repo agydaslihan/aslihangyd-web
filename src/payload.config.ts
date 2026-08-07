@@ -22,6 +22,7 @@ import { Talepler } from '@/collections/Talepler'
 import { VergiParametreleri } from '@/collections/VergiParametreleri'
 import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
+import { BakimDurumu } from '@/globals/BakimDurumu'
 import { DanismanOl } from '@/globals/DanismanOl'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
 import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
@@ -57,6 +58,16 @@ export default buildConfig({
      * bilinçli bir eylem olarak kalır (CLAUDE.md kural 1).
      */
     components: {
+      /**
+       * ⚠️ Bildirim şeridi — panelin ana ekranında, en üstte.
+       *
+       * EİDS yetki bitişi ve bakım görevlerinin aksaması yasal sonuç
+       * doğuruyor. SMTP gelene kadar tek uyarı kanalı `bakim.log` idi —
+       * kimsenin bakmadığı bir dosya. Uyarı, işin yapıldığı yerde
+       * görünmezse yok sayılır.
+       */
+      beforeDashboard: ['@/components/panel/BildirimSeridi#default'],
+
       views: {
         portfoySihirbazi: {
           Component: '@/components/sihirbaz/SihirbazGorunumu#default',
@@ -91,6 +102,7 @@ export default buildConfig({
     DanismanOl,
     DegerlemeAyarlari,
     EndeksAyarlari,
+    BakimDurumu,
   ],
 
   editor: lexicalEditor(),

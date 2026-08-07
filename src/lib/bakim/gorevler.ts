@@ -2,8 +2,13 @@ import 'server-only'
 
 import type { Payload } from 'payload'
 
+import { GOREV_KUNYELERI, gorevKunyesi, type GorevAnahtari, type GorevKunyesi } from './kunye'
+
 import { HERKESE_ACIK_DURUMLAR, YETKI_UYARI_ESIGI_GUN, yetkiyeKalanGun } from '@/lib/eids'
 import { bugununAnahtari, tarihiYaz } from '@/lib/tarih'
+
+export { gecerliGorevMi, GOREV_KUNYELERI, gorevKunyesi } from './kunye'
+export type { GorevAnahtari, GorevKunyesi } from './kunye'
 
 /**
  * Günlük bakım görevleri.
@@ -20,23 +25,6 @@ import { bugununAnahtari, tarihiYaz } from '@/lib/tarih'
  * Fonksiyonlar rapor döner, hata fırlatmaz: bir görevin başarısız olması
  * diğerlerini engellememelidir.
  */
-
-/**
- * Görev anahtarları.
- *
- * ⚠️ Görevlerin AYRI AYRI çağrılabilmesi bir kolaylık değil, arıza
- * yalıtımı.
- *
- * Üçü tek çağrıda koşsaydı ve KVKK silme görevi bozulsaydı (bir veritabanı
- * kısıtı, bir şema değişikliği), uç her gece 500 dönerdi. Bu durumda
- * işletmecinin en olası tepkisi cron satırını susturmak olurdu — ve
- * EİDS kontrolü de onunla birlikte susardı. Yasal riski olan görevin,
- * olmayan bir görevin arızasıyla düşmesi kabul edilemez.
- *
- * Ayrı anahtarlar ayrıca tanı için gerekli: "sadece EİDS'i şimdi çalıştır"
- * demek mümkün oluyor.
- */
-export type GorevAnahtari = 'eids-kaldir' | 'eids-uyar' | 'kvkk-sil'
 
 export interface GorevRaporu {
   /** Makine tarafından okunabilir kimlik — nöbetçi betiği bunu arar. */
@@ -195,69 +183,31 @@ export async function saklamaSuresiDolanlariSil(payload: Payload): Promise<Gorev
    Görev kaydı
    ══════════════════════════════════════════════════════════════════════════ */
 
-export interface GorevTanimi {
-  anahtar: GorevAnahtari
-  ad: string
-  /** Cron'da önerilen sıklık — belgeye ve panele aynı yerden yansır. */
-  siklik: string
-  /**
-   * ⚠️ Bu görev çalışmazsa NE OLUR. Belgeye kopyalanan değil, kaynağı
-   * burada olan cümle: görevi değiştiren kişi sonucunu da güncellemek
-   * zorunda kalsın.
-   */
-  calismazsaSonuc: string
-  /** Yasal yükümlülük mü? Öyleyse aksaması ertelenemez. */
-  yasal: boolean
+export interface GorevTanimi extends GorevKunyesi {
   calistir: (payload: Payload) => Promise<GorevRaporu>
 }
 
-export const GOREV_KAYDI: readonly GorevTanimi[] = [
-  {
-    anahtar: 'eids-kaldir',
-    ad: 'EİDS — yetkisi dolan ilanları yayından kaldır',
-    siklik: 'Her gün 03:10 (Europe/Istanbul)',
-    calismazsaSonuc:
-      'Yetki belgesi süresi dolmuş ilan yayında kalır. Bu, Taşınmaz Ticareti ' +
-      'Hakkında Yönetmelik kapsamında yetkisiz ilan yayını sayılır; idari yaptırım ' +
-      've ilan kaldırma riski doğar. Kancalar yalnızca KAYDETME anında çalıştığı ' +
-      'için hiç kimse ilana dokunmazsa yetki sessizce dolar — bu görev o boşluğu ' +
-      'kapatan tek mekanizmadır.',
-    yasal: true,
-    calistir: yetkisiDolanlariKaldir,
-  },
-  {
-    anahtar: 'eids-uyar',
-    ad: `EİDS — ${YETKI_UYARI_ESIGI_GUN} gün içinde yetkisi bitecekler`,
-    siklik: 'Her gün 08:10 (Europe/Istanbul)',
-    calismazsaSonuc:
-      'Yaklaşan yetki bitişleri fark edilmez. Yasal ihlal doğurmaz — çünkü ' +
-      '"eids-kaldir" ilanı zaten yayından alır — ama portföy sessizce görünmez ' +
-      'olur ve yetki yenileme fırsatı kaçar. Etkisi ticari, yasal değil.',
-    yasal: false,
-    calistir: yetkisiBitecekleriBildir,
-  },
-  {
-    anahtar: 'kvkk-sil',
-    ad: 'KVKK — saklama süresi dolan kayıtları sil',
-    siklik: 'Her gün 03:40 (Europe/Istanbul)',
-    calismazsaSonuc:
-      'Saklama süresi dolmuş kişisel veri (talepler ve danışman başvuruları) ' +
-      'silinmeden kalır. KVKK md. 7 ve md. 12 kapsamında ihlal; veri sahibinin ' +
-      'başvurusu ya da denetim halinde yaptırım riski. Gecikme her gün büyür, ' +
-      'kendiliğinden düzelmez.',
-    yasal: true,
-    calistir: saklamaSuresiDolanlariSil,
-  },
-]
-
-export function gorevTanimi(anahtar: GorevAnahtari): GorevTanimi {
-  const tanim = GOREV_KAYDI.find((aday) => aday.anahtar === anahtar)
-  if (tanim === undefined) throw new Error(`Bilinmeyen bakım görevi: ${anahtar}`)
-  return tanim
+/**
+ * Anahtar → çalıştırıcı.
+ *
+ * ⚠️ `Record<GorevAnahtari, …>` bilinçli: künyeye yeni bir görev eklenip
+ * çalıştırıcısı yazılmazsa derleme kırılır. `find` ile eşleştirseydik
+ * eksik görev çalışma zamanında sessizce atlanırdı — yasal bir görevin
+ * sessizce atlanması, bu dosyanın önlemeye çalıştığı şeyin ta kendisi.
+ */
+const CALISTIRICILAR: Record<GorevAnahtari, (payload: Payload) => Promise<GorevRaporu>> = {
+  'eids-kaldir': yetkisiDolanlariKaldir,
+  'eids-uyar': yetkisiBitecekleriBildir,
+  'kvkk-sil': saklamaSuresiDolanlariSil,
 }
 
-export function gecerliGorevMi(deger: string): deger is GorevAnahtari {
-  return GOREV_KAYDI.some((gorev) => gorev.anahtar === deger)
+export const GOREV_KAYDI: readonly GorevTanimi[] = GOREV_KUNYELERI.map((kunye) => ({
+  ...kunye,
+  calistir: CALISTIRICILAR[kunye.anahtar],
+}))
+
+export function gorevTanimi(anahtar: GorevAnahtari): GorevTanimi {
+  return { ...gorevKunyesi(anahtar), calistir: CALISTIRICILAR[anahtar] }
 }
 
 /**
@@ -283,7 +233,76 @@ export async function bakimCalistir(
     gorevler.push(await gorev.calistir(payload))
   }
 
-  return { calistigiAn: new Date().toISOString(), gorevler }
+  const calistigiAn = new Date().toISOString()
+  await durumuYaz(payload, calistigiAn, gorevler)
+
+  return { calistigiAn, gorevler }
+}
+
+/**
+ * Koşu sonucunu `bakim-durumu` global'ine yazar.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN VAR: cron'un çalışmadığını kimse fark etmiyordu.
+ *
+ * Görev sonuçları yalnızca `/srv/aslihangyd/logs/bakim.log` dosyasına
+ * gidiyordu. Cron satırı hiç kurulmadıysa o dosya hiç oluşmuyor — yani
+ * "hiç çalışmadı" durumu, "kimsenin bakmadığı bir dosyanın yokluğu"
+ * olarak temsil ediliyordu. Buraya yazınca panel şeridi görebiliyor.
+ *
+ * ⚠️ `sonBasariliCalisma` yalnızca hata YOKSA ilerler. Her koşuda
+ * ilerletseydik, üç aydır hata veren bir görev panelde "bugün çalıştı"
+ * görünürdü — teknik olarak doğru, işletme açısından yalan.
+ *
+ * ⚠️ Yazma hatası koşuyu düşürmez. Bu kayıt bir gözlem defteri; defteri
+ * tutamamak, defterin konusu olan yasal görevi geçersiz kılmaz.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+async function durumuYaz(
+  payload: Payload,
+  calistigiAn: string,
+  gorevler: readonly GorevRaporu[],
+): Promise<void> {
+  try {
+    const oncekiler = (await payload.findGlobal({ slug: 'bakim-durumu', depth: 0 })).gorevler ?? []
+
+    const satirlar = GOREV_KUNYELERI.map((kunye) => {
+      const yeni = gorevler.find((rapor) => rapor.anahtar === kunye.anahtar)
+      const onceki = oncekiler.find((satir) => satir.anahtar === kunye.anahtar)
+
+      // Bu koşuda çalışmayan görevin kaydına dokunulmaz: tek bir görevi elle
+      // çalıştırmak, diğerlerinin geçmişini silmemeli.
+      if (yeni === undefined) {
+        return {
+          anahtar: kunye.anahtar,
+          sonCalisma: onceki?.sonCalisma ?? null,
+          sonBasariliCalisma: onceki?.sonBasariliCalisma ?? null,
+          sonHata: onceki?.sonHata ?? null,
+          sonIslenen: onceki?.sonIslenen ?? null,
+        }
+      }
+
+      const basarili = yeni.hata === undefined
+      return {
+        anahtar: kunye.anahtar,
+        sonCalisma: calistigiAn,
+        sonBasariliCalisma: basarili ? calistigiAn : (onceki?.sonBasariliCalisma ?? null),
+        sonHata: yeni.hata ?? null,
+        sonIslenen: yeni.islenen,
+      }
+    })
+
+    await payload.updateGlobal({
+      slug: 'bakim-durumu',
+      data: { gorevler: satirlar },
+      depth: 0,
+    })
+  } catch (hata) {
+    console.error(
+      '[bakim] Durum kaydı yazılamadı — görevler çalıştı, panel şeridi eski veriyi gösterecek:',
+      hata instanceof Error ? hata.message : hata,
+    )
+  }
 }
 
 /** Tüm görevleri çalıştırır — elle tam bakım için. */

@@ -114,6 +114,7 @@ export interface Config {
     'danisman-ol': DanismanOl;
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
+    'bakim-durumu': BakimDurumu;
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
@@ -122,6 +123,7 @@ export interface Config {
     'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
+    'bakim-durumu': BakimDurumuSelect<false> | BakimDurumuSelect<true>;
   };
   locale: null;
   widgets: {
@@ -1719,6 +1721,30 @@ export interface EndeksAyarlari {
   createdAt?: string | null;
 }
 /**
+ * Bakım görevlerinin son çalışma bilgisi. Görevler otomatik yazar; elle değiştirmeyin.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bakim-durumu".
+ */
+export interface BakimDurumu {
+  id: number;
+  /**
+   * Her satır bir bakım görevinin son durumunu tutar. Tanımlı görevler: eids-kaldir, eids-uyar, kvkk-sil
+   */
+  gorevler?:
+    | {
+        anahtar: string;
+        sonCalisma?: string | null;
+        sonBasariliCalisma?: string | null;
+        sonHata?: string | null;
+        sonIslenen?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kurumsal-bilgiler_select".
  */
@@ -1850,6 +1876,25 @@ export interface EndeksAyarlariSelect<T extends boolean = true> {
       };
   agirlikGuncellemeYili?: T;
   tcmbKarsilastirmaNotu?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "bakim-durumu_select".
+ */
+export interface BakimDurumuSelect<T extends boolean = true> {
+  gorevler?:
+    | T
+    | {
+        anahtar?: T;
+        sonCalisma?: T;
+        sonBasariliCalisma?: T;
+        sonHata?: T;
+        sonIslenen?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
