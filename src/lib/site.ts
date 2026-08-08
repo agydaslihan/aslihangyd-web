@@ -16,9 +16,13 @@ export const SITE_ACIKLAMASI =
  * Kanonik adres. Site haritası, robots.txt ve OG etiketleri mutlak adres
  * gerektirir.
  *
- * ⚠️ ADRES PORT İÇERİR: 80/443 sunucuda başka bir uygulamada, yayın 8443
- * üzerinden. Portu düşürmek, arama motoruna ulaşılamayan kanonik adresler
- * bildirmek demek olur.
+ * ⚠️ Adres standart HTTPS portunda — sunucuya bu makineye özel bir dış IP
+ * tahsis edildi ve 80/443 boş. (Önceki kurgu 8443 kullanıyordu; portlar
+ * dolu olduğu için zorunluluktu, artık değil.)
+ *
+ * ⚠️ Yedek değer YALNIZCA yapılandırma eksikse devreye girer ve o durumda
+ * bile yanlış olabilir. Doğru kaynak `SITE_ADRESI`; eksik bırakılırsa site
+ * haritası ve kanonik etiketler buradaki tahmine düşer.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ `SITE_ADRESI` ÖN EKSİZ VE BU BİLİNÇLİ.
@@ -48,7 +52,7 @@ export const SITE_ADRESI =
     // Derleme zamanı — geliştirmede ve istemci tarafı ihtiyaçlarında.
     process.env.NEXT_PUBLIC_SITE_ADRESI ||
     process.env.NEXT_PUBLIC_SERVER_URL ||
-    'https://aslihangyd.com:8443'
+    'https://aslihangyd.com'
   ).replace(/\/$/, '')
 
 export function mutlakAdres(yol: string): string {

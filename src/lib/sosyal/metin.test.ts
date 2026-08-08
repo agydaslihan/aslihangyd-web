@@ -8,7 +8,7 @@ import {
   type PaylasimGirdisi,
 } from './metin'
 
-const ADRES = 'https://aslihangyd.com:8443'
+const ADRES = 'https://aslihangyd.com'
 
 const girdi = (ek: Partial<PaylasimGirdisi> = {}): PaylasimGirdisi => ({
   baslik: 'Ferah 3+1 daire',
@@ -38,9 +38,20 @@ describe('paylaşım bağlantısı', () => {
     expect(adres.searchParams.get('utm_campaign')).toBe('portfoy')
   })
 
-  it('port düşürülmez', () => {
-    // 8443 kaybolursa bağlantı başka bir uygulamaya gider.
-    expect(paylasimBaglantisi(ADRES, 'x', 'whatsapp')).toContain(':8443')
+  /**
+   * ⚠️ Üretim adresi artık portsuz (80/443 serbest), ama bu güvence
+   * KALDIRILMADI: geliştirmede `localhost:3000`, olası bir hazırlık
+   * ortamında başka bir port kullanılıyor. Adresteki portu düşüren bir
+   * paylaşım bağlantısı, ziyaretçiyi başka bir uygulamaya gönderir.
+   */
+  it('adreste port varsa düşürülmez', () => {
+    expect(paylasimBaglantisi('http://localhost:3000', 'x', 'whatsapp')).toContain(':3000')
+  })
+
+  it('portsuz adrese port uydurmaz', () => {
+    const adres = new URL(paylasimBaglantisi(ADRES, 'x', 'whatsapp'))
+    expect(adres.port).toBe('')
+    expect(adres.origin).toBe('https://aslihangyd.com')
   })
 })
 

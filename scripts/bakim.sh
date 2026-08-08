@@ -31,7 +31,7 @@ set -Eeuo pipefail
 UYGULAMA_DIZINI="${UYGULAMA_DIZINI:-/srv/aslihangyd/app}"
 # ⚠️ Doğrudan uygulama kabına gidilir, Caddy'ye DEĞİL.
 #
-# Caddy 8443'te dinliyor ve §5.4'teki güvenlik duvarı kuralı Cloudflare
+# Caddy 443'te dinliyor ve §5.4'teki güvenlik duvarı kuralı Cloudflare
 # dışındaki kaynakları — sunucunun kendisi dahil — reddediyor. Ayrıca
 # origin sertifikası yalnızca Cloudflare tarafından geçerli sayılır.
 #

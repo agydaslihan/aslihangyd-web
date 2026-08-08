@@ -39,8 +39,10 @@ const IZLENECEK = ['src', 'scripts', 'docker', 'docs', '.github']
  */
 const BEKLENEN_DISARIDA: Record<string, string> = {
   'docker/certs/':
-    'Cloudflare origin sertifikası ve ÖZEL ANAHTARI. Depoya girerse ' +
-    'origin sunucunun kimliği taklit edilebilir hale gelir (CLAUDE.md kural 7).',
+    'Eski Cloudflare origin sertifikası ve ÖZEL ANAHTARI. Kurgu kaldırıldı ' +
+    "(Caddy artık Let's Encrypt kullanıyor), ama eski kurulumlarda dosya " +
+    'diskte kalmış olabilir. Depoya girerse origin sunucunun kimliği taklit ' +
+    'edilebilir hale gelir (CLAUDE.md kural 7).',
 }
 
 describe('depo bütünlüğü', () => {
