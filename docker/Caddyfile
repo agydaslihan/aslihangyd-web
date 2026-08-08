@@ -1,33 +1,34 @@
 # =============================================================================
 # aslihangyd.com — Caddy ters vekil
 #
-# ⚠️ TLS: Cloudflare origin sertifikası. Let's Encrypt YOK.
-#    80/443 portları sunucuda başka bir uygulamada olduğu için ACME'nin
-#    HTTP-01 doğrulaması zaten çalışamaz. Origin sertifikası 15 yıl
-#    geçerlidir ve yenileme gerektirmez.
+# ⚠️ TLS: Let's Encrypt, Caddy'nin otomatik HTTPS'i ile.
 #
-# ⚠️ Yayın portu 8443. Cloudflare'in proxy'lediği HTTPS portlarından biri
-#    (443, 2053, 2083, 2087, 2096, 8443).
+#    Sunucuya bu makineye özel bir dış IP tahsis edildi ve 80/443 boş.
+#    Önceki kurgu (8443 + Cloudflare origin sertifikası) portlar dolu
+#    olduğu için zorunluluktu; artık gereksiz ve kaldırıldı.
+#
+# ⚠️ İLK SERTİFİKA ALIMINDA CLOUDFLARE PROXY KAPALI OLMALI.
+#    Let's Encrypt'in HTTP-01 doğrulaması :80'e doğrudan bağlanır.
+#    A kayıtları turuncu buluttaysa istek Cloudflare'e gider ve doğrulama
+#    başarısız olur. Yordam: docs/ISLETME-REHBERI.md §5.2.
 #
 # ⚠️ HSTS BURADA YOK — Cloudflare yönetiyor. İki kaynaktan gönderilen
 #    Strict-Transport-Security başlığı çakışır; tarayıcı hangisini
 #    uygulayacağı belirsiz kalır ve HSTS geri alınamaz bir mekanizmadır.
 # =============================================================================
 {
-	# ⚠️ Otomatik HTTPS TAMAMEN kapalı.
-	#
-	# Üç şeyi birden kapatır: ACME sertifika alımı, sertifika yenileme ve
-	# :80 üzerinde açılan HTTP→HTTPS yönlendirme sunucusu. Sonuncusu önemli:
-	# 80 portu başka bir uygulamada, Caddy oraya bağlanmaya çalışırsa
-	# başlangıçta hata verir.
-	auto_https off
+	# Let's Encrypt bildirimlerinin gideceği adres (süresi dolan sertifika,
+	# doğrulama sorunları). Boş bırakılırsa Caddy anonim ACME hesabı açar ve
+	# yenileme bozulduğunda kimse haberdar olmaz.
+	email {$CADDY_EPOSTA}
 
 	servers {
 		# ─────────────────────────────────────────────────────────────────
 		# ⚠️ GERÇEK ZİYARETÇİ IP'Sİ — bu blok atlanırsa site kilitlenir.
 		#
-		# Cloudflare arkasındayız: uzak adres HER istekte bir Cloudflare
-		# IP'si görünür. Bu düzeltilmezse hız sınırlayıcı bütün
+		# Cloudflare proxy'si ARKASINDA KALMAYA DEVAM EDİYORUZ; yalnızca
+		# TLS'in nereden geldiği değişti. Uzak adres hâlâ HER istekte bir
+		# Cloudflare IP'si görünür. Bu düzeltilmezse hız sınırlayıcı bütün
 		# ziyaretçileri tek kişi sanar ve beşinci form gönderiminden sonra
 		# siteyi HERKESE kapatır.
 		#
@@ -56,16 +57,18 @@
 	}
 }
 
-https://aslihangyd.com:8443 {
-	# Cloudflare origin sertifikası — 15 yıl geçerli, yenileme yok.
-	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
+aslihangyd.com {
+	# ⚠️ `tls` yönergesi YOK — bilinçli.
+	# Caddy alan adı için sertifikayı kendisi alır ve süresi dolmadan
+	# yeniler. Elle sertifika yolu vermek otomatik yenilemeyi kapatırdı.
 
 	encode zstd gzip
 
 	# ── Güvenlik başlıkları ───────────────────────────────────────────────
 	header {
 		# ⚠️ Strict-Transport-Security BİLİNÇLİ OLARAK YOK — Cloudflare
-		# gönderiyor. İkisi birden gönderirse başlık çakışır.
+		# gönderiyor. İkisi birden gönderirse başlık çakışır ve HSTS geri
+		# alınamaz bir mekanizmadır.
 
 		X-Content-Type-Options "nosniff"
 		X-Frame-Options "SAMEORIGIN"
@@ -118,10 +121,9 @@ https://aslihangyd.com:8443 {
 # www → kök yönlendirmesi Cloudflare'de de yapılabilir; burada tutmak
 # Cloudflare devre dışı kaldığında da davranışı korur.
 #
-# ⚠️ Origin sertifikası bu ada da geçerli olmalı. Cloudflare origin
-# sertifikası üretilirken hem `aslihangyd.com` hem `*.aslihangyd.com`
-# istenmelidir (varsayılan olarak ikisini de sunar).
-https://www.aslihangyd.com:8443 {
-	tls /etc/caddy/certs/origin.pem /etc/caddy/certs/origin.key
-	redir https://aslihangyd.com:8443{uri} permanent
+# ⚠️ Bu blok da kendi sertifikasını alır. Yani ilk sertifika alımında
+# www A kaydının da DNS only olması gerekir; yalnızca kök alan adını gri
+# buluta çevirmek www için doğrulamayı başarısız bırakır.
+www.aslihangyd.com {
+	redir https://aslihangyd.com{uri} permanent
 }

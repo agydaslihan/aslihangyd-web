@@ -105,7 +105,7 @@ export function hizSinirlariniSifirla(): void {
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ SIRALAMA VE LİSTE GÜVENLİK KARARIDIR.
  *
- * Site Cloudflare arkasında ve 8443 üzerinden yayında. Uzak adres HER
+ * Site Cloudflare arkasında yayında. Uzak adres HER
  * istekte bir Cloudflare IP'si görünür; düzeltilmezse hız sınırlayıcı
  * bütün ziyaretçileri tek kişi sanar ve siteyi HERKESE kapatır.
  *

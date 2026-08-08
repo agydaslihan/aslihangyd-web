@@ -32,4 +32,10 @@ next-env.d.ts
 # Yükleme dizini `src/collections/Medya.ts` içinde `staticDir: 'medya'`,
 # yani çalışma dizinine göre çözülüyor — kökte.
 /medya/
+# ⚠️ Artık KULLANILMIYOR ama koruma olarak duruyor.
+#
+# Cloudflare origin sertifikası kurgusu kaldırıldı (80/443 serbest, Caddy
+# Let's Encrypt kullanıyor). Bu satır yine de silinmiyor: eski kurulumlarda
+# diskte kalmış bir `origin.key` bulunabilir ve bir özel anahtarın depoya
+# sızma ihtimalini açık bırakmanın hiçbir faydası yok.
 docker/certs/

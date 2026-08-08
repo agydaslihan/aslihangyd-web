@@ -103,15 +103,19 @@ cp .env.production.example .env
 openssl rand -base64 48
 ```
 
-⚠️ `.env` içinde genel adres **portu içermelidir**:
+⚠️ `.env` içinde genel adres **portsuz ve https** olmalı:
 
 ```
-NEXT_PUBLIC_SERVER_URL=https://aslihangyd.com:8443
+NEXT_PUBLIC_SERVER_URL=https://aslihangyd.com
 ```
 
 Kanonik URL'ler, site haritası, robots.txt ve OG etiketleri bu değerden
-üretilir. Portu düşürürseniz arama motoruna ulaşılamayan adresler
+üretilir. Yanlış yazılırsa arama motoruna ulaşılamayan adresler
 bildirirsiniz.
+
+⚠️ Eski kurulumdan geçiyorsanız buradaki `:8443` portunu **silin**. Kalırsa
+site çalışmaya devam eder ama site haritası ve kanonik etiketler
+ulaşılamayan adresler gösterir — sessiz bir SEO hasarı.
 
 ⚠️ **`NEXT_PUBLIC_*` değişkenleri çalışma zamanında okunmaz.** Next.js
 onları derleme anında koda gömer — sunucu tarafında bile. Bu yüzden
@@ -135,21 +139,149 @@ chmod 600 /srv/aslihangyd/app/docker/certs/origin.*
 karşı başlatmak, panelin hata vermesine ve ilk isteklerin 500 dönmesine
 yol açar.
 
+#### ⚠️ ADIM 0 — Cloudflare'i GRİ BULUTA al (yalnızca ilk sertifikada)
+
+Caddy sertifikayı Let's Encrypt'ten **HTTP-01** doğrulamasıyla alır: Let's
+Encrypt `http://aslihangyd.com/.well-known/acme-challenge/...` adresine
+**doğrudan** bağlanır ve sunucunun yanıt vermesini bekler.
+
+A kaydı turuncu bulutsa (Proxied) o istek Cloudflare'e gider. Cloudflare
+80 portunu kendi karşılar ve isteği origin'e ACME'nin beklediği biçimde
+iletmez; doğrulama başarısız olur.
+
+**Cloudflare panelinde, deploy'dan ÖNCE:**
+
+1. DNS → Records
+2. `aslihangyd.com` A kaydı → bulut simgesine tıkla → **DNS only** (gri)
+3. `www` A kaydı için de **aynısını yap**
+
+   ⚠️ `www` unutulmasın: Caddyfile'da ayrı bir site bloğu ve kendi
+   sertifikasını alıyor. Yalnızca kökü gri yapmak, www doğrulamasını
+   başarısız bırakır ve Caddy açılışta o alan için hata döngüsüne girer.
+4. DNS yayılması için **2–3 dakika bekle**
+
+**Atlarsanız ne olur:** Caddy açılır, sertifika isteğinde bulunur,
+doğrulama başarısız olur ve tekrar dener. Site HTTPS'te açılmaz;
+`docker logs aslihangyd-caddy` içinde `could not get certificate` ya da
+`challenge failed` satırları görürsünüz. Kalıcı bir hasar yok — gri buluta
+alıp Caddy'yi yeniden başlatınca düzelir. ⚠️ Ama körlemesine tekrar
+denemeye devam ederseniz Let's Encrypt'in **haftalık oran sınırına**
+(aynı alan adı için 5 sertifika / 168 saat) takılabilirsiniz; o durumda
+sınır düşene kadar beklemekten başka yapılacak bir şey yoktur.
+
+#### Adım adım
+
+⚠️ Bu komutlar gerçek sunucuda **ilk kez** çalıştırılacak. Her adımda
+"başarılı görünümü" ve "hata alırsan" yazılı; bir adım beklendiği gibi
+gitmediyse sonrakine geçmeyin.
+
+**1. Veritabanı ve önbellek**
+
 ```bash
 cd /srv/aslihangyd/app
-
-# 1. Önce yalnızca veritabanı ve önbellek.
 docker compose --env-file .env -f docker/compose.prod.yml up -d postgres redis
+```
 
-# 2. Şemayı kur. (Göçmen imajı hakkında aşağıdaki uyarıyı okuyun.)
+*Başarılı görünüm:* iki kap `Started`. Kontrol:
+
+```bash
+docker compose --env-file .env -f docker/compose.prod.yml ps
+```
+`postgres` ve `redis` **healthy** olmalı (birkaç saniye sürebilir).
+
+*Hata alırsan:* `unhealthy` kalıyorsa `docker logs aslihangyd-postgres`.
+En sık sebep `.env` içindeki `POSTGRES_*` değerlerinin eksik olması.
+`--env-file .env` yazmayı unutmak da aynı sonucu verir — compose dosyası
+`docker/` içinde olduğu için değişkenleri kendiliğinden bulamaz.
+
+**2. Şemayı kur**
+
+```bash
 docker compose --env-file .env -f docker/compose.prod.yml \
   --profile gocmen run --rm gocmen
+```
 
-# 3. Uygulama ve Caddy.
+*Başarılı görünüm:* her göç için `Migrating:` ve `Migrated:` satırları,
+sonunda `Done.`. İlk kurulumda 11 göç uygulanır.
+
+*Hata alırsan:* `relation already exists` görürseniz şema kısmen kurulmuş
+demektir — devam etmeyin, önce `migrate:status` ile duruma bakın:
+
+```bash
+docker compose --env-file .env -f docker/compose.prod.yml \
+  --profile gocmen run --rm gocmen pnpm payload migrate:status
+```
+
+**3. Uygulama ve Caddy**
+
+```bash
 docker compose --env-file .env -f docker/compose.prod.yml up -d
 ```
 
-Site **8443** üzerinden yayında: <https://aslihangyd.com:8443>
+*Başarılı görünüm:* `uygulama` ve `caddy` kapları `Started`.
+
+**4. ⚠️ Sertifikanın gerçekten alındığını doğrula**
+
+Bu adımı atlamayın: Caddy kabı "çalışıyor" görünürken sertifika almamış
+olabilir. Kap sağlıklı diye site açık sanmak, bu kurulumdaki en olası
+yanılgı.
+
+```bash
+docker logs aslihangyd-caddy 2>&1 | grep -iE "certificate obtained|could not get certificate|challenge"
+```
+
+*Başarılı görünüm:* `certificate obtained successfully` satırı, hem
+`aslihangyd.com` hem `www.aslihangyd.com` için.
+
+*Hata alırsan:*
+- `could not get certificate` / `challenge failed` → A kayıtları hâlâ
+  turuncu bulutta. Adım 0'a dönün, gri buluta alın, sonra
+  `docker restart aslihangyd-caddy`.
+- `connection refused` → 80 portu dışarıdan kapalı. Sunucu güvenlik
+  duvarında 80/tcp açık olmalı: `sudo ufw allow 80/tcp`.
+- `too many certificates already issued` → Let's Encrypt oran sınırı.
+  Beklemekten başka çare yok; sınır 168 saatte sıfırlanır.
+
+**5. Siteyi doğrula**
+
+```bash
+curl -sS -o /dev/null -w 'HTTP %{http_code}  TLS %{ssl_verify_result}\n' \
+  https://aslihangyd.com/api/saglik
+```
+
+*Başarılı görünüm:* `HTTP 200  TLS 0` (`ssl_verify_result 0` = sertifika
+zinciri geçerli).
+
+```bash
+curl -sI https://www.aslihangyd.com | head -3
+```
+*Başarılı görünüm:* `HTTP/2 301` ve `location: https://aslihangyd.com/`.
+
+*Hata alırsan:* `HTTP 502` → Caddy ayakta ama uygulamaya ulaşamıyor;
+`docker logs aslihangyd-uygulama`. `HTTP 200` ama TLS hatası → sertifika
+alınmamış, adım 4'e dönün.
+
+**6. ⚠️ Cloudflare'i TURUNCU BULUTA geri al**
+
+Sertifika alındıktan sonra proxy'yi geri açın: DNS → Records → her iki A
+kaydı → **Proxied** (turuncu).
+
+*Neden geri alınmalı:* gri bulutta origin IP'si dünyaya açık kalır —
+Cloudflare'in WAF'ı, bot koruması ve DDoS kalkanı devre dışıdır. Ayrıca
+§5.6'daki gerçek ziyaretçi IP kurgusu Cloudflare'den gelen
+`CF-Connecting-IP` başlığına dayanıyor; proxy kapalıyken o başlık gelmez.
+
+*Doğrulama:*
+```bash
+curl -sI https://aslihangyd.com | grep -i "server\|cf-ray"
+```
+`cf-ray` başlığı görünüyorsa proxy aktif.
+
+⚠️ **Yenileme için tekrar gri buluta almanız gerekmez.** Caddy yenilemeyi
+`.well-known` üzerinden yapar ve Cloudflare bu yolu origin'e iletir.
+Yenileme yine de başarısız olursa §8b'ye bakın.
+
+Site yayında: <https://aslihangyd.com>
 
 #### ⚠️ Göç neden ayrı bir imajda koşuyor
 
@@ -193,7 +325,7 @@ docker compose --env-file .env -f docker/compose.prod.yml \
 docker compose --env-file .env -f docker/compose.prod.yml up -d --no-deps uygulama
 
 # 5. Doğrula.
-curl -f https://aslihangyd.com:8443/api/saglik
+curl -f https://aslihangyd.com/api/saglik
 
 # 6. Eski imajları temizle — 3.2 GB'lık sunucuda disk gerçek bir kısıt.
 docker image prune -f
@@ -221,9 +353,8 @@ gidilmez, **yedekten dönülür** (§7).
 
 ### 5.4 Ağ güvenliği ⚠️
 
-`compose.prod.yml` içinde **yalnızca Caddy** dışarıya port açar ve
-yalnızca **8443**. PostgreSQL ve Redis'te `ports` tanımı yoktur ve
-**eklenmemelidir.**
+`compose.prod.yml` içinde **yalnızca Caddy** dışarıya port açar: **80 ve
+443**. PostgreSQL ve Redis'te `ports` tanımı yoktur ve **eklenmemelidir.**
 
 Sebep: Docker port yayınlarken iptables kurallarını doğrudan yazar ve UFW
 kurallarını atlar. `ports: - "5432:5432"` eklemek, UFW'de 5432 kapalı
@@ -236,10 +367,10 @@ ssh -L 5432:localhost:5432 deploy@sunucu
 docker exec -it aslihangyd-postgres psql -U <kullanici> -d <veritabani>
 ```
 
-#### ⚠️ 8443'ü Cloudflare ile sınırlayın
+#### ⚠️ 443'ü Cloudflare ile sınırlayın
 
-Aynı Docker/UFW sorunu 8443 için de geçerli: port tüm internete açık ve
-`ufw deny 8443` işe yaramaz. Origin IP'sini bulan biri Cloudflare'i atlayıp
+Aynı Docker/UFW sorunu 443 için de geçerli: port tüm internete açık ve
+`ufw deny 443` işe yaramaz. Origin IP'sini bulan biri Cloudflare'i atlayıp
 doğrudan bağlanabilir — WAF, bot koruması ve hız sınırı devre dışı kalır.
 
 Doğru yer `DOCKER-USER` zinciri:
@@ -247,9 +378,9 @@ Doğru yer `DOCKER-USER` zinciri:
 ```bash
 # Cloudflare aralıklarına izin ver, gerisini reddet
 for ag in $(curl -s https://www.cloudflare.com/ips-v4); do
-  sudo iptables -I DOCKER-USER -p tcp --dport 8443 -s "$ag" -j RETURN
+  sudo iptables -I DOCKER-USER -p tcp --dport 443 -s "$ag" -j RETURN
 done
-sudo iptables -A DOCKER-USER -p tcp --dport 8443 -j DROP
+sudo iptables -A DOCKER-USER -p tcp --dport 443 -j DROP
 
 # Kalıcı yap
 sudo apt install iptables-persistent && sudo netfilter-persistent save
@@ -258,50 +389,79 @@ sudo apt install iptables-persistent && sudo netfilter-persistent save
 ⚠️ IPv6 kullanıyorsanız `ip6tables` için de aynısını `ips-v6` listesiyle
 yapın. Aksi halde IPv6 üzerinden origin'e doğrudan erişim açık kalır.
 
+⚠️⚠️ **80 PORTUNU BU KURALA DAHİL ETMEYİN.**
+
+Let's Encrypt doğrulaması ve yenilemesi 80 portuna **Cloudflare
+aralıklarının dışından** gelir — doğrulama sunucuları Cloudflare'e ait
+değildir. 80'i Cloudflare ile sınırlarsanız ilk sertifika alınamaz ve daha
+kötüsü, mevcut sertifika **60 gün sonra sessizce yenilenemez**. Site o güne
+kadar sorunsuz çalışır, sonra bir sabah tarayıcıda sertifika hatası verir.
+
+80 portunda yalnızca ACME doğrulaması ve HTTPS'e yönlendirme var; açık
+bırakmanın riski yok.
+
 ---
 
 ### 5.5 TLS ve Cloudflare ⚠️
 
-#### Let's Encrypt YOK
+#### Let's Encrypt — Caddy otomatik alır
 
-ACME'nin HTTP-01 doğrulaması 80 portuna gelen bir isteği gerektirir; o port
-sunucuda başka bir uygulamada. Caddy'de otomatik HTTPS **tamamen kapalı**
-(`auto_https off`) — bu üç şeyi birden kapatır: sertifika alımı, yenileme
-ve :80 üzerinde açılan yönlendirme sunucusu. Sonuncusu kapatılmazsa Caddy
-başlangıçta 80'e bağlanmayı deneyip hata verir.
+Sunucuya bu makineye özel bir dış IP tahsis edildi; 80 ve 443 boş. Caddy
+sertifikayı kendisi alır ve süresi dolmadan yeniler. Caddyfile'da `tls`
+yönergesi **yoktur** — elle sertifika yolu vermek otomatik yenilemeyi
+kapatırdı.
 
-#### Cloudflare origin sertifikası
+Gereken tek yapılandırma, bildirim adresi:
 
-Cloudflare panelinde: **SSL/TLS → Origin Server → Create Certificate**.
-
-- Hostname listesine hem `aslihangyd.com` hem `*.aslihangyd.com` girin
-  (www yönlendirmesi de aynı sertifikayı kullanıyor).
-- Geçerlilik: **15 yıl**. Yenileme gerekmez, cron gerekmez, hatırlatıcı
-  gerekmez.
-- Çıktıyı iki dosyaya kaydedin:
-
-```bash
-/srv/aslihangyd/app/docker/certs/origin.pem   # Origin Certificate
-/srv/aslihangyd/app/docker/certs/origin.key   # Private Key
+```
+CADDY_EPOSTA=...
 ```
 
-⚠️ `docker/certs/` **`.gitignore` içindedir** ve öyle kalmalı. Özel anahtar
-depoya girmemeli.
+Boş bırakılırsa Caddy anonim bir ACME hesabı açar ve **yenileme
+bozulduğunda kimse haberdar olmaz.** `compose.prod.yml` bu değişkeni
+zorunlu tutuyor (`:?`), yani eksikse kap hiç başlamaz — sessiz kalmasındansa
+gürültülü başarısızlık.
 
-⚠️ Origin sertifikası **yalnızca Cloudflare tarafından** geçerli kabul
-edilir; tarayıcı doğrudan origin'e bağlanırsa güvenmez. Bu bir sorun değil,
-tasarımın kendisi — trafik zaten Cloudflare üzerinden gelmeli (§5.4).
+⚠️ **Sertifikalar `caddy_veri` biriminde.** Bu birimi silmek (`down -v`)
+Caddy'yi sıfırdan sertifika istemeye zorlar ve Let's Encrypt'in haftalık
+oran sınırına (aynı alan adı için 5 sertifika / 168 saat) yaklaştırır.
+Yedeklemede bu birim yok — çünkü kaybı telafi edilebilir, ama gereksiz yere
+silmeyin.
 
-Cloudflare SSL modu **Full (strict)** olmalı. "Flexible" seçilirse
-Cloudflare ile origin arasındaki bağlantı şifresiz kalır.
+#### İlk sertifika: Cloudflare gri bulut
+
+Doğrulama Let's Encrypt'ten origin'e **doğrudan** gelir; A kayıtları
+turuncu bulutta olamaz. Yordam ve doğrulama adımları §5.2 → "ADIM 0" ve
+"Adım 6".
+
+#### Cloudflare SSL modu
+
+**Full (strict)** olmalı. Caddy artık tarayıcıların da güvendiği bir
+Let's Encrypt sertifikası sunuyor, dolayısıyla strict doğrulaması sorunsuz
+geçer. "Flexible" seçilirse Cloudflare ile origin arasındaki bağlantı
+şifresiz kalır.
+
+#### Eski kurgudan kalanlar
+
+Önceki sürümde 8443 portu ve **Cloudflare origin sertifikası** kullanılıyordu
+(80/443 sunucuda başka bir uygulamadaydı). Bu kurgu tamamen kaldırıldı.
+
+⚠️ Eski bir kurulumdan geçiyorsanız:
+
+1. `docker/certs/origin.key` ve `origin.pem` dosyalarını **silin** — artık
+   kullanılmıyorlar ve diskte duran bir özel anahtar gereksiz risktir
+2. Cloudflare panelinde **SSL/TLS → Origin Server** altındaki origin
+   sertifikasını **iptal edin (Revoke)**
+3. `DOCKER-USER` zincirindeki 8443 kurallarını kaldırın
+4. Cloudflare'de 8443'e yönlendiren bir kural varsa temizleyin
 
 #### HSTS Caddy'de değil, Cloudflare'de
 
 `Strict-Transport-Security` başlığı Caddyfile'dan **bilinçli olarak
-çıkarıldı**. Cloudflare (SSL/TLS → Edge Certificates → HSTS) gönderiyor;
-iki kaynaktan gönderilen başlık çakışır ve tarayıcının hangisini
-uygulayacağı belirsiz kalır. HSTS geri alınamaz bir mekanizma — belirsizlik
-kabul edilemez.
+çıkarıldı** ve Let's Encrypt'e geçişte de eklenmedi. Cloudflare
+(SSL/TLS → Edge Certificates → HSTS) gönderiyor; iki kaynaktan gönderilen
+başlık çakışır ve tarayıcının hangisini uygulayacağı belirsiz kalır. HSTS
+geri alınamaz bir mekanizma — belirsizlik kabul edilemez.
 
 ---
 
@@ -334,7 +494,7 @@ Dağıtımdan sonra **mutlaka** kontrol edin:
 
 ```bash
 # 1. Cloudflare üzerinden — kendi genel IP'nizi görmelisiniz
-curl -s https://aslihangyd.com:8443/api/saglik -o /dev/null -w '%{http_code}\n'
+curl -s https://aslihangyd.com/api/saglik -o /dev/null -w '%{http_code}\n'
 docker compose --env-file .env -f docker/compose.prod.yml logs --tail 20 caddy | grep client_ip
 ```
 
@@ -593,7 +753,7 @@ docker compose --env-file .env -f docker/compose.prod.yml --profile gocmen \
 
 ```bash
 # 2. Genel adres portu içeriyor mu?
-grep NEXT_PUBLIC_SERVER_URL .env              # https://aslihangyd.com:8443
+grep NEXT_PUBLIC_SERVER_URL .env              # https://aslihangyd.com
 
 # 3. Bakım anahtarı tanımlı mı?
 grep -q '^BAKIM_ANAHTARI=.\+' .env && echo tamam || echo EKSİK
@@ -691,7 +851,7 @@ PostGIS geometrisi (`POINT(27.7997 41.1592)`, SRID 4326) bozulmadan geldi.
 
 | Ne | Nerede |
 | --- | --- |
-| Sağlık kontrolü | `GET https://aslihangyd.com:8443/api/saglik` — veritabanına gerçek sorgu atar |
+| Sağlık kontrolü | `GET https://aslihangyd.com/api/saglik` — veritabanına gerçek sorgu atar |
 | Gerçek IP zinciri | Uygulama günlüğünde `İstemci IP başlığı yok` satırı **olmamalı** (§5.6) |
 | Uygulama günlükleri | `docker compose -f docker/compose.prod.yml logs -f uygulama` |
 | Bakım günlüğü | `/srv/aslihangyd/logs/bakim.log` — günde üç `TAMAM` satırı olmalı |
@@ -701,6 +861,129 @@ PostGIS geometrisi (`POINT(27.7997 41.1592)`, SRID 4326) bozulmadan geldi.
 
 `/api/saglik` bilinçli olarak sürüm veya yapılandırma bilgisi döndürmez —
 herkese açık bir uçtur.
+
+---
+
+## 8b. Sertifika yenilemesi ⚠️
+
+Caddy sertifikayı **otomatik yeniler** — süresinin son üçte birine
+girildiğinde, yani 90 günlük Let's Encrypt sertifikasında ~30 gün kala.
+Cron gerekmez, elle müdahale gerekmez.
+
+Ama sessizce bozulabilir. Bu bölüm onun için.
+
+### Neden sessizce bozulur
+
+Yenileme arka planda olur ve başarısız olduğunda **site çalışmaya devam
+eder** — eski sertifika hâlâ geçerlidir. Sorun ancak sertifika gerçekten
+dolduğunda görünür: bir sabah tarayıcı "bu bağlantı güvenli değil" der ve
+ziyaretçiler kaçar. Arada geçen ~30 gün boyunca hiçbir şey bunu söylemez.
+
+En sık üç sebep:
+
+1. **80 portu kapatılmış.** §5.4'teki `DOCKER-USER` kuralına 80 dahil
+   edilirse, ya da güvenlik duvarında kapatılırsa, ACME doğrulaması
+   ulaşamaz. Site normal çalıştığı için fark edilmez.
+2. **`caddy_veri` birimi silinmiş.** `down -v` çalıştırıldıysa Caddy'nin
+   ACME hesabı ve sertifikaları gitmiştir.
+3. **Alan adı artık bu sunucuyu göstermiyor.** DNS taşındıysa doğrulama
+   başka bir makineye gider.
+
+### Nasıl anlarım
+
+**Elle kontrol — sertifikanın kalan ömrü:**
+
+```bash
+echo | openssl s_client -servername aslihangyd.com -connect aslihangyd.com:443 2>/dev/null \
+  | openssl x509 -noout -enddate -issuer
+```
+
+*Beklenen:* `notAfter` tarihi **bugünden en az 25 gün sonra** ve
+`issuer` içinde `Let's Encrypt`.
+
+⚠️ Cloudflare proxy açıkken bu komut **Cloudflare'in kenar
+sertifikasını** gösterir, sizinkini değil. Origin'inkini görmek için
+sunucunun kendisinden bakın:
+
+```bash
+docker exec aslihangyd-caddy sh -c \
+  'echo | openssl s_client -connect 127.0.0.1:443 -servername aslihangyd.com 2>/dev/null | openssl x509 -noout -enddate'
+```
+
+**Caddy'nin kendi kaydı:**
+
+```bash
+docker logs aslihangyd-caddy 2>&1 | grep -iE "certificate obtained|renew|error"
+```
+
+Yenileme yaklaşırken `renewing certificate` ve ardından
+`certificate obtained successfully` görürsünüz.
+
+**Sertifika dosyasının tarihi:**
+
+```bash
+docker exec aslihangyd-caddy \
+  find /data/caddy/certificates -name '*.crt' -newermt '-40 days' -ls
+```
+Boş çıktı, sertifikanın 40 gündür yenilenmediği anlamına gelir. 90 günlük
+ömürde bu henüz normal olabilir; 70 günü geçtiyse değildir.
+
+### Yenileme çalışmazsa ne yaparım
+
+**1. Sebebi bul**
+
+```bash
+docker logs aslihangyd-caddy 2>&1 | grep -iE "challenge|could not|rate limit" | tail -20
+```
+
+**2. 80 portunun dışarıdan ulaşılabilir olduğunu doğrula**
+
+Başka bir makineden:
+
+```bash
+curl -sS -o /dev/null -w '%{http_code}\n' http://aslihangyd.com/.well-known/acme-challenge/test
+```
+*Beklenen:* `404` — yani istek Caddy'ye **ulaştı** ve o yolda dosya yok.
+`connection refused` ya da zaman aşımı alıyorsanız port kapalı; §5.4'teki
+uyarıyı okuyun ve 80'i açın.
+
+**3. Elle yenilemeyi tetikle**
+
+Caddy'de "şimdi yenile" komutu yok; yapılandırmayı yeniden yüklemek
+denemeyi tetikler:
+
+```bash
+docker exec aslihangyd-caddy caddy reload --config /etc/caddy/Caddyfile
+docker logs --tail 50 aslihangyd-caddy
+```
+
+**4. Hâlâ olmuyorsa: geçici olarak gri buluta al**
+
+Cloudflare proxy'si doğrulamayı engelliyor olabilir (yapılandırma
+değiştiyse). A kayıtlarını **DNS only** yapın, `caddy reload`, sertifika
+alındıktan sonra **Proxied**'a döndürün. Adımların tamamı §5.2.
+
+**5. Oran sınırına takıldıysanız**
+
+`too many certificates already issued` görüyorsanız Let's Encrypt aynı
+alan adı için haftalık sınırı uygulamış (5 sertifika / 168 saat).
+
+⚠️ Panik etmeden önce: **Caddy varsayılan olarak ZeroSSL'i yedek CA olarak
+kullanıyor.** Let's Encrypt sınıra takıldığında kendiliğinden ZeroSSL'e
+geçer ve sertifikayı oradan alır — kayıtlarda `acme.zerossl.com` görürsünüz.
+Yani çoğu durumda kendiliğinden düzelir. (Bunu `caddy adapt` çıktısında
+doğruladım: iki CA da yapılandırılmış durumda.)
+
+İkisi birden başarısız olursa beklemek gerekiyor; tekrar denemek sınırı
+düşürmez. Bu sırada site eski sertifikayla çalışmaya devam eder — süresi
+dolmadan sınır kalkarsa ziyaretçi hiçbir şey fark etmez.
+
+### Erken uyarı
+
+⚠️ Şu an sertifika ömrünü izleyen otomatik bir uyarı **yok**. `CADDY_EPOSTA`
+sayesinde Let's Encrypt süre dolmadan önce e-posta gönderir — o yüzden bu
+değişkenin dolu olması önemli. Daha sağlamı için aylık bir hatırlatıcı
+kurun ve yukarıdaki `openssl` komutunu çalıştırın.
 
 ---
 
