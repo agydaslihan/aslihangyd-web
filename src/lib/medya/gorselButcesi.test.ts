@@ -88,8 +88,19 @@ describe('görsel bütçe ölçümü', () => {
     expect(olcum).toBeNull()
   })
 
-  it('ölçüm genişlikleri next/image cihaz boyutlarıyla hizalı', () => {
-    expect(OLCUM_GENISLIKLERI).toEqual({ kart: 480, mobil: 828, masaustu: 1920 })
+  /**
+   * ⚠️ BU SAYILAR GÖZLEMLE DOĞRULANDI, TAHMİN DEĞİL.
+   *
+   * Lighthouse'un gerçek ağ isteklerinde hero görselleri `w=750`, kart
+   * görselleri `w=640` ile indi. Önceki sabitler (828 ve 480) ikisinde de
+   * yanlıştı ve kart maliyetini %30 düşük gösteriyordu.
+   *
+   * Değerler artık `sizes` dizelerinden türetiliyor; bu test türetmenin
+   * gözlemle uyumunu kilitliyor. `sizes` bilinçli olarak değişirse bu
+   * test de güncellenmeli — sessizce kaymamalı.
+   */
+  it('ölçüm genişlikleri gerçek indirmelerle aynı', () => {
+    expect(OLCUM_GENISLIKLERI).toEqual({ kart: 640, mobil: 750, masaustu: 1920 })
   })
 })
 

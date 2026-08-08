@@ -2006,6 +2006,129 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 
 ---
 
+## Gerçek kullanıcı Core Web Vitals ölçümü — DEPLOY SONRASI YAPILACAK ⚠️
+
+**Mobil LCP hedefi (< 2,5 sn) laboratuvar ölçümünde tutmuyor: 3,3–3,5 sn.
+Bu hedefi kapatma kararı, gerçek kullanıcı verisi görülmeden VERİLMEYECEK.**
+
+### Neden laboratuvar sayısına bakıp karar vermiyoruz
+
+Üç sebep, üçü de ölçülmüş:
+
+1. **Kalan yükün %93,8'i çatı.** Sayfadaki JavaScript'in yalnızca 9,9 kB
+   gzip'i bizim kodumuz; gerisi React + Next App Router çalışma zamanı.
+   Bizim kodu sıfıra indirsek bile taban yerinde kalıyor. Kesecek yer yok.
+
+2. **Ölçüm CDN olmadan yapılıyor.** Lighthouse `localhost`a bağlanıyor;
+   canlıda trafik Cloudflare üzerinden gelecek ve statik varlıklar kenar
+   düğümlerden servis edilecek. Yazı tipleri ve JS parçaları için bu
+   doğrudan LCP'ye yansır. Laboratuvar sayısı bu avantajı hiç görmüyor.
+
+3. **Lighthouse mobil ölçümü SİMÜLASYON.** Gerçek bir 4G bağlantı değil;
+   kaydedilen izin üzerine 1.475 kbps / 150 ms RTT / 4x CPU yavaşlatma
+   uygulanıyor (`throttlingMethod: simulate`). Çorlu'daki gerçek bir
+   ziyaretçinin bağlantısı bundan iyi de olabilir kötü de.
+
+### Kurulacak olan
+
+Gerçek kullanıcı ölçümü (RUM). İki seçenek var, ikisi de mevcut altyapıya
+oturuyor:
+
+- **Cloudflare Web Analytics** — proxy zaten önümüzde olacak, ek betik
+  gerekmeden Core Web Vitals topluyor. ⚠️ Panelden açılması gerekiyor.
+- **Umami** — `NEXT_PUBLIC_UMAMI_URL` / `NEXT_PUBLIC_UMAMI_SITE_ID` ile
+  bağlanan altyapı hazır (`src/components/analitik/Analitik.tsx`).
+
+⚠️ **KVKK kuralı ikisinde de geçerli.** CLAUDE.md kural 8: analitik betiği
+onay alınmadan YÜKLENMEZ. `Analitik` bileşeni bunu zaten zorluyor
+(`izinVarMi(onay, 'analitik')`); RUM ölçümü de aynı kapıdan geçmeli.
+Cloudflare Web Analytics kullanılacaksa, "proxy seviyesinde topluyor,
+betik yok" gerekçesiyle onayın atlanıp atlanamayacağı **avukata
+sorulmalı** — kendi başımıza karar vermiyoruz.
+
+### Hedefi neye göre değerlendireceğiz
+
+Laboratuvar medyanı değil, **gerçek kullanıcıların 75. yüzdeliği** — Core
+Web Vitals'ın kendi tanımı bu. Yeterli örneklem birikene kadar (en az
+birkaç yüz oturum) hedef hakkında karar verilmeyecek.
+
+⚠️ Ölçüm kurulmadan "LCP hedefi tutmuyor" ya da "tutuyor" demek, ikisi de
+temelsiz olur.
+
+---
+
+## Yatay sırada lazy yükleme — bilinen sınırlama ⚠️
+
+**Kısa hâli: `loading="lazy"` yatay kaydırmalı sıralarda fiilen çalışmıyor
+ve bunu düzeltmeye çalışmak durumu kötüleştirdi. Aynı fikri tekrar
+denemeden önce burayı okuyun.**
+
+### Sorun
+
+`/portfoy` sayfasındaki tema sıraları yatay kaydırmalı (`YataySira`).
+Mobilde ilk ekranda **hiçbir kart görseli görünmüyor** — çerez banneri
+ekranın alt yarısını kaplıyor, kartların yalnızca üst kenarı görünüyor.
+Buna rağmen **6 görsel (152 kB) iniyor**.
+
+Sebep: tarayıcının `loading="lazy"` kararı ağırlıklı olarak **dikey**
+yakınlığa dayanıyor. Sağa kaydırılmış kartlar dikeyde aynı hizada olduğu
+için "yakında görünecek" sayılıyor ve indiriliyor.
+
+### Denenen çözüm ve ölçüm sonucu
+
+8 Ağustos 2026'da şu denendi: ekran dışı kartlar küçük bir `sizes`
+değeriyle (`48px`) sunucuda basılıyor, `IntersectionObserver` kart görünür
+alana girince gerçek `sizes` değerini yazıyor. `<img>`, `src`, `srcset` ve
+`alt` sunucu HTML'inde aynen duruyordu — SEO tarafı sağlamdı.
+
+**Ölçüm kötüleşme gösterdi:**
+
+| | Önce | Sonra |
+| --- | --- | --- |
+| Görsel isteği | 6 | **10** |
+| Görsel baytı | 152,3 kB | **155,2 kB** |
+| İnen genişlikler | [640] | [96, **640**] |
+
+Ertelenen kartlar **iki kez** indi: önce 96 px'lik küçük sürüm, sonra
+gözlemci yükseltince 640 px'lik tam sürüm.
+
+### Neden ısrar edilmedi
+
+İlk tepki `rootMargin`i (250 px) küçültmekti — kart genişliği 248 px
+olduğu için komşu kartlar "neredeyse görünür" sayılıyordu. Payı sıfırlamak
+**Lighthouse sayısını düzeltirdi**, çünkü Lighthouse sayfayı kaydırmıyor:
+ekran dışı kartlar hiç yükseltilmez ve ölçümde 96 px'te kalır.
+
+Ama **gerçek kullanımı düzeltmezdi.** Kaydıran her kullanıcı için görünen
+her kart yine iki kez inecekti (96 px + 640 px ≈ 28 kB, tek seferde 25 kB
+yerine). Kazanç yalnızca "hiç kaydırmayan kullanıcı" senaryosunda vardı.
+
+⚠️ **Ölçüm aracını memnun edip kullanıcıya zarar veren bir değişiklik,
+kazanç değil metrik oyunudur.** Bu yüzden geri alındı.
+
+### Bugünkü durum
+
+Kartlar sade `loading="lazy"` kullanıyor. Yatay sıradaki tüm görseller
+iniyor; bu bilinen ve kabul edilmiş bir maliyet.
+
+### Tekrar denenecekse
+
+Çift indirmeyi ortadan kaldıran bir yaklaşım gerekiyor. Akla gelenler:
+
+- **Sunucuda daha az kart basmak** — SEO'yu bozar, içerik HTML'den çıkar.
+  Bu sayfalar sitenin arama motoru; yapılmamalı.
+- **Sıra başına kart sayısını azaltmak** — editoryal karar, teknik değil.
+  Sıra başına 6 yerine 4 kart, indirmeyi doğrudan üçte bir azaltır.
+- **`content-visibility: auto`** — render işini azaltır ama kaynak
+  indirmesini engellemez; bu sorunu çözmez.
+- Sanallaştırma **denenmemeli**: içerik HTML'den çıkar, SEO kaybı kazançtan
+  büyük.
+
+En umut verici yol, teknik bir numara değil, **sıra başına kart sayısını
+düşürmek**.
+
+---
+
 ## Bilinen eksikler ve teknik borç
 
 | Konu | Etki | Not |

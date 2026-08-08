@@ -5,6 +5,7 @@ import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { KonumIkon } from '@/components/ui/Ikon'
 import { mutlakAdres } from '@/lib/site'
+import { IZGARA_MIN_YUKSEKLIK } from '@/lib/duzen/iskelet'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 
 export const metadata: Metadata = {
@@ -29,7 +30,9 @@ export default async function MahallelerSayfasi() {
       </header>
 
       {mahalleler.length > 0 ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+        <div
+          className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5 ${IZGARA_MIN_YUKSEKLIK}`}
+        >
           {/*
             ⚠️ Bu sayfada araya bölüm başlığı girmiyor: h1 doğrudan kartlara
             bağlanıyor. Kart varsayılanı h3 olduğu için seviye atlanıyordu.

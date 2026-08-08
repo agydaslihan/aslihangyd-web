@@ -169,6 +169,29 @@ function OkButonu({
 }
 
 /** Sıradaki tek bir kartın sarmalayıcısı — sabit genişlik ve tutma noktası. */
+/**
+ * Yatay sıradaki tek kart.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BURADA GÖRSEL ERTELEME DENENDİ VE GERİ ALINDI.
+ *
+ * `loading="lazy"` yatay kaydırmada fiilen çalışmıyor: tarayıcı "yakında
+ * görünecek mi" kararını ağırlıklı olarak DİKEY yakınlığa göre veriyor,
+ * bu yüzden sağa kaydırılmış kartların görselleri de iniyor.
+ *
+ * Denenen çözüm: ekran dışı kartları küçük bir `sizes` değeriyle basıp
+ * `IntersectionObserver` ile görünürlükte yükseltmek. Ölçüm sonucu
+ * KÖTÜLEŞME oldu — 6 istek / 152 kB yerine 10 istek / 155 kB. Sebep, her
+ * kartın iki kez inmesi: önce küçük sürüm, sonra yükseltilmiş sürüm.
+ *
+ * Payı sıfırlamak Lighthouse sayısını düzeltirdi ama gerçek kullanımı
+ * DÜZELTMEZDİ: kaydıran her kullanıcı için görünen her kart yine iki kez
+ * inecekti. Ölçüm aracını memnun edip kullanıcıya zarar veren bir
+ * değişiklik, kazanç değil metrik oyunudur.
+ *
+ * Ayrıntı ve sayılar: docs/ILERLEME.md → "Yatay sırada lazy yükleme".
+ * ─────────────────────────────────────────────────────────────────────────
+ */
 export function SiraOgesi({ children }: { children: ReactNode }) {
   return <div className="w-[248px] shrink-0 snap-start sm:w-[264px]">{children}</div>
 }

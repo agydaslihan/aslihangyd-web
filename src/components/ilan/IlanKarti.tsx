@@ -8,6 +8,7 @@ import { etiketBul, ODA_SAYILARI } from '@/lib/secenekler'
 import { sinif } from '@/lib/sinif'
 import type { Ilanlar, Medya } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
+import { KART_SIZES } from '@/lib/medya/boyutlar'
 
 /**
  * İlan kartı — listelerin ve tema sıralarının birimi.
@@ -73,7 +74,9 @@ export function IlanKarti({
             alt={kapak.alt ?? ilan.baslik}
             fill
             // Yatay sırada kart sabit genişlikte; ızgarada esner.
-            sizes="(max-width: 640px) 78vw, (max-width: 1024px) 40vw, 260px"
+            // Değer `boyutlar.ts`ten geliyor — bütçe rozeti de aynı dizeden
+            // türetiliyor, ikisi ayrışamaz.
+            sizes={KART_SIZES}
             className="object-cover"
             priority={oncelikli}
             {...bulanikOzellikleri(kapak)}

@@ -11,6 +11,7 @@ import type { Ilanlar } from '@/payload-types'
 
 import { gizliPortfoyuGetir, type GizliKayit } from './gizliPortfoy'
 import { payloadGetir, ZIYARETCI } from './istemci'
+import { MEDYA_POPULATE } from './medyaAlanlari'
 
 /**
  * Portföy tema sıralarını kurar.
@@ -184,6 +185,7 @@ async function secilenleriGetir(kimlikler: readonly number[]): Promise<Map<numbe
       where: { id: { in: [...kimlikler] } },
       limit: kimlikler.length,
       depth: 1,
+      populate: MEDYA_POPULATE,
       ...ZIYARETCI,
     })
     return new Map(sonuc.docs.map((ilan) => [ilan.id, ilan]))
