@@ -2006,6 +2006,57 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 
 ---
 
+## Gerçek kullanıcı Core Web Vitals ölçümü — DEPLOY SONRASI YAPILACAK ⚠️
+
+**Mobil LCP hedefi (< 2,5 sn) laboratuvar ölçümünde tutmuyor: 3,3–3,5 sn.
+Bu hedefi kapatma kararı, gerçek kullanıcı verisi görülmeden VERİLMEYECEK.**
+
+### Neden laboratuvar sayısına bakıp karar vermiyoruz
+
+Üç sebep, üçü de ölçülmüş:
+
+1. **Kalan yükün %93,8'i çatı.** Sayfadaki JavaScript'in yalnızca 9,9 kB
+   gzip'i bizim kodumuz; gerisi React + Next App Router çalışma zamanı.
+   Bizim kodu sıfıra indirsek bile taban yerinde kalıyor. Kesecek yer yok.
+
+2. **Ölçüm CDN olmadan yapılıyor.** Lighthouse `localhost`a bağlanıyor;
+   canlıda trafik Cloudflare üzerinden gelecek ve statik varlıklar kenar
+   düğümlerden servis edilecek. Yazı tipleri ve JS parçaları için bu
+   doğrudan LCP'ye yansır. Laboratuvar sayısı bu avantajı hiç görmüyor.
+
+3. **Lighthouse mobil ölçümü SİMÜLASYON.** Gerçek bir 4G bağlantı değil;
+   kaydedilen izin üzerine 1.475 kbps / 150 ms RTT / 4x CPU yavaşlatma
+   uygulanıyor (`throttlingMethod: simulate`). Çorlu'daki gerçek bir
+   ziyaretçinin bağlantısı bundan iyi de olabilir kötü de.
+
+### Kurulacak olan
+
+Gerçek kullanıcı ölçümü (RUM). İki seçenek var, ikisi de mevcut altyapıya
+oturuyor:
+
+- **Cloudflare Web Analytics** — proxy zaten önümüzde olacak, ek betik
+  gerekmeden Core Web Vitals topluyor. ⚠️ Panelden açılması gerekiyor.
+- **Umami** — `NEXT_PUBLIC_UMAMI_URL` / `NEXT_PUBLIC_UMAMI_SITE_ID` ile
+  bağlanan altyapı hazır (`src/components/analitik/Analitik.tsx`).
+
+⚠️ **KVKK kuralı ikisinde de geçerli.** CLAUDE.md kural 8: analitik betiği
+onay alınmadan YÜKLENMEZ. `Analitik` bileşeni bunu zaten zorluyor
+(`izinVarMi(onay, 'analitik')`); RUM ölçümü de aynı kapıdan geçmeli.
+Cloudflare Web Analytics kullanılacaksa, "proxy seviyesinde topluyor,
+betik yok" gerekçesiyle onayın atlanıp atlanamayacağı **avukata
+sorulmalı** — kendi başımıza karar vermiyoruz.
+
+### Hedefi neye göre değerlendireceğiz
+
+Laboratuvar medyanı değil, **gerçek kullanıcıların 75. yüzdeliği** — Core
+Web Vitals'ın kendi tanımı bu. Yeterli örneklem birikene kadar (en az
+birkaç yüz oturum) hedef hakkında karar verilmeyecek.
+
+⚠️ Ölçüm kurulmadan "LCP hedefi tutmuyor" ya da "tutuyor" demek, ikisi de
+temelsiz olur.
+
+---
+
 ## Yatay sırada lazy yükleme — bilinen sınırlama ⚠️
 
 **Kısa hâli: `loading="lazy"` yatay kaydırmalı sıralarda fiilen çalışmıyor
