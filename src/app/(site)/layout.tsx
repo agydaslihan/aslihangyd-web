@@ -1,5 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { Inter, Source_Serif_4 } from 'next/font/google'
+import localFont from 'next/font/local'
 import type React from 'react'
 
 import { Analitik } from '@/components/analitik/Analitik'
@@ -18,22 +18,54 @@ import './globals.css'
  * - Source Serif 4 — başlıklar. Editoryal ağırlık katıyor ve siteyi
  *   "her yerdeki Inter sitesi" görünümünden ayırıyor.
  *
- * İkisi de `latin-ext` alt kümesiyle yükleniyor; Türkçe'nin ş, ğ, ı, İ
- * karakterleri temel `latin` kümesinde YOK. Eksik alt küme, yedek fontla
- * karışık bir metin ve gözle görülür bir düzen kayması üretir.
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ KENDİ BARINDIRDIĞIMIZ TÜRKÇE ALT KÜMELERİ — `next/font/google` DEĞİL.
  *
- * `display: swap` + değişken font: FOIT yok, CLS düşük.
+ * Google'ın hazır `latin` + `latin-ext` alt kümeleri iki aile için 226.684
+ * bayt ediyordu: mobil sayfa ağırlığının %51'i ve mobil LCP'nin (3,8 sn)
+ * baş sorumlusu. `latin-ext`ten bize lazım olan yalnızca beş harf —
+ * İ ğ Ğ ş Ş. Gerisi Latin Extended-A/B, IPA fonetik alfabesi, Latin
+ * Extended Additional; hiçbiri kullanılmıyor. (ç ö ü ı zaten `latin`de.)
+ *
+ * `next/font/google` özel alt küme üretemediği için dosyalar
+ * `pnpm font:altkume` ile üretilip depoya konuyor. Karakter listesi
+ * `src/lib/tipografi/alfabe.ts` — alfabeye göre kesildi, metne göre değil.
+ * Gerekçe ve yükseltme yordamı: `src/fonts/OKUBENI.md`.
+ *
+ * ⚠️ `weight: '400 500'` bir DARALTMA DEĞİL, BEYANDIR.
+ * Dosya hâlâ tam `wght` eksenini taşıyor (Google ekseni kırpmıyor). Burada
+ * aralığı bildirmek, tasarım sisteminde olmayan bir ağırlık istendiğinde
+ * tarayıcının sentetik kalınlaştırma yapmasını engelliyor — 500'e kırpıyor.
+ *
+ * `display: swap` + `adjustFontFallback`: FOIT yok, yedek fontla gerçek
+ * font arasındaki ölçü farkı Next tarafından dengeleniyor, CLS 0 kalıyor.
+ * ─────────────────────────────────────────────────────────────────────────
  */
-const yaziArayuz = Inter({
-  subsets: ['latin', 'latin-ext'],
+const yaziArayuz = localFont({
+  src: '../../fonts/inter-turkce.woff2',
+  weight: '400 500',
+  style: 'normal',
   variable: '--yazi-arayuz',
   display: 'swap',
+  // ⚠️ Yedek zinciri: alt kümede olmayan bir karakter geldiğinde tarayıcı
+  // "tofu" (boş kutu) yerine sistem fontuna düşsün. Alt küme 136 karakter
+  // kapsıyor; CMS'ten emoji, Kiril ya da matematik simgesi gelirse bu
+  // zincir devreye girer.
+  fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+  adjustFontFallback: 'Arial',
 })
 
-const yaziBaslik = Source_Serif_4({
-  subsets: ['latin', 'latin-ext'],
+const yaziBaslik = localFont({
+  src: '../../fonts/source-serif-4-turkce.woff2',
+  weight: '400 500',
+  style: 'normal',
   variable: '--yazi-baslik',
   display: 'swap',
+  // ⚠️ Source Serif 4'te `‑` (U+2011, bölünmez tire) YOK — fontun kendisinde
+  // bulunmuyor, alt kümeyle ilgisi değil. Bir başlıkta geçerse buradaki
+  // serif yedeğine düşer ve okunur kalır.
+  fallback: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
+  adjustFontFallback: 'Times New Roman',
 })
 
 export const metadata: Metadata = {

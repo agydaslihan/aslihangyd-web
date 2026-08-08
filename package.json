@@ -24,7 +24,8 @@
     "db:reset": "docker compose --env-file .env -f docker/compose.dev.yml down -v && docker compose --env-file .env -f docker/compose.dev.yml up -d",
     "payload": "payload",
     "prepare": "husky",
-    "seed": "payload run scripts/seed.ts"
+    "seed": "payload run scripts/seed.ts",
+    "font:altkume": "node --experimental-strip-types scripts/font-altkume.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.87.0",
