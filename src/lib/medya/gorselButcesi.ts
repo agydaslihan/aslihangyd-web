@@ -1,5 +1,7 @@
 import sharp from 'sharp'
 
+import { inecekGenislik, KULLANIM_SIZES } from './boyutlar'
+
 /**
  * Görsel bütçesi — yüklenen görselin ziyaretçiye kaç bayt olarak ineceğini ölçer.
  *
@@ -21,18 +23,28 @@ import sharp from 'sharp'
  */
 
 /**
- * Ölçüm genişlikleri — `next/image`in bu görsel için seçeceği boyutlar.
+ * Ölçüm genişlikleri — `sizes` dizelerinden TÜRETİLİYOR.
  *
- * Next varsayılan `deviceSizes` listesinden geliyor:
- * · Mobil  — 390 px genişliğinde bir telefon, 2x piksel yoğunluğu → 780 px
- *   isteniyor, listedeki 828 seçiliyor.
- * · Masaüstü — 1440 px pencerede tam genişlik hero → 1920 seçiliyor.
+ * ⚠️ ÖNCEKİ SÜRÜM SABİT SAYI KULLANIYORDU VE YANLIŞTI.
  *
- * Kart görselleri daha küçük `sizes` bildirdiği için bunlardan azını
- * indirir; yani bu ölçüm EN KÖTÜ DURUMU veriyor. Bütçe aşılmıyorsa
- * gerçek yükleme de aşmaz.
+ * 480/828/1920 gömülüydü. Gerçek indirmeler ölçülünce ikisinin tuttuğu
+ * görüldü, ikisinin tutmadığı:
+ *   · Kart görselleri 640 px iniyor, 480 değil → maliyet %30 düşük
+ *     gösteriliyordu
+ *   · Hero görselleri 750 px iniyor, 828 değil
+ *
+ * Artık `sizes` → CSS piksel → piksel oranı → aday genişlik zinciriyle
+ * hesaplanıyor (`boyutlar.ts`). `sizes` değişirse rozet kendiliğinden
+ * doğru kalıyor; iki gerçeği ayrı ayrı güncellemek zorunda değiliz.
+ *
+ * Doğrulama: türetilen değerler Lighthouse'un indirdiği genişliklerle
+ * birebir aynı çıktı (hero mobil 750, kart mobil 640, hero masaüstü 1920).
  */
-export const OLCUM_GENISLIKLERI = { kart: 480, mobil: 828, masaustu: 1920 } as const
+export const OLCUM_GENISLIKLERI = {
+  kart: inecekGenislik(KULLANIM_SIZES.kart, 'mobil') ?? 640,
+  mobil: inecekGenislik(KULLANIM_SIZES.hero, 'mobil') ?? 750,
+  masaustu: inecekGenislik(KULLANIM_SIZES.hero, 'masaustu') ?? 1920,
+} as const
 
 /**
  * `next/image`in varsayılan kalitesi 75. Ölçümü aynı kaliteyle yapmak

@@ -1,4 +1,5 @@
 import { IlanKartiIskeleti } from '@/components/ilan/IlanKarti'
+import { ISKELET_KART_SAYISI } from '@/lib/duzen/iskelet'
 
 /**
  * Portföy listesi yükleme iskeleti.
@@ -18,7 +19,7 @@ export default function PortfoyYukleniyor() {
       <div className="iskelet h-24" />
 
       <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-        {Array.from({ length: 6 }, (_, sira) => (
+        {Array.from({ length: ISKELET_KART_SAYISI }, (_, sira) => (
           <IlanKartiIskeleti key={sira} />
         ))}
       </div>

@@ -169,6 +169,82 @@ function OkButonu({
 }
 
 /** Sıradaki tek bir kartın sarmalayıcısı — sabit genişlik ve tutma noktası. */
-export function SiraOgesi({ children }: { children: ReactNode }) {
-  return <div className="w-[248px] shrink-0 snap-start sm:w-[264px]">{children}</div>
+/**
+ * Yatay sıradaki tek kart.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ `gercekSizes` VERİLİRSE GÖRSEL İNDİRMESİ ERTELENİR.
+ *
+ * Sorun: `loading="lazy"` yatay kaydırmada işe yaramıyor. Tarayıcı
+ * "yakında görünecek mi" kararını ağırlıklı olarak DİKEY yakınlığa göre
+ * veriyor; sağa kaydırılmış kartlar dikeyde aynı hizada olduğu için
+ * hepsini indiriyor. Ölçüm: /portfoy mobilde ilk ekranda HİÇBİR kart
+ * görseli görünmezken 6 görsel (152 kB) iniyordu.
+ *
+ * Çözüm `src`i boşaltmak DEĞİL — öyle yapmak arama motorundan görseli
+ * gizlerdi. Bunun yerine kart sunucuda küçük bir `sizes` bildirimiyle
+ * basılıyor; `<img>`, `src`, `srcset` ve `alt` olduğu gibi HTML'de. Yalnızca
+ * tarayıcının `srcset` içinden seçtiği aday küçük oluyor (~3 kB). Kart
+ * görünür alana yaklaşınca buradaki gözlemci gerçek `sizes` değerini
+ * yazıyor ve tarayıcı tam çözünürlüklü sürümü indiriyor.
+ *
+ * ⚠️ Gözlemcinin kökü `null` (görünüm alanı) — bilinçli. Kaydırma kabını
+ * kök yapmak yalnızca YATAY konumu ölçerdi; `null` ile tarayıcı ata
+ * öğelerin kırpmasını da hesaba katıyor, yani hem yatay hem dikey
+ * görünürlük tek seferde doğru çıkıyor.
+ *
+ * ⚠️ Bedeli: JavaScript çalışmazsa ertelenen kartlar bulanık kalır.
+ * Görsel, alt metni ve bağlantı yerinde; yalnızca çözünürlük düşük.
+ * İlk iki kart erteleme dışında (`ERTELEMESIZ_KART`), yani sıranın
+ * görünen kısmı JavaScript'siz de net.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function SiraOgesi({
+  children,
+  gercekSizes,
+}: {
+  children: ReactNode
+  /** Verilirse kart ertelenmiş sayılır ve görünürlükte bu değere yükseltilir. */
+  gercekSizes?: string
+}) {
+  const ogeRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    if (gercekSizes === undefined) return
+    const oge = ogeRef.current
+    if (oge === null) return
+
+    const gorsel = oge.querySelector('img')
+    if (gorsel === null) return
+    // Zaten yükseltilmişse (yeniden bağlanma) tekrar gözlemeye gerek yok.
+    if (gorsel.getAttribute('sizes') === gercekSizes) return
+
+    // ⚠️ IntersectionObserver yoksa erteleme yapılmamalı: görsel bulanık
+    // kalırdı ve bunu düzeltecek kimse olmazdı. Hemen yükselt.
+    if (typeof IntersectionObserver === 'undefined') {
+      gorsel.setAttribute('sizes', gercekSizes)
+      return
+    }
+
+    const gozlemci = new IntersectionObserver(
+      (girisler) => {
+        for (const giris of girisler) {
+          if (!giris.isIntersecting) continue
+          gorsel.setAttribute('sizes', gercekSizes)
+          gozlemci.disconnect()
+        }
+      },
+      // Kart görünmeden biraz önce yükselt: kullanıcı bulanık hâli görmesin.
+      { root: null, rootMargin: '250px' },
+    )
+
+    gozlemci.observe(oge)
+    return () => gozlemci.disconnect()
+  }, [gercekSizes])
+
+  return (
+    <div ref={ogeRef} className="w-[248px] shrink-0 snap-start sm:w-[264px]">
+      {children}
+    </div>
+  )
 }

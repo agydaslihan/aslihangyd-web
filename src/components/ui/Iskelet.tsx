@@ -24,7 +24,26 @@ export function SatirIskeleti({
 }
 
 /** İlan/mahalle kartının iskeleti — gerçek kartla aynı yüksekliği tutar. */
-export function KartIskeleti({ sinifAdi }: { sinifAdi?: string }) {
+export function KartIskeleti({
+  sinifAdi,
+  gorselSinifi = 'h-[124px]',
+}: {
+  sinifAdi?: string
+  /**
+   * ⚠️ Görsel alanının yüksekliği GERÇEK KARTLA AYNI OLMAK ZORUNDA.
+   *
+   * Varsayılan `h-[124px]`, `IlanKarti`nin görsel yüksekliği. Mahalle
+   * kartı ise `aspect-16/10` kullanıyor ve masaüstünde ~237 px'e çıkıyor.
+   * `/mahalleler` iskeleti bu varsayılanı kullandığı için kart başına
+   * ~113 px eksik yer ayırıyordu; gerçek içerik gelince düzen zıplıyor ve
+   * ölçümde CLS 0,029 olarak görünüyordu (footer yukarı sıçrıyordu).
+   *
+   * Yani "iskelet gerçek içerikle aynı yüksekliği tutar" varsayımı
+   * doğrulanmamıştı. Artık çağıran taraf hangi kartı taklit ettiğini
+   * açıkça söylüyor.
+   */
+  gorselSinifi?: string
+}) {
   return (
     <div
       className={sinif(
@@ -33,7 +52,7 @@ export function KartIskeleti({ sinifAdi }: { sinifAdi?: string }) {
       )}
       aria-hidden
     >
-      <span className="iskelet block h-[124px] rounded-none" />
+      <span className={sinif('iskelet block rounded-none', gorselSinifi)} />
       <div className="flex flex-col gap-2.5 p-4">
         <SatirIskeleti genislik="w-1/2" yukseklik="h-5" />
         <SatirIskeleti genislik="w-3/4" yukseklik="h-3.5" />
