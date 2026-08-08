@@ -38,16 +38,10 @@ import { KART_SIZES } from '@/lib/medya/boyutlar'
 export function IlanKarti({
   ilan,
   oncelikli = false,
-  resimSizes = KART_SIZES,
   sinifAdi,
 }: {
   ilan: Ilanlar
   oncelikli?: boolean
-  /**
-   * ⚠️ Ertelenen kartlarda küçük bir değer geçilir (`ERTELENEN_SIZES`);
-   * `SiraOgesi` kart görünürken gerçek değeri yazar. Ayrıntı orada.
-   */
-  resimSizes?: string
   sinifAdi?: string
 }) {
   const kapak = kapakGorseli(ilan)
@@ -82,7 +76,7 @@ export function IlanKarti({
             // Yatay sırada kart sabit genişlikte; ızgarada esner.
             // Değer `boyutlar.ts`ten geliyor — bütçe rozeti de aynı dizeden
             // türetiliyor, ikisi ayrışamaz.
-            sizes={resimSizes}
+            sizes={KART_SIZES}
             className="object-cover"
             priority={oncelikli}
             {...bulanikOzellikleri(kapak)}

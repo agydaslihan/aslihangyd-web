@@ -1,14 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  adayGenislik,
-  ERTELEMESIZ_KART,
-  ERTELENEN_SIZES,
-  HERO_SIZES,
-  inecekGenislik,
-  KART_SIZES,
-  sizesCssPiksel,
-} from './boyutlar'
+import { adayGenislik, HERO_SIZES, inecekGenislik, KART_SIZES, sizesCssPiksel } from './boyutlar'
 
 /**
  * `sizes` → inecek genişlik türetmesini sınar.
@@ -76,23 +68,5 @@ describe('inecek genişlik — gözlemle kilitli', () => {
     expect(inecekGenislik(HERO_SIZES, 'masaustu')).toBe(1920)
     expect(inecekGenislik(KART_SIZES, 'mobil')).toBe(640)
     expect(inecekGenislik(KART_SIZES, 'masaustu')).toBe(384)
-  })
-
-  it('ertelenen kart en küçük adaylardan birini seçer', () => {
-    const genislik = inecekGenislik(ERTELENEN_SIZES, 'mobil')
-    expect(genislik).not.toBeNull()
-    // Kart genişliğinin çok altında olmalı; erteleme bunun için var.
-    expect(genislik!).toBeLessThan(inecekGenislik(KART_SIZES, 'mobil')!)
-    expect(genislik!).toBeLessThanOrEqual(128)
-  })
-})
-
-describe('erteleme sınırı', () => {
-  /**
-   * ⚠️ En az iki kart ertelemesiz kalmalı: mobilde sıranın görünen kısmı
-   * bu kadar ve JavaScript çalışmazsa yalnızca bunlar net görünüyor.
-   */
-  it('görünen kartlar erteleme dışında', () => {
-    expect(ERTELEMESIZ_KART).toBeGreaterThanOrEqual(2)
   })
 })

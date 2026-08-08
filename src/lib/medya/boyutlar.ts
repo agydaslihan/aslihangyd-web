@@ -23,27 +23,6 @@ export const KART_SIZES = '(max-width: 640px) 78vw, (max-width: 1024px) 40vw, 26
 export const HERO_SIZES = '100vw'
 
 /**
- * Yatay sırada ekran dışında kalan kartların BAŞLANGIÇ `sizes` değeri.
- *
- * ⚠️ Bu bir "yükleme" değil, KÜÇÜK bir sürüm indirme talimatı.
- *
- * `<img>` etiketi, `src`, `srcset` ve `alt` sunucu HTML'inde olduğu gibi
- * duruyor — arama motoru her şeyi görüyor. Değişen tek şey tarayıcının
- * `srcset` içinden hangi adayı seçtiği: 48 px'lik bir bildirim en küçük
- * adayı seçtiriyor (~3 kB), kart görünür alana yaklaşınca `SiraOgesi`
- * gerçek değeri yazıyor ve tarayıcı tam çözünürlüklü sürümü indiriyor.
- *
- * ⚠️ BEDELİ: JavaScript çalışmazsa ekran dışındaki kartlar bulanık kalır.
- * Görsel yine görünür, alt metni yerinde, bağlantı çalışır — yalnızca
- * çözünürlük düşüktür. İlk iki kart bu erteleme dışında tutuldu, yani
- * JavaScript'siz bir ziyaretçi de sıranın görünen kısmını net görüyor.
- */
-export const ERTELENEN_SIZES = '48px'
-
-/** Erteleme dışında tutulan kart sayısı — sıranın görünen kısmı. */
-export const ERTELEMESIZ_KART = 2
-
-/**
  * `next/image`in üretebileceği genişlikler (deviceSizes + imageSizes).
  * Next varsayılanları; `next.config.ts` içinde değiştirilmedi.
  */

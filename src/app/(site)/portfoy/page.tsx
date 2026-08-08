@@ -3,7 +3,6 @@ import { Suspense } from 'react'
 
 import { IlanFiltreleri } from '@/components/ilan/IlanFiltreleri'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
-import { ERTELEMESIZ_KART, ERTELENEN_SIZES, KART_SIZES } from '@/lib/medya/boyutlar'
 import { SiraOgesi, YataySira } from '@/components/ilan/YataySira'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
@@ -132,37 +131,21 @@ function TemaBolumu({ sira }: { sira: TemaSirasi }) {
 
       {dolu ? (
         <YataySira etiket={sira.baslik}>
-          {sira.ogeler.map((oge, sirada) => {
-            /*
-             * ⚠️ İlk iki kart dışındakilerin görsel indirmesi erteleniyor.
-             *
-             * Ölçüm: /portfoy mobilde ilk ekranda hiçbir kart görseli
-             * görünmezken 6 görsel (152 kB) iniyordu — `loading="lazy"`
-             * yatay kaydırmada işe yaramıyor. Gerekçenin tamamı
-             * `SiraOgesi` içinde.
-             *
-             * İki kart bilinçli: mobilde sıranın görünen kısmı bu kadar.
-             */
-            const ertelenen = sirada >= ERTELEMESIZ_KART
-            return (
-              <SiraOgesi key={oge.anahtar} gercekSizes={ertelenen ? KART_SIZES : undefined}>
-                {oge.tip === 'kilitli' ? (
-                  <KilitliKart
-                    mahalleAdi={oge.kayit.mahalleAdi}
-                    odaSayisi={oge.kayit.odaSayisi}
-                    m2Araligi={oge.kayit.m2Araligi}
-                    fiyatBandi={oge.kayit.fiyatBandi}
-                    kiraCarpani={oge.kayit.kiraCarpani}
-                  />
-                ) : (
-                  <IlanKarti
-                    ilan={oge.ilan}
-                    resimSizes={ertelenen ? ERTELENEN_SIZES : KART_SIZES}
-                  />
-                )}
-              </SiraOgesi>
-            )
-          })}
+          {sira.ogeler.map((oge) => (
+            <SiraOgesi key={oge.anahtar}>
+              {oge.tip === 'kilitli' ? (
+                <KilitliKart
+                  mahalleAdi={oge.kayit.mahalleAdi}
+                  odaSayisi={oge.kayit.odaSayisi}
+                  m2Araligi={oge.kayit.m2Araligi}
+                  fiyatBandi={oge.kayit.fiyatBandi}
+                  kiraCarpani={oge.kayit.kiraCarpani}
+                />
+              ) : (
+                <IlanKarti ilan={oge.ilan} />
+              )}
+            </SiraOgesi>
+          ))}
         </YataySira>
       ) : (
         <BosDurum

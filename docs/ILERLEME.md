@@ -2006,6 +2006,78 @@ bu koşullardaki skorlar yayına girecek halin skorları değil.
 
 ---
 
+## Yatay sırada lazy yükleme — bilinen sınırlama ⚠️
+
+**Kısa hâli: `loading="lazy"` yatay kaydırmalı sıralarda fiilen çalışmıyor
+ve bunu düzeltmeye çalışmak durumu kötüleştirdi. Aynı fikri tekrar
+denemeden önce burayı okuyun.**
+
+### Sorun
+
+`/portfoy` sayfasındaki tema sıraları yatay kaydırmalı (`YataySira`).
+Mobilde ilk ekranda **hiçbir kart görseli görünmüyor** — çerez banneri
+ekranın alt yarısını kaplıyor, kartların yalnızca üst kenarı görünüyor.
+Buna rağmen **6 görsel (152 kB) iniyor**.
+
+Sebep: tarayıcının `loading="lazy"` kararı ağırlıklı olarak **dikey**
+yakınlığa dayanıyor. Sağa kaydırılmış kartlar dikeyde aynı hizada olduğu
+için "yakında görünecek" sayılıyor ve indiriliyor.
+
+### Denenen çözüm ve ölçüm sonucu
+
+8 Ağustos 2026'da şu denendi: ekran dışı kartlar küçük bir `sizes`
+değeriyle (`48px`) sunucuda basılıyor, `IntersectionObserver` kart görünür
+alana girince gerçek `sizes` değerini yazıyor. `<img>`, `src`, `srcset` ve
+`alt` sunucu HTML'inde aynen duruyordu — SEO tarafı sağlamdı.
+
+**Ölçüm kötüleşme gösterdi:**
+
+| | Önce | Sonra |
+| --- | --- | --- |
+| Görsel isteği | 6 | **10** |
+| Görsel baytı | 152,3 kB | **155,2 kB** |
+| İnen genişlikler | [640] | [96, **640**] |
+
+Ertelenen kartlar **iki kez** indi: önce 96 px'lik küçük sürüm, sonra
+gözlemci yükseltince 640 px'lik tam sürüm.
+
+### Neden ısrar edilmedi
+
+İlk tepki `rootMargin`i (250 px) küçültmekti — kart genişliği 248 px
+olduğu için komşu kartlar "neredeyse görünür" sayılıyordu. Payı sıfırlamak
+**Lighthouse sayısını düzeltirdi**, çünkü Lighthouse sayfayı kaydırmıyor:
+ekran dışı kartlar hiç yükseltilmez ve ölçümde 96 px'te kalır.
+
+Ama **gerçek kullanımı düzeltmezdi.** Kaydıran her kullanıcı için görünen
+her kart yine iki kez inecekti (96 px + 640 px ≈ 28 kB, tek seferde 25 kB
+yerine). Kazanç yalnızca "hiç kaydırmayan kullanıcı" senaryosunda vardı.
+
+⚠️ **Ölçüm aracını memnun edip kullanıcıya zarar veren bir değişiklik,
+kazanç değil metrik oyunudur.** Bu yüzden geri alındı.
+
+### Bugünkü durum
+
+Kartlar sade `loading="lazy"` kullanıyor. Yatay sıradaki tüm görseller
+iniyor; bu bilinen ve kabul edilmiş bir maliyet.
+
+### Tekrar denenecekse
+
+Çift indirmeyi ortadan kaldıran bir yaklaşım gerekiyor. Akla gelenler:
+
+- **Sunucuda daha az kart basmak** — SEO'yu bozar, içerik HTML'den çıkar.
+  Bu sayfalar sitenin arama motoru; yapılmamalı.
+- **Sıra başına kart sayısını azaltmak** — editoryal karar, teknik değil.
+  Sıra başına 6 yerine 4 kart, indirmeyi doğrudan üçte bir azaltır.
+- **`content-visibility: auto`** — render işini azaltır ama kaynak
+  indirmesini engellemez; bu sorunu çözmez.
+- Sanallaştırma **denenmemeli**: içerik HTML'den çıkar, SEO kaybı kazançtan
+  büyük.
+
+En umut verici yol, teknik bir numara değil, **sıra başına kart sayısını
+düşürmek**.
+
+---
+
 ## Bilinen eksikler ve teknik borç
 
 | Konu | Etki | Not |

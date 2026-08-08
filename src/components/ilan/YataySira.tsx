@@ -173,90 +173,25 @@ function OkButonu({
  * Yatay sıradaki tek kart.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * ⚠️ `gercekSizes` VERİLİRSE GÖRSEL İNDİRMESİ ERTELENİR.
+ * ⚠️ BURADA GÖRSEL ERTELEME DENENDİ VE GERİ ALINDI.
  *
- * Sorun: `loading="lazy"` yatay kaydırmada işe yaramıyor. Tarayıcı
- * "yakında görünecek mi" kararını ağırlıklı olarak DİKEY yakınlığa göre
- * veriyor; sağa kaydırılmış kartlar dikeyde aynı hizada olduğu için
- * hepsini indiriyor. Ölçüm: /portfoy mobilde ilk ekranda HİÇBİR kart
- * görseli görünmezken 6 görsel (152 kB) iniyordu.
+ * `loading="lazy"` yatay kaydırmada fiilen çalışmıyor: tarayıcı "yakında
+ * görünecek mi" kararını ağırlıklı olarak DİKEY yakınlığa göre veriyor,
+ * bu yüzden sağa kaydırılmış kartların görselleri de iniyor.
  *
- * Çözüm `src`i boşaltmak DEĞİL — öyle yapmak arama motorundan görseli
- * gizlerdi. Bunun yerine kart sunucuda küçük bir `sizes` bildirimiyle
- * basılıyor; `<img>`, `src`, `srcset` ve `alt` olduğu gibi HTML'de. Yalnızca
- * tarayıcının `srcset` içinden seçtiği aday küçük oluyor (~3 kB). Kart
- * görünür alana yaklaşınca buradaki gözlemci gerçek `sizes` değerini
- * yazıyor ve tarayıcı tam çözünürlüklü sürümü indiriyor.
+ * Denenen çözüm: ekran dışı kartları küçük bir `sizes` değeriyle basıp
+ * `IntersectionObserver` ile görünürlükte yükseltmek. Ölçüm sonucu
+ * KÖTÜLEŞME oldu — 6 istek / 152 kB yerine 10 istek / 155 kB. Sebep, her
+ * kartın iki kez inmesi: önce küçük sürüm, sonra yükseltilmiş sürüm.
  *
- * ⚠️ Gözlemcinin kökü `null` (görünüm alanı) — bilinçli. Kaydırma kabını
- * kök yapmak yalnızca YATAY konumu ölçerdi; `null` ile tarayıcı ata
- * öğelerin kırpmasını da hesaba katıyor, yani hem yatay hem dikey
- * görünürlük tek seferde doğru çıkıyor.
+ * Payı sıfırlamak Lighthouse sayısını düzeltirdi ama gerçek kullanımı
+ * DÜZELTMEZDİ: kaydıran her kullanıcı için görünen her kart yine iki kez
+ * inecekti. Ölçüm aracını memnun edip kullanıcıya zarar veren bir
+ * değişiklik, kazanç değil metrik oyunudur.
  *
- * ⚠️ Bedeli: JavaScript çalışmazsa ertelenen kartlar bulanık kalır.
- * Görsel, alt metni ve bağlantı yerinde; yalnızca çözünürlük düşük.
- * İlk iki kart erteleme dışında (`ERTELEMESIZ_KART`), yani sıranın
- * görünen kısmı JavaScript'siz de net.
+ * Ayrıntı ve sayılar: docs/ILERLEME.md → "Yatay sırada lazy yükleme".
  * ─────────────────────────────────────────────────────────────────────────
  */
-export function SiraOgesi({
-  children,
-  gercekSizes,
-}: {
-  children: ReactNode
-  /** Verilirse kart ertelenmiş sayılır ve görünürlükte bu değere yükseltilir. */
-  gercekSizes?: string
-}) {
-  const ogeRef = useRef<HTMLDivElement>(null)
-
-  useEffect(() => {
-    if (gercekSizes === undefined) return
-    const oge = ogeRef.current
-    if (oge === null) return
-
-    const gorsel = oge.querySelector('img')
-    if (gorsel === null) return
-    // Zaten yükseltilmişse (yeniden bağlanma) tekrar gözlemeye gerek yok.
-    if (gorsel.getAttribute('sizes') === gercekSizes) return
-
-    // ⚠️ IntersectionObserver yoksa erteleme yapılmamalı: görsel bulanık
-    // kalırdı ve bunu düzeltecek kimse olmazdı. Hemen yükselt.
-    if (typeof IntersectionObserver === 'undefined') {
-      gorsel.setAttribute('sizes', gercekSizes)
-      return
-    }
-
-    const gozlemci = new IntersectionObserver(
-      (girisler) => {
-        for (const giris of girisler) {
-          if (!giris.isIntersecting) continue
-          gorsel.setAttribute('sizes', gercekSizes)
-          gozlemci.disconnect()
-        }
-      },
-      /*
-       * ⚠️ PAY YOK — ÖLÇÜLDÜ.
-       *
-       * İlk sürüm 250 px pay bırakıyordu. Kart genişliği 248 px, yani
-       * komşu kartlar "neredeyse görünür" sayılıp hemen yükseltiliyordu:
-       * ertelenen dört kart hem 96 px hem 640 px sürümü indirdi.
-       * Sonuç 6 istek / 152 kB yerine 10 istek / 155 kB — erteleme
-       * durumu iyileştirmek yerine kötüleştirdi.
-       *
-       * Pay sıfırlandı: yalnızca gerçekten görünür alana giren kart
-       * yükseltiliyor. Bedeli, hızlı kaydırmada kartın bir an bulanık
-       * görünmesi.
-       */
-      { root: null, rootMargin: '0px' },
-    )
-
-    gozlemci.observe(oge)
-    return () => gozlemci.disconnect()
-  }, [gercekSizes])
-
-  return (
-    <div ref={ogeRef} className="w-[248px] shrink-0 snap-start sm:w-[264px]">
-      {children}
-    </div>
-  )
+export function SiraOgesi({ children }: { children: ReactNode }) {
+  return <div className="w-[248px] shrink-0 snap-start sm:w-[264px]">{children}</div>
 }
