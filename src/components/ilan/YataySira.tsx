@@ -234,8 +234,20 @@ export function SiraOgesi({
           gozlemci.disconnect()
         }
       },
-      // Kart görünmeden biraz önce yükselt: kullanıcı bulanık hâli görmesin.
-      { root: null, rootMargin: '250px' },
+      /*
+       * ⚠️ PAY YOK — ÖLÇÜLDÜ.
+       *
+       * İlk sürüm 250 px pay bırakıyordu. Kart genişliği 248 px, yani
+       * komşu kartlar "neredeyse görünür" sayılıp hemen yükseltiliyordu:
+       * ertelenen dört kart hem 96 px hem 640 px sürümü indirdi.
+       * Sonuç 6 istek / 152 kB yerine 10 istek / 155 kB — erteleme
+       * durumu iyileştirmek yerine kötüleştirdi.
+       *
+       * Pay sıfırlandı: yalnızca gerçekten görünür alana giren kart
+       * yükseltiliyor. Bedeli, hızlı kaydırmada kartın bir an bulanık
+       * görünmesi.
+       */
+      { root: null, rootMargin: '0px' },
     )
 
     gozlemci.observe(oge)
