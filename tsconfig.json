@@ -18,6 +18,14 @@
     "isolatedModules": true,
     "incremental": true,
     "noEmit": true,
+    /*
+     * `scripts/font-altkume.ts` Node'un yerel tip sıyırmasıyla çalışıyor
+     * (`node --experimental-strip-types`) ve Node, TS dosyasını ancak
+     * uzantısı yazılırsa çözüyor. `noEmit` açık olduğu için bu seçenek
+     * güvenli: derleme çıktısı üretilmediğinden yanlış uzantılı bir import
+     * çıktıya sızamaz. Bir bağımlılık (tsx) eklememek için tercih edildi.
+     */
+    "allowImportingTsExtensions": true,
     "plugins": [
       {
         "name": "next"

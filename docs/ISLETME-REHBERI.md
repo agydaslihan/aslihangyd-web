@@ -768,6 +768,101 @@ yapıp yalnızca imajı çekin (varsayılan akış zaten budur).
 
 ---
 
+## 9b. Font alt kümeleri
+
+Site fontlarını **kendimiz barındırıyoruz** ve Türkçeye göre kesilmiş alt
+kümelerini kullanıyoruz. Bu bölüm bir yıl sonra "bu dosyalar nereden geldi?"
+diye soran kişi için.
+
+### Ne kullanılıyor
+
+| Aile | Rol | Dosya | Google Fonts sürümü | Font sürümü |
+| --- | --- | --- | --- | --- |
+| Inter | Arayüz ve gövde | `src/fonts/inter-turkce.woff2` | v20 | 4.001 (git-66647c0bb) |
+| Source Serif 4 | Başlıklar | `src/fonts/source-serif-4-turkce.woff2` | v14 | 4.004 |
+
+Kaynak: Google Fonts CSS API'si (`https://fonts.googleapis.com/css2`),
+`text=` parametresiyle alt küme. Alınma tarihi 8 Ağustos 2026.
+Güncel SHA-256 özetleri `src/fonts/uretim.json` içinde.
+
+Lisans: ikisi de **SIL Open Font License 1.1**; lisans metinleri
+`src/fonts/Inter-OFL.txt` ve `src/fonts/SourceSerif4-OFL.txt`.
+
+### Neden
+
+Google'ın hazır `latin` + `latin-ext` alt kümeleri iki aile için 226.684
+bayt ediyordu — mobil sayfa ağırlığının **%51'i**. `latin-ext`ten bize
+lazım olan yalnızca beş harf: İ ğ Ğ ş Ş.
+
+`next/font/google` özel alt küme üretemiyor; `subsets` seçeneği yalnızca
+Google'ın hazır unicode-range bloklarından seçim yaptırıyor. Bu yüzden alt
+küme elle üretilip depoya konuyor.
+
+### Alt küme nasıl üretildi
+
+```bash
+pnpm font:altkume            # üretir ve src/fonts/ içine yazar
+pnpm font:altkume --kontrol  # yalnızca fark bildirir, dosya yazmaz
+```
+
+Betik: `scripts/font-altkume.ts`. Yaptığı iş:
+
+1. `src/lib/tipografi/alfabe.ts` içindeki karakter listesini okur
+   (şu an 193 karakter)
+2. Her aile için şu isteği atar:
+   `GET https://fonts.googleapis.com/css2`
+   `?family=<Aile>:wght@400;500&text=<alfabe>&display=swap`
+   ⚠️ `User-Agent` başlığı modern Chrome olarak gönderiliyor — Google
+   yanıtı istemciye göre değiştiriyor ve bilinmeyen kimliğe `woff2`
+   yerine eski biçimler dönebiliyor.
+3. Dönen CSS'teki tek `url(...)` adresinden `.woff2` dosyasını indirir
+4. `src/fonts/uretim.json` künyesini yazar (alfabe özeti + dosya özetleri)
+
+⚠️ **Ağırlık ekseni daraltılamıyor.** `wght@400;500` istemek dosyayı
+küçültmüyor: Google değişken fontu gliflere göre kesiyor ama `wght`
+eksenini olduğu gibi bırakıyor (Inter 100–900, Source Serif 200–900).
+Kazancın tamamı glif alt kümesinden geliyor. Denendi ve ölçüldü.
+
+### Alfabeye karakter eklemek
+
+Sitede alt kümede olmayan bir karakter kullanılırsa `alfabe.test.ts`
+kapıyı kırmızıya döndürür. Yapılacaklar, **üçü birden**:
+
+1. Karakteri `src/lib/tipografi/alfabe.ts` içindeki uygun gruba ekle
+2. `pnpm font:altkume` çalıştır
+3. Değişen `.woff2` dosyalarını **ve** `src/fonts/uretim.json`'u commit et
+
+⚠️ Yalnızca 1. adımı yapmak testi yeşile döndürür ama fontta glif yine
+olmaz. Bu boşluk için ikinci bir test var: `uretim.json` içindeki alfabe
+özeti güncel alfabeyle karşılaştırılıyor, tutmazsa kapı düşer.
+
+### Font sürümünü yükseltmek
+
+1. `pnpm font:altkume --kontrol` — Google yeni sürüm yayımladıysa
+   "DEĞİŞTİ" der ve çıkış kodu 1 verir
+2. `pnpm font:altkume` — yeni dosyaları indirir
+3. **Kapsamı doğrula** — yordam `src/fonts/OKUBENI.md` → "Kapsamı
+   doğrulama". Yeni sürümde bir glif düşmüş olabilir.
+4. `pnpm build` sonrası bir sayfayı gözle kontrol et: harf biçimleri ve
+   satır yükseklikleri değişmiş olabilir
+5. `src/fonts/OKUBENI.md` ve bu bölümdeki sürüm tablolarını güncelle
+
+### Yedek font zinciri
+
+Alt kümede ya da fontta olmayan karakterler sistem fontuna düşer, "tofu"
+(boş kutu) görünmez. Zincir `src/app/(site)/layout.tsx` içinde:
+
+- Gövde: `Inter → Arial (ölçü dengeli) → system-ui → … → sans-serif`
+- Başlık: `Source Serif 4 → Times New Roman (ölçü dengeli) → Georgia → serif`
+
+`adjustFontFallback` sayesinde yedek fontun ölçüleri gerçek fonta
+yakınsanıyor; bu yüzden font yüklenirken düzen kaymıyor (CLS 0).
+
+Bilerek yedeğe düşen beş karakter var (`‑ ▾ ⌖ ⌘ ✗`) — listesi ve gerekçesi
+`src/fonts/OKUBENI.md` → "Bilinen eksikler".
+
+---
+
 ## 10. İlgili dosyalar
 
 | Dosya | İçerik |
@@ -781,3 +876,6 @@ yapıp yalnızca imajı çekin (varsayılan akış zaten budur).
 | `scripts/bakim.sh` | Bakım görevi çağırıcı (cron buradan çalışır) |
 | `scripts/yedekle.sh` · `geri-yukle.sh` | Yedekleme ve geri yükleme |
 | `src/lib/bakim/gorevler.ts` | Görev kaydı: sıklık ve başarısızlık sonuçları |
+| `src/fonts/OKUBENI.md` | Font alt kümeleri: kaynak, sürüm, lisans, eksikler |
+| `src/lib/tipografi/alfabe.ts` | Alt kümedeki karakter listesi (tek gerçek kaynak) |
+| `scripts/font-altkume.ts` | Alt küme üretici (`pnpm font:altkume`) |
