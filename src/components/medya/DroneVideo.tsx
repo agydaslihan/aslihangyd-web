@@ -52,7 +52,7 @@ export function DroneVideo({ videoId, baslik }: { videoId: string; baslik: strin
     return (
       <div className="cerceve aspect-video overflow-hidden">
         <iframe
-          src={`${gomme}&autoplay=true`}
+          src={bunnyGommeAdresi(videoId, true) ?? gomme}
           title={baslik}
           loading="lazy"
           allow="accelerometer; gyroscope; autoplay; encrypted-media; picture-in-picture; fullscreen"

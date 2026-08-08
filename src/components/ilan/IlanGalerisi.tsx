@@ -2,6 +2,7 @@ import Image from 'next/image'
 
 import { VeriBekleniyorIkon } from '@/components/ui/Ikon'
 import type { Ilanlar, Medya } from '@/payload-types'
+import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 
 /**
  * İlan görselleri.
@@ -39,6 +40,7 @@ export function IlanGalerisi({ ilan }: { ilan: Ilanlar }) {
           sizes="(max-width: 640px) 100vw, 66vw"
           className="object-cover"
           priority
+          {...bulanikOzellikleri(kapak)}
         />
       </div>
 
@@ -55,6 +57,7 @@ export function IlanGalerisi({ ilan }: { ilan: Ilanlar }) {
                 fill
                 sizes="(max-width: 640px) 25vw, 17vw"
                 className="object-cover"
+                {...bulanikOzellikleri(gorsel)}
               />
             </div>
           ))}

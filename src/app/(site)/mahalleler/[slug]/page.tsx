@@ -23,6 +23,7 @@ import { tarihiYaz } from '@/lib/tarih'
 import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
 import type { Mahalleler } from '@/payload-types'
+import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 
 type SayfaOzellikleri = { params: Promise<{ slug: string }> }
 
@@ -350,6 +351,7 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
               sizes="100vw"
               className="object-cover"
               priority
+              {...bulanikOzellikleri(poster)}
             />
             {/* Metin okunabilirliği için gradyan — dekoratif değil, kontrast aracı. */}
             <div

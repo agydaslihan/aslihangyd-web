@@ -361,6 +361,14 @@ export interface Medya {
    * Görsel size ait değilse kaynağını yazın. Boş bırakılırsa kendi çekimimiz sayılır.
    */
   kaynak?: string | null;
+  /**
+   * Boyut bütçesi buna göre değerlendirilir. Hero görseli sayfanın en büyük öğesidir ve açılış hızını doğrudan belirler.
+   */
+  kullanim?: ('belirsiz' | 'hero' | 'kart') | null;
+  tahminiKartBayt?: number | null;
+  tahminiMobilBayt?: number | null;
+  tahminiMasaustuBayt?: number | null;
+  bulanikVeri?: string | null;
   updatedAt: string;
   createdAt: string;
   url?: string | null;
@@ -1340,6 +1348,11 @@ export interface SayfalarSelect<T extends boolean = true> {
 export interface MedyaSelect<T extends boolean = true> {
   alt?: T;
   kaynak?: T;
+  kullanim?: T;
+  tahminiKartBayt?: T;
+  tahminiMobilBayt?: T;
+  tahminiMasaustuBayt?: T;
+  bulanikVeri?: T;
   updatedAt?: T;
   createdAt?: T;
   url?: T;

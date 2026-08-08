@@ -8,6 +8,7 @@ import * as migration_20260804_091230_faz2b_eslestirme_profili from './20260804_
 import * as migration_20260806_093100_portfoy_bolumleri from './20260806_093100_portfoy_bolumleri';
 import * as migration_20260806_094944_faz_d_site_bolumleri from './20260806_094944_faz_d_site_bolumleri';
 import * as migration_20260807_112409_bakim_durumu from './20260807_112409_bakim_durumu';
+import * as migration_20260808_074503_gorsel_butcesi from './20260808_074503_gorsel_butcesi';
 
 export const migrations = [
   {
@@ -58,6 +59,11 @@ export const migrations = [
   {
     up: migration_20260807_112409_bakim_durumu.up,
     down: migration_20260807_112409_bakim_durumu.down,
-    name: '20260807_112409_bakim_durumu'
+    name: '20260807_112409_bakim_durumu',
+  },
+  {
+    up: migration_20260808_074503_gorsel_butcesi.up,
+    down: migration_20260808_074503_gorsel_butcesi.down,
+    name: '20260808_074503_gorsel_butcesi'
   },
 ];

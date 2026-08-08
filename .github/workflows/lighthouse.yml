@@ -80,6 +80,25 @@ jobs:
         env:
           NODE_ENV: development
 
+      # ⚠️ ÖLÇÜM GERÇEKTEN GÖRSEL İÇERİYOR MU — sessizce görselsiz ölçmeyelim.
+      #
+      # Bu iş akışı aylarca hiç görseli olmayan bir siteyi ölçtü ve sonuçlar
+      # "LCP 3,0 sn" diyordu. O rakam yayına girecek sayfanın rakamı değildi:
+      # LCP öğesi bir metin bloğuydu. Tohumlama artık temsili boyutta görsel
+      # üretiyor; üretmediği gün bunu bilmek istiyoruz, çünkü görselsiz bir
+      # yeşil, sahte güvenliğin ta kendisi.
+      - name: Tohumlanan görselleri doğrula
+        env:
+          PGPASSWORD: ci_gecici_sifre
+        run: |
+          adet=$(psql -h localhost -U aslihangyd -d aslihangyd_lh -tAc \
+            "SELECT count(*) FROM medya WHERE tahmini_mobil_bayt IS NOT NULL;")
+          echo "Ölçülmüş demo görseli: $adet"
+          if [ "$adet" -lt 10 ]; then
+            echo "::error::Tohumlama görsel üretmedi ($adet). Lighthouse görselsiz ölçerdi."
+            exit 1
+          fi
+
       - run: pnpm build
 
       - name: Sunucuyu başlat

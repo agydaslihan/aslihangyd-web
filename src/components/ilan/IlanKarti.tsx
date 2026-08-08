@@ -7,6 +7,7 @@ import { carpanYaz, m2Yaz, paraKisaYaz, paraYaz } from '@/lib/bicimlendirme'
 import { etiketBul, ODA_SAYILARI } from '@/lib/secenekler'
 import { sinif } from '@/lib/sinif'
 import type { Ilanlar, Medya } from '@/payload-types'
+import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 
 /**
  * İlan kartı — listelerin ve tema sıralarının birimi.
@@ -75,6 +76,7 @@ export function IlanKarti({
             sizes="(max-width: 640px) 78vw, (max-width: 1024px) 40vw, 260px"
             className="object-cover"
             priority={oncelikli}
+            {...bulanikOzellikleri(kapak)}
           />
         ) : (
           <div className="text-metin-3 flex h-full flex-col items-center justify-center gap-1.5">
