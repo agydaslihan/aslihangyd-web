@@ -1,0 +1,81 @@
+/*
+ * Görsel bütçe rozeti — Payload panelinin kenar çubuğunda.
+ *
+ * Payload'ın kendi tema değişkenleri kullanılıyor; site paleti buraya
+ * girmiyor. Panel Payload'ın tasarım dilinde kalmalı, aksi halde açık/koyu
+ * tema geçişinde okunmaz hale gelir.
+ */
+
+.gbr {
+  margin-bottom: 1rem;
+}
+
+.gbr-baslik {
+  margin: 0 0 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--theme-elevation-800, #333);
+}
+
+.gbr-bos,
+.gbr-not {
+  margin: 0.5rem 0 0;
+  font-size: 0.75rem;
+  line-height: 1.5;
+  color: var(--theme-elevation-500, #888);
+}
+
+.gbr-satir {
+  margin-bottom: 0.5rem;
+  padding: 0.5rem 0.625rem;
+  border-radius: 4px;
+  /* Durum sol kenarlıkla da veriliyor; renk körlüğünde de ayırt edilir. */
+  border-left: 3px solid var(--theme-elevation-300, #ccc);
+  background: var(--theme-elevation-50, #f7f7f7);
+}
+
+.gbr-ust {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.gbr-etiket {
+  font-size: 0.75rem;
+  color: var(--theme-elevation-600, #666);
+}
+
+.gbr-deger {
+  font-size: 0.9375rem;
+  font-weight: 500;
+  /* CLAUDE.md: TÜM RAKAMLARDA tabular-nums. İstisna yok. */
+  font-variant-numeric: tabular-nums;
+}
+
+.gbr-alt {
+  margin-top: 0.125rem;
+  font-size: 0.6875rem;
+  color: var(--theme-elevation-500, #888);
+  font-variant-numeric: tabular-nums;
+}
+
+.gbr-oneri {
+  margin: 0.375rem 0 0;
+  font-size: 0.6875rem;
+  line-height: 1.5;
+  color: var(--theme-elevation-700, #444);
+}
+
+.gbr-uygun {
+  border-left-color: var(--theme-success-500, #2f8f4e);
+}
+
+.gbr-sinirda {
+  border-left-color: var(--theme-warning-500, #c98a12);
+}
+
+.gbr-asildi {
+  border-left-color: var(--theme-error-500, #c0392b);
+  background: var(--theme-error-50, #fdf3f2);
+}

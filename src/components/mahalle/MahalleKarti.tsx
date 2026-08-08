@@ -5,6 +5,7 @@ import { KonumIkon } from '@/components/ui/Ikon'
 import { Rozet } from '@/components/ui/Rozet'
 import { carpanYaz, paraYaz } from '@/lib/bicimlendirme'
 import type { Mahalleler } from '@/payload-types'
+import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 
 /**
  * Mahalle kartı.
@@ -52,6 +53,7 @@ export function MahalleKarti({
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+            {...bulanikOzellikleri(gorsel)}
           />
         ) : (
           <div className="text-vurgu/40 flex h-full items-center justify-center">

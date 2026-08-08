@@ -44,17 +44,32 @@ export function gecerliVideoKimligi(deger: string | null | undefined): deger is 
 /**
  * Gömme (iframe) adresi.
  *
- * ⚠️ `autoplay=false` ve `preload=false` bilinçli: sayfa açılır açılmaz
- * video indirmeye başlamak, mobil trafiğin ~%75 olduğu bir sitede
- * kullanıcının verisini onun izni olmadan harcamak demektir. Ayrıca
- * LCP hedefini (< 2,5 sn) doğrudan bozar.
+ * ⚠️ `preload=false` bilinçli: sayfa açılır açılmaz video indirmeye
+ * başlamak, mobil trafiğin ~%75 olduğu bir sitede kullanıcının verisini
+ * onun izni olmadan harcamak demektir. Ayrıca LCP hedefini doğrudan bozar.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ `otomatikOynat` "SAYFA AÇILINCA OYNAT" DEĞİLDİR.
+ *
+ * Bu iframe yalnızca ziyaretçi oynat düğmesine bastıktan SONRA DOM'a
+ * giriyor (bkz. `DroneVideo`). O anda `autoplay=true` vermek, kullanıcıyı
+ * ikinci kez tıklamaya zorlamamak demek — istenen davranış bu.
+ * Sayfa açılışında otomatik oynatma hâlâ yasak ve mümkün değil: çerçeve
+ * ortada yok.
+ *
+ * ⚠️ Parametre BURADA belirleniyor, çağıran tarafta adrese eklenmiyor.
+ * Önceki hâlde bu fonksiyon `autoplay=false` yazıyor, bileşen sonuna
+ * `&autoplay=true` ekliyordu; ortaya aynı parametreyi iki kez taşıyan bir
+ * adres çıkıyordu ve hangisinin kazanacağı ayrıştırıcıya kalmıştı.
+ * Tanımsız davranışa yaslanan bir video oynatıcı, sessizce ters çalışır.
+ * ─────────────────────────────────────────────────────────────────────────
  */
-export function bunnyGommeAdresi(videoId: string): string | null {
+export function bunnyGommeAdresi(videoId: string, otomatikOynat = false): string | null {
   const ayar = bunnyAyarlari()
   if (ayar === null || !gecerliVideoKimligi(videoId)) return null
 
   const adres = new URL(`https://iframe.mediadelivery.net/embed/${ayar.kutuphaneId}/${videoId}`)
-  adres.searchParams.set('autoplay', 'false')
+  adres.searchParams.set('autoplay', otomatikOynat ? 'true' : 'false')
   adres.searchParams.set('preload', 'false')
   adres.searchParams.set('responsive', 'true')
   return adres.toString()

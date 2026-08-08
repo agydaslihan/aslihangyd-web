@@ -27,6 +27,7 @@
  */
 
 import config from '@payload-config'
+import { demoGorselUret, demoGorselVaryant } from './demo-gorsel.ts'
 import { getPayload, type RequiredDataFromCollectionSlug } from 'payload'
 
 const DEMO_ONEKI = '[DEMO]'
@@ -102,6 +103,62 @@ try {
     await payload.delete({ collection: 'ilanlar', where: { baslik: { like: DEMO_ONEKI } } })
     await payload.delete({ collection: 'mahalleler', where: { ad: { like: DEMO_ONEKI } } })
     await payload.delete({ collection: 'sayfalar', where: { baslik: { like: DEMO_ONEKI } } })
+    // ⚠️ Görseller en sona: ilan ve mahalle kayıtları onlara bağlı, önce
+    // silinirse ilişki kırılır ve Payload hata verir.
+    await payload.delete({ collection: 'medya', where: { alt: { like: DEMO_ONEKI } } })
+  }
+
+  /**
+   * ── Demo görselleri ──────────────────────────────────────────────────
+   *
+   * ⚠️ ÖLÇÜMÜN DÜRÜSTLÜĞÜ İÇİN VAR.
+   *
+   * Görselsiz bir siteyi ölçmek sahte güvenlik veriyordu: LCP öğesi bir
+   * metin bloğuydu ve gerçek hero fotoğrafı girdiğinde o rakam anlamını
+   * yitirecekti. Buradaki görseller sentetik ama TEMSİLİ boyutta —
+   * ziyaretçiye inecek AVIF, hero için ~80 kB, kart için ~30 kB.
+   *
+   * Gerçek fotoğraf kullanılmıyor: telif riski ve "bu bizim çekimimiz"
+   * izlenimi. Her kayıt "ÖRNEK VERİ — YAYINLANMAYACAK" etiketli.
+   */
+  console.log('Demo görselleri üretiliyor (birkaç saniye sürer)…')
+
+  // ⚠️ Hedefler bütçenin biraz ALTINDA: üretici hedefe yukarıdan yaklaşıyor
+  // ve tam bütçeyi hedeflersek demo içeriğin kendisi "bütçe aşıldı" gösterir.
+  const heroAyari = await demoGorselUret(2400, 1000, 101, 72 * 1024, 828)
+  const kartAyari = await demoGorselUret(1200, 750, 202, 26 * 1024, 480)
+  console.log(
+    `  hero  ~${(heroAyari.avifBayt / 1024).toFixed(0)} kB AVIF · ` +
+      `kart ~${(kartAyari.avifBayt / 1024).toFixed(0)} kB AVIF`,
+  )
+
+  async function gorselYukle(
+    tur: 'hero' | 'kart',
+    tohum: number,
+    aciklama: string,
+  ): Promise<number> {
+    const ayar = tur === 'hero' ? heroAyari : kartAyari
+    const [g, y] = tur === 'hero' ? ([2400, 1000] as const) : ([1200, 750] as const)
+    // ⚠️ Her kayda AYRI dosya: aynı görseli paylaştırmak tarayıcı
+    // önbelleğine takılır ve sayfayı olduğundan hafif gösterirdi.
+    const jpeg = await demoGorselVaryant(g, y, tohum, ayar.gurultu)
+    const kayit = await payload.create({
+      collection: 'medya',
+      data: {
+        // ⚠️ Açıklama zaten ön ek taşıyor olabilir (ilan başlıkları taşıyor);
+        // iki kez yazmak "[DEMO] [DEMO] …" üretiyordu.
+        alt: aciklama.startsWith(DEMO_ONEKI) ? aciklama : `${DEMO_ONEKI} ${aciklama}`,
+        kullanim: tur,
+        kaynak: 'ÖRNEK VERİ — YAYINLANMAYACAK. Sentetik olarak üretildi.',
+      },
+      file: {
+        data: jpeg,
+        mimetype: 'image/jpeg',
+        name: `demo-${tur}-${tohum}.jpg`,
+        size: jpeg.length,
+      },
+    })
+    return kayit.id
   }
 
   // ── Mahalleler ────────────────────────────────────────────────────────
@@ -119,11 +176,18 @@ try {
       continue
     }
 
+    const kapakId = await gorselYukle(
+      'hero',
+      300 + mahalle.siraNo,
+      `${mahalle.ad} Mahallesi kapak görseli`,
+    )
+
     const kayit = await payload.create({
       collection: 'mahalleler',
       data: mahalleVerisi({
         ad: mahalle.ad,
         siraNo: mahalle.siraNo,
+        kapakGorseli: kapakId,
         yayinda: true,
         // ⚠️ Rakamlar bilinçli olarak BOŞ bırakıldı. Boş durum tasarımının
         // gerçekte nasıl göründüğünü görmek, uydurma rakam görmekten daha
@@ -221,10 +285,17 @@ try {
     })
     if (mevcut.docs[0]) continue
 
+    // İlk fotoğraf kapak; galeri ölçümü için ikinci bir görsel de var.
+    const ilanGorselleri = [
+      { gorsel: await gorselYukle('hero', 400 + sira, `${ilan.baslik} kapak fotoğrafı`) },
+      { gorsel: await gorselYukle('kart', 500 + sira, `${ilan.baslik} iç mekân fotoğrafı`) },
+    ]
+
     await payload.create({
       collection: 'ilanlar',
       data: ilanVerisi({
         ...ilan,
+        gorseller: ilanGorselleri,
         il: 'Tekirdağ',
         ilce: 'Çorlu',
         mahalle: mahalleIdleri[sira % mahalleIdleri.length]!,

@@ -74,6 +74,30 @@ describe('gömme adresi', () => {
     ayarla('12345', 'vz-abc.b-cdn.net')
     expect(bunnyGommeAdresi('drone-1')).toBeNull()
   })
+
+  /**
+   * ⚠️ Otomatik oynatma parametresi TEK YERDE belirlenmeli.
+   *
+   * Önceki hâlde bu fonksiyon `autoplay=false` yazıyor, `DroneVideo` adresin
+   * sonuna `&autoplay=true` ekliyordu. Ortaya aynı parametreyi iki kez
+   * taşıyan bir adres çıkıyordu ve hangisinin kazanacağı ayrıştırıcıya
+   * kalmıştı — tanımsız davranışa yaslanan bir oynatıcı sessizce ters
+   * çalışır.
+   */
+  it('otomatik oynatma istendiğinde autoplay tek kez ve true', () => {
+    ayarla('12345', 'vz-abc.b-cdn.net')
+    const adres = new URL(bunnyGommeAdresi(KIMLIK, true)!)
+    expect(adres.searchParams.getAll('autoplay')).toEqual(['true'])
+    // ⚠️ Ön yükleme yine kapalı: kullanıcı oynat dedi diye videoyu
+    // baştan sona indirmeye başlamak mobil veriyi harcar.
+    expect(adres.searchParams.get('preload')).toBe('false')
+  })
+
+  it('varsayılan çağrıda autoplay tek kez ve false', () => {
+    ayarla('12345', 'vz-abc.b-cdn.net')
+    const adres = new URL(bunnyGommeAdresi(KIMLIK)!)
+    expect(adres.searchParams.getAll('autoplay')).toEqual(['false'])
+  })
 })
 
 describe('kapak adresi', () => {

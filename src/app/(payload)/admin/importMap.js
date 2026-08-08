@@ -22,6 +22,7 @@ import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997e
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/components/panel/TalepEslesmeleri'
+import { GorselButceRozeti as GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0 } from '@/components/panel/GorselButceRozeti'
 import { SihirbazNavBaglantisi as SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d } from '@/components/sihirbaz/SihirbazNavBaglantisi'
 import { SosyalNavBaglantisi as SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2 } from '@/components/sosyal/SosyalNavBaglantisi'
 import { default as default_ac4995af7e2bbcdcd73ea0a7c441a293 } from '@/components/panel/BildirimSeridi'
@@ -55,6 +56,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/panel/TalepEslesmeleri#default": default_1e93637515c2cbbab351072f38d704e3,
+  "@/components/panel/GorselButceRozeti#GorselButceRozeti": GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0,
   "@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi": SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d,
   "@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi": SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2,
   "@/components/panel/BildirimSeridi#default": default_ac4995af7e2bbcdcd73ea0a7c441a293,
