@@ -4,6 +4,7 @@ import { Suspense } from 'react'
 import { AkilliArama } from '@/components/ilan/AkilliArama'
 import { IlanFiltreleri } from '@/components/ilan/IlanFiltreleri'
 import { aiAramaAcikMi } from '@/lib/arama/motor'
+import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { SiraOgesi, YataySira } from '@/components/ilan/YataySira'
 import { BosDurum } from '@/components/ui/BosDurum'
@@ -48,11 +49,23 @@ export default async function PortfoySayfasi({
     (anahtar) => filtre[anahtar as keyof IlanFiltresi] === undefined,
   )
 
-  const [sonuc, mahalleler, siralar] = await Promise.all([
+  const [sonuc, mahalleler, siralar, bolumler] = await Promise.all([
     ilanlariGetir(filtre, sayfa),
     mahalleleriGetir(),
     filtresizMi ? temaSiralariniGetir() : Promise.resolve([]),
+    bolumDurumlariniGetir(),
   ])
+
+  /**
+   * AI arama İKİ koşula birden bağlı.
+   *
+   * ⚠️ `ai_arama` bölümü varsayılan KAPALI ve bu bir KVKK kararı, teknik
+   * değil: ziyaretçinin yazdığı metin Anthropic'in (ABD) sunucularına
+   * gidiyor ve bu aktarımın aydınlatma metnine eklenmesi gerekiyor.
+   * Anahtar tanımlı olsa bile bölüm açılmadan kutu basılmaz.
+   * Ayrıntı: docs/AI-ARAMA-KVKK-NOTU.md
+   */
+  const aiAramaGoster = bolumler.ai_arama && aiAramaAcikMi()
 
   return (
     <div className="kapsayici py-10 sm:py-14">
@@ -72,11 +85,10 @@ export default async function PortfoySayfasi({
         </div>
       ) : null}
 
-      {/* ⚠️ Anahtar tanımlı değilse kutu hiç basılmaz — çalışmayan bir arama
-          kutusu göstermek, olmayan bir özelliği varmış gibi sunmaktır.
-          Filtreler her hâlükârda çalışır; AI arama onların yerine değil
-          yanına konuyor. */}
-      {aiAramaAcikMi() ? <AkilliArama /> : null}
+      {/* ⚠️ İki koşul: bölüm açık VE anahtar tanımlı. Bölüm varsayılan
+          kapalı (KVKK — aydınlatma metni bekliyor). Filtreler her
+          hâlükârda çalışır; AI arama onların yerine değil yanına konuyor. */}
+      {aiAramaGoster ? <AkilliArama /> : null}
 
       <Suspense fallback={<div className="iskelet h-24" />}>
         <IlanFiltreleri mahalleler={mahalleler} />

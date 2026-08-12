@@ -155,6 +155,15 @@ kullanıcı `create`, `rol` alanı (alan seviyesi), kullanıcı `delete`.
 yoksa kurulumu yapan kişi kendi panelinden kilitlenir.
 ⚠️ Rolü çözülemeyen kullanıcı yönetici SAYILMAZ.
 
+## AI doğal dil arama — KAPALI
+⚠️ Varsayılan KAPALI ve bu bir KVKK kararı, teknik değil: ziyaretçinin
+yazdığı metin Anthropic'in (ABD) sunucularına gidiyor — yurt dışına veri
+aktarımı. Aydınlatma metni avukattan gelmeden AÇILMAZ.
+
+İki koşul birden: Site Bölümleri → `ai_arama` açık VE `ANTHROPIC_API_KEY`
+tanımlı. Ham sorgu hiçbir yere yazılmaz (ne veritabanı ne günlük).
+Veri akışı tarifi: docs/AI-ARAMA-KVKK-NOTU.md
+
 ## İlan yayın onayı
 Danışman hazırlar → `onay_bekliyor` → yönetici doğrular → `yayinda`.
 Danışman `taslak` ve `onay_bekliyor` dışına çıkamaz; geri çekebilir.

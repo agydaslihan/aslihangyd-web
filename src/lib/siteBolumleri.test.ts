@@ -10,7 +10,7 @@ import {
 } from './siteBolumleri'
 
 describe('bölüm tanımları', () => {
-  it('şartnamedeki sekiz bölüm tanımlı', () => {
+  it('tanımlı bölümler ve sıraları', () => {
     expect(BOLUMLER.map((b) => b.anahtar)).toEqual([
       'danisman_ol',
       'ticari',
@@ -19,26 +19,47 @@ describe('bölüm tanımları', () => {
       'gizli_portfoy',
       'mahalle_testi',
       'simulator',
+      'ai_arama',
       'bolge_radari',
     ])
   })
 
-  /** ⚠️ Şartname: danışman ol varsayılan KAPALI. */
-  it('danışman ol kapalı, diğerleri açık başlar', () => {
+  /**
+   * Varsayılan kapalı başlayan bölümler ve SEBEPLERİ.
+   *
+   * ⚠️ Liste bilinçli olarak açıkça yazılıyor; "kapalı olanları atla"
+   * demek, yeni bir bölümün yanlışlıkla kapalı doğmasını gizlerdi.
+   *
+   * · `danisman_ol` — şartname gereği (henüz danışman alımı yok)
+   * · `ai_arama`   — KVKK: aydınlatma metni avukattan gelmeden açılmaz
+   */
+  const VARSAYILAN_KAPALILAR: BolumAnahtari[] = ['danisman_ol', 'ai_arama']
+
+  it('yalnızca gerekçesi olan bölümler kapalı başlar', () => {
     const varsayilan = varsayilanDurumlar()
-    expect(varsayilan.danisman_ol).toBe(false)
 
     for (const bolum of BOLUMLER) {
-      if (bolum.anahtar === 'danisman_ol') continue
-      expect(varsayilan[bolum.anahtar], bolum.anahtar).toBe(true)
+      const beklenen = !VARSAYILAN_KAPALILAR.includes(bolum.anahtar)
+      expect(varsayilan[bolum.anahtar], bolum.anahtar).toBe(beklenen)
     }
   })
 
-  it('her bölümün rotası ve açıklaması var', () => {
+  /**
+   * ⚠️ Her bölüm bir SAYFA değil.
+   *
+   * `ai_arama` mevcut bir sayfanın üzerindeki bir bileşen; kendi rotası
+   * yok ve olmamalı. Kural "her bölümün rotası vardır"dan "rotasız bölüm
+   * gezinmede görünmez"e daraltıldı: rotasız bir bölümü altbilgiye koymak,
+   * hiçbir yere gitmeyen bir bağlantı üretirdi.
+   */
+  it('sayfa bölümlerinin rotası var, bileşen bölümleri gezinmede görünmez', () => {
     for (const bolum of BOLUMLER) {
-      expect(bolum.rotalar.length, bolum.anahtar).toBeGreaterThan(0)
       expect(bolum.aciklama.length, bolum.anahtar).toBeGreaterThan(10)
       expect(bolum.adres.startsWith('/'), bolum.anahtar).toBe(true)
+
+      if (bolum.rotalar.length === 0) {
+        expect(bolum.gezinmede, `${bolum.anahtar} rotasız ama gezinmede`).toBe(false)
+      }
     }
   })
 
@@ -103,5 +124,29 @@ describe('açık bölüm listesi', () => {
     expect(acik).not.toContain('ticari')
     expect(acik).not.toContain('danisman_ol')
     expect(acik).toContain('endeks')
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+describe('AI arama bölümü', () => {
+  it('VARSAYILAN KAPALI — KVKK kararı', () => {
+    // ⚠️ Aydınlatma metni avukattan gelmeden açılmamalı.
+    // docs/AI-ARAMA-KVKK-NOTU.md
+    expect(bolumTanimi('ai_arama').varsayilanAcik).toBe(false)
+    expect(varsayilanDurumlar().ai_arama).toBe(false)
+  })
+
+  it('rotası yok — sayfa değil, bileşen', () => {
+    expect(bolumTanimi('ai_arama').rotalar).toEqual([])
+  })
+
+  it('rotası olmadığı için hiçbir yolu 404 yapmaz', () => {
+    const durumlar = { ...varsayilanDurumlar(), ai_arama: false }
+    expect(kapaliBolumeAitMi('/portfoy', durumlar)).not.toBe('ai_arama')
+    expect(kapaliBolumeAitMi('/portfoy/bir-ilan', durumlar)).not.toBe('ai_arama')
+  })
+
+  it('altbilgi gezinmesinde görünmez', () => {
+    expect(bolumTanimi('ai_arama').gezinmede).toBe(false)
   })
 })

@@ -2645,8 +2645,15 @@ güvencesi ve kaybetmenin karşılığı yok — alan `required`, kanca her
 oluşturmada rolü yazıyor, alan erişimi yalnızca güncellemede alanı düşürür
 ve güncellemede sütun eski değerini korur.
 
-⚠️ **Sonraki `migrate:create` çağrıları bu satırı yeniden önerecek;
-yeniden silin.** Fark bilinçli.
+⚠️ **Düzeltme:** İlk yazdığımda "sonraki `migrate:create` çağrıları bu
+satırı yeniden önerecek" demiştim; **yanlış.** Payload canlı veritabanıyla
+değil, göç dosyasının yanındaki `.json` anlık görüntüsüyle karşılaştırıyor
+ve o görüntü sütunu zaten nullable kaydetti. Yani öneri tekrarlanmayacak.
+
+Kalan fark şu: **anlık görüntü nullable diyor, veritabanı NOT NULL.**
+Zararsız, çünkü hiçbir göç kısıtı düşürmüyor — göçlerden sıfırdan kurulan
+bir veritabanı da NOT NULL olur. Fark yalnızca diff dosyasında.
+(`ai_arama` göçü üretilirken doğrulandı: satır yeniden önerilmedi.)
 
 `down` da düzeltildi: üretilen hâli enum'u doğrudan daraltıyordu ve
 kuyrukta tek bir ilan varsa son dönüşüm patlayıp göçü yarıda bırakırdı.
@@ -2669,6 +2676,81 @@ daraltılıyor.
 - **Panel duman testi:** yönetici panelinde "1 ilan yayın onayı bekliyor"
   göründü, aynı anda danışman panelinde **görünmedi**.
 - Kapı: `typecheck` ✅ `lint` ✅ `test` (1143 test) ✅ `build` ✅
+
+---
+
+## AI arama — KVKK onayına kadar KAPALI
+
+Aslıhan'ın kararı: özelliği maliyet yüzünden değil, **yurt dışına veri
+aktarımı** yüzünden ertele. Avukat metinleri gelmeden açılmayacak.
+
+### Ne yapıldı
+
+- `ai_arama` site bölümü eklendi, **varsayılan KAPALI**
+- `/portfoy` kutusu artık **iki** koşula bağlı: bölüm açık **VE** anahtar tanımlı
+- `docs/AI-ARAMA-KVKK-NOTU.md` — avukat için veri akışı notu
+- Ham sorgunun hiçbir yere yazılmadığı doğrulandı
+
+### Kararlar
+
+**1. İki koşul, tek değil.**
+
+Önceden yalnızca `ANTHROPIC_API_KEY` kontrol ediliyordu. Anahtarın bir gün
+başka bir amaçla (örn. sunucu tarafı rapor üretimi) tanımlanması, arama
+kutusunu istemeden açardı. Artık bölüm anahtarı ayrı bir karar noktası.
+
+**2. Bölüm modeli genişletildi: her bölüm bir sayfa değil.**
+
+`ai_arama`'nın rotası yok — mevcut bir sayfanın üzerindeki bileşen.
+`rotalar: []` artık geçerli. Testteki değişmez kural zayıflatılmadı,
+daraltıldı: "her bölümün rotası vardır" → **"rotasız bölüm gezinmede
+görünmez"** (rotasız bir bölümü altbilgiye koymak hiçbir yere gitmeyen bir
+bağlantı üretirdi).
+
+Varsayılan kapalı bölümlerin listesi de teste açıkça yazıldı; "kapalı
+olanları atla" demek, yeni bir bölümün yanlışlıkla kapalı doğmasını
+gizlerdi.
+
+**3. Ham sorgu saklanmıyor — zaten saklanmıyordu.**
+
+Karar "ham sorguları loglama, sadece türetilmiş filtreyi sakla" idi.
+Mevcut durum bundan daha katı: **hiçbir şey saklanmıyor.** Ne sorgu, ne
+filtre; veritabanına da günlüğe de yazılmıyor. Türetilen filtre yalnızca
+ziyaretçinin adres çubuğunda yaşıyor.
+
+Filtre analitiği istenirse ayrı bir iş — istenmeden veri toplamaya
+başlamıyorum. Günlüğe yalnızca yapılandırma hataları yazılıyor ve o
+kayıtlar sorgu metnini içermiyor (kodda doğrulandı).
+
+**4. Avukat notu hukuki metin değil.**
+
+CLAUDE.md kural 3: hukuki metinleri ben yazmam. `AI-ARAMA-KVKK-NOTU.md`
+bir aydınlatma metni değil, **avukatın metni yazabilmesi için teknik
+tarif**: hangi veri, nereye, ne amaçla, ne saklanıyor, ziyaretçi ne
+görüyor. Sonunda beş somut soru var (açık rıza gerekir mi, VERBİS'e
+beyan gerekir mi, …).
+
+### Göç notundaki hatam — düzeltildi
+
+Önceki bölümde "sonraki `migrate:create` çağrıları `rol` NOT NULL düşürme
+satırını yeniden önerecek" yazmıştım. **Yanlıştı.** Payload canlı
+veritabanıyla değil, göçün yanındaki `.json` anlık görüntüsüyle
+karşılaştırıyor; o görüntü sütunu zaten nullable kaydetmiş. `ai_arama`
+göçü üretilirken doğrulandı: satır tekrarlanmadı. Not düzeltildi.
+
+### Doğrulama
+
+- 4 yeni bölüm testi (varsayılan kapalı, rotasız, gezinmede yok, 404 yapmıyor)
+- Mevcut bölüm değişmezleri güncellendi, zayıflatılmadı
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1147 test) ✅ `build` ✅
+
+### Açmak için üç adım (sırayla)
+
+1. Avukat metni → Payload admin → Sayfalar
+2. `.env` → `ANTHROPIC_API_KEY`
+3. Payload admin → Ayarlar → Site Bölümleri → "AI doğal dil arama" aç
+
+Üçü birden yapılmadan kutu ziyaretçiye görünmez.
 
 ---
 

@@ -236,21 +236,18 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       bu aktarımın eklenmesi gerekiyor ve o metni ben yazmıyorum**
       (CLAUDE.md kural 3). Metin hazır olmadan anahtarı üretime koyma.
 
-- [ ] **AI arama için model tercihi — maliyet kararı senin** ⬅️ *karar bekliyor*
-      Nereye: `.env` → `ANTHROPIC_ARAMA_MODELI` (boş bırakırsan `claude-opus-5`)
+- [x] ~~**AI arama için model tercihi**~~ — **ERTELENDİ** (senin kararın).
+      Sebep maliyet değil KVKK. Avukat onayı sonrası konuşacağız; o zamana
+      kadar `.env` → `ANTHROPIC_ARAMA_MODELI` boş kalabilir.
+      Hatırlatma: hız sınırı dakikada 10 arama — betikle fatura şişirmeyi
+      durdurur, gerçek ziyaretçiyi rahatsız etmez.
 
-      Her arama ücretli bir API isteği. Yaptığı iş dar ve mekanik: kısa bir
-      cümleyi filtre alanlarına çevirmek — taşınmaz yorumlamıyor, metin
-      yazmıyor. Bu tür bir iş daha küçük bir modelle de yapılabilir ve
-      arama başına maliyet doğrudan bu seçime bağlı.
-
-      Varsayılanı en yetenekli modele koydum çünkü doğruluk burada
-      dönüşüme etki ediyor; ama bunu senin adına maliyet kararı olarak
-      veremem. Anahtar geldiğinde iki modeli aynı cümlelerle deneyip
-      farkı birlikte görebiliriz.
-
-      Ayrıca hız sınırı koydum: dakikada 10 arama. Gerçek ziyaretçiyi
-      rahatsız etmez, betikle fatura şişirmeyi durdurur.
+- [ ] **AI arama KVKK maddesi — avukata ver** ⚠️ *özelliği açan tek şey bu*
+      Ver: `docs/AI-ARAMA-KVKK-NOTU.md` (hangi veri, nereye, ne amaçla
+      gidiyor; ne saklanıyor; ziyaretçi ne görüyor; beş somut soru)
+      Al: aydınlatma metnine eklenecek madde + "açık rıza gerekir mi" cevabı
+      Sonra: Sayfalar'a metni gir → `.env`'e anahtarı koy → Site
+      Bölümleri'nden aç. Üçü birden yapılmadan kutu görünmez.
 
 - [x] ~~**Bakım anahtarı**~~ — `.env`'e eklendi.
 

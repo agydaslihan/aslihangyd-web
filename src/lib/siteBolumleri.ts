@@ -31,6 +31,7 @@ export type BolumAnahtari =
   | 'mahalle_testi'
   | 'simulator'
   | 'bolge_radari'
+  | 'ai_arama'
 
 export interface BolumTanimi {
   anahtar: BolumAnahtari
@@ -41,6 +42,10 @@ export interface BolumTanimi {
   /**
    * Bu bölüme ait rotalar. Bölüm kapalıyken hepsi 404 döner.
    * Ön ek eşleşmesi yapılır: `/rapor` altındaki her şey kapanır.
+   *
+   * ⚠️ BOŞ OLABİLİR. Her bölüm bir sayfa değil: `ai_arama` mevcut bir
+   * sayfanın üzerindeki bir bileşendir, kendi rotası yoktur. Böyle
+   * bölümlerde anahtar yalnızca bileşeni gösterir/gizler.
    */
   rotalar: readonly string[]
   /** Altbilgi ve ana sayfa bağlantısı. */
@@ -126,6 +131,29 @@ export const BOLUMLER: readonly BolumTanimi[] = [
     adres: '/araclar/yatirim-simulatoru',
     gezinmede: true,
     varsayilanAcik: true,
+  },
+  {
+    /**
+     * ⚠️ VARSAYILAN KAPALI — KVKK kararı, teknik değil.
+     *
+     * Ziyaretçinin yazdığı arama metni Anthropic'in (ABD) sunucularına
+     * gidiyor; bu bir yurt dışına veri aktarımıdır ve aydınlatma metnine
+     * eklenmesi gerekir. Metin avukattan gelene kadar özellik açılmaz.
+     *
+     * Kutu ayrıca `ANTHROPIC_API_KEY` yoksa da basılmaz. İki koşul birden
+     * sağlanmadıkça görünmez: anahtar VE bu bölüm açık.
+     * Veri akışının ayrıntısı: docs/AI-ARAMA-KVKK-NOTU.md
+     */
+    anahtar: 'ai_arama',
+    ad: 'AI doğal dil arama',
+    aciklama:
+      '⚠️ Portföy sayfasındaki "kendi cümlenizle arayın" kutusu. Ziyaretçinin yazdığı ' +
+      "metin Anthropic'in (ABD) sunucularına gider — yurt dışına veri aktarımı. " +
+      'Aydınlatma metni avukattan gelmeden AÇMAYIN.',
+    rotalar: [],
+    adres: '/portfoy',
+    gezinmede: false,
+    varsayilanAcik: false,
   },
   {
     anahtar: 'bolge_radari',

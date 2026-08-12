@@ -1573,6 +1573,10 @@ export interface SiteBolumleri {
    */
   simulator?: boolean | null;
   /**
+   * ⚠️ Portföy sayfasındaki "kendi cümlenizle arayın" kutusu. Ziyaretçinin yazdığı metin Anthropic'in (ABD) sunucularına gider — yurt dışına veri aktarımı. Aydınlatma metni avukattan gelmeden AÇMAYIN.
+   */
+  ai_arama?: boolean | null;
+  /**
    * Mahalle medyanına göre fırsat ve risk sinyalleri.
    */
   bolge_radari?: boolean | null;
@@ -1799,6 +1803,7 @@ export interface SiteBolumleriSelect<T extends boolean = true> {
   gizli_portfoy?: T;
   mahalle_testi?: T;
   simulator?: T;
+  ai_arama?: T;
   bolge_radari?: T;
   updatedAt?: T;
   createdAt?: T;
