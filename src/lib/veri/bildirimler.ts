@@ -173,9 +173,16 @@ async function gozlemsizMahalleSay(payload: Payload, simdi: Date): Promise<numbe
  * boş görünüp "her şey yolunda" izlenimi vermesi. Bu yüzden hata halinde
  * boş liste değil, sebebi söyleyen bir bildirim döner.
  */
+/**
+ * @param yoneticiMi Onay kuyruğu bildirimi yalnızca yöneticiye gösterilir.
+ *                   Danışman kuyruğa bakıp bir şey yapamaz; ona göstermek
+ *                   üzerinde işlem yapamayacağı bir uyarı biriktirir ve
+ *                   şeridin tamamını görmezden gelmeyi öğretir.
+ */
 export async function bildirimleriGetir(
   payload: Payload,
   simdi: Date = new Date(),
+  yoneticiMi = true,
 ): Promise<Bildirim[]> {
   try {
     const [
@@ -185,6 +192,7 @@ export async function bildirimleriGetir(
       ilgisizPortfoy,
       gozlemsizMahalle,
       kurumsal,
+      onayBekleyen,
     ] = await Promise.all([
       payload.count({
         collection: 'ilanlar',
@@ -209,6 +217,13 @@ export async function bildirimleriGetir(
       ilgisizPortfoyuSay(payload, simdi),
       gozlemsizMahalleSay(payload, simdi),
       payload.findGlobal({ slug: 'kurumsal-bilgiler', depth: 0 }),
+      // Danışmana gösterilmeyecekse sorguyu hiç çalıştırma.
+      yoneticiMi
+        ? payload.count({
+            collection: 'ilanlar',
+            where: { durum: { equals: 'onay_bekliyor' } },
+          })
+        : Promise.resolve({ totalDocs: 0 }),
     ])
 
     const belgeNo = kurumsal.yetkiBelgesiNo
@@ -222,6 +237,7 @@ export async function bildirimleriGetir(
         ilgisizPortfoy,
         gozlemsizMahalle,
         yetkiBelgesiVar,
+        onayBekleyenIlan: onayBekleyen.totalDocs,
       },
       simdi,
     )

@@ -30,13 +30,28 @@ export const EIDS_DURUM_ETIKETLERI: Record<EidsDurum, string> = {
   yabanci_malik: 'Yabancı malik',
 }
 
-/** İlanın yayın durumu. */
-export const ILAN_DURUMLARI = ['taslak', 'yayinda', 'rezerve', 'satildi', 'yetki_bitti'] as const
+/**
+ * İlanın yayın durumu.
+ *
+ * ⚠️ `onay_bekliyor` bir ONAY KUYRUĞUDUR, yayın durumu değil. Danışman
+ * ilanı hazırlayıp bu duruma gönderir; yönetici EİDS alanlarını doğrulayıp
+ * yayınlar. Ziyaretçiye GÖRÜNMEZ (bkz. `HERKESE_ACIK_DURUMLAR`).
+ * Kurallar: `src/lib/onay/kurallar.ts`
+ */
+export const ILAN_DURUMLARI = [
+  'taslak',
+  'onay_bekliyor',
+  'yayinda',
+  'rezerve',
+  'satildi',
+  'yetki_bitti',
+] as const
 
 export type IlanDurumu = (typeof ILAN_DURUMLARI)[number]
 
 export const ILAN_DURUM_ETIKETLERI: Record<IlanDurumu, string> = {
   taslak: 'Taslak',
+  onay_bekliyor: 'Onay bekliyor',
   yayinda: 'Yayında',
   rezerve: 'Rezerve',
   satildi: 'Satıldı',
@@ -54,7 +69,9 @@ export const ILAN_DURUM_ETIKETLERI: Record<IlanDurumu, string> = {
  * kapsamına girme riski doğurur. Satılan kayıtlar iç referans olarak durur,
  * dışarı sızmaz.
  *
- * `taslak` ve `yetki_bitti` asla dışarı sızmaz.
+ * `taslak`, `onay_bekliyor` ve `yetki_bitti` asla dışarı sızmaz.
+ * `onay_bekliyor` özellikle önemli: onay kuyruğundaki ilan, henüz yönetici
+ * EİDS doğrulaması yapmamış demektir — yayına açık sayılamaz.
  */
 export const HERKESE_ACIK_DURUMLAR = ['yayinda', 'rezerve'] as const
 

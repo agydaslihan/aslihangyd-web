@@ -155,6 +155,17 @@ kullanıcı `create`, `rol` alanı (alan seviyesi), kullanıcı `delete`.
 yoksa kurulumu yapan kişi kendi panelinden kilitlenir.
 ⚠️ Rolü çözülemeyen kullanıcı yönetici SAYILMAZ.
 
+## İlan yayın onayı
+Danışman hazırlar → `onay_bekliyor` → yönetici doğrular → `yayinda`.
+Danışman `taslak` ve `onay_bekliyor` dışına çıkamaz; geri çekebilir.
+
+⚠️ Onay, EİDS kancasının YERİNE GEÇMEZ — üstüne biner. Yönetici de EİDS
+koşulları sağlanmadan yayına alamaz.
+⚠️ Kural DEĞERE değil DEĞİŞİKLİĞE bakar (`onceki === hedef` serbest);
+yoksa danışman yayındaki ilanın fiyatını bile düzenleyemez.
+⚠️ Kullanıcısız çağrılar (bakım cron'u, içe aktarma, seed) kısıtlanmaz —
+yoksa yetkisi dolan ilanı yayından kaldıran görev çalışamaz.
+
 ## Kod standartları
 - TypeScript strict, `any` yasak (gerekçesiz)
 - Server Components varsayılan; 'use client' sadece gerektiğinde

@@ -19,6 +19,7 @@ import {
 } from '@/lib/secenekler'
 
 import { eidsYayinEngeli } from './hooks/eidsYayinEngeli'
+import { onayAkisi } from './hooks/onayAkisi'
 import { ilanGostergeleri } from './hooks/ilanGostergeleri'
 import { seoAlanlari, slugAlani } from './ortakAlanlar'
 
@@ -50,8 +51,19 @@ export const Ilanlar: CollectionConfig = {
   },
 
   hooks: {
-    // Sıra önemli: önce göstergeler yazılır, sonra EİDS engeli kontrol edilir.
-    beforeChange: [ilanGostergeleri, eidsYayinEngeli],
+    /**
+     * Sıra bilinçli:
+     *  1. `ilanGostergeleri` — türetilmiş alanlar (kira çarpanı, getiri)
+     *  2. `onayAkisi` — durum değişikliğini rol açısından denetler
+     *  3. `eidsYayinEngeli` — yasal yayın engeli
+     *
+     * Onay kapısı EİDS'ten ÖNCE: danışman eksik EİDS'li bir ilanı doğrudan
+     * yayına almaya çalıştığında "EİDS eksik" değil "bu yönetici işi,
+     * onaya gönderin" mesajını görmeli. İkincisi eyleme dönük olan.
+     * ⚠️ Onay adımı EİDS kancasının yerine geçmez; yönetici de EİDS
+     * koşulları sağlanmadan yayına alamaz.
+     */
+    beforeChange: [ilanGostergeleri, onayAkisi, eidsYayinEngeli],
   },
 
   fields: [
@@ -67,7 +79,10 @@ export const Ilanlar: CollectionConfig = {
       admin: {
         position: 'sidebar',
         description:
-          '"Yayında" veya "Rezerve" seçebilmek için EİDS sekmesindeki tüm koşullar sağlanmalıdır.',
+          'Danışmansanız: ilanı hazırlayıp "Onay bekliyor" seçin — yönetici EİDS ' +
+          'bilgilerini doğrulayıp yayınlar. Vazgeçerseniz "Taslak"a geri çekebilirsiniz. ' +
+          'Yayın kararı yöneticide, çünkü yetki belgesi işletme sahibinin adına. ' +
+          '⚠️ "Yayında" veya "Rezerve" için EİDS sekmesindeki tüm koşullar ayrıca sağlanmalıdır.',
       },
     },
     slugAlani('baslik'),

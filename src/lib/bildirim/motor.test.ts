@@ -18,6 +18,7 @@ const temiz = (ek: Partial<BildirimGirdisi> = {}): BildirimGirdisi => ({
   ilgisizPortfoy: 0,
   gozlemsizMahalle: 0,
   yetkiBelgesiVar: true,
+  onayBekleyenIlan: 0,
   ...ek,
 })
 
@@ -244,5 +245,36 @@ describe('yardımcılar', () => {
   it('geçen günü Europe/Istanbul gününe göre sayar', () => {
     expect(gecenGun('2026-08-01T00:00:00.000Z', SIMDI)).toBe(5)
     expect(gecenGun(null, SIMDI)).toBeNull()
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+describe('onay bekleyen ilan bildirimi', () => {
+  it('kuyruk boşken bildirim üretmez', () => {
+    const bildirimler = bildirimleriUret(temiz(), SIMDI)
+    expect(bildirimler.find((b) => b.anahtar === 'onay-bekleyen-ilan')).toBeUndefined()
+  })
+
+  it('kuyrukta ilan varsa bildirir ve kuyruğa bağlantı verir', () => {
+    const bildirimler = bildirimleriUret(temiz({ onayBekleyenIlan: 3 }), SIMDI)
+    const bildirim = bildirimler.find((b) => b.anahtar === 'onay-bekleyen-ilan')
+
+    expect(bildirim).toBeDefined()
+    expect(bildirim?.baslik).toContain('3 ilan')
+    expect(bildirim?.adres).toContain('onay_bekliyor')
+  })
+
+  it('tek ilanda tekil dil kullanır', () => {
+    const bildirimler = bildirimleriUret(temiz({ onayBekleyenIlan: 1 }), SIMDI)
+    expect(bildirimler.find((b) => b.anahtar === 'onay-bekleyen-ilan')?.baslik).toBe(
+      '1 ilan yayın onayı bekliyor',
+    )
+  })
+
+  it('YASAL değil önemli — yetkisiz yayınla aynı ağırlıkta gösterilmez', () => {
+    // Kuyrukta bekleyen ilan duran bir iştir, ihlal değil. İkisini aynı
+    // görsel ağırlıkta göstermek yasal olanı görünmez kılar.
+    const bildirimler = bildirimleriUret(temiz({ onayBekleyenIlan: 2 }), SIMDI)
+    expect(bildirimler.find((b) => b.anahtar === 'onay-bekleyen-ilan')?.oncelik).toBe('onemli')
   })
 })

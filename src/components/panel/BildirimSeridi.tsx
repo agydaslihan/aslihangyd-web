@@ -2,6 +2,7 @@ import type { ServerProps } from 'payload'
 
 import './bildirimSeridi.css'
 
+import { yoneticiMi } from '@/lib/erisim'
 import { bildirimleriGetir } from '@/lib/veri/bildirimler'
 
 import type { Bildirim, Oncelik } from '@/lib/bildirim/motor'
@@ -54,7 +55,9 @@ export default async function BildirimSeridi({ payload, user }: ServerProps) {
    */
   if (!user) return null
 
-  const bildirimler = await bildirimleriGetir(payload)
+  // Onay kuyruğu bildirimi yalnızca yöneticiye — danışman kuyruğa bakıp
+  // bir şey yapamaz.
+  const bildirimler = await bildirimleriGetir(payload, new Date(), yoneticiMi(user))
   if (bildirimler.length === 0) return null
 
   const adminYolu = payload.config.routes.admin
