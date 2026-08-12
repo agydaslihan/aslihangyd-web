@@ -2568,6 +2568,110 @@ kullanıcı zaten `yonetici`, üretim veritabanında hiç kullanıcı yok
 
 ---
 
+## İlan yayın onayı — onay kuyruğu
+
+Aslıhan'ın kararı: yayına alma yöneticiye geçsin **ama operasyonu
+tıkamadan.** Danışman hazırlar ve gönderir, yönetici doğrular ve yayınlar.
+
+### Akış
+
+```
+danışman: ilanı hazırlar          → taslak
+danışman: "yayına gönder"          → onay_bekliyor   (ziyaretçiye GÖRÜNMEZ)
+yönetici: bildirim şeridinde görür → onay kuyruğu
+yönetici: EİDS alanlarını doğrular → yayinda
+danışman: vazgeçerse               → taslak (geri çekme)
+```
+
+### Kararlar ve gerekçeleri
+
+**1. Onay, EİDS kancasının YERİNE GEÇMEZ — ÜSTÜNE BİNER.** ⭐
+
+`eidsYayinEngeli` aynen çalışıyor: **yönetici bile** EİDS koşulları
+sağlanmadan yayına alamıyor. Onay ikinci bir kapı, birincinin ikamesi
+değil. Entegrasyon testi bunu ayrıca kanıtlıyor.
+
+**2. Kural DEĞERE değil DEĞİŞİKLİĞE bakar.** ⭐ En kolay yapılacak hata
+
+`durumDegisikligiGecerliMi` önce `onceki === hedef` kontrolü yapıyor.
+Bu satır olmasaydı danışman **yayındaki bir ilanın fiyatını bile
+güncelleyemezdi**: kısmi güncellemede hedef durum yine `yayinda` gelir ve
+salt değere bakan bir kural her kaydetmeyi reddederdi. Hem birim hem
+entegrasyon testi bu senaryoyu ayrı ayrı tutuyor.
+
+**3. Kancanın sırası: onay → EİDS.**
+
+Danışman eksik EİDS'li bir ilanı doğrudan yayına almaya çalıştığında
+"EİDS eksik" değil "bu yönetici işi, onaya gönderin" mesajını görmeli.
+İkincisi eyleme dönük olan.
+
+**4. Kullanıcısız çağrılar kısıtlanmıyor.**
+
+Bakım cron'u, içe aktarma ve seed kullanıcısız çalışır (`rol === null`).
+Kısıtlansaydı **yetkisi dolan ilanı yayından kaldıran görev çalışamaz** ve
+yasal engel kendi kendini kilitlerdi.
+
+**5. Onay bildirimi yalnızca yöneticiye.**
+
+Danışman kuyruğa bakıp bir şey yapamaz; ona göstermek üzerinde işlem
+yapamayacağı bir uyarı biriktirir ve şeridin tamamını görmezden gelmeyi
+öğretir. Bildirim `yasal` değil `onemli`: kuyrukta bekleyen ilan duran bir
+iştir, ihlal değil — ikisini aynı ağırlıkta göstermek yasal olanı
+görünmez kılar.
+
+**6. Sahiplik kısıtı KONULMADI.**
+
+Aslıhan "danışman kendi ilanını geri çekebilsin" dedi; ben bunu "geri
+çekme mümkün olmalı" olarak uyguladım, "yalnızca kendi ilanı" olarak
+değil. Sebep: danışman zaten her ilanı düzenleyebiliyor
+(`update: yalnizcaPanel`); geri çekmeyi sahipliğe bağlamak tutarsız
+olurdu. İlan bazlı sahiplik istenirse ayrı bir karar — SENDEN-BEKLENENLER.
+
+### Göç — elle düzeltildi ⚠️
+
+`payload migrate:create` iki şey üretti; biri istenmeyendi:
+
+```sql
+ALTER TYPE enum_ilanlar_durum ADD VALUE 'onay_bekliyor' BEFORE 'yayinda';
+ALTER TABLE kullanicilar ALTER COLUMN rol DROP NOT NULL;   ← SİLİNDİ
+```
+
+İkinci satır, rol yetkilendirmesinde `rol` alanına eklenen **alan seviyesi
+erişim kuralının** yan etkisi: Payload, erişim denetimli bir alanın
+yazmadan çıkarılabileceğini varsayıp sütunu nullable işaretliyor.
+
+Satır silindi. "Her kullanıcının bir rolü vardır" bir veri bütünlüğü
+güvencesi ve kaybetmenin karşılığı yok — alan `required`, kanca her
+oluşturmada rolü yazıyor, alan erişimi yalnızca güncellemede alanı düşürür
+ve güncellemede sütun eski değerini korur.
+
+⚠️ **Sonraki `migrate:create` çağrıları bu satırı yeniden önerecek;
+yeniden silin.** Fark bilinçli.
+
+`down` da düzeltildi: üretilen hâli enum'u doğrudan daraltıyordu ve
+kuyrukta tek bir ilan varsa son dönüşüm patlayıp göçü yarıda bırakırdı.
+Artık önce veri taşınıyor (`onay_bekliyor` → `taslak`), sonra tip
+daraltılıyor.
+
+### Doğrulama
+
+- **13 birim testi** — geçiş kuralları, "durum değişmiyorsa serbest",
+  kullanıcısız çağrı, tekil/çoğul dil
+- **8 entegrasyon testi** — onaya gönderme, doğrudan yayına alamama, geri
+  çekme, yayındaki ilanı düzenleyebilme, yöneticinin yayınlaması,
+  **eksik EİDS'te yöneticinin de yayınlayamaması**, kuyruğun ziyaretçiye
+  görünmemesi
+- **4 bildirim testi** — kuyruk boşken sessiz, sayı ve bağlantı doğru,
+  öncelik `onemli`
+- **HTTP duman testi:** danışman hesabıyla `PATCH /api/ilanlar/:id`
+  → `yayinda` **403** ve eyleme dönük Türkçe mesaj istemciye ulaştı;
+  `onay_bekliyor` ve geri çekme geçti.
+- **Panel duman testi:** yönetici panelinde "1 ilan yayın onayı bekliyor"
+  göründü, aynı anda danışman panelinde **görünmedi**.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1143 test) ✅ `build` ✅
+
+---
+
 ## Bilinen eksikler ve teknik borç
 
 | Konu | Etki | Not |

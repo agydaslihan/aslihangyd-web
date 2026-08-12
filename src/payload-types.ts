@@ -162,9 +162,9 @@ export interface KullanicilarAuthOperations {
 export interface Ilanlar {
   id: number;
   /**
-   * "Yayında" veya "Rezerve" seçebilmek için EİDS sekmesindeki tüm koşullar sağlanmalıdır.
+   * Danışmansanız: ilanı hazırlayıp "Onay bekliyor" seçin — yönetici EİDS bilgilerini doğrulayıp yayınlar. Vazgeçerseniz "Taslak"a geri çekebilirsiniz. Yayın kararı yöneticide, çünkü yetki belgesi işletme sahibinin adına. ⚠️ "Yayında" veya "Rezerve" için EİDS sekmesindeki tüm koşullar ayrıca sağlanmalıdır.
    */
-  durum: 'taslak' | 'yayinda' | 'rezerve' | 'satildi' | 'yetki_bitti';
+  durum: 'taslak' | 'onay_bekliyor' | 'yayinda' | 'rezerve' | 'satildi' | 'yetki_bitti';
   /**
    * Sayfanın adres satırındaki adı. Boş bırakırsan başlıktan otomatik üretilir. Yayına girdikten sonra değiştirmek eski adresi 404 yapar.
    */

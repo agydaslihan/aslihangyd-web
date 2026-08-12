@@ -53,6 +53,18 @@ export function yoneticiMi(kullanici: unknown): boolean {
 }
 
 /**
+ * Kullanıcının rolü; oturumsuz ya da rolü çözülemeyen çağrıda `null`.
+ *
+ * ⚠️ `null` "yetkisiz" demek DEĞİL — "sunucu içi çağrı" demek. Bakım
+ * cron'u, içe aktarma ve seed betikleri kullanıcısız çalışır ve bunlar
+ * güvenilen yollardır. Yetki kararı veren yerlerde `yoneticiMi` kullanın;
+ * `rolAl` yalnızca rolü bilmek isteyen kurallar içindir.
+ */
+export function rolAl(kullanici: unknown): Rol | null {
+  return rolu(kullanici)
+}
+
+/**
  * Yeni kullanıcının rolü ne olmalı?
  *
  * ⚠️ KİLİTLENME KORUMASI — sistemdeki ilk kullanıcı DAİMA yönetici olur.

@@ -358,3 +358,167 @@ describe('rolsüz ve oturumsuz erişim', () => {
     ).rejects.toThrow()
   })
 })
+
+// ═══════════════════════════════════════════════════════════════════════════
+describe('ilan yayın onayı', () => {
+  it('danışman ilanı ONAYA GÖNDEREBİLİR', async () => {
+    const ilan = await payload.create({
+      collection: 'ilanlar',
+      data: ilanVerisi({ baslik: `${ONEK} onaya giden`, tasinmazNo: `${ONEK}-10` }),
+      user: danisman,
+      ...PANEL,
+    })
+
+    const guncel = await payload.update({
+      collection: 'ilanlar',
+      id: ilan.id,
+      data: { durum: 'onay_bekliyor' },
+      user: danisman,
+      ...PANEL,
+    })
+
+    expect(guncel.durum).toBe('onay_bekliyor')
+  })
+
+  it('danışman DOĞRUDAN YAYINA ALAMAZ', async () => {
+    // ⭐ Kararın özü: yetki belgesi işletme sahibinin adına, yetkisiz ilan
+    // yayınının idari sorumlusu o.
+    const ilan = await payload.create({
+      collection: 'ilanlar',
+      data: ilanVerisi({ baslik: `${ONEK} yayına kaçak`, tasinmazNo: `${ONEK}-11` }),
+      user: danisman,
+      ...PANEL,
+    })
+
+    await expect(
+      payload.update({
+        collection: 'ilanlar',
+        id: ilan.id,
+        data: { durum: 'yayinda' },
+        user: danisman,
+        ...PANEL,
+      }),
+    ).rejects.toThrow()
+
+    const duruyorMu = await payload.findByID({ collection: 'ilanlar', id: ilan.id })
+    expect(duruyorMu.durum).toBe('taslak')
+  })
+
+  it('danışman onay kuyruğundan GERİ ÇEKEBİLİR', async () => {
+    const ilan = await payload.create({
+      collection: 'ilanlar',
+      data: ilanVerisi({
+        baslik: `${ONEK} geri çekilen`,
+        tasinmazNo: `${ONEK}-12`,
+        durum: 'onay_bekliyor',
+      }),
+      user: danisman,
+      ...PANEL,
+    })
+
+    const geri = await payload.update({
+      collection: 'ilanlar',
+      id: ilan.id,
+      data: { durum: 'taslak' },
+      user: danisman,
+      ...PANEL,
+    })
+
+    expect(geri.durum).toBe('taslak')
+  })
+
+  it('⭐ danışman YAYINDAKİ ilanı düzenleyebilir — durum değişmiyorsa engel yok', async () => {
+    // Kural değere değil DEĞİŞİKLİĞE bakmalı; yoksa danışman yayındaki bir
+    // ilanın fiyatını bile güncelleyemez.
+    const ilan = await payload.create({
+      collection: 'ilanlar',
+      data: ilanVerisi({
+        baslik: `${ONEK} yayındaki`,
+        tasinmazNo: `${ONEK}-13`,
+        durum: 'yayinda',
+      }),
+      user: yonetici,
+      ...PANEL,
+    })
+
+    const guncel = await payload.update({
+      collection: 'ilanlar',
+      id: ilan.id,
+      data: { ozet: 'danışman fiyat notunu güncelledi' },
+      user: danisman,
+      ...PANEL,
+    })
+
+    expect(guncel.ozet).toBe('danışman fiyat notunu güncelledi')
+    expect(guncel.durum).toBe('yayinda')
+  })
+
+  it('yönetici onay kuyruğundaki ilanı YAYINLAYABİLİR', async () => {
+    const ilan = await payload.create({
+      collection: 'ilanlar',
+      data: ilanVerisi({
+        baslik: `${ONEK} onaylanan`,
+        tasinmazNo: `${ONEK}-14`,
+        durum: 'onay_bekliyor',
+      }),
+      user: danisman,
+      ...PANEL,
+    })
+
+    const yayin = await payload.update({
+      collection: 'ilanlar',
+      id: ilan.id,
+      data: { durum: 'yayinda' },
+      user: yonetici,
+      ...PANEL,
+    })
+
+    expect(yayin.durum).toBe('yayinda')
+  })
+
+  it('⚠️ ONAY, EİDS KANCASININ YERİNE GEÇMEZ — yönetici bile eksik EİDS ile yayınlayamaz', async () => {
+    const ilan = await payload.create({
+      collection: 'ilanlar',
+      data: ilanVerisi({
+        baslik: `${ONEK} eids eksik`,
+        tasinmazNo: `${ONEK}-15`,
+        durum: 'onay_bekliyor',
+        eidsYetkiBitis: '2020-01-01T00:00:00.000Z',
+      }),
+      user: danisman,
+      ...PANEL,
+    })
+
+    await expect(
+      payload.update({
+        collection: 'ilanlar',
+        id: ilan.id,
+        data: { durum: 'yayinda' },
+        user: yonetici,
+        ...PANEL,
+      }),
+    ).rejects.toThrow()
+  })
+
+  it('onay bekleyen ilan ZİYARETÇİYE GÖRÜNMEZ', async () => {
+    await payload.create({
+      collection: 'ilanlar',
+      data: ilanVerisi({
+        baslik: `${ONEK} kuyrukta gizli`,
+        tasinmazNo: `${ONEK}-16`,
+        durum: 'onay_bekliyor',
+      }),
+      user: danisman,
+      ...PANEL,
+    })
+
+    const ziyaretci = await payload.find({
+      collection: 'ilanlar',
+      where: { baslik: { like: `${ONEK} kuyrukta gizli` } },
+      user: null,
+      ...PANEL,
+    })
+
+    expect(ziyaretci.totalDocs).toBe(0)
+  })
+})

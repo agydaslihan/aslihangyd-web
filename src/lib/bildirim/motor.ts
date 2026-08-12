@@ -90,6 +90,14 @@ export interface BildirimGirdisi {
   gozlemsizMahalle: number
   /** Yetki belgesi numarası girilmiş mi. */
   yetkiBelgesiVar: boolean
+  /**
+   * Danışmanın yayına gönderdiği, yönetici onayı bekleyen ilan sayısı.
+   *
+   * ⚠️ Yalnızca YÖNETİCİYE gösterilir. Danışman bu kuyruğa bakıp bir şey
+   * yapamaz; ona göstermek, üzerinde işlem yapamayacağı bir uyarı biriktirir
+   * ve şeridin tamamını görmezden gelmeyi öğretir.
+   */
+  onayBekleyenIlan: number
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -126,6 +134,28 @@ export function bildirimleriUret(girdi: BildirimGirdisi, simdi: Date = new Date(
         'yayından almalıydı; çalışmamış olabilir. Hemen elle yayından alın.',
       adres: '/admin/collections/ilanlar?where[durum][in]=yayinda,rezerve',
       adresEtiketi: 'Yayındaki ilanlar',
+    })
+  }
+
+  if (girdi.onayBekleyenIlan > 0) {
+    /**
+     * Yasal DEĞİL, önemli: kuyrukta bekleyen ilan yayına girmiyor demektir.
+     * Yetkisiz yayın (yasal) ile karıştırılmamalı — burada henüz bir ihlal
+     * yok, duran bir iş var.
+     */
+    bildirimler.push({
+      anahtar: 'onay-bekleyen-ilan',
+      oncelik: 'onemli',
+      baslik:
+        girdi.onayBekleyenIlan === 1
+          ? '1 ilan yayın onayı bekliyor'
+          : `${girdi.onayBekleyenIlan} ilan yayın onayı bekliyor`,
+      aciklama:
+        'Danışman hazırlayıp yayına gönderdi. EİDS bilgilerini (taşınmaz numarası, ada, ' +
+        'parsel, yetki tarihleri) doğrulayıp yayınlayın. Yetki belgesi sizin adınıza; ' +
+        'yayın kararı bu yüzden sizde.',
+      adres: '/admin/collections/ilanlar?where[durum][equals]=onay_bekliyor',
+      adresEtiketi: 'Onay kuyruğunu aç',
     })
   }
 
