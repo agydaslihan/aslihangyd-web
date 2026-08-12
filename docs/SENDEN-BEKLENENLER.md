@@ -153,7 +153,48 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 - [ ] **POI verisi** — okul, hastane, market, park, sanayi, durak konumları
       Nereye: Payload admin → İlgi Noktaları
-      Alternatif: OpenStreetMap'ten toplu içe aktarma yazabilirim, söyle.
+      ⬆️ **OpenStreetMap içe aktarma HAZIR** (senin kararın).
+      Nerede: Payload admin → sol menü → **POI içe aktar (OpenStreetMap)**
+
+      ⚠️ **Önce mahalle merkezlerini gir** (yukarıdaki madde). Arama alanı
+      onlardan hesaplanıyor — Çorlu'nun koordinatlarını koda gömmedim ki
+      yeni mahalle eklediğinde alan kendiliğinden büyüsün.
+
+      Akış: payı seç → **Önizle** → listeyi gör → aktar.
+
+      Gerçek ölçüm (3 km pay ile): **277 nokta** eşleşti. Elle girsen
+      haftalar sürerdi.
+
+      ⚠️ Elle düzelttiğin kayıt bir daha ezilmez. Bir noktanın adını ya da
+      konumunu düzelttiğinde kayıt işaretlenir, sonraki içe aktarmalar onu
+      atlar ve raporda "korundu" der.
+
+      ⚠️ Atıf zorunlu (ODbL): içe aktarılan noktalar sitede "© OpenStreetMap
+      katkıcıları" ile gösteriliyor, lisans ve kategori eşlemesi
+      `/veri-kaynaklari` sayfasında yayınlanıyor. Bu ibareleri kaldırma.
+
+- [ ] **Eşleme tablosuna eklemek istediğin tür var mı?** ⬅️ *karar bekliyor*
+
+      İçe aktarma, eşleme tablomuzda karşılığı olmayanları da sayıyor ve
+      önizlemede gösteriyor. Çorlu'da (3 km pay) dışarıda kalanların
+      ilk sıraları:
+
+      | OSM etiketi | Adet | Bizde karşılığı |
+      | --- | --- | --- |
+      | leisure=playground (oyun alanı) | 60 | yok |
+      | amenity=parking (otopark) | 50 | yok |
+      | leisure=pitch (spor sahası) | 42 | yok |
+      | amenity=restaurant | 34 | yok |
+      | amenity=cafe | 29 | yok |
+      | amenity=place_of_worship (cami vb.) | 27 | yok |
+      | amenity=pharmacy (eczane) | 21 | yok |
+
+      Bence **eczane** ve **oyun alanı** sosyal donatı sayılabilir; ikisi de
+      "yürüme mesafesinde ne var" sorusuna cevap veriyor. Restoran/kafe daha
+      çok yaşam tarzı göstergesi — istersen ayrı bir tip açarız.
+
+      Söyle, eşleme tablosuna eklerim ve `/veri-kaynaklari` sayfasında
+      yayınlanır.
 
       ⬆️ **Bu madde artık daha değerli.** Yakınlık sorguları yazıldı; her
       kayıt üç yeri birden besliyor:

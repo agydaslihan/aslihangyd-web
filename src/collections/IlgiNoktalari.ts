@@ -2,6 +2,8 @@ import type { CollectionConfig } from 'payload'
 
 import { herkesOkur, yalnizcaPanel, yalnizcaYoneticiSiler } from '@/lib/erisim'
 
+import { osmElleDuzenlemeIzi } from './hooks/osmElleDuzenlemeIzi'
+
 /**
  * İlgi noktaları (POI) — okul, sağlık, market, park, sanayi, ulaşım.
  *
@@ -44,6 +46,11 @@ export const IlgiNoktalari: CollectionConfig = {
     update: yalnizcaPanel,
     // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
     delete: yalnizcaYoneticiSiler,
+  },
+
+  hooks: {
+    // Elle düzeltilen OSM kaydı bir daha içe aktarmayla ezilmesin.
+    beforeChange: [osmElleDuzenlemeIzi],
   },
 
   admin: {
@@ -112,6 +119,68 @@ export const IlgiNoktalari: CollectionConfig = {
       name: 'detay',
       type: 'textarea',
       label: 'Açıklama',
+    },
+
+    // ── Kaynak izi ────────────────────────────────────────────────────────
+    {
+      type: 'collapsible',
+      label: 'Kaynak',
+      admin: { initCollapsed: true },
+      fields: [
+        {
+          name: 'kaynak',
+          type: 'select',
+          label: 'Veri kaynağı',
+          required: true,
+          defaultValue: 'elle',
+          index: true,
+          options: [
+            { value: 'elle', label: 'Elle girildi' },
+            { value: 'osm', label: 'OpenStreetMap' },
+          ],
+          admin: {
+            readOnly: true,
+            description:
+              'İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı kayıtlar sitede ' +
+              '"© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği).',
+          },
+        },
+        {
+          name: 'osmKimlik',
+          type: 'text',
+          label: 'OSM kimliği',
+          index: true,
+          admin: {
+            readOnly: true,
+            description:
+              'Örn. "node/123456". Yeniden içe aktarmada aynı kaydı bulmak için kullanılır.',
+          },
+        },
+        {
+          /**
+           * ⚠️ ELLE DÜZELTİLEN KAYIT BİR DAHA EZİLMEZ.
+           *
+           * OSM'de eksik ve yanlış kayıt olur. Aslıhan bir noktanın adını ya
+           * da konumunu düzelttiğinde, bir sonraki içe aktarma onu OSM'deki
+           * hâline geri çevirseydi düzeltme emeği her seferinde çöpe giderdi
+           * ve sistem güvenilmez olurdu.
+           *
+           * Bu kutu, kaydı **panel üzerinden** düzenleyen ilk kişide
+           * kendiliğinden işaretlenir (bkz. `osmElleDuzenlemeIzi` kancası).
+           * İçe aktarma bu kayıtları atlar ve raporunda "korundu" der.
+           */
+          name: 'elleDuzenlendi',
+          type: 'checkbox',
+          label: 'Elle düzeltildi — içe aktarma bu kaydı atlar',
+          defaultValue: false,
+          index: true,
+          admin: {
+            description:
+              'Bu kaydı panelden düzenlediğinizde otomatik işaretlenir ve yeniden içe ' +
+              "aktarma onu EZMEZ. İşareti kaldırırsanız kayıt tekrar OSM'den güncellenir.",
+          },
+        },
+      ],
     },
   ],
 }

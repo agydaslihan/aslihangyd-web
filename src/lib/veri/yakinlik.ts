@@ -83,6 +83,7 @@ function satiriCoz(satir: Record<string, unknown>): PoiMesafesi | null {
     enYakinMetre: Math.round(metre),
     yakindaSayi: sayiya(satir.yakinda_sayi) ?? 0,
     onemli: satir.en_yakin_onemli === true,
+    kaynak: satir.en_yakin_kaynak === 'osm' ? 'osm' : 'elle',
   }
 }
 
@@ -114,6 +115,7 @@ export async function noktayaGoreYakinlik(
           p."tip"    AS tip,
           p."ad"     AS ad,
           p."onemli" AS onemli,
+          p."kaynak" AS kaynak,
           ST_Distance(ST_SetSRID(p."konum", ${SRID})::geography, hedef.g) AS metre
         FROM "ilgi_noktalari" p
         CROSS JOIN hedef
@@ -122,6 +124,7 @@ export async function noktayaGoreYakinlik(
         tip,
         (array_agg(ad     ORDER BY metre, ad))[1] AS en_yakin_ad,
         (array_agg(onemli ORDER BY metre, ad))[1] AS en_yakin_onemli,
+        (array_agg(kaynak ORDER BY metre, ad))[1] AS en_yakin_kaynak,
         min(metre)                                AS en_yakin_metre,
         count(*) FILTER (WHERE metre <= ${yaricapMetre}) AS yakinda_sayi
       FROM mesafeler
@@ -165,6 +168,7 @@ export async function tumMahallelerinYakinligi(
           p."tip"    AS tip,
           p."ad"     AS poi_ad,
           p."onemli" AS onemli,
+          p."kaynak" AS kaynak,
           ST_Distance(ST_SetSRID(p."konum", ${SRID})::geography, mh.g) AS metre
         FROM mahalle mh
         CROSS JOIN "ilgi_noktalari" p
@@ -175,6 +179,7 @@ export async function tumMahallelerinYakinligi(
         tip,
         (array_agg(poi_ad ORDER BY metre, poi_ad))[1] AS en_yakin_ad,
         (array_agg(onemli ORDER BY metre, poi_ad))[1] AS en_yakin_onemli,
+        (array_agg(kaynak ORDER BY metre, poi_ad))[1] AS en_yakin_kaynak,
         min(metre)                                    AS en_yakin_metre,
         count(*) FILTER (WHERE metre <= ${yaricapMetre}) AS yakinda_sayi
       FROM mesafeler

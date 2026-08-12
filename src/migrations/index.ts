@@ -11,6 +11,7 @@ import * as migration_20260807_112409_bakim_durumu from './20260807_112409_bakim
 import * as migration_20260808_074503_gorsel_butcesi from './20260808_074503_gorsel_butcesi';
 import * as migration_20260812_172431_onay_bekliyor_durumu from './20260812_172431_onay_bekliyor_durumu';
 import * as migration_20260812_174328_ai_arama_bolumu from './20260812_174328_ai_arama_bolumu';
+import * as migration_20260812_175841_osm_poi_kaynak from './20260812_175841_osm_poi_kaynak';
 
 export const migrations = [
   {
@@ -76,6 +77,11 @@ export const migrations = [
   {
     up: migration_20260812_174328_ai_arama_bolumu.up,
     down: migration_20260812_174328_ai_arama_bolumu.down,
-    name: '20260812_174328_ai_arama_bolumu'
+    name: '20260812_174328_ai_arama_bolumu',
+  },
+  {
+    up: migration_20260812_175841_osm_poi_kaynak.up,
+    down: migration_20260812_175841_osm_poi_kaynak.down,
+    name: '20260812_175841_osm_poi_kaynak'
   },
 ];

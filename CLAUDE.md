@@ -155,6 +155,20 @@ kullanıcı `create`, `rol` alanı (alan seviyesi), kullanıcı `delete`.
 yoksa kurulumu yapan kişi kendi panelinden kilitlenir.
 ⚠️ Rolü çözülemeyen kullanıcı yönetici SAYILMAZ.
 
+## OpenStreetMap POI verisi
+⚠️ ODbL — ATIF ZORUNLU. POI verisinin göründüğü her yerde "© OpenStreetMap
+katkıcıları"; lisans ve kategori eşlemesi /veri-kaynaklari sayfasında.
+Bu ibareleri kaldırma.
+
+⚠️ Elle düzeltilen kayıt bir daha EZİLMEZ (`elleDuzenlendi`). İçe aktarıcı
+kendi yazmalarında `context.osmIceAktarma = true` gönderir; bu olmadan
+kanca içe aktarıcıyı insan sanar ve ikinci içe aktarma hiçbir şeyi
+güncelleyemez.
+⚠️ Arama alanı mahalle merkezlerinden türetilir — Çorlu koordinatı koda
+gömülmez.
+⚠️ Bu, kural 6'daki scraping yasağıyla çelişmez: OSM açık veridir ve
+Overpass API resmî arayüzdür.
+
 ## AI doğal dil arama — KAPALI
 ⚠️ Varsayılan KAPALI ve bu bir KVKK kararı, teknik değil: ziyaretçinin
 yazdığı metin Anthropic'in (ABD) sunucularına gidiyor — yurt dışına veri

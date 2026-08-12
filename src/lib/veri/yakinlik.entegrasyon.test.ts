@@ -62,6 +62,8 @@ beforeAll(async () => {
         tip: nokta.tip,
         konum: [nokta.konum.boylam, nokta.konum.enlem],
         onemli: nokta.tip === 'sanayi',
+        // Her POI'nin bir kaynağı var; elle girilen kayıtların varsayılanı.
+        kaynak: 'elle',
       },
     })
   }

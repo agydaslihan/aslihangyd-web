@@ -11,7 +11,14 @@ import type { BilesenOnerisi, MahalleYakinligi, PoiMesafesi, YakinlikBileseni } 
  * (CLAUDE.md kural 2).
  */
 function mesafe(tip: PoiTipi, metre: number, yakindaSayi = 1): PoiMesafesi {
-  return { tip, enYakinAd: `${tip} noktası`, enYakinMetre: metre, yakindaSayi, onemli: false }
+  return {
+    tip,
+    enYakinAd: `${tip} noktası`,
+    enYakinMetre: metre,
+    yakindaSayi,
+    onemli: false,
+    kaynak: 'elle',
+  }
 }
 
 function mahalle(slug: string, mesafeler: PoiMesafesi[]): MahalleYakinligi {

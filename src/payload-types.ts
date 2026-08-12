@@ -638,6 +638,18 @@ export interface IlgiNoktalari {
    */
   onemli?: boolean | null;
   detay?: string | null;
+  /**
+   * İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı kayıtlar sitede "© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği).
+   */
+  kaynak: 'elle' | 'osm';
+  /**
+   * Örn. "node/123456". Yeniden içe aktarmada aynı kaydı bulmak için kullanılır.
+   */
+  osmKimlik?: string | null;
+  /**
+   * Bu kaydı panelden düzenlediğinizde otomatik işaretlenir ve yeniden içe aktarma onu EZMEZ. İşareti kaldırırsanız kayıt tekrar OSM'den güncellenir.
+   */
+  elleDuzenlendi?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1197,6 +1209,9 @@ export interface IlgiNoktalariSelect<T extends boolean = true> {
   mahalle?: T;
   onemli?: T;
   detay?: T;
+  kaynak?: T;
+  osmKimlik?: T;
+  elleDuzenlendi?: T;
   updatedAt?: T;
   createdAt?: T;
 }
