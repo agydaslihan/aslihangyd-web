@@ -150,7 +150,39 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       Olmazsa: Video alanları boş durum gösterir; sayfa kırılmaz.
 
 - [ ] **Anthropic API anahtarı** (Faz 4 — AI doğal dil arama)
+      Nereden: console.anthropic.com → API Keys
       Nereye: `.env` → `ANTHROPIC_API_KEY`
+
+      Ne açar: `/portfoy` sayfasında "kendi cümlenizle arayın" kutusu.
+      Ziyaretçi *"Muhittin'de 5 milyon altı 3+1, getirisi iyi olsun"*
+      yazar, sistem bunu filtreye çevirip normal arama adresine yollar.
+
+      ⚠️ **Varsayılan kapalı.** Anahtar yoksa kutu hiç görünmez, normal
+      filtreler çalışmaya devam eder. Acele etme.
+
+      ⚠️ **ÖNCE AVUKATA SOR — yurt dışına veri aktarımı.**
+      Ziyaretçinin yazdığı metin Anthropic'in (ABD) sunucularına gider.
+      Sitenin Türkiye'de barındırılıyor olması bunu değiştirmiyor.
+      Aldığım önlemler: yalnızca metin gönderiliyor (IP, oturum, kimlik
+      yok) ve kutunun altında bu açıkça yazıyor. Ama **aydınlatma metnine
+      bu aktarımın eklenmesi gerekiyor ve o metni ben yazmıyorum**
+      (CLAUDE.md kural 3). Metin hazır olmadan anahtarı üretime koyma.
+
+- [ ] **AI arama için model tercihi — maliyet kararı senin** ⬅️ *karar bekliyor*
+      Nereye: `.env` → `ANTHROPIC_ARAMA_MODELI` (boş bırakırsan `claude-opus-5`)
+
+      Her arama ücretli bir API isteği. Yaptığı iş dar ve mekanik: kısa bir
+      cümleyi filtre alanlarına çevirmek — taşınmaz yorumlamıyor, metin
+      yazmıyor. Bu tür bir iş daha küçük bir modelle de yapılabilir ve
+      arama başına maliyet doğrudan bu seçime bağlı.
+
+      Varsayılanı en yetenekli modele koydum çünkü doğruluk burada
+      dönüşüme etki ediyor; ama bunu senin adına maliyet kararı olarak
+      veremem. Anahtar geldiğinde iki modeli aynı cümlelerle deneyip
+      farkı birlikte görebiliriz.
+
+      Ayrıca hız sınırı koydum: dakikada 10 arama. Gerçek ziyaretçiyi
+      rahatsız etmez, betikle fatura şişirmeyi durdurur.
 
 - [x] ~~**Bakım anahtarı**~~ — `.env`'e eklendi.
 

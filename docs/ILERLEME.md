@@ -24,7 +24,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 2B++ | Portföy giriş sihirbazı | ✅ Admin'in yanında, EİDS canlı geri bildirimli |
 | 2C | Gözlem girişi ve endeks altyapısı | ✅ (sayfa kapalı — tasarım gereği) |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
-| 4 | Yatırım skoru, AI arama, raporlar | 🟡 Skor + raporlar tamam; AI arama yapılmadı |
+| 4 | Yatırım skoru, AI arama, raporlar | ✅ Skor, raporlar ve AI arama tamam |
 | 5 | Çorlu Live | ⏭️ atlandı |
 
 ---
@@ -2129,6 +2129,121 @@ düşürmek**.
 
 ---
 
+## Faz 4 kalanı — AI doğal dil arama
+
+Faz 4'ün açık kalan tek maddesi. Planlanan fazların tamamı böylece işlendi.
+
+### Ne yapıldı
+
+- `src/lib/arama/sema.ts` — filtre şeması + URL çevirisi (16 test)
+- `src/lib/arama/motor.ts` — Claude API çağrısı, yapılandırılmış çıktı
+- `src/lib/arama/eylemler.ts` — sunucu eylemi, hız sınırı
+- `src/components/ilan/AkilliArama.tsx` — `/portfoy` üzerinde arama kutusu
+- `@anthropic-ai/sdk` bağımlılığı (yalnızca sunucu tarafı)
+
+### Kararlar ve gerekçeleri
+
+**1. AI'nin ürettiği şey bir URL'dir, veritabanı sorgusu değil.** ⭐
+
+Mimarinin kilit taşı. Model, sorguyu filtre nesnesine çevirir; kod onu
+`/portfoy?tip=satilik&odaSayisi=3+1` adresine dönüştürür ve ziyaretçiyi
+oraya yollar. Sonrası aylardır çalışan normal filtre yolu.
+
+Üç şey birden kazanılıyor:
+- **Güvenlik:** model sorgu üretmiyor, yeni saldırı yüzeyi yok.
+- **Şeffaflık:** anlaşılan filtre mevcut filtre çubuğunda görünür.
+- **Düzeltilebilirlik:** yanlış anlaşılan filtreyi ziyaretçi elle değiştirir.
+
+**2. Model cevap üretmez, filtre üretir.**
+
+PROJE-PLANI §4'ün vaadi. Modelden çıkan hiçbir metin ziyaretçiye
+gösterilmez; fiyat, mahalle bilgisi, öneri hiçbiri modelden gelmez.
+Halüsinasyon görse üretebileceği en kötü şey **yanlış bir filtredir** — ve
+o filtre görünür durumda.
+
+**3. Yapılandırılmış çıktı (`output_config.format`) + Zod.**
+
+"JSON döndür" diye rica edip ayrıştırmak yerine şema API seviyesinde
+zorlanıyor, dönen değer ayrıca Zod'dan geçiyor. Şema dışı hiçbir değer
+geçemez: model `tip: "devren"` derse düşer, olmayan bir mahalle slug'ı
+üretirse URL'ye yazılmaz.
+
+**4. `anlasilmayan` alanı — sessiz yok saymaya karşı.** ⭐
+
+Modelden, sorgunun filtreye çevrilemeyen kısımlarını ayrıca listelemesi
+isteniyor ("OSB'ye 10 dakika", "güney cephe", "asansörlü"). Bunlar arayüzde
+açıkça gösteriliyor. Sessizce yok saymak, ziyaretçiye isteğinin tamamının
+uygulandığını düşündürürdü — aramanın en sinsi yalanı budur.
+
+**5. Varsayılan KAPALI.**
+
+`ANTHROPIC_API_KEY` yoksa kutu hiç basılmıyor. Çalışmayan bir arama kutusu
+göstermek, olmayan bir özelliği varmış gibi sunmaktır. Filtreler her
+hâlükârda çalışıyor; AI arama onların yerine değil yanına kondu.
+
+**6. KVKK — yurt dışına veri aktarımı açıkça yazıldı.** ⚠️
+
+Ziyaretçinin yazdığı metin Anthropic'in sunucularına gidiyor. Bu bir yurt
+dışına aktarımdır ve sitenin Türkiye'de barındırılıyor olması bunu
+değiştirmez. Alınan önlemler:
+- Metin dışında hiçbir şey gönderilmiyor (IP, oturum, çerez, kimlik yok).
+- Kutunun hemen altında, küçültülmeden yazıyor.
+- Anahtar yoksa özellik yok.
+
+⚠️ **Aydınlatma metnine bu aktarımın eklenmesi avukat işidir.** Metin hazır
+olmadan anahtar üretimde tanımlanmamalı — SENDEN-BEKLENENLER.md'ye yazıldı.
+
+**7. Model ortam değişkeniyle değiştirilebilir.**
+
+Varsayılan `claude-opus-5`. Bu iş (kısa metinden yapılandırılmış çıktı)
+daha küçük bir modelle de yapılabilir ve arama başına maliyet doğrudan
+model seçimine bağlı. Bu bir maliyet kararı ve Aslıhan'ın; kodda
+sabitlemek yerine `ANTHROPIC_ARAMA_MODELI` ile açık bırakıldı.
+
+**8. Hız sınırı maliyet koruması.**
+
+Her arama ücretli bir istek. Form sınırından ayrı bir kova: dakikada 10.
+Gerçek ziyaretçiyi rahatsız etmez, betiği durdurur.
+
+**9. Yapılandırma hatası günlüğe, ziyaretçiye değil.**
+
+Geçersiz anahtarda ziyaretçi yalnızca "arama çalışmıyor" görür; anahtar
+durumunu dışarıya sızdırmak bilgi verir. Ama sessiz kalırsak özellik
+haftalarca bozuk kalır — `console.error` ile işletenin bakacağı yere yazılıyor.
+
+### Ölçüm ve doğrulama
+
+- 24 birim testi: şema reddi (uydurma tip/oda/sıralama), uydurma mahallenin
+  URL'ye yazılmaması, ters fiyat aralığı, kapalı durum, ağa çıkmadan önceki
+  doğrulama kapıları, SDK yüzeyinin varlığı
+- Duman testi: anahtar **yokken** `/portfoy` açıldı → kutu basılmadı,
+  filtreler çalıştı. Anahtar **varken** açıldı → kutu, KVKK ibaresi ve
+  örnek metin basıldı.
+- Geçersiz anahtarla gerçek ağ çağrısı yapıldı: istek serileşti, API'ye
+  ulaştı, 401 döndü, hata yolu insani mesaj üretti ve anahtar durumunu
+  sızdırmadı; günlüğe operatör uyarısı düştü.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1006 test) ✅ `build` ✅
+
+### ⚠️ Doğrulanmamış kalan tek yol: BAŞARILI yanıt
+
+Geçerli bir `ANTHROPIC_API_KEY` olmadığı için **başarılı bir çağrının
+çözümlenmesi** denenemedi. Doğrulanan: istek şekli (SDK tipleri + gerçek
+401), hata yolları, kapalı durum, şema reddi. Doğrulanmayan: modelin gerçek
+çıktısının şemaya uyması ve çevirinin kalitesi.
+
+**Anahtar gelince yapılacak duman testi (2 dakika):**
+
+1. `.env` → `ANTHROPIC_API_KEY=sk-ant-...`
+2. `pnpm dev`, `/portfoy` aç
+3. Şunu yaz: *"Muhittin'de 5 milyon altı 3+1, getirisi iyi olsun"*
+4. Beklenen: `/portfoy?mahalle=muhittin&odaSayisi=3+1&enCokFiyat=5000000&siralama=carpan_artan`
+   adresine gidilir, filtre çubuğu bu değerleri gösterir
+5. Sonra şunu yaz: *"OSB'ye 10 dakika, güney cephe daire"* — "şunları
+   filtreye çeviremedik" satırı görünmeli
+6. Görünmüyorsa istem (`sistemIstemi`) ayarlanmalı; kod değil.
+
+---
+
 ## Bilinen eksikler ve teknik borç
 
 | Konu | Etki | Not |
@@ -2137,6 +2252,8 @@ düşürmek**.
 | Lighthouse eşikleri engelleyici değil | Regresyon kaçabilir | Gerçek içerik gelince zorunlu yapılacak |
 | Derleme: yerel 107 sn, **CI 37 sn** | Sorun değil | Eşik 150 sn'ye çekildi; CI bunun çok altında. `.next/cache` önbelleği eklendi ama Turbopack oraya yazmadığı için kazancı yok — ölçüm ve gerekçe "CI derleme önbelleği ölçümü" başlığında. |
 | **Sunucu tarafı PDF yok** | Rapor e-postaya iliştirilemiyor | Faz 4: Playwright + headless Chrome ile `/rapor/*` rotaları render edilecek. Türkçe sorunu yok, `@media print` aynen geçerli. Chromium ~300 MB → kuyrukta çalışmalı. SMTP gelmeden anlamsız. |
+| **AI aramanın başarılı yolu doğrulanmadı** | Anahtar gelene kadar bilinmiyor | Geçerli `ANTHROPIC_API_KEY` olmadığı için yalnızca hata/kapalı yolları denendi. Duman testi tarifi "Faz 4 kalanı" başlığında. |
+| AI arama KVKK metni bekliyor | Üretimde açılamaz | Yurt dışına aktarım aydınlatma metnine eklenmeli — avukat işi. Anahtar tanımlanmadıkça özellik kapalı. |
 | SMTP yok | Lead bildirimi gitmiyor | Kayıt düşüyor, e-posta gitmiyor. Bilgi bekleniyor. |
 | E-posta bildirimi kodu yok | — | SMTP bilgileri gelince `yetkisiBitecekleriBildir` görevine eklenecek |
 | `sharp` 0.34'e sabit | — | Payload sürüm yükseltmesinde 0.35 tekrar denenebilir |

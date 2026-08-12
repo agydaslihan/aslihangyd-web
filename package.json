@@ -28,6 +28,7 @@
     "font:altkume": "node --experimental-strip-types scripts/font-altkume.ts"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.116.0",
     "@payloadcms/db-postgres": "3.87.0",
     "@payloadcms/next": "3.87.0",
     "@payloadcms/richtext-lexical": "3.87.0",

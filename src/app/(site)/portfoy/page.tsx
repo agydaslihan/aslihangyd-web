@@ -1,7 +1,9 @@
 import type { Metadata } from 'next'
 import { Suspense } from 'react'
 
+import { AkilliArama } from '@/components/ilan/AkilliArama'
 import { IlanFiltreleri } from '@/components/ilan/IlanFiltreleri'
+import { aiAramaAcikMi } from '@/lib/arama/motor'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { SiraOgesi, YataySira } from '@/components/ilan/YataySira'
 import { BosDurum } from '@/components/ui/BosDurum'
@@ -69,6 +71,12 @@ export default async function PortfoySayfasi({
           ))}
         </div>
       ) : null}
+
+      {/* ⚠️ Anahtar tanımlı değilse kutu hiç basılmaz — çalışmayan bir arama
+          kutusu göstermek, olmayan bir özelliği varmış gibi sunmaktır.
+          Filtreler her hâlükârda çalışır; AI arama onların yerine değil
+          yanına konuyor. */}
+      {aiAramaAcikMi() ? <AkilliArama /> : null}
 
       <Suspense fallback={<div className="iskelet h-24" />}>
         <IlanFiltreleri mahalleler={mahalleler} />
