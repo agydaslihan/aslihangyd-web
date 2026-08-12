@@ -10,6 +10,38 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 ## Acil (yayın engelleyici)
 
+- [ ] **Sunucudaki `.env` dosyasında değişken adlarını güncelle** — bu
+      değişiklik yayına çıktıktan SONRA, kabı yeniden başlatmadan önce
+
+      Dokuz değişkenin adı değişti. Eski adlar (`NEXT_PUBLIC_` önekli)
+      **zaten çalışmıyordu**: Next.js onları derleme anında imaja gömüyor ve
+      imaj bu değerler tanımsızken derleniyordu. Yani bugün yayında harita
+      açılmıyor, bot koruması kapalı, analitik yüklenmiyor ve drone
+      videoları "yapılandırılmadı" diyor. Yeni adlar çalışma zamanında
+      okunuyor — artık `.env`'i değiştirip kabı yeniden başlatmak yetiyor.
+
+      | Eski ad | Yeni ad |
+      | --- | --- |
+      | `NEXT_PUBLIC_MAPTILER_API_KEY` | `MAPTILER_ANAHTARI` |
+      | `NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI` | `TURNSTILE_SITE_ANAHTARI` |
+      | `NEXT_PUBLIC_WHATSAPP_NUMARA` | `WHATSAPP_NUMARA` |
+      | `NEXT_PUBLIC_ILETISIM_TELEFON` | `ILETISIM_TELEFON` |
+      | `NEXT_PUBLIC_ILETISIM_EPOSTA` | `ILETISIM_EPOSTA` |
+      | `NEXT_PUBLIC_UMAMI_URL` | `UMAMI_URL` |
+      | `NEXT_PUBLIC_UMAMI_SITE_ID` | `UMAMI_SITE_ID` |
+      | `NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME` | `BUNNY_STREAM_CDN_HOSTNAME` |
+      | `NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID` | (silin — `BUNNY_STREAM_LIBRARY_ID` ile birleşti) |
+
+      `NEXT_PUBLIC_SERVER_URL` kalıyor; yanındaki `SITE_ADRESI` ile aynı
+      değeri taşımaya devam etmeli.
+
+      Doğrulama (kabı yeniden başlattıktan sonra):
+      ```bash
+      curl -s http://127.0.0.1:3000/harita | grep -c api.maptiler.com   # 1+ olmalı
+      ```
+      Olmazsa: `/harita` boş durumda kalır ve OSM'den içe aktardığımız ilgi
+      noktalarının görüneceği başka yer yok.
+
 - [ ] **Taşınmaz Ticareti Yetki Belgesi numarası**
       Nereye: Payload admin → Ayarlar → Kurumsal Bilgiler → Yetki Belgesi No
       Olmazsa: `/hakkimizda` sayfasında zorunlu yasal bilgi eksik kalır, ilan
@@ -26,11 +58,13 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       içerik metinlerini ben yazmıyorum (CLAUDE.md kural 3).
 
 - [ ] **WhatsApp iş numarası** (uluslararası biçimde, örn. 905XXXXXXXXX)
-      Nereye: `.env` → `NEXT_PUBLIC_WHATSAPP_NUMARA`
+      Nereye: Payload admin → Ayarlar → Kurumsal Bilgiler → WhatsApp
+              (yedek olarak `.env` → `WHATSAPP_NUMARA`)
       Olmazsa: Tüm WhatsApp CTA'ları gizlenir (kırılmaz ama dönüşüm kaybı).
 
 - [ ] **İletişim e-postası ve telefon**
-      Nereye: `.env` → `NEXT_PUBLIC_ILETISIM_EPOSTA`, `NEXT_PUBLIC_ILETISIM_TELEFON`
+      Nereye: Payload admin → Ayarlar → Kurumsal Bilgiler
+              (yedek olarak `.env` → `ILETISIM_EPOSTA`, `ILETISIM_TELEFON`)
 
 ## Önemli (içerik eksikliği)
 
@@ -140,8 +174,13 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 - [ ] **MapTiler API anahtarı** (Faz 2)
       Nereden: maptiler.com → hesap aç → Account → API Keys
-      Nereye: `.env` → `NEXT_PUBLIC_MAPTILER_API_KEY`
-      Olmazsa: `/harita` sayfası ve mini haritalar çalışmaz.
+      Nereye: `.env` → `MAPTILER_ANAHTARI`
+      Olmazsa: `/harita` sayfası boş durum gösterir — OSM'den içe aktarılan
+      ilgi noktalarının göründüğü tek yer orasıdır.
+      ⚠️ Anahtarı aldıktan sonra MapTiler panelinden **alan adı kısıtı**
+      koyun (Account → API Keys → anahtar → Allowed origins →
+      `aslihangyd.com`). Anahtar harita isteklerinin içinde tarayıcıya
+      gider ve gizlenemez; tek gerçek koruma bu kısıttır.
 
 - [ ] **Güncel vergi/harç oranları** (Faz 2 — hesaplayıcılar)
       Tapu harcı oranı, döner sermaye ücreti, DASK tarifesi, kira geliri
@@ -224,7 +263,7 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       Olmazsa: Lead geldiğinde sana e-posta gitmez (kayıt yine de düşer).
 
 - [ ] **Umami analitik kurulumu** (Faz 2)
-      Nereye: `.env` → `NEXT_PUBLIC_UMAMI_URL`, `NEXT_PUBLIC_UMAMI_SITE_ID`
+      Nereye: `.env` → `UMAMI_URL`, `UMAMI_SITE_ID`
       Not: Çerez onayı alınmadan yüklenmez (CLAUDE.md kural 8).
 
 - [ ] **Sunucu / deploy erişimi** (Faz 1.10 — CI/CD)

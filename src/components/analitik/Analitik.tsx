@@ -18,8 +18,14 @@ export async function Analitik() {
   const onay = await cerezOnayiniOku()
   if (!izinVarMi(onay, 'analitik')) return null
 
-  const url = process.env.NEXT_PUBLIC_UMAMI_URL
-  const siteId = process.env.NEXT_PUBLIC_UMAMI_SITE_ID
+  /**
+   * ⚠️ Ön eksiz ve bu bilinçli — bu bir Server Component, çalışma zamanında
+   * okuyor. `NEXT_PUBLIC_` önekliyken değerler derleme anında gömülüyordu
+   * ve üretim imajı onlar tanımsızken derlendiği için analitik yayında
+   * HİÇ yüklenmiyordu. Gerekçenin tamamı `lib/harita/sunucu.ts` içinde.
+   */
+  const url = process.env.UMAMI_URL
+  const siteId = process.env.UMAMI_SITE_ID
 
   // Umami kurulmadıysa sessizce hiçbir şey yapma — site çalışmaya devam eder.
   if (!url || !siteId) return null

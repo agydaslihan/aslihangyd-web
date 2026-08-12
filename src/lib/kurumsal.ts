@@ -32,15 +32,21 @@ export const kurumsalBilgileriGetir = cache(async (): Promise<KurumsalBilgiler |
  *
  * CMS öncelikli çünkü Aslıhan numarayı panelden değiştirebilmeli; ortam
  * değişkeni ise CMS henüz doldurulmadan sitenin çalışabilmesi için yedek.
+ *
+ * ⚠️ Yedekler ön eksiz ve bu bilinçli. `NEXT_PUBLIC_` önekliyken derleme
+ * anına bağlıydılar ve üretim imajında boş kalıyorlardı — yani "CMS
+ * doldurulmadan da çalışsın" yedeği tam da üretimde çalışmıyordu.
+ * Gerekçenin tamamı `lib/harita/sunucu.ts` içinde. Bu dosya `server-only`,
+ * dolayısıyla çalışma zamanı okuması güvenli.
  */
 export function whatsappNumarasi(kurumsal: KurumsalBilgiler | null): string | null {
-  return kurumsal?.whatsapp || process.env.NEXT_PUBLIC_WHATSAPP_NUMARA || null
+  return kurumsal?.whatsapp || process.env.WHATSAPP_NUMARA || null
 }
 
 export function iletisimTelefonu(kurumsal: KurumsalBilgiler | null): string | null {
-  return kurumsal?.telefon || process.env.NEXT_PUBLIC_ILETISIM_TELEFON || null
+  return kurumsal?.telefon || process.env.ILETISIM_TELEFON || null
 }
 
 export function iletisimEpostasi(kurumsal: KurumsalBilgiler | null): string | null {
-  return kurumsal?.eposta || process.env.NEXT_PUBLIC_ILETISIM_EPOSTA || null
+  return kurumsal?.eposta || process.env.ILETISIM_EPOSTA || null
 }

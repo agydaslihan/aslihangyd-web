@@ -126,6 +126,127 @@ describe('ortam değişkeni belgeleri', () => {
   })
 
   /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ `NEXT_PUBLIC_` OKUMASI YASAK — HARİTAYI ÜRETİMDE KAPATAN HATA BUYDU.
+   *
+   * Next.js `NEXT_PUBLIC_` önekli değişkenleri **derleme anında** paketin
+   * içine gömer. Üretim imajımız GitHub Actions'ta derleniyor ve orada bu
+   * değişkenlerin hiçbiri tanımlı değil (`Dockerfile`da `ARG` yok,
+   * `imaj.yml`de `build-args` yok). Sonuç: yayına giden pakette **dokuz
+   * değişken birden boş dizeydi.**
+   *
+   * `compose.prod.yml` üçünü çalışma zamanı `environment:` olarak
+   * veriyordu — çoktan derlenmiş bir pakete bunun hiçbir etkisi yok.
+   * Yani dosya çalışıyormuş gibi görünüyor, çalışmıyordu.
+   *
+   * 12 Ağustos 2026'da bulunanlar: `/harita` kalıcı boş durumda (OSM'den
+   * içe aktarılan POI verisinin görüneceği tek yer), Turnstile bot koruması
+   * kapalı, Umami analitiği hiç yüklenmiyor, Bunny videoları
+   * "yapılandırılmadı", WhatsApp/telefon/e-posta yedekleri boş.
+   *
+   * Hepsi ön eksiz çalışma zamanı adlarına taşındı. Değer artık `.env`
+   * içinde yaşıyor — `PAYLOAD_SECRET`in yanında, Aslıhan'ın zaten
+   * düzenlediği tek dosyada — ve imajı yeniden derlemeden değişebiliyor.
+   *
+   * ⚠️ Bu testi susturmanın doğru yolu muafiyet eklemek DEĞİL, değişkeni
+   * ön eksiz adlandırıp sunucuda okumak, değeri istemci bileşenine prop
+   * olarak indirmektir. Örnek: `lib/harita/sunucu.ts` → `HaritaSahnesi`.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('kod derleme anına gömülen NEXT_PUBLIC_ değişkeni okumuyor', () => {
+    /**
+     * Tek muafiyet: `site.ts` içindeki derleme zamanı yedeği.
+     *
+     * Asıl kaynak ön eksiz `SITE_ADRESI` ve çalışma zamanında okunuyor;
+     * bunlar yalnızca o tanımsızken devreye giren yedekler. Gerekçe
+     * `src/lib/site.ts` içinde yazılı.
+     */
+    const MUAF_DOSYA = 'src/lib/site.ts'
+
+    const ihlaller: string[] = []
+    const dosyalar = [
+      ...kaynakDosyalari(join(KOK, 'src')),
+      ...kaynakDosyalari(join(KOK, 'scripts')),
+    ]
+
+    for (const dosya of dosyalar) {
+      const goreli = dosya.replace(`${KOK}/`, '')
+      if (goreli === MUAF_DOSYA) continue
+
+      const icerik = readFileSync(dosya, 'utf8')
+      for (const eslesme of icerik.matchAll(/process\.env\.(NEXT_PUBLIC_[A-Z0-9_]+)/g)) {
+        ihlaller.push(`${goreli} → ${eslesme[1]}`)
+      }
+    }
+
+    expect(
+      ihlaller.sort(),
+      'Bu değişkenler DERLEME ANINDA gömülür ve üretim imajı onlar tanımsızken ' +
+        'derleniyor — yani yayında BOŞ olurlar, hata vermeden.\n' +
+        'Çözüm: öneki kaldırın (ön eksiz adlar çalışma zamanında okunur), ' +
+        'sunucuda okuyun ve istemci bileşenine prop olarak geçirin.\n' +
+        `İhlaller:\n  ${ihlaller.join('\n  ')}`,
+    ).toEqual([])
+  })
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BELGELENMİŞ OLMAK YETMEZ — DEĞİŞKEN KABA ULAŞMALI.
+   *
+   * Yukarıdaki test `.env.production.example` ile kodu karşılaştırıyor.
+   * Ama üretimde uygulama bir kapta çalışıyor ve kap yalnızca
+   * `compose.prod.yml` içinde `environment:` altında SAYILAN değişkenleri
+   * görüyor. Sunucudaki `.env` dosyasında bir değer olması tek başına
+   * hiçbir şey ifade etmez.
+   *
+   * Bu boşluk gerçekti: `MAPTILER_ANAHTARI` `.env`de yazılıydı ama compose
+   * onu uygulamaya hiç geçirmiyordu. Belge testi yeşildi, harita ölüydü.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('kodun okuduğu her çalışma zamanı değişkeni compose ile kaba ulaşıyor', () => {
+    /**
+     * Kaba ulaşması BEKLENMEYENLER — her satırın gerekçesi yazılı.
+     */
+    const MUAF: Record<string, string> = {
+      NODE_ENV: 'compose zaten `production` veriyor; kod okuması dallanma için.',
+      PORT: 'Dockerfile `ENV PORT=3000` veriyor.',
+      HOSTNAME: 'Dockerfile `ENV HOSTNAME=0.0.0.0` veriyor.',
+      NEXT_TELEMETRY_DISABLED: 'Dockerfile veriyor.',
+      MEDYA_DIZINI: 'compose sabit değer veriyor (aşağıda zaten var).',
+      TEMIZLE: 'Yalnızca `pnpm seed` bayrağı; tohumlama üretimde çalışmaz.',
+      DEV_IZINLI_KAYNAKLAR: 'Yalnızca `pnpm dev`; üretim derlemesinde okunmaz.',
+      GITHUB_ACTIONS: 'CI koşumu verir.',
+      GITHUB_STEP_SUMMARY: 'CI koşumu verir.',
+      NEXT_PUBLIC_SITE_ADRESI: 'Derleme zamanı yedeği; çalışma zamanında okunmaz.',
+      NEXT_PUBLIC_SERVER_URL: 'Derleme zamanı yedeği; asıl kaynak SITE_ADRESI.',
+      ANTHROPIC_API_KEY:
+        'AI arama avukat metinleri gelene kadar ERTELENDİ (KVKK: sorgu yurt ' +
+        'dışına gidiyor). Anahtarı kaba hiç sokmamak ikinci kapı.',
+      ANTHROPIC_ARAMA_MODELI: 'Yukarıdakiyle aynı sebep.',
+    }
+
+    const okunan = okunanDegiskenler()
+
+    const compose = readFileSync(join(KOK, 'docker', 'compose.prod.yml'), 'utf8')
+    // `uygulama` servisinin `environment:` bloğu altı boşlukla girintili.
+    const verilen = new Set(
+      [...compose.matchAll(/^ {6}([A-Z0-9_]+):/gm)].map((eslesme) => eslesme[1]),
+    )
+
+    const ulasmayan = [...okunan].filter((ad) => !verilen.has(ad) && !(ad in MUAF)).sort()
+
+    expect(
+      ulasmayan,
+      'Kod bu değişkenleri okuyor ama `docker/compose.prod.yml` onları ' +
+        'uygulama kabına geçirmiyor — sunucudaki `.env` içinde dolu olsalar ' +
+        'bile kabın içinde TANIMSIZ olurlar.\n' +
+        'Çözüm: compose `environment:` bloğuna ekleyin, ya da gerçekten ' +
+        'gerekmiyorsa bu testteki MUAF listesine gerekçesiyle yazın.\n' +
+        `Ulaşmayanlar:\n  ${ulasmayan.join('\n  ')}`,
+    ).toEqual([])
+  })
+
+  /**
    * ⚠️ Üretim örneği, uygulamanın kabın İÇİNDEN bağlanacağını yansıtmalı.
    * `localhost` yazan bir örnek dosyayı kopyalayan kişi `ECONNREFUSED`
    * alır ve sebebini bulması saatler sürer.

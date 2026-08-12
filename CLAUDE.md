@@ -77,6 +77,19 @@ derinleştirme (PDF rapor, kişiye özel analiz) için istenir.
 Hiçbir API anahtarı, şifre, token koda girmez. Hepsi .env.
 .env dosyaları .gitignore'da. Örnekler .env.example'da placeholder ile.
 
+### 7b. NEXT_PUBLIC_ yasak (SITE_ADRESI yedeği hariç)
+Next.js `NEXT_PUBLIC_*` değişkenlerini DERLEME ANINDA gömer. Üretim imajı
+CI'da, bu değişkenler tanımsızken derleniyor → değer yayında BOŞ olur ve
+hata vermez. 12 Ağustos 2026'da dokuz değişken birden bu yüzden ölüydü
+(harita, Turnstile, Umami, Bunny, iletişim yedekleri).
+
+→ Yapılandırma ön eksiz adla, SUNUCUDA, çalışma zamanında okunur.
+→ İstemci bileşenine prop olarak iner. Örnek: `lib/harita/sunucu.ts`.
+→ Sunucu-istemci sınırı `import 'server-only'` ile derleme hatasına
+  çevrilir; ön eksiz değişken istemcide sessizce `undefined` olur.
+→ Kodun okuduğu her değişken `compose.prod.yml` ile kaba ulaşmalı.
+→ İkisi de `src/lib/ortam.test.ts` içinde test edilir. Muafiyet ekleme.
+
 ### 8. Çerez onayı
 Onay alınmadan analitik/pazarlama scripti YÜKLENMEZ. Banner göstermek
 yetmez; script enjeksiyonu onaya bağlı olmalı.

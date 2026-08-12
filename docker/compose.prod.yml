@@ -42,18 +42,69 @@ services:
       REDIS_URL: redis://redis:6379
       MEDYA_DIZINI: /uygulama/medya
       BAKIM_ANAHTARI: ${BAKIM_ANAHTARI:-}
-      # Kanonik URL'ler, site haritası ve OG etiketleri bu değerden üretilir.
-      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-https://aslihangyd.com}
-      # ⚠️ ÖN EKSİZ KOPYA — asıl okunan değişken bu.
+
+      # ── Çalışma zamanı yapılandırması ───────────────────────────────────
       #
-      # Next.js `NEXT_PUBLIC_*` değişkenlerini DERLEME ANINDA gömer; burada
-      # verilen değer sunucu tarafında bile okunmaz. Ön eksiz ad çalışma
-      # zamanında okunur, böylece imajı yeniden derlemeden adres
-      # değiştirilebilir. Gerekçenin tamamı src/lib/site.ts içinde.
-      SITE_ADRESI: ${NEXT_PUBLIC_SERVER_URL:-https://aslihangyd.com}
-      NEXT_PUBLIC_WHATSAPP_NUMARA: ${NEXT_PUBLIC_WHATSAPP_NUMARA:-}
-      NEXT_PUBLIC_UMAMI_URL: ${NEXT_PUBLIC_UMAMI_URL:-}
-      NEXT_PUBLIC_UMAMI_SITE_ID: ${NEXT_PUBLIC_UMAMI_SITE_ID:-}
+      # ⚠️ BURADAKİ ADLARIN HİÇBİRİ `NEXT_PUBLIC_` ÖNEKLİ DEĞİL, BİLİNÇLİ.
+      #
+      # Next.js `NEXT_PUBLIC_*` değişkenlerini DERLEME ANINDA pakete gömer —
+      # sunucu tarafında bile. Üretim imajı GitHub Actions'ta derleniyor ve
+      # orada bu değişkenlerin hiçbiri tanımlı değil, `Dockerfile`da da
+      # `ARG` yok. Yani önekli bir ad buraya yazılırsa HİÇBİR ETKİSİ OLMAZ:
+      # imaj hangi değerle derlendiyse (boş dizeyle) o kalır.
+      #
+      # 12 Ağustos 2026'ya kadar bu dosyada tam olarak öyle üç satır vardı
+      # (`NEXT_PUBLIC_WHATSAPP_NUMARA`, `NEXT_PUBLIC_UMAMI_*`). Çalışıyor
+      # görünüyor, çalışmıyorlardı. Aynı sebeple yayında harita açılmıyor,
+      # Turnstile bot koruması kapalı kalıyor, analitik hiç yüklenmiyor ve
+      # drone videoları "yapılandırılmadı" diyordu.
+      #
+      # Ön eksiz adlar çalışma zamanında okunur: değeri `.env` içinde
+      # değiştirip `up -d` demek yeter, imajı yeniden derlemek gerekmez.
+      # Gerekçenin tamamı: src/lib/harita/sunucu.ts
+      #
+      # ⚠️ Buraya yeni bir `NEXT_PUBLIC_` satırı EKLEMEYİN. `pnpm test`
+      # içindeki ortam kapısı kodda böyle bir okuma kalmadığını denetliyor.
+
+      # Kanonik URL'ler, site haritası ve OG etiketleri bu değerden üretilir.
+      SITE_ADRESI: ${SITE_ADRESI:-https://aslihangyd.com}
+
+      # Harita. Boşsa /harita boş durum gösterir (kırık gri kutu değil).
+      MAPTILER_ANAHTARI: ${MAPTILER_ANAHTARI:-}
+
+      # Bot koruması. İkisi de doluysa etkin; biri boşsa katman devre dışı.
+      TURNSTILE_SITE_ANAHTARI: ${TURNSTILE_SITE_ANAHTARI:-}
+      TURNSTILE_GIZLI_ANAHTAR: ${TURNSTILE_GIZLI_ANAHTAR:-}
+
+      # Analitik. ⚠️ Dolu olması betiğin yükleneceği anlamına GELMEZ;
+      # yükleme çerez onayına bağlı (CLAUDE.md kural 8).
+      UMAMI_URL: ${UMAMI_URL:-}
+      UMAMI_SITE_ID: ${UMAMI_SITE_ID:-}
+
+      # Video CDN. Boşsa video bölümü "oynatıcı yapılandırılmadı" der.
+      BUNNY_STREAM_LIBRARY_ID: ${BUNNY_STREAM_LIBRARY_ID:-}
+      BUNNY_STREAM_CDN_HOSTNAME: ${BUNNY_STREAM_CDN_HOSTNAME:-}
+
+      # İletişim yedekleri — asıl kaynak CMS → Kurumsal Bilgiler.
+      WHATSAPP_NUMARA: ${WHATSAPP_NUMARA:-}
+      ILETISIM_TELEFON: ${ILETISIM_TELEFON:-}
+      ILETISIM_EPOSTA: ${ILETISIM_EPOSTA:-}
+
+      # OpenStreetMap POI içe aktarma sunucusu.
+      #
+      # ⚠️ Boş bırakmak GÜVENLİ: kod herkese açık `overpass-api.de`ye düşer.
+      # Değişken yalnızca ayna sunucu kullanmak içindir — genel sunucu yoğun
+      # saatlerde yavaşlıyor ve içe aktarma zaman aşımına uğrayabiliyor.
+      OVERPASS_ADRESI: ${OVERPASS_ADRESI:-}
+
+      # ⚠️ ANTHROPIC_API_KEY VE ANTHROPIC_ARAMA_MODELI BİLİNÇLİ OLARAK YOK.
+      #
+      # AI doğal dil arama, avukat metinleri gelene kadar ERTELENDİ: ziyaretçi
+      # sorgusu yurt dışına aktarılıyor ve aydınlatma metnine bu aktarımın
+      # eklenmesi gerekiyor (KVKK). Özellik SiteSections anahtarıyla zaten
+      # kapalı; anahtarı kaba hiç sokmamak ikinci kapı.
+      #
+      # Açılacağı zaman: önce aydınlatma metni, sonra bu iki satır.
 
     # ⚠️ YALNIZCA GERİ DÖNGÜ (127.0.0.1). Dışarıya açık değil.
     #

@@ -33,8 +33,22 @@ import type { CozumlemeOzeti, Kutu, OsmAdayi } from './sorgu'
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-/** Overpass'ın herkese açık uç noktası. */
-const OVERPASS_ADRESI = process.env.OVERPASS_ADRESI ?? 'https://overpass-api.de/api/interpreter'
+/**
+ * Overpass uç noktası — ayarlanmadıysa herkese açık sunucu.
+ *
+ * ⚠️ `??` DEĞİL `||` — fark burada gerçek bir arızaya karşılık geliyor.
+ *
+ * `compose.prod.yml` bu değişkeni `${OVERPASS_ADRESI:-}` ile geçiyor, yani
+ * ayarlanmadığında kaba **boş dize** olarak ulaşıyor. `??` yalnızca
+ * `undefined`/`null` durumunda yedeğe düşer; boş dize "tanımlı" sayılır ve
+ * varsayılan atlanırdı. Sonuç `fetch('')` olurdu — içe aktarma, sebebi
+ * görünmeyen bir hatayla ölürdü.
+ *
+ * `.trim()` de bilinçli: `.env` dosyasına yanlışlıkla boşluk yazmak
+ * (`OVERPASS_ADRESI= `) aynı sonucu verirdi.
+ */
+const OVERPASS_ADRESI =
+  process.env.OVERPASS_ADRESI?.trim() || 'https://overpass-api.de/api/interpreter'
 
 /** Tek seferde alınacak azami POI — kaza koruması. */
 export const AZAMI_ADAY = 3_000
