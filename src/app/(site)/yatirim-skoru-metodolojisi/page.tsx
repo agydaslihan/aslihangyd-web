@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { Feragat } from '@/components/ui/Feragat'
+import { mesafeYaz } from '@/lib/bicimlendirme'
 import { mutlakAdres } from '@/lib/site'
 import {
   ASGARI_KAPSAM,
@@ -10,6 +11,15 @@ import {
   SKOR_AGIRLIKLARI,
   type SkorBileseniAdi,
 } from '@/lib/skorlama/yatirimSkoru'
+// ⚠️ Eğriler ve ağırlıklar motorun kendisinden okunuyor — yayınlanan
+// metodoloji ile çalışan hesap tek kaynaktan gelsin diye.
+import {
+  ASGARI_KARSILASTIRMA,
+  SANAYI_EGRISI,
+  SOSYAL_DONATI_AGIRLIKLARI,
+  ULASIM_KALEMLERI,
+} from '@/lib/yakinlik/motor'
+import { YOGUNLUK_YARICAPI_METRE } from '@/lib/yakinlik/tipler'
 
 export const metadata: Metadata = {
   title: 'Yatırım Skoru metodolojisi',
@@ -90,6 +100,106 @@ export default function SkorMetodolojisiSayfasi() {
           <p className="text-metin-2 mt-3 leading-relaxed">
             <strong className="text-metin font-medium">Arz baskısı:</strong> çok sayıda devam eden
             inşaat projesi, gelecekte yüksek arz ve fiyat baskısı demektir — düşük puan alır.
+          </p>
+        </section>
+
+        {/*
+          ⚠️ Bu bölümdeki rakamlar sabit yazılmadı; motorun kendisinden
+          okunuyor. Eğri kodda değişirse bu sayfa da değişir. Metodoloji
+          sayfası ile hesabın ayrı ayrı yaşaması, yayınlanan metodolojinin
+          en sık görülen sessiz yalanıdır.
+        */}
+        <section className="mt-10">
+          <h2 className="font-sans text-[1.375rem] leading-tight">
+            Konum bileşenleri mesafeden nasıl türetilir?
+          </h2>
+          <p className="text-metin-2 mt-3 leading-relaxed">
+            Sanayi yakınlığı, ulaşım ve sosyal donatı bileşenleri için sisteme girilmiş ilgi
+            noktalarının koordinatlarından{' '}
+            <strong className="text-metin font-medium">kuş uçuşu</strong> mesafe hesaplanır.
+          </p>
+          <p className="text-metin-2 mt-3 leading-relaxed">
+            <strong className="text-metin font-medium">Süre (dakika) vermiyoruz.</strong> Sürüş
+            süresi için yol ağı verisi ve rotalama gerekir; elimizde yok. Mesafeyi varsayılan bir
+            hıza bölüp &quot;10 dakika&quot; yazmak, bilmediğimiz bir şeyi iddia etmek olurdu.
+          </p>
+
+          <h3 className="font-sans text-govde mt-6 font-medium">
+            Sanayi yakınlığı: yakın iyidir, çok yakın değildir
+          </h3>
+          <p className="text-metin-2 mt-2 leading-relaxed">
+            Bu bileşen sanayiyi bir <em>kira talebi motoru</em> olarak ölçer: OSB&apos;ye işe
+            gidilebilir mesafede olmak değerlidir. Ama OSB&apos;nin dibinde oturmak gürültü, ağır
+            araç trafiği ve hava kalitesi demektir. Bu yüzden eğri monoton değildir — en yüksek puan
+            orta banttadır.
+          </p>
+          <ul className="text-metin-2 mt-3 list-disc space-y-1.5 pl-5 leading-relaxed">
+            {SANAYI_EGRISI.map((nokta) => (
+              <li key={nokta.metre}>
+                <span className="tabular-nums">{mesafeYaz(nokta.metre)}</span> →{' '}
+                <strong className="text-metin font-medium tabular-nums">{nokta.puan} puan</strong>
+              </li>
+            ))}
+          </ul>
+          <p className="text-metin-3 text-govde-kucuk mt-2">
+            Ara mesafelerde doğrusal geçiş yapılır; ilk noktanın altında ve son noktanın üstünde
+            puan sabittir.
+          </p>
+
+          <h3 className="font-sans text-govde mt-6 font-medium">
+            Ulaşım: üç kalemin ağırlıklı ortalaması
+          </h3>
+          <ul className="text-metin-2 mt-2 list-disc space-y-1.5 pl-5 leading-relaxed">
+            {(Object.keys(ULASIM_KALEMLERI) as (keyof typeof ULASIM_KALEMLERI)[]).map((tip) => {
+              const kalem = ULASIM_KALEMLERI[tip]
+              const ilk = kalem.egri[0]
+              const son = kalem.egri[kalem.egri.length - 1]
+              return (
+                <li key={tip}>
+                  <strong className="text-metin font-medium">{kalem.etiket}</strong> — ağırlık %
+                  {kalem.agirlik}
+                  {ilk && son ? (
+                    <span className="text-metin-3">
+                      {' '}
+                      · {mesafeYaz(ilk.metre)} ve yakınında {ilk.puan} puan, {mesafeYaz(son.metre)}{' '}
+                      ve ötesinde {son.puan} puan
+                    </span>
+                  ) : null}
+                </li>
+              )
+            })}
+          </ul>
+          <p className="text-metin-2 mt-3 leading-relaxed">
+            Verisi olmayan kalem puanı <strong className="text-metin font-medium">düşürmez</strong>;
+            hesaptan çıkarılır ve mevcut kalemler kendi içinde normalize edilir.
+          </p>
+
+          <h3 className="font-sans text-govde mt-6 font-medium">
+            Sosyal donatı: mutlak eşik yerine karşılaştırma
+          </h3>
+          <p className="text-metin-2 mt-2 leading-relaxed">
+            &quot;1 km içinde 8 donatı iyidir&quot; gibi bir eşik kullanmıyoruz — böyle bir eşiği
+            biz uydurmuş oluruz. Bunun yerine puan iki parçadan oluşur:{' '}
+            <strong className="text-metin font-medium">yoğunluk</strong> (%
+            {SOSYAL_DONATI_AGIRLIKLARI.yogunluk}) en yoğun mahalleye oranla, ve{' '}
+            <strong className="text-metin font-medium">çeşitlilik</strong> (%
+            {SOSYAL_DONATI_AGIRLIKLARI.cesitlilik}) verisi olan donatı türlerinden kaçının{' '}
+            {YOGUNLUK_YARICAPI_METRE / 1000} km içinde bulunduğu.
+          </p>
+          <p className="text-metin-2 mt-3 leading-relaxed">
+            Karşılaştırmalı puanlama en az {ASGARI_KARSILASTIRMA} mahalle ister. Daha azıyla
+            &quot;en yoğun olan 100 puan&quot; demek kıyas değil, etiketleme olurdu.
+          </p>
+
+          <h3 className="font-sans text-govde mt-6 font-medium">
+            Kayıt yokluğu, donatı yokluğu değildir
+          </h3>
+          <p className="text-metin-2 mt-2 leading-relaxed">
+            Bu hesap yalnızca <em>sisteme girilmiş</em> noktaları görür. Bir mahalleye henüz okul
+            girilmediyse, hesap onu &quot;donatısı zayıf&quot; sanır. Bu yüzden mesafeden çıkan
+            puanlar skora <strong className="text-metin font-medium">otomatik yazılmaz</strong>:
+            sistem öneri üretir, danışman değerlendirir ve alanı kendisi doldurur. Veri eksikliğinin
+            sessizce olguya dönüşmesine izin vermiyoruz.
           </p>
         </section>
 

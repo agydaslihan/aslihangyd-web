@@ -1,0 +1,214 @@
+/**
+ * Skor önerileri ekranı.
+ *
+ * Payload'ın tema değişkenleri kullanılıyor; sitenin tasarım jetonları
+ * admin'e yüklenmiyor ve sabit renk yazmak koyu temada okunmaz bir ekran
+ * üretirdi.
+ */
+
+.skor-oneri {
+  max-width: 72rem;
+  margin-inline: auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.skor-oneri-baslik {
+  margin: 0 0 1rem;
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--theme-text, #111);
+}
+
+/**
+ * ⚠️ Uyarı kutusu kapatılamaz ve en üstte.
+ *
+ * "Bu ekran hiçbir şey kaydetmez" cümlesi bir dipnot değil, aracın çalışma
+ * biçiminin kendisi. Kaydırılınca kaybolan uyarı, okunmayan uyarıdır.
+ */
+.skor-oneri-uyari {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  border-left: 3px solid var(--theme-warning-500, #a87a1e);
+  border-radius: 6px;
+  background: var(--theme-elevation-50, #fafafa);
+}
+
+.skor-oneri-uyari p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-elevation-700, #555);
+}
+
+.skor-oneri-uyari p + p {
+  margin-top: 0.5rem;
+}
+
+.skor-oneri-ozet,
+.skor-oneri-alt {
+  margin: 0 0 1.25rem;
+  max-width: 62ch;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-elevation-600, #666);
+  font-variant-numeric: tabular-nums;
+}
+
+.skor-oneri-alt {
+  margin-top: 1.5rem;
+  margin-bottom: 0;
+}
+
+.skor-oneri-bos {
+  padding: 1.5rem;
+  border: 1px dashed var(--theme-elevation-200, #ddd);
+  border-radius: 6px;
+  background: var(--theme-elevation-50, #fafafa);
+}
+
+.skor-oneri-bos p {
+  margin: 0;
+  max-width: 62ch;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-elevation-700, #555);
+}
+
+.skor-oneri-bos p + p {
+  margin-top: 0.5rem;
+}
+
+.skor-oneri-liste {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.skor-oneri-mahalle {
+  padding: 1.25rem;
+  border: 1px solid var(--theme-elevation-150, #e5e5e5);
+  border-radius: 6px;
+  background: var(--theme-elevation-0, #fff);
+}
+
+.skor-oneri-mahalle-baslik {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.skor-oneri-mahalle-baslik h2 {
+  margin: 0;
+  font-size: 1.0625rem;
+  font-weight: 500;
+  color: var(--theme-text, #111);
+}
+
+.skor-oneri-kayit {
+  font-size: 0.75rem;
+  color: var(--theme-elevation-500, #777);
+  font-variant-numeric: tabular-nums;
+}
+
+.skor-oneri-kartlar {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: 1fr;
+}
+
+/* Mobil önce; üç bileşen yan yana ancak yer varken. */
+@media (min-width: 60rem) {
+  .skor-oneri-kartlar {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.skor-oneri-kart {
+  padding: 0.875rem 1rem;
+  border: 1px solid var(--theme-elevation-150, #e5e5e5);
+  border-radius: 5px;
+  background: var(--theme-elevation-50, #fafafa);
+}
+
+.skor-oneri-kart-baslik {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.625rem;
+}
+
+.skor-oneri-bilesen {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--theme-elevation-700, #555);
+}
+
+/* Rakam öne çıksın — ekranın amacı bu. */
+.skor-oneri-puan {
+  font-size: 1.5rem;
+  font-weight: 500;
+  line-height: 1;
+  color: var(--theme-text, #111);
+  font-variant-numeric: tabular-nums;
+}
+
+.skor-oneri-puan--yok {
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--theme-elevation-500, #777);
+}
+
+.skor-oneri-gerekce,
+.skor-oneri-eksik {
+  margin: 0;
+  padding-left: 1rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+}
+
+.skor-oneri-gerekce {
+  color: var(--theme-elevation-600, #666);
+}
+
+.skor-oneri-eksik {
+  margin-top: 0.5rem;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--theme-elevation-150, #e5e5e5);
+  color: var(--theme-warning-600, #8a6414);
+}
+
+.skor-oneri-mesafeler {
+  margin-top: 1rem;
+  font-size: 0.75rem;
+  color: var(--theme-elevation-600, #666);
+}
+
+.skor-oneri-mesafeler summary {
+  cursor: pointer;
+  padding: 0.25rem 0;
+}
+
+.skor-oneri-mesafeler ul {
+  margin: 0.5rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.skor-oneri-mesafeler li {
+  display: flex;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 0.25rem 0;
+  border-bottom: 1px solid var(--theme-elevation-100, #eee);
+}
+
+.skor-oneri-mesafe-deger {
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-text, #111);
+}

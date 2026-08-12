@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { IlanKarti } from '@/components/ilan/IlanKarti'
+import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
 import { DroneVideo } from '@/components/medya/DroneVideo'
 import { SanalTur } from '@/components/medya/SanalTur'
 import { MahalleSkoru } from '@/components/skor/MahalleSkoru'
@@ -22,6 +23,7 @@ import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
+import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 
@@ -57,10 +59,12 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
   if (!mahalle) notFound()
 
-  const [ilanlar, digerMahalleler, kurumsal] = await Promise.all([
+  const [ilanlar, digerMahalleler, kurumsal, cevre] = await Promise.all([
     mahalledekiIlanlariGetir(mahalle.id, 3),
     karsilastirilabilirMahalleler(mahalle.slug, 3),
     kurumsalBilgileriGetir(),
+    // Merkez noktası girilmemişse sorgu hiç çalışmaz, boş dizi döner.
+    mahalleCevresiGetir(mahalle.merkez),
   ])
 
   const whatsapp = whatsappBaglantisi(
@@ -171,16 +175,25 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
               />
             </section>
 
-            {/* 5 ── Harita */}
+            {/* 5 ── Konum ve çevre */}
             <section aria-labelledby="harita">
               <h2 id="harita" className="mb-4 font-sans text-baslik-3 font-medium">
                 Konum ve çevre
               </h2>
+
+              {/* Mesafe listesi haritadan bağımsız çalışır: MapTiler anahtarı
+                  gelmeden de, ilgi noktaları girildiği anda dolar. */}
+              <CevreBolumu
+                mesafeler={cevre}
+                neyeGore={`${mahalle.ad} Mahallesi merkezinden`}
+                sinifAdi="mb-4"
+              />
+
               <YakindaBolumu
                 oran="aspect-16/9"
                 ikon={<KonumIkon width={30} height={30} />}
                 baslik="Etkileşimli harita hazırlanıyor"
-                aciklama="Okul, sağlık, market, park, sanayi ve ulaşım katmanlarıyla birlikte mahalle sınırı burada gösterilecek."
+                aciklama="Yukarıdaki noktalar, mahalle sınırı ve katman filtreleriyle birlikte harita üzerinde de gösterilecek."
               />
             </section>
 

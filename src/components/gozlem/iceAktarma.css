@@ -1,0 +1,301 @@
+/**
+ * Gözlem CSV içe aktarma ekranı.
+ *
+ * Payload'ın tema değişkenleri kullanılıyor; sitenin tasarım jetonları
+ * admin'e yüklenmiyor ve sabit renk yazmak koyu temada okunmaz bir ekran
+ * üretirdi.
+ */
+
+.ice-aktar-sayfa {
+  max-width: 78rem;
+  margin-inline: auto;
+  padding: 1.5rem 0 3rem;
+}
+
+.ice-aktar-baslik {
+  margin: 0 0 1rem;
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--theme-text, #111);
+}
+
+.ice-aktar-uyari {
+  margin: 0 0 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  border-left: 3px solid var(--theme-warning-500, #a87a1e);
+  border-radius: 6px;
+  background: var(--theme-elevation-50, #fafafa);
+}
+
+.ice-aktar-uyari p,
+.ice-aktar-not,
+.ice-aktar-alt {
+  margin: 0;
+  max-width: 66ch;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-elevation-700, #555);
+}
+
+.ice-aktar-uyari p + p {
+  margin-top: 0.5rem;
+}
+
+.ice-aktar-not {
+  margin-top: 0.5rem;
+  color: var(--theme-elevation-600, #666);
+}
+
+.ice-aktar-alt {
+  margin-top: 2rem;
+  color: var(--theme-elevation-600, #666);
+}
+
+.ice-aktar-adim {
+  margin-bottom: 1.5rem;
+  padding: 1.25rem;
+  border: 1px solid var(--theme-elevation-150, #e5e5e5);
+  border-radius: 6px;
+  background: var(--theme-elevation-0, #fff);
+}
+
+.ice-aktar-adim h2 {
+  margin: 0 0 0.875rem;
+  font-size: 1rem;
+  font-weight: 500;
+  color: var(--theme-text, #111);
+}
+
+.ice-aktar-bos {
+  margin-bottom: 1.5rem;
+  padding: 1rem 1.25rem;
+  border: 1px dashed var(--theme-elevation-200, #ddd);
+  border-radius: 6px;
+}
+
+.ice-aktar-bos p {
+  margin: 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-elevation-700, #555);
+}
+
+/* ── Form alanları ── */
+
+.ice-aktar-alan {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3125rem;
+  margin-bottom: 0.875rem;
+}
+
+.ice-aktar-alan > span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--theme-elevation-700, #555);
+}
+
+.ice-aktar-zorunlu {
+  font-style: normal;
+  font-weight: 400;
+  color: var(--theme-error-500, #a33);
+}
+
+.ice-aktar-ipucu {
+  font-size: 0.6875rem;
+  font-style: normal;
+  color: var(--theme-elevation-500, #777);
+}
+
+.ice-aktar-alan textarea,
+.ice-aktar-alan select,
+.ice-aktar-dosya input {
+  width: 100%;
+  padding: 0.5rem 0.625rem;
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  border-radius: 4px;
+  background: var(--theme-input-bg, var(--theme-elevation-0, #fff));
+  color: var(--theme-text, #111);
+  font-size: 0.8125rem;
+  font-family: inherit;
+}
+
+.ice-aktar-alan textarea {
+  font-family: var(--font-mono, ui-monospace, monospace);
+  line-height: 1.6;
+  resize: vertical;
+}
+
+/* Klavye erişilebilirliği: odak halkası admin temasından gelir ama
+   görünürlüğünü garanti altına alıyoruz. */
+.ice-aktar-alan textarea:focus-visible,
+.ice-aktar-alan select:focus-visible,
+.ice-aktar-buton:focus-visible,
+.ice-aktar-tablo input:focus-visible {
+  outline: 2px solid var(--theme-success-500, #2a7);
+  outline-offset: 2px;
+}
+
+.ice-aktar-secimler,
+.ice-aktar-eslesme {
+  display: grid;
+  gap: 0 1rem;
+  grid-template-columns: 1fr;
+}
+
+/* Mobil önce; çoklu sütun ancak yer varken. */
+@media (min-width: 48rem) {
+  .ice-aktar-secimler {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+  .ice-aktar-eslesme {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+.ice-aktar-buton {
+  margin-top: 0.75rem;
+  padding: 0.5rem 1.125rem;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: var(--theme-success-500, #2a7);
+  color: #fff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.ice-aktar-buton--ikincil {
+  background: transparent;
+  border-color: var(--theme-elevation-300, #ccc);
+  color: var(--theme-text, #111);
+}
+
+.ice-aktar-buton:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* ── Özet rozetleri ── */
+
+.ice-aktar-ozet {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.ice-aktar-rozet {
+  padding: 0.25rem 0.625rem;
+  border: 1px solid var(--theme-elevation-200, #ddd);
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--theme-elevation-700, #555);
+}
+
+.ice-aktar-rozet--hazir {
+  border-color: var(--theme-success-500, #2a7);
+  color: var(--theme-success-600, #196);
+}
+
+.ice-aktar-rozet--uyari {
+  border-color: var(--theme-warning-500, #a87a1e);
+  color: var(--theme-warning-600, #8a6414);
+}
+
+.ice-aktar-rozet--hata {
+  border-color: var(--theme-error-500, #a33);
+  color: var(--theme-error-600, #922);
+}
+
+/* ── Önizleme tablosu ── */
+
+/* Geniş tablo kendi içinde kaysın; sayfa gövdesi yatay kaymasın. */
+.ice-aktar-tablo-sarmal {
+  overflow-x: auto;
+  border: 1px solid var(--theme-elevation-150, #e5e5e5);
+  border-radius: 4px;
+}
+
+.ice-aktar-tablo {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.75rem;
+}
+
+.ice-aktar-tablo th,
+.ice-aktar-tablo td {
+  padding: 0.4375rem 0.625rem;
+  text-align: left;
+  border-bottom: 1px solid var(--theme-elevation-100, #eee);
+  vertical-align: top;
+  white-space: nowrap;
+}
+
+.ice-aktar-tablo th {
+  position: sticky;
+  top: 0;
+  background: var(--theme-elevation-50, #fafafa);
+  font-weight: 500;
+  color: var(--theme-elevation-700, #555);
+}
+
+.ice-aktar-sayi {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.ice-aktar-durum {
+  white-space: normal;
+  min-width: 18rem;
+}
+
+.ice-aktar-durum span {
+  display: block;
+  line-height: 1.5;
+}
+
+.ice-aktar-durum-hata {
+  color: var(--theme-error-600, #922);
+}
+
+.ice-aktar-durum-uyari {
+  color: var(--theme-warning-600, #8a6414);
+}
+
+.ice-aktar-durum-ok {
+  color: var(--theme-elevation-500, #777);
+}
+
+/* Durum yalnızca renkle anlatılmıyor: her satırda metin de var (WCAG 1.4.1). */
+.ice-aktar-satir--hata td {
+  background: color-mix(in srgb, var(--theme-error-500, #a33) 6%, transparent);
+}
+
+.ice-aktar-satir--uyari td {
+  background: color-mix(in srgb, var(--theme-warning-500, #a87a1e) 6%, transparent);
+}
+
+.ice-aktar-hata {
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.7;
+  color: var(--theme-error-600, #922);
+}
+
+.ice-aktar-basari {
+  margin: 0;
+  font-size: 0.875rem;
+  line-height: 1.7;
+  color: var(--theme-success-600, #196);
+}
+
+.ice-aktar-yazma-hatalari {
+  margin: 0.75rem 0 0;
+  padding-left: 1.25rem;
+  font-size: 0.75rem;
+  line-height: 1.6;
+  color: var(--theme-error-600, #922);
+}

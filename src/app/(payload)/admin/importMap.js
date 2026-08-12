@@ -25,9 +25,13 @@ import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/component
 import { GorselButceRozeti as GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0 } from '@/components/panel/GorselButceRozeti'
 import { SihirbazNavBaglantisi as SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d } from '@/components/sihirbaz/SihirbazNavBaglantisi'
 import { SosyalNavBaglantisi as SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2 } from '@/components/sosyal/SosyalNavBaglantisi'
+import { GozlemNavBaglantisi as GozlemNavBaglantisi_18cba9bdef93245964bb90fef5a851d6 } from '@/components/gozlem/GozlemNavBaglantisi'
+import { YakinlikNavBaglantisi as YakinlikNavBaglantisi_ebdf29bfda9ee39d0a886776559b4f9f } from '@/components/yakinlik/YakinlikNavBaglantisi'
 import { default as default_ac4995af7e2bbcdcd73ea0a7c441a293 } from '@/components/panel/BildirimSeridi'
 import { default as default_1aab0adce7828f318eceac0ff9d4de43 } from '@/components/sihirbaz/SihirbazGorunumu'
 import { default as default_da503fe49822663a0dcf59383a7ad931 } from '@/components/sosyal/SosyalGorunumu'
+import { default as default_d7b02a7b2eea07e0848ff9c32c4173cf } from '@/components/gozlem/IceAktarmaGorunumu'
+import { default as default_ada92df2dbe95dcf1a2dab6488533618 } from '@/components/yakinlik/SkorOnerileriGorunumu'
 import { CollectionCards as CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1 } from '@payloadcms/next/rsc'
 
 /** @type import('payload').ImportMap */
@@ -59,8 +63,12 @@ export const importMap = {
   "@/components/panel/GorselButceRozeti#GorselButceRozeti": GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0,
   "@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi": SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d,
   "@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi": SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2,
+  "@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi": GozlemNavBaglantisi_18cba9bdef93245964bb90fef5a851d6,
+  "@/components/yakinlik/YakinlikNavBaglantisi#YakinlikNavBaglantisi": YakinlikNavBaglantisi_ebdf29bfda9ee39d0a886776559b4f9f,
   "@/components/panel/BildirimSeridi#default": default_ac4995af7e2bbcdcd73ea0a7c441a293,
   "@/components/sihirbaz/SihirbazGorunumu#default": default_1aab0adce7828f318eceac0ff9d4de43,
   "@/components/sosyal/SosyalGorunumu#default": default_da503fe49822663a0dcf59383a7ad931,
+  "@/components/gozlem/IceAktarmaGorunumu#default": default_d7b02a7b2eea07e0848ff9c32c4173cf,
+  "@/components/yakinlik/SkorOnerileriGorunumu#default": default_ada92df2dbe95dcf1a2dab6488533618,
   "@payloadcms/next/rsc#CollectionCards": CollectionCards_f9c02e79a4aed9a3924487c0cd4cafb1
 }

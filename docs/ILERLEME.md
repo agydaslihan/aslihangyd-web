@@ -18,11 +18,11 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 1.8 | Mahalle sayfaları | ✅ |
 | 1.9 | Lead formu + WhatsApp | ✅ |
 | 1.10 | SEO, CI/CD, yedekleme, dokümantasyon | ✅ |
-| 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
+| 2 | Harita, hesaplayıcılar, ticari dikey | ✅ (PostGIS yakınlık dahil) |
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
 | 2B+ | Kalan bal küpü modülleri + raporlar | ✅ 4 modül + PDF rapor — bkz. aşağısı |
 | 2B++ | Portföy giriş sihirbazı | ✅ Admin'in yanında, EİDS canlı geri bildirimli |
-| 2C | Gözlem girişi ve endeks altyapısı | ✅ (sayfa kapalı — tasarım gereği) |
+| 2C | Gözlem girişi ve endeks altyapısı | ✅ CSV içe aktarma dahil (sayfa kapalı — tasarım gereği) |
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
 | 4 | Yatırım skoru, AI arama, raporlar | ✅ Skor, raporlar ve AI arama tamam |
 | 5 | Çorlu Live | ⏭️ atlandı |
@@ -2129,6 +2129,228 @@ düşürmek**.
 
 ---
 
+## Faz 2 kalanı — PostGIS yakınlık sorguları
+
+Faz 2'nin tamamlanmamış tek maddesi buydu: "sanayiye 10 dakika" tipi
+yakınlık sorguları. Kapatıldı.
+
+### Ne yapıldı
+
+- `src/lib/yakinlik/` — saf motor: mesafe → 0–100 puan eğrileri, veri
+  kapsamı korumaları, karşılaştırmalı yoğunluk. 15 birim testi.
+- `src/lib/veri/yakinlik.ts` — ham parametreli PostGIS sorguları
+  (`ST_Distance` + `geography`). 8 entegrasyon testi.
+- `CevreBolumu` bileşeni — mahalle sayfası 5. bölümünde ve ilan
+  detayında; en yakın nokta + 1 km içindeki kayıt sayısı.
+- `/admin/skor-onerileri` — üç skor bileşeni için gerekçeli öneri ekranı.
+- `/yatirim-skoru-metodolojisi` — eğriler ve ağırlıklar yayınlandı.
+- `mesafeYaz` biçimlendiricisi (`850 m` / `3,4 km`).
+
+### Kararlar ve gerekçeleri
+
+**1. Dakika değil, kilometre — ve "kuş uçuşu" etiketiyle.**
+
+PROJE-PLANI.md "sanayiye 10 dakika" diyor. Süre üretmek için yol ağı ve
+rotalama motoru (OSRM/Valhalla) gerekir; elimizde yok. Mesafeyi varsayılan
+bir hıza bölüp "12 dakika" yazmak, bilmediğimiz bir şeyi iddia etmek
+olurdu — CLAUDE.md kural 2 kapsamında uydurma veri. Arayüzde her yerde
+"kuş uçuşu" etiketi var. Rotalama gelirse etiket değişir, veri modeli
+değişmez.
+
+**2. Türetilen puan skora OTOMATİK YAZILMIYOR.** ⭐ En önemli karar
+
+Sanayi yakınlığı, ulaşım ve sosyal donatı bileşenleri koordinatlardan
+hesaplanabiliyor. Doğrudan yazmak kolaydı ve yanlış olurdu:
+
+> **POI kaydının yokluğu, donatının yokluğu değildir.**
+
+Hıdırağa'ya henüz tek okul girilmediyse otomatik hesap onu "donatısı
+zayıf" diye damgalar. Veri eksikliği bir kez skora yazıldığında olguya
+dönüşür ve kimse geri dönüp sorgulamaz. Bu yüzden ekran **öneri** üretir,
+gerekçesini satır satır gösterir, veri boşluklarını söyler; alanı Aslıhan
+doldurur.
+
+Aynı ilkenin daha önceki örnekleri: skorda %70 kapsam eşiği, eşleştirmede
+%60, endekste katman başına 8 gözlem.
+
+**3. Sosyal donatıda mutlak eşik yerine karşılaştırma.**
+
+"1 km içinde 8 donatı iyidir" gibi bir eşiği biz uydurmuş oluruz. Bunun
+yerine en yoğun mahalle 100 puan, diğerleri ona oranlanır — eşleştirme
+motorundaki bütçe puanıyla aynı yöntem. En az 3 mahalle şartı var; ikisiyle
+"en yoğun olan 100" demek kıyas değil etiketlemedir.
+
+**4. Sanayi eğrisi monoton değil.**
+
+OSB'ye işe gidilebilir mesafede olmak değerli; OSB'nin dibinde oturmak
+gürültü ve ağır araç trafiği. En yüksek puan 2–7 km bandında. Havalimanı
+kalemi de aynı gerekçeyle plato biçimli.
+
+**5. Eğri sayıları metodoloji sayfasına koddan basılıyor.**
+
+`/yatirim-skoru-metodolojisi` sayfası kırılım noktalarını `SANAYI_EGRISI`
+ve `ULASIM_KALEMLERI`den okuyor, elle yazmıyor. Yayınlanan metodolojinin en
+sık görülen sessiz yalanı, kod değişip sayfanın eski kalmasıdır.
+
+**6. Mesafe listesi haritadan bağımsız.**
+
+MapTiler anahtarı gelmeden de çalışır: ilgi noktası girildiği anda dolar.
+En değerli bilgi (neye ne kadar uzak) en ucuz veriye bağlandı. Harita boş
+durumu bunun altında duruyor.
+
+**7. Ham SQL erişim denetimini atlar — iki koruma kondu.**
+
+- Ziyaretçiye açık yol (`noktayaGoreYakinlik`) yalnızca **koordinat** alır;
+  mahalle zaten Payload üzerinden erişim denetimiyle çekilmiştir.
+  Sorgulanan `ilgi_noktalari` koleksiyonu zaten herkese açık.
+- Panel yolu (`tumMahallelerinYakinligi`) yayında olmayan mahalleleri de
+  döndürür; görünümde `if (!req.user) return null` kapısı var. Oturumsuz
+  istekte gövdenin hiç basılmadığı duman testiyle doğrulandı.
+
+### Ölçüm ve doğrulama
+
+- Birim: 15 test (eğri uçları, doğrusal geçiş, kapsam koruması, kıyas eşiği)
+- Entegrasyon: 8 test, gerçek PostGIS'e karşı. İki tuzağı kapatıyorlar:
+  **boylam/enlem sırası** (karışırsa Çorlu Somali açıklarına gider) ve
+  **SRID** (sütun `geometry(Point)`, SRID'siz açılmış; `ST_SetSRID`
+  olmadan `geography` dönüşümü kırılgan).
+- Duman testi: geçici veriyle mahalle sayfası — 3,3 km / 2,2 km / 666 m /
+  444 m / 222 m doğru sırayla basıldı, "Öne çıkan" rozetleri doğru
+  kayıtlara düştü. Test verisi sonrasında silindi.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1009 test) ✅ `build` ✅
+
+### Bilerek yapılmayan
+
+- **GiST uzamsal indeks eklenmedi.** `ilgi_noktalari.konum` üzerinde
+  indeks yok. Gerekçe: Payload'ın ürettiği göç dosyaları kendi şemasını
+  temel alıyor; elle eklenen bir indeksi ileride sessizce `DROP` edebilir.
+  Kazanç ise bu ölçekte ölçülemez — Çorlu'da POI sayısı yüzlerle ifade
+  edilecek, sıralı tarama milisaniyenin altında. Tetik: kayıt sayısı
+  10.000'i geçerse indeks eklenmeli ve göç üretiminden sonra korunduğu
+  doğrulanmalı.
+- **Rotalama (sürüş süresi) yapılmadı.** Ayrı bir servis (OSRM) ve yol ağı
+  verisi gerektirir; 3,2 GB RAM'de barındırma kararı ayrıca verilmeli.
+
+---
+
+## Faz 2C kalanı — Gözlem CSV içe aktarma
+
+Faz 2C'nin tamamlanmamış tek maddesi buydu. ILERLEME'de "Aslıhan'ın mevcut
+tablo düzeni bilinince" diye bekletiliyordu; **beklemeye gerek olmadığı
+anlaşıldı** — düzeni sormak yerine düzeni tanıyan bir eşleme yazıldı.
+
+### Ne yapıldı
+
+- `src/lib/csv/ayristir.ts` — CSV ayrıştırıcı (26 birim testi)
+- `src/lib/gozlem/iceAktarma.ts` — sütun eşleme + satır doğrulama (22 test)
+- `src/lib/gozlem/iceAktarmaCekirdegi.ts` — çözümleme ve yazma çekirdeği
+- `src/lib/gozlem/eylemler.ts` — ince sunucu eylemleri (yalnızca oturum)
+- `/admin/gozlem-ice-aktar` — üç adımlı sihirbaz: dosya → eşleme → önizleme
+- 10 entegrasyon testi (gerçek veritabanı)
+
+### Kararlar ve gerekçeleri
+
+**1. Sabit sütun düzeni dayatılmadı.** ⭐
+
+ENDEKS-VERI-YONETIMI.md §6 bir şablon öneriyor ama Aslıhan'ın tablosu
+aylardır kullanımda. "Önce tablonuzu şu düzene çevirin" demek, içe
+aktarmayı hiç kullanılmayacak bir özelliğe dönüştürürdü. Sütunlar
+başlıklardan tahmin ediliyor, tahmin ekranda gösteriliyor ve elle
+düzeltilebiliyor. Eşlenemeyen sütun sessizce atılmıyor, "bu sütun
+kullanılmadı" diye yazılıyor.
+
+**2. Hiçbir satır sessizce düzeltilmez ve sessizce atlanmaz.** ⭐
+
+Her satır üç durumdan birinde: hazır, uyarılı (aktarılır, işaretlenir),
+hatalı (aktarılmaz, sebebi yazılır). "Anlamadığım satırı atlarım"
+davranışı, 500 satırlık dosyadan 430 satır aktarıp kimseye söylememektir.
+
+**3. Kendi CSV ayrıştırıcımız yazıldı — kütüphane değil.**
+
+Çözülmesi gereken asıl sorun genel CSV değil, **Türkçe Excel'in CSV'si:**
+noktalı virgül ayırıcı, BOM, CRLF, Windows-1254 kodlama, `4.300.000`
+biçiminde sayı. Hazır kütüphanelerin çoğu virgül varsayar ve noktalı
+virgüllü dosyayı **tek sütun** olarak okur — hata da vermez. Sessizce
+yanlış çalışan içe aktarma, hata veren içe aktarmadan çok daha pahalıdır.
+
+**4. Türkçe sayı ayrıştırma ayrı bir tehlike olarak ele alındı.**
+
+`4.300.000` İngilizce ayrıştırıcıda `4,3` olur. Böyle bir hata endekse
+girer ve fark edilmesi aylar sürer. Kural: iki ayırıcı varsa sondaki
+ondalıktır; yalnız virgül varsa ondalıktır; yalnız nokta varsa son grup
+tam 3 haneliyse binliktir. Belirsizlik tamamen yok edilemediği için
+**önizleme çözümlenmiş sayıyı gösteriyor** — asıl güvence gözle doğrulama.
+
+**5. Tarih `new Date(metin)` ile ayrıştırılmıyor.**
+
+"03.08.2026" dizesini ortamlar farklı yorumlar, bazıları ay/gün sırasını
+Amerikan varsayar. 3 Ağustos ile 8 Mart arasındaki fark endekste beş aylık
+kaymadır. Elle ayrıştırılıyor, iki haneli yıl reddediliyor.
+
+**6. Tarih UTC öğlen yazılıyor.**
+
+Gece yarısı yazılsaydı saat dilimi kayması gözlemi bir önceki aya
+taşıyabilirdi ve endeks ay bazlı. Entegrasyon testi bunu doğruluyor
+(ayın 1'i sınavı).
+
+**7. Güven varsayılanı "Düşük".**
+
+ENDEKS-VERI-YONETIMI.md §5: geriye dönük kayıtlar düşük güvenle
+işaretlenmeli, grafikte kesikli çizgiyle gösterilmeli. CSV yolu tipik
+olarak geriye dönük veri taşır. Varsayılan görünür ve değiştirilebilir —
+gizli bir kural değil.
+
+**8. İstemcinin çözümlediği veriye güvenilmiyor.** ⭐
+
+Önizleme tarayıcıda gösterilir ama içe aktarma o değerleri kabul etmez:
+sunucu CSV metnini + eşlemeyi + ayarları **yeniden çözümler** ve yalnızca
+kendi ürettiğini yazar. Kullanıcının seçebildiği tek şey hangi satırların
+dışarıda kalacağı; değerler değil. Aksi hâlde ağ isteğini düzenleyen biri,
+önizlemede gördüğünden bambaşka rakamları endeksin ham verisine
+yazdırabilirdi.
+
+**9. Yazma yolu Local API + `overrideAccess: false`.**
+
+Toplu yazma, kancaları atlamak için bahane değil. `beforeChange` kancası
+m² fiyatını, `ay` alanını ve özeti hesaplıyor; endeks bu alanlardan
+besleniyor. Entegrasyon testi kancanın gerçekten çalıştığını doğruluyor.
+
+**10. Çekirdek, sunucu eyleminden ayrı dosyada.**
+
+`'use server'` dosyaları yalnızca async fonksiyon dışa aktarabilir, her
+dışa aktarım bir uç noktaya dönüşür ve `headers()` bağımlılığı yüzünden
+doğrudan test edilemez. Çekirdek `payload` ve `user`'ı parametre alıyor;
+entegrasyon testi onu doğrudan çağırıyor.
+
+### Testin yakaladığı gerçek hatalar
+
+- **`"falan filan"` → `portal_ilan`.** Kaynak sezgisi alt dize araması
+  yapıyordu; "falan filan" metni `ilan` alt dizesini içerdiği için
+  tanınmadığı hâlde tanınmış sayılıyor ve uyarı bile üretmiyordu. Kelime
+  sınırına çevrildi.
+- **Kaynakta U+FFFD karakteri.** Font alt kümesi denetim testi (Faz E)
+  kaynak dosyaya doğrudan yazılmış değiştirme karakterini yakaladı;
+  kaçış dizisine çevrildi.
+
+### Ölçüm ve doğrulama
+
+- Birim: 48 test (26 ayrıştırıcı + 22 eşleme/doğrulama)
+- Entegrasyon: 10 test, gerçek veritabanına karşı
+- Duman testi: gerçek oturumla `/admin/gozlem-ice-aktar` açıldı, üç adım
+  da basıldı, konsol temiz. Test kullanıcısı sonrasında silindi.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1044 test) ✅ `build` ✅
+
+### Bilinen sınırlar
+
+- Tek seferde 5.000 satır / 2 MB tavanı (3,2 GB RAM koruması). Üstü için
+  dosya bölünür; ekran bunu söylüyor.
+- Geri alma yok. Yanlış aktarılan kayıtlar Gözlemler koleksiyonundan elle
+  silinir; ekran bunu aktarımdan ÖNCE uyarıyor. Toplu geri alma için
+  "içe aktarma partisi" kimliği tutmak gerekirdi — veri modelini bir
+  özellik uğruna genişletmek yerine önizlemeye yatırım yapıldı.
+
+---
+
 ## Faz 4 kalanı — AI doğal dil arama
 
 Faz 4'ün açık kalan tek maddesi. Planlanan fazların tamamı böylece işlendi.
@@ -2258,6 +2480,8 @@ Geçerli bir `ANTHROPIC_API_KEY` olmadığı için **başarılı bir çağrını
 | E-posta bildirimi kodu yok | — | SMTP bilgileri gelince `yetkisiBitecekleriBildir` görevine eklenecek |
 | `sharp` 0.34'e sabit | — | Payload sürüm yükseltmesinde 0.35 tekrar denenebilir |
 | PostGIS `tiger`/`topology` şemaları | Disk | Düşük öncelik |
+| `ilgi_noktalari.konum` üzerinde GiST indeks yok | Ölçekte sorgu süresi | Bilinçli. Payload'ın ürettiği göç, elle eklenen indeksi sessizce `DROP` edebilir; kazanç bu ölçekte ölçülemez. Tetik: 10.000+ POI kaydı. |
+| Sürüş süresi (dakika) yok | "OSB'ye 10 dk" denemiyor | Rotalama servisi (OSRM) + yol ağı verisi gerekir. Mesafeler kuş uçuşu olarak, böyle etiketlenerek gösteriliyor. |
 | Rol tabanlı yetkilendirme | — | `Kullanicilar.rol` alanı var ama henüz erişim kurallarına bağlı değil; CRM fazında |
 | Gizli portföy modülü | ✅ | Faz 2B'de tamamlandı |
 | Eşleştirme profili boş | Test sonuç üretmez | `Mahalleler → Eşleştirme profili` 4 alan doldurulmalı; SENDEN-BEKLENENLER md. 8 |
