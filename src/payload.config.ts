@@ -13,6 +13,7 @@ import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
 import { SOSYAL_YOLU } from '@/components/sosyal/yol'
 import { GOZLEM_ICE_AKTARMA_YOLU } from '@/components/gozlem/yol'
+import { OSM_YOLU } from '@/components/osm/yol'
 import { YAKINLIK_YOLU } from '@/components/yakinlik/yol'
 import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
@@ -103,6 +104,18 @@ export default buildConfig({
         },
 
         /**
+         * OpenStreetMap POI içe aktarma.
+         *
+         * ⚠️ Yalnızca YÖNETİCİ: yüzlerce kayıt oluşturur ve dış servise
+         * sorgu atar. ⚠️ ODbL atıf yükümlülüğü — içe aktarılan noktalar
+         * sitede "© OpenStreetMap katkıcıları" ile gösterilir.
+         */
+        osmIceAktarma: {
+          Component: '@/components/osm/OsmGorunumu#default',
+          path: OSM_YOLU,
+        },
+
+        /**
          * Yakınlıktan skor önerileri.
          *
          * ⚠️ Bu ekran da hiçbir şey KAYDETMEZ. İlgi noktası
@@ -122,6 +135,7 @@ export default buildConfig({
         '@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi',
         '@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi',
         '@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi',
+        '@/components/osm/OsmNavBaglantisi#OsmNavBaglantisi',
         '@/components/yakinlik/YakinlikNavBaglantisi#YakinlikNavBaglantisi',
       ],
     },

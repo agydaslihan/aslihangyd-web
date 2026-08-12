@@ -28,6 +28,15 @@ export interface PoiMesafesi {
   yakindaSayi: number
   /** En yakın kaydın "öne çıkan nokta" işareti. */
   onemli: boolean
+  /**
+   * En yakın kaydın veri kaynağı.
+   *
+   * ⚠️ Atıf için gerekli: OpenStreetMap verisi ODbL altında ve atıf
+   * zorunlu. Ama elle toplanmış veriyi OSM'e atfetmek de yanlış olurdu —
+   * bu yüzden kaynak kayıt bazında taşınıyor ve atıf yalnızca OSM kaydı
+   * gösterildiğinde basılıyor.
+   */
+  kaynak: 'elle' | 'osm'
 }
 
 /** Skor önerisi üretilirken tek bir mahallenin girdisi. */
@@ -79,7 +88,9 @@ export const CEVRE_GOSTERIM_SIRASI: readonly PoiTipi[] = [
   'okul',
   'avm',
   'market',
+  'eczane',
   'park',
+  'oyun_alani',
   'durak',
   'resmi',
 ] as const
