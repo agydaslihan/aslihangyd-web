@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { yalnizcaPanel, yayimlananlariHerkesOkur } from '@/lib/erisim'
+import { yalnizcaPanel, yalnizcaYoneticiSiler, yayimlananlariHerkesOkur } from '@/lib/erisim'
 
 import { yatirimSkoruHesapla } from '@/lib/skorlama/yatirimSkoru'
 
@@ -24,7 +24,8 @@ export const Mahalleler: CollectionConfig = {
     read: yayimlananlariHerkesOkur,
     create: yalnizcaPanel,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   admin: {

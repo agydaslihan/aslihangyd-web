@@ -108,6 +108,34 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       **Aynı dosyadan türeyecekler** (logo gelince ben hallederim):
       Apple dokunmatik simgesi ve paylaşım görselinin köşe işareti.
 
+- [ ] **Danışman yetkileri — gevşetmek istediğin var mı?** ⬅️ *karar bekliyor*
+
+      Rol ayrımını erişim kurallarına bağladım. Sen **yöneticisin**, her
+      şeye erişiyorsun; bu madde yalnızca ileride ekleyeceğin danışmanlar
+      için.
+
+      Danışmanın şu an **yapabildikleri:** ilan/mahalle/POI/medya
+      oluşturma ve güncelleme, talep ve değerleme güncelleme, gözlem
+      girme, kendi şifresini değiştirme.
+
+      Danışmanın şu an **yapamadıkları:**
+
+      | Ne | Neden kısıtladım |
+      | --- | --- |
+      | Kayıt silme (her koleksiyon) | İlan silinince EİDS kayıtları da gider — yasal dayanak. Güncelleme hatası düzeltilir, silme hatası düzeltilmez. |
+      | Vergi parametreleri | Yanlış oran → hesaplayıcılar yatırımcıya yanlış rakam gösterir |
+      | Hukuki sayfalar | KVKK, gizlilik, kullanım koşulları — hukuki sonuç doğurur |
+      | Kurumsal bilgiler | Yetki belgesi numarası burada |
+      | Endeks ve değerleme ayarları | Metodolojinin kendisi |
+      | Site/portföy vitrini, altbilgi | Editoryal karar |
+      | Kullanıcı ekleme/silme, rol değiştirme | Yetki yükseltme riski |
+
+      **Neden sıkı taraftan başladım:** fazla kısıtladıysam danışman
+      "erişemiyorum" der, açarım. Az kısıtladıysam yanlış vergi oranı
+      yayınlanır ya da bir ilan silinir — ikisi de fark edilmeden olur.
+
+      Gevşetmek istediğin bir satır varsa söyle, tek tek açarım.
+
 ## Sonra (fazlar geldiğinde gerekecek)
 
 - [ ] **MapTiler API anahtarı** (Faz 2)

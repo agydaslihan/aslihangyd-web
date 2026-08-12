@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 
 /**
  * Kurumsal bilgiler — site genelinde kullanılan tekil ayarlar.
@@ -16,7 +16,8 @@ export const KurumsalBilgiler: GlobalConfig = {
 
   access: {
     read: herkesOkur,
-    update: yalnizcaPanel,
+    // ⚠️ Yalnızca yönetici: yetki belgesi numarası ve yasal kurumsal bilgiler.
+    update: yalnizcaYonetici,
   },
 
   admin: {

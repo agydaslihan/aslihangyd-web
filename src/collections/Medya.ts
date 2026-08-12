@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaPanel, yalnizcaYoneticiSiler } from '@/lib/erisim'
 
 /**
  * Görsel ve belge deposu.
@@ -18,7 +18,8 @@ export const Medya: CollectionConfig = {
     read: herkesOkur,
     create: yalnizcaPanel,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   admin: {

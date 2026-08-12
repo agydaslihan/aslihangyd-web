@@ -1,7 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { GOREV_KUNYELERI } from '@/lib/bakim/kunye'
-import { yalnizcaPanel } from '@/lib/erisim'
+import { yalnizcaPanel, yalnizcaYonetici } from '@/lib/erisim'
 
 /**
  * Bakım görevlerinin son durumu.
@@ -28,7 +28,8 @@ export const BakimDurumu: GlobalConfig = {
   access: {
     // Panel dışına açılmaz: hangi görevin ne zaman koştuğu iç bilgi.
     read: yalnizcaPanel,
-    update: yalnizcaPanel,
+    // ⚠️ Yalnızca yönetici: bakım görevlerinin durumu — sistem kaydı.
+    update: yalnizcaYonetici,
   },
 
   admin: {

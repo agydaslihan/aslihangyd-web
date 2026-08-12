@@ -1,7 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { ODA_TIPLERI } from '@/lib/endeks/tipler'
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 
 /**
  * Endeks ayarları — sepet ağırlıkları ve yayın kontrolü.
@@ -22,7 +22,8 @@ export const EndeksAyarlari: GlobalConfig = {
 
   access: {
     read: herkesOkur,
-    update: yalnizcaPanel,
+    // ⚠️ Yalnızca yönetici: endeks sepet ağırlıkları — metodolojinin kendisi.
+    update: yalnizcaYonetici,
   },
 
   admin: {

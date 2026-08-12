@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 import { VERGI_PARAMETRELERI } from '@/lib/vergi/parametreler'
 
 /**
@@ -25,9 +25,10 @@ export const VergiParametreleri: CollectionConfig = {
     // Herkese açık: hesaplayıcılar bunları okur ve değerler zaten sitede
     // görünür. Gizli bir bilgi değil, tersine şeffaflığı artıran bir veri.
     read: herkesOkur,
-    create: yalnizcaPanel,
-    update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    create: yalnizcaYonetici,
+    update: yalnizcaYonetici,
+    // ⚠️ Yalnızca yönetici: vergi oranları hesaplayıcıları besliyor; yanlış oran yatırımcıya yanlış rakam gösterir.
+    delete: yalnizcaYonetici,
   },
 
   admin: {

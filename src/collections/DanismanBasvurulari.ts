@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 import { APIError } from 'payload'
 
-import { herkesOlusturur, kimseOkuyamaz, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOlusturur, kimseOkuyamaz, yalnizcaPanel, yalnizcaYoneticiSiler } from '@/lib/erisim'
 import { DENEYIM_SECENEKLERI } from '@/lib/danisman/secenekler'
 import { saklamaBitisi } from '@/lib/kvkk/saklama'
 
@@ -51,7 +51,8 @@ export const DanismanBasvurulari: CollectionConfig = {
     create: herkesOlusturur,
     read: kimseOkuyamaz,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   hooks: {

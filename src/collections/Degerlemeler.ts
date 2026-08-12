@@ -1,7 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
 import { BINA_DURUMLARI, KAT_TIPLERI } from '@/lib/degerleme/motor'
-import { herkesOlusturur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOlusturur, yalnizcaPanel, yalnizcaYoneticiSiler } from '@/lib/erisim'
 import { saklamaBitisi } from '@/lib/kvkk/saklama'
 
 /**
@@ -25,7 +25,8 @@ export const Degerlemeler: CollectionConfig = {
     create: herkesOlusturur,
     read: yalnizcaPanel,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   admin: {

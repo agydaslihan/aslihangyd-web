@@ -321,9 +321,9 @@ export interface Kullanicilar {
   id: number;
   adSoyad: string;
   /**
-   * Rol ayrımı Faz 2B'de (CRM) yetkilendirmeye bağlanacak. Şu an bilgi amaçlıdır.
+   * Yönetici her şeye erişir. Danışman günlük portföy ve talep işini yapar; ayarlara, hukuki metinlere, vergi oranlarına dokunamaz ve kayıt silemez. Bu alanı yalnızca yönetici değiştirebilir.
    */
-  rol: 'yonetici' | 'danisman';
+  rol?: ('yonetici' | 'danisman') | null;
   telefon?: string | null;
   fotograf?: (number | null) | Medya;
   updatedAt: string;
