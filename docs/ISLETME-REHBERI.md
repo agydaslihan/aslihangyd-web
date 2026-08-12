@@ -124,14 +124,22 @@ uygulamanın gerçekten okuduğu o. `.env` yine tek satır kalıyor, kopyalamay�
 compose yapıyor. Adres değiştiğinde imajı yeniden derlemeye gerek yok,
 kabı yeniden başlatmak yetiyor.
 
-Sertifika dosyalarını yerleştirin (bkz. §5.5):
+⚠️ **Sertifika dosyası yerleştirmeniz GEREKMİYOR.**
 
-```bash
-mkdir -p /srv/aslihangyd/app/docker/certs
-# origin.pem ve origin.key buraya konur
-chmod 700 /srv/aslihangyd/app/docker/certs
-chmod 600 /srv/aslihangyd/app/docker/certs/origin.*
+Önceki kurgu Cloudflare origin sertifikası kullanıyordu ve buraya
+`origin.pem` / `origin.key` konuyordu. O kurgu kaldırıldı: Caddy artık
+sertifikayı Let's Encrypt'ten kendisi alıyor ve yeniliyor (§5.5).
+`docker/certs/` dizinine ihtiyaç yok.
+
+Yapmanız gereken tek TLS ayarı `.env` içindeki bildirim adresi:
+
 ```
+CADDY_EPOSTA=...
+```
+
+Boş bırakılırsa Caddy anonim bir ACME hesabı açar ve yenileme bozulduğunda
+kimse haberdar olmaz. `compose.prod.yml` bu değişkeni zorunlu tutuyor —
+eksikse Caddy kabı hiç başlamaz.
 
 ### 5.2 İlk çalıştırma
 
@@ -166,8 +174,9 @@ doğrulama başarısız olur ve tekrar dener. Site HTTPS'te açılmaz;
 `challenge failed` satırları görürsünüz. Kalıcı bir hasar yok — gri buluta
 alıp Caddy'yi yeniden başlatınca düzelir. ⚠️ Ama körlemesine tekrar
 denemeye devam ederseniz Let's Encrypt'in **haftalık oran sınırına**
-(aynı alan adı için 5 sertifika / 168 saat) takılabilirsiniz; o durumda
-sınır düşene kadar beklemekten başka yapılacak bir şey yoktur.
+(aynı alan adı için 5 sertifika / 168 saat) takılabilirsiniz. Caddy o
+noktada yedek CA'ya (ZeroSSL) geçmeyi dener — çoğu durumda kendiliğinden
+toparlar. İkisi birden başarısız olursa beklemek gerekiyor; ayrıntı §8b.
 
 #### Adım adım
 
@@ -237,10 +246,25 @@ docker logs aslihangyd-caddy 2>&1 | grep -iE "certificate obtained|could not get
 - `could not get certificate` / `challenge failed` → A kayıtları hâlâ
   turuncu bulutta. Adım 0'a dönün, gri buluta alın, sonra
   `docker restart aslihangyd-caddy`.
-- `connection refused` → 80 portu dışarıdan kapalı. Sunucu güvenlik
-  duvarında 80/tcp açık olmalı: `sudo ufw allow 80/tcp`.
-- `too many certificates already issued` → Let's Encrypt oran sınırı.
-  Beklemekten başka çare yok; sınır 168 saatte sıfırlanır.
+- `connection refused` / zaman aşımı → 80 portuna dışarıdan ulaşılamıyor.
+  ⚠️ Önce **sağlayıcı seviyesindeki güvenlik duvarına** bakın (bulut
+  panelindeki security group / firewall kuralları). UFW genelde suçlu
+  DEĞİLDİR: Docker yayınlanan portlar için iptables kurallarını doğrudan
+  yazar ve UFW'yi atlar (§5.4). Yani `ufw status` 80'i kapalı gösterse
+  bile port açık olabilir; tersi de geçerli — sağlayıcı engelliyorsa UFW'de
+  izin vermek işe yaramaz.
+
+  Dışarıdan test:
+  ```bash
+  curl -sS -o /dev/null -w '%{http_code}\n' http://aslihangyd.com/.well-known/acme-challenge/test
+  ```
+  `404` = istek Caddy'ye ULAŞTI (o yolda dosya yok, beklenen). Bağlantı
+  hatası = port gerçekten kapalı.
+- `too many certificates already issued` → Let's Encrypt oran sınırı
+  (5 sertifika / 168 saat). ⚠️ Hemen beklemeye geçmeyin: Caddy yedek CA'ya
+  (ZeroSSL) geçmeyi dener ve kayıtlarda `acme.zerossl.com` görürsünüz —
+  çoğu durumda kendiliğinden toparlar. İkisi de başarısız olursa beklemek
+  gerekiyor; ayrıntı §8b.
 
 **5. Siteyi doğrula**
 
@@ -280,6 +304,32 @@ curl -sI https://aslihangyd.com | grep -i "server\|cf-ray"
 ⚠️ **Yenileme için tekrar gri buluta almanız gerekmez.** Caddy yenilemeyi
 `.well-known` üzerinden yapar ve Cloudflare bu yolu origin'e iletir.
 Yenileme yine de başarısız olursa §8b'ye bakın.
+
+**7. Yönetici hesabını oluştur**
+
+Site yayında ama panelde **hiç kullanıcı yok**. Payload ilk ziyarette
+kurulum ekranı gösteriyor:
+
+<https://aslihangyd.com/admin>
+
+*Başarılı görünüm:* "Create first user" formu. E-posta ve **güçlü** bir
+parola girin.
+
+⚠️ **Bu adresi ilk açan kişi yönetici olur.** Site yayına girdiği andan
+hesabın oluşturulduğu ana kadar bu kapı herkese açık. Deploy'u bitirir
+bitirmez, başka hiçbir işe geçmeden bu hesabı oluşturun.
+
+*Doğrulama:* çıkış yapıp `/admin` adresine tekrar gidin — artık kurulum
+ekranı değil giriş ekranı görmelisiniz.
+
+**8. Yayın öncesi kontrol listesini yürüt**
+
+Site açıldı ama yayına hazır değil. §6b'deki listeyi (EİDS, KVKK metinleri,
+bakım cron'u, yedekleme provası) tamamlamadan siteyi duyurmayın.
+
+⚠️ Özellikle **bakım cron'u** (§6) ve **yedekleme** (§7) kurulmadan geçen
+her gün, yasal yükümlülüğün karşılanmadığı bir gündür: EİDS yetkisi dolan
+ilan otomatik yayından kalkmaz, KVKK saklama süresi dolan kayıt silinmez.
 
 Site yayında: <https://aslihangyd.com>
 
