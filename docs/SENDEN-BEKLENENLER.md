@@ -362,8 +362,28 @@ en az 6 ay veri, 500 gözlem, ağırlığın %70'ini kapsayan katmanlarda her ay
 **Nereye:** Payload admin → Gözlemler
 **Haftalık hedef:** 30 gözlem (satılık ~20, kiralık ~10) — yaklaşık 30-40 dakika
 
-Elinde Excel/Sheets varsa CSV içe aktarma yazabilirim — **sütun düzenini
-bana gönder**, tahmin edip iki kez yazmak istemiyorum.
+**Elindeki Excel/Sheets tablosunu artık aktarabilirsin** — sütun düzenini
+bana göndermene gerek kalmadı.
+
+**Nerede:** Payload admin → sol menü → **Gözlem içe aktar (CSV)**
+
+Sütun düzenin sabit olmak zorunda değil: başlıklardan tahmin ediliyor,
+tahmini ekranda görüp düzeltiyorsun. Türkçe Excel'in `4.300.000` biçimi,
+`03.08.2026` tarihi, noktalı virgül ayırıcı ve Windows-1254 kodlaması
+destekleniyor.
+
+Akış: dosyayı seç → sütunları onayla → **önizlemeye bak** → aktar.
+
+⚠️ Önizlemeyi atlamadan aktarma. Her satırın ne olarak okunduğu orada
+yazıyor; hatalı satırlar sebebiyle birlikte ayrılıyor. Geri alma yok —
+yanlış aktarılan kayıtlar Gözlemler koleksiyonundan tek tek silinir.
+
+⚠️ CSV'deki mahalle adları sistemdeki mahallelerle eşleşmeli. Eşleşmeyen
+satır aktarılmaz (tahmin edilmez) — önce mahalleyi ekle.
+
+Not: CSV ile gelen kayıtlar varsayılan olarak **Güven: Düşük** işaretlenir,
+çünkü genellikle geriye dönüktür (metodoloji §5). Dosyan güncel
+gözlemlerse ekrandan değiştirebilirsin.
 
 ### 6b. Portföy bölümlerini kendin düzenleyebilirsin
 
