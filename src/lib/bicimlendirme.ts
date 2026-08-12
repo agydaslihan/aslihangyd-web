@@ -99,6 +99,20 @@ export function carpanYaz(deger: number | null | undefined): string | null {
 }
 
 /**
+ * "850 m" / "3,4 km" — kuş uçuşu mesafe.
+ *
+ * ⚠️ Bu değer **hiçbir zaman dakikaya çevrilmez.** Süre için yol ağı ve
+ * rotalama motoru gerekir; mesafeyi varsayılan bir hıza bölüp "12 dakika"
+ * yazmak bilmediğimiz bir şeyi iddia etmek olur (CLAUDE.md kural 2).
+ * Arayüzde daima "kuş uçuşu" etiketiyle birlikte gösterilir.
+ */
+export function mesafeYaz(metre: number | null | undefined): string | null {
+  if (!gecerliSayi(metre) || metre < 0) return null
+  if (metre < 1_000) return `${tamSayi.format(Math.round(metre))} m`
+  return `${birOndalik.format(metre / 1_000)} km`
+}
+
+/**
  * WhatsApp bağlantısı üretir. Numara yoksa `null` — çağıran butonu gizler.
  * Numara yalnızca rakamlara indirgenir; başındaki `+`, boşluk ve parantez
  * wa.me tarafından kabul edilmez.

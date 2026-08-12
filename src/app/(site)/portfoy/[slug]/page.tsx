@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
 import { IlanGalerisi } from '@/components/ilan/IlanGalerisi'
+import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
 import { DroneVideo } from '@/components/medya/DroneVideo'
 import { SanalTur } from '@/components/medya/SanalTur'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
@@ -35,6 +36,7 @@ import {
 import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { ilanGetir } from '@/lib/veri/ilanlar'
+import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Ilanlar } from '@/payload-types'
 
 type SayfaOzellikleri = { params: Promise<{ slug: string }> }
@@ -70,8 +72,19 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
   if (!ilan) notFound()
 
-  const kurumsal = await kurumsalBilgileriGetir()
+  // Taşınmazın kendi noktasına göre çevre; nokta girilmemişse mahalle
+  // merkezine düşer. İkisi de yoksa bölüm hiç basılmaz.
+  const [kurumsal, cevre] = await Promise.all([
+    kurumsalBilgileriGetir(),
+    mahalleCevresiGetir(
+      ilan.konum ?? (typeof ilan.mahalle === 'object' ? ilan.mahalle?.merkez : null),
+    ),
+  ])
+
   const mahalle = typeof ilan.mahalle === 'object' ? ilan.mahalle : null
+  const cevreNeyeGore = ilan.konum
+    ? 'taşınmazın konumundan'
+    : `${mahalle?.ad ?? 'mahalle'} merkezinden`
   const paraBirimi = ilan.paraBirimi ?? 'TRY'
   const whatsapp = whatsappBaglantisi(
     whatsappNumarasi(kurumsal),
@@ -191,6 +204,17 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               <section className="mt-10">
                 <h2 className="mb-3 font-sans text-baslik-3 font-medium">360° sanal tur</h2>
                 <SanalTur adres={ilan.sanalTurUrl} baslik={`${ilan.baslik} 360° turu`} />
+              </section>
+            ) : null}
+
+            {/* ── Çevre ve erişim ──
+                Yatırımcının en çok sorduğu şey: "OSB'ye ne kadar?" Veri
+                yoksa bölüm hiç basılmaz; ilan sayfasında boş durum kutusu
+                gürültüdür, mahalle sayfasından farklı olarak. */}
+            {cevre.length > 0 ? (
+              <section className="mt-10">
+                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Çevre ve erişim</h2>
+                <CevreBolumu mesafeler={cevre} neyeGore={cevreNeyeGore} />
               </section>
             ) : null}
 

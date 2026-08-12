@@ -123,9 +123,31 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       Olmazsa: Hesaplayıcılar "parametre tanımlı değil" uyarısı gösterir ve
       hesaplama yapmaz. Ben bu oranları koda gömmüyorum (CLAUDE.md kural 4).
 
-- [ ] **POI verisi** — okul, hastane, market, park, sanayi, durak konumları (Faz 2)
+- [ ] **POI verisi** — okul, hastane, market, park, sanayi, durak konumları
       Nereye: Payload admin → İlgi Noktaları
       Alternatif: OpenStreetMap'ten toplu içe aktarma yazabilirim, söyle.
+
+      ⬆️ **Bu madde artık daha değerli.** Yakınlık sorguları yazıldı; her
+      kayıt üç yeri birden besliyor:
+
+      1. Mahalle sayfası → "Konum ve çevre" bölümü (en yakın nokta + mesafe)
+      2. İlan detayı → "Çevre ve erişim" bölümü
+      3. `/admin/skor-onerileri` → yatırım skorunun üç bileşeni için
+         gerekçeli puan önerisi
+
+      Haritadan **bağımsız** çalışıyor: MapTiler anahtarı gelmese bile
+      nokta girdiğin anda bu bölümler dolmaya başlar.
+
+      ⚠️ İki şart: mahallenin **merkez noktası** girilmiş olmalı (yukarıdaki
+      madde) ve mesafeler **kuş uçuşu** gösterilir — sürüş süresi değil.
+
+      ⚠️ Önce en çok fark yaratanları gir: OSB'ler, tren istasyonu,
+      havalimanı, şehir hastanesi. Bunlar Çorlu'nun değer sürücüleri ve
+      skor önerisinde en ağır kalemler.
+
+      Not: Bir tür için **hiç kayıt yoksa** sistem o türü hesaba katmaz —
+      mahalleyi "o donatısı yok" diye cezalandırmaz. Kayıt eksikliğini
+      olguya çevirmiyoruz.
 
 - [ ] **SMTP bilgileri** (e-posta bildirimleri için)
       Nereye: `.env` → `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`,
