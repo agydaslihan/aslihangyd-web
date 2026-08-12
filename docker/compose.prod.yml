@@ -90,6 +90,13 @@ services:
       ILETISIM_TELEFON: ${ILETISIM_TELEFON:-}
       ILETISIM_EPOSTA: ${ILETISIM_EPOSTA:-}
 
+      # OpenStreetMap POI içe aktarma sunucusu.
+      #
+      # ⚠️ Boş bırakmak GÜVENLİ: kod herkese açık `overpass-api.de`ye düşer.
+      # Değişken yalnızca ayna sunucu kullanmak içindir — genel sunucu yoğun
+      # saatlerde yavaşlıyor ve içe aktarma zaman aşımına uğrayabiliyor.
+      OVERPASS_ADRESI: ${OVERPASS_ADRESI:-}
+
       # ⚠️ ANTHROPIC_API_KEY VE ANTHROPIC_ARAMA_MODELI BİLİNÇLİ OLARAK YOK.
       #
       # AI doğal dil arama, avukat metinleri gelene kadar ERTELENDİ: ziyaretçi
