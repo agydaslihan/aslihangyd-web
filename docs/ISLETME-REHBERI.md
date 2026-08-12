@@ -118,11 +118,49 @@ site çalışmaya devam eder ama site haritası ve kanonik etiketler
 ulaşılamayan adresler gösterir — sessiz bir SEO hasarı.
 
 ⚠️ **`NEXT_PUBLIC_*` değişkenleri çalışma zamanında okunmaz.** Next.js
-onları derleme anında koda gömer — sunucu tarafında bile. Bu yüzden
-`compose.prod.yml` aynı değeri ön eksiz `SITE_ADRESI` adıyla da geçiyor;
-uygulamanın gerçekten okuduğu o. `.env` yine tek satır kalıyor, kopyalamayı
-compose yapıyor. Adres değiştiğinde imajı yeniden derlemeye gerek yok,
-kabı yeniden başlatmak yetiyor.
+onları derleme anında koda gömer — sunucu tarafında bile. Uygulamanın
+gerçekten okuduğu, ön eksiz `SITE_ADRESI`. İkisini de aynı değerle yazın;
+`.env.production.example` bunu zaten böyle gösteriyor.
+
+### ⚠️ Bu tuzak dokuz değişkeni birden vurmuştu (12 Ağustos 2026)
+
+Yukarıdaki kural yalnızca adres için değil, **her** `NEXT_PUBLIC_*`
+değişkeni için geçerli. Uzun süre fark edilmedi:
+
+- `Dockerfile`ın derleme aşamasında bu değişkenler için `ARG` yoktu.
+- `imaj.yml` derlerken `build-args` vermiyordu.
+- `compose.prod.yml` üçünü çalışma zamanı `environment:` olarak veriyordu —
+  çoktan derlenmiş bir pakete bunun hiçbir etkisi yok.
+
+Sonuç: yayına giden imajda dokuz değişken de **boş dizeydi.** Görünen
+belirtiler — hepsi sessiz, hiçbiri hata vermiyordu:
+
+| Ne bozuktu | Nasıl görünüyordu |
+| --- | --- |
+| MapTiler anahtarı | `/harita` kalıcı "Etkileşimli harita hazırlanıyor" boş durumunda |
+| Turnstile site anahtarı | Danışman başvuru formu bot korumasız |
+| Umami | Analitik betiği hiç yüklenmiyor |
+| Bunny kütüphane + CDN | Her drone videosu "oynatıcı yapılandırılmadı" |
+| WhatsApp / telefon / e-posta | CMS boşsa yedek de boş |
+
+Hepsi ön eksiz adlara taşındı ve `compose.prod.yml` artık hepsini
+geçiriyor. **Bugün `.env` içindeki değeri değiştirip kabı yeniden
+başlatmak yetiyor; imajı yeniden derlemek gerekmiyor.**
+
+Kurulumda kontrol etmenin en hızlı yolu:
+
+```bash
+# Kabın içinde değişken gerçekten var mı?
+docker exec aslihangyd-uygulama sh -c 'env | grep -E "MAPTILER|TURNSTILE|UMAMI|BUNNY"'
+
+# Harita stili sayfaya ulaşıyor mu? (0 dönerse anahtar kaba ulaşmamış)
+curl -s http://127.0.0.1:3000/harita | grep -c api.maptiler.com
+```
+
+⚠️ `pnpm test` içindeki ortam kapısı artık iki şeyi birden denetliyor:
+kodda `NEXT_PUBLIC_` okuması kalmadığını ve kodun okuduğu her değişkenin
+`compose.prod.yml` ile kaba ulaştığını. Yani bu hata bir daha sessizce
+geri gelemez.
 
 ⚠️ **Sertifika dosyası yerleştirmeniz GEREKMİYOR.**
 
@@ -803,7 +841,12 @@ docker compose --env-file .env -f docker/compose.prod.yml --profile gocmen \
 
 ```bash
 # 2. Genel adres portu içeriyor mu?
-grep NEXT_PUBLIC_SERVER_URL .env              # https://aslihangyd.com
+grep SITE_ADRESI .env                         # https://aslihangyd.com
+
+# 2b. Çalışma zamanı yapılandırması gerçekten kaba ulaşıyor mu?
+#     (Boş çıkarsa harita, bot koruması, analitik ve video sessizce ölüdür.)
+docker exec aslihangyd-uygulama sh -c 'env | grep -E "MAPTILER|TURNSTILE_SITE|UMAMI|BUNNY"'
+curl -s http://127.0.0.1:3000/harita | grep -c api.maptiler.com   # 0 ise EKSİK
 
 # 3. Bakım anahtarı tanımlı mı?
 grep -q '^BAKIM_ANAHTARI=.\+' .env && echo tamam || echo EKSİK

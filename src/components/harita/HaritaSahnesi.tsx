@@ -66,13 +66,18 @@ export function HaritaSahnesi({
   mahalleler,
   noktalar,
   noktaKatmanlari,
-  haritaHazir,
+  stilAdresi,
 }: {
   mahalleler: MahalleVerisi[]
   noktalar: HaritaNoktasi[]
   noktaKatmanlari: KatmanTanimi[]
-  /** MapTiler anahtarı tanımlı mı. */
-  haritaHazir: boolean
+  /**
+   * MapLibre stil adresi; MapTiler anahtarı yoksa `null` (boş durum).
+   *
+   * ⚠️ Sunucudan iniyor — bkz. `lib/harita/sunucu.ts`. Burada `process.env`
+   * okumak değeri derleme anına bağlar ve üretimde haritayı kapatır.
+   */
+  stilAdresi: string | null
 }) {
   const [veriKipi, setVeriKipi] = useState<VeriKipi>('satisM2')
   const [boyutlu, setBoyutlu] = useState(true)
@@ -165,8 +170,9 @@ export function HaritaSahnesi({
     <div className="bg-yuzey-2 relative h-full w-full overflow-hidden">
       {/* ── Harita ──────────────────────────────────────────────────── */}
       <div className="absolute inset-0">
-        {haritaHazir ? (
+        {stilAdresi !== null ? (
           <Harita3B
+            stilAdresi={stilAdresi}
             mahalleler={geometriler}
             sutunlar={sutunlar}
             noktalar={noktalar}
@@ -265,7 +271,7 @@ export function HaritaSahnesi({
               // Bina geometrisi taban haritadan gelir; sayılabilir bir
               // öğe kümesi değil, bu yüzden sayaç gösterilmiyor.
               etiket: 'Binalar',
-              adet: haritaHazir ? null : 0,
+              adet: stilAdresi !== null ? null : 0,
               renk: null,
             },
             ...noktaKatmanlari.map((katman) => ({

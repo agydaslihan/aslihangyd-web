@@ -1,16 +1,13 @@
 /**
- * Harita yapılandırması.
+ * Harita yapılandırması — istemcide de okunabilen saf sabitler.
  *
- * MapTiler anahtarı yoksa harita HİÇ yüklenmez — bileşen boş durum gösterir.
- * Anahtarsız bir MapLibre örneği boş gri bir dikdörtgen çizer ve bu, "site
- * bozuk" izlenimi verir.
+ * ⚠️ MapTiler anahtarı ve stil adresi BU DOSYADA DEĞİL.
+ *
+ * Anahtar çalışma zamanında sunucuda okunuyor (`sunucu.ts`) ve bileşenlere
+ * prop olarak iniyor. Gerekçe orada yazılı; özeti: `NEXT_PUBLIC_` önekli bir
+ * değişken derleme anında gömülür ve üretim imajımız o değer olmadan
+ * derlendiği için harita üretimde hiç açılmıyordu.
  */
-
-export const MAPTILER_ANAHTARI = process.env.NEXT_PUBLIC_MAPTILER_API_KEY ?? ''
-
-export function haritaHazirMi(): boolean {
-  return MAPTILER_ANAHTARI.trim().length > 0
-}
 
 /**
  * Çorlu merkezi — haritanın varsayılan odağı.
@@ -21,12 +18,6 @@ export function haritaHazirMi(): boolean {
  */
 export const CORLU_MERKEZ: [number, number] = [27.8, 41.16]
 export const VARSAYILAN_YAKINLIK = 12
-
-export function stilAdresi(): string {
-  // "streets-v2" dengeli bir taban; uydu görüntüsü mahalle sınırlarını
-  // okumayı zorlaştırıyor, sade vektör harita veriyi öne çıkarıyor.
-  return `https://api.maptiler.com/maps/streets-v2/style.json?key=${MAPTILER_ANAHTARI}`
-}
 
 /** POI tiplerinin harita üzerindeki renkleri — tasarım paletiyle uyumlu. */
 export const POI_RENKLERI: Record<string, string> = {

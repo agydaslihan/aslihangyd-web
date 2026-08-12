@@ -17,13 +17,25 @@
 /**
  * Kütüphane kimliği ve oynatma alan adı.
  *
- * ⚠️ İkisi de `NEXT_PUBLIC_` — istemcide görünür ve gizli DEĞİLLER.
+ * ⚠️ İkisi de gizli DEĞİL — kurulan adreslerin içinde ziyaretçiye görünür.
  * Bunny'nin API anahtarı (yükleme yetkisi olan) buraya asla girmez;
- * o yalnızca sunucuda, ön eksiz `BUNNY_STREAM_API_KEY` olarak durur.
+ * o yalnızca sunucuda, `BUNNY_STREAM_API_KEY` olarak durur.
+ *
+ * ⚠️ GİZLİ OLMAMALARI, `NEXT_PUBLIC_` ÖNEKİNİ GEREKTİRMEZ.
+ *
+ * Eskiden öyleydiler ve bu, değerleri **derleme anına** bağlıyordu. Üretim
+ * imajı GitHub Actions'ta bu değişkenler tanımlı değilken derlendiği için
+ * yayındaki pakette ikisi de boş dizeydi; her drone videosu "oynatıcı
+ * yapılandırılmadı" boş durumunda kalıyordu. Ön eksiz adlar çalışma
+ * zamanında okunur — imajı yeniden derlemeden değiştirilebilirler.
+ * Gerekçenin tamamı `lib/harita/sunucu.ts` içinde.
+ *
+ * ⚠️ Bu fonksiyon yalnızca SUNUCUDA çağrılmalı (`DroneVideo` sunucu
+ * bileşeni). İstemci paketinde ön eksiz değişkenler `undefined` gelir.
  */
 export function bunnyAyarlari(): { kutuphaneId: string; alanAdi: string } | null {
-  const kutuphaneId = process.env.NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID ?? ''
-  const alanAdi = process.env.NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME ?? ''
+  const kutuphaneId = process.env.BUNNY_STREAM_LIBRARY_ID ?? ''
+  const alanAdi = process.env.BUNNY_STREAM_CDN_HOSTNAME ?? ''
 
   if (kutuphaneId.trim() === '' || alanAdi.trim() === '') return null
   return { kutuphaneId: kutuphaneId.trim(), alanAdi: alanAdi.trim().replace(/^https?:\/\//, '') }

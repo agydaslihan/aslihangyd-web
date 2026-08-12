@@ -7,7 +7,7 @@ import type { AllPaintProperties } from 'maplibre-gl'
 import { GeolocateControl, MapLibreMap, NavigationControl, ScaleControl } from 'maplibre-gl'
 import { useEffect, useRef, useState } from 'react'
 
-import { CORLU_MERKEZ, stilAdresi, VARSAYILAN_YAKINLIK } from '@/lib/harita/ayarlar'
+import { CORLU_MERKEZ, VARSAYILAN_YAKINLIK } from '@/lib/harita/ayarlar'
 import { haritaRenkleri } from '@/lib/harita/jetonlar'
 import { cokgenUret, SUTUN_YARICAPI_M, type Konum } from '@/lib/harita/sutunlar'
 
@@ -64,6 +64,15 @@ export interface HaritaNoktasi {
 }
 
 export interface Harita3BOzellikleri {
+  /**
+   * MapLibre stil adresi — MapTiler anahtarını içerir.
+   *
+   * ⚠️ Bileşen bunu KENDİ KURMUYOR, sunucudan prop olarak alıyor. Anahtar
+   * çalışma zamanında sunucuda okunuyor (`lib/harita/sunucu.ts`); burada
+   * `process.env`'den okumak, değeri derleme anına bağlar ve üretimde
+   * haritayı sessizce kapatırdı. Gerekçenin tamamı o dosyada.
+   */
+  stilAdresi: string
   mahalleler: MahalleGeometrisi[]
   sutunlar: SutunOzelligi[]
   noktalar: HaritaNoktasi[]
@@ -117,6 +126,27 @@ const KATMAN_MAHALLE_KESIK = 'mahalle-sinirlari-veriyok'
 const KATMAN_MAHALLE_ETIKET = 'mahalle-etiket'
 const KATMAN_BINA = 'binalar'
 
+/**
+ * "Hiçbir mahalle seçili değil" nöbetçisi.
+ *
+ * MapLibre `['==', ['get', 'slug'], X]` ifadesi bir karşılaştırma değeri
+ * ister; seçim yokken hiçbir mahalleyle eşleşmeyecek bir değer gerekiyor.
+ * NUL, slug üretiminden asla çıkamaz (bkz. `slug.ts`), dolayısıyla güvenli.
+ *
+ * ⚠️ KAÇIŞ DİZİSİYLE YAZILIYOR, HAM BAYT OLARAK DEĞİL.
+ *
+ * Daha önce buraya ham bir NUL baytı yazılmıştı. Çalışma zamanında farkı
+ * yok ama kaynak dosyayı ikili (`file` → "data") hâle getiriyordu ve
+ * **grep 684 satırın tamamını sessizce atlıyordu.** 12 Ağustos 2026'da
+ * yapılan ortam denetiminde tam olarak buna yakalandık: "MapTiler anahtarı
+ * istemci tarafında kullanılmıyor" sonucuna varıldı, oysa bu dosya
+ * `stilAdresi()` çağırıyordu. Yanlış teşhis, yanlış düzeltmeye götürüyordu.
+ *
+ * Aynı nöbetçi iki yerde farklı yazılmıştı (biri boş dize, biri NUL);
+ * tek sabitte birleştirildi.
+ */
+const HICBIR_SLUG = '\u0000'
+
 /** Katman anahtarları — panelle bu dosya arasındaki sözleşme. */
 export const KATMAN_ANAHTARLARI = {
   sutunlar: KATMAN_SUTUN,
@@ -125,6 +155,7 @@ export const KATMAN_ANAHTARLARI = {
 } as const
 
 export function Harita3B({
+  stilAdresi,
   mahalleler,
   sutunlar,
   noktalar,
@@ -165,7 +196,7 @@ export function Harita3B({
 
     const harita = new MapLibreMap({
       container: kapsayiciRef.current,
-      style: stilAdresi(),
+      style: stilAdresi,
       center: CORLU_MERKEZ,
       zoom: VARSAYILAN_YAKINLIK,
       // Eğim ve döndürme 3B'nin ön koşulu; sahnedeki düğmeler bunları sürer.
@@ -216,8 +247,16 @@ export function Harita3B({
       setHazir(false)
     }
     // Harita bir kez kurulur; veri güncellemeleri ayrı efektlerde yapılır.
+    //
+    // ⚠️ `stilAdresi` listede ama haritayı yeniden kurmaz: efektin başındaki
+    // `haritaRef.current` koruması ilk kurulumdan sonra çıkışa götürüyor.
+    // Listede olması, değeri sessizce bayatlatmamak için.
+    //
+    // `onHata` bilinçli olarak DIŞARIDA: üst bileşen her render'da yeni bir
+    // fonksiyon üretiyor ve listeye girseydi harita her seferinde sökülüp
+    // yeniden kurulurdu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [webglVar])
+  }, [webglVar, stilAdresi])
 
   /* ── Mahalle poligonları ─────────────────────────────────────────────── */
   useEffect(() => {
@@ -372,7 +411,7 @@ export function Harita3B({
      */
     const ifade = [
       'case',
-      ['==', ['get', 'slug'], seciliSlug ?? ' '],
+      ['==', ['get', 'slug'], seciliSlug ?? HICBIR_SLUG],
       renkler.sutunSecili,
       renkler.sutun,
     ] as unknown as AllPaintProperties['fill-extrusion-color']
@@ -381,7 +420,7 @@ export function Harita3B({
     dene(() =>
       harita.setPaintProperty(KATMAN_MAHALLE_DOLGU, 'fill-opacity', [
         'case',
-        ['==', ['get', 'slug'], seciliSlug ?? ' '],
+        ['==', ['get', 'slug'], seciliSlug ?? HICBIR_SLUG],
         0.55,
         0.25,
       ]),

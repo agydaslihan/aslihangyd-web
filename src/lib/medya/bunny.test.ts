@@ -5,8 +5,8 @@ import { bunnyGommeAdresi, bunnyKapakAdresi, gecerliVideoKimligi } from './bunny
 const KIMLIK = '1c9d4f2e-7a3b-4c8d-9e1f-2a3b4c5d6e7f'
 
 function ayarla(kutuphane: string | undefined, alan: string | undefined) {
-  vi.stubEnv('NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID', kutuphane ?? '')
-  vi.stubEnv('NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME', alan ?? '')
+  vi.stubEnv('BUNNY_STREAM_LIBRARY_ID', kutuphane ?? '')
+  vi.stubEnv('BUNNY_STREAM_CDN_HOSTNAME', alan ?? '')
 }
 
 afterEach(() => {

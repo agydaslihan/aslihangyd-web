@@ -2718,6 +2718,155 @@ kadar boş durum gösteriyorlar. Bu bir eksiklik değil, tasarım:
 Tamamı `docs/SENDEN-BEKLENENLER.md` içinde, nereye gireceği ve olmazsa ne
 olacağıyla birlikte.
 
+---
+
+## Çalışma zamanı yapılandırması — üretimde dokuz değişken ölüydü
+
+Frontend yeniden tasarımına başlamadan önce Aslıhan'ın istediği ön kontrol
+(*"NEXT_PUBLIC_* taraması yapıldı mı? Harita şu an çalışıyor mu?"*) gerçek
+bir arıza ortaya çıkardı ve arıza tek bir değişkenden büyüktü.
+
+### Ne bozuktu
+
+Next.js `NEXT_PUBLIC_*` değişkenlerini **derleme anında** pakete gömer —
+sunucu tarafında bile. Üretim imajı GitHub Actions'ta derleniyor ve:
+
+- `docker/Dockerfile` derleme aşamasında bu değişkenler için `ARG` yoktu,
+- `.github/workflows/imaj.yml` `build-args` vermiyordu,
+- `docker/compose.prod.yml` üçünü çalışma zamanı `environment:` olarak
+  veriyordu — çoktan derlenmiş bir pakete etkisi yok.
+
+Sonuç: yayına giden imajda dokuz değişken de boş dizeydi.
+
+**Canlı sunucuda doğrulandı** (salt okunur):
+
+```
+$ docker exec aslihangyd-uygulama sh -c 'env | grep -i maptiler'
+(çıktı yok)
+
+$ curl -s http://127.0.0.1:3000/harita | grep -c api.maptiler.com
+0
+```
+
+| Ne | Belirtisi |
+| --- | --- |
+| MapTiler anahtarı | `/harita` kalıcı boş durumda |
+| Turnstile site anahtarı | Danışman başvuru formu bot korumasız |
+| Umami | Analitik betiği hiç yüklenmiyor |
+| Bunny kütüphane + CDN | Videolar "oynatıcı yapılandırılmadı" |
+| WhatsApp / telefon / e-posta | CMS boşsa yedek de boş |
+
+Hiçbiri hata vermiyordu. Harita özellikle can sıkıcı: OSM'den içe
+aktardığımız POI verisinin göründüğü **tek yer** orası.
+
+### Neden derleme argümanı değil, çalışma zamanı
+
+İki seçenek vardı. `Dockerfile`a `ARG` ekleyip CI'da `build-args` geçmek
+~25 satırla biterdi ve hiçbir bileşene dokunmayı gerektirmezdi. Yine de
+çalışma zamanı seçildi, çünkü asıl düzeltilen şey **sessiz yanlış
+yapılandırma** ve derleme argümanları onu yeni bir biçimde geri getiriyor:
+
+- Değer GitHub ayarlarında yaşar; depodaki hiçbir test onu denetleyemez.
+  Aslıhan on değişkenden dokuzunu girse harita çalışır, WhatsApp sessizce
+  boş kalır.
+- Telefon numarasını değiştirmek imajı yeniden derlemeyi ve yeniden
+  dağıtmayı gerektirir.
+
+Çalışma zamanında değer `.env` içinde — `PAYLOAD_SECRET`in yanında, zaten
+düzenlenen tek dosyada — ve `ortam.test.ts` onun belgelendiğini **ve**
+compose ile kaba ulaştığını denetleyebiliyor. Desen zaten `src/lib/site.ts`
+içinde `SITE_ADRESI` için kurulmuştu; yalnızca yayılmamıştı.
+
+### Ne yapıldı
+
+Dokuz değişken ön eksiz adlara taşındı. Değerler sunucuda okunuyor,
+istemci bileşenlerine prop olarak iniyor:
+
+- `lib/harita/sunucu.ts` (yeni, `server-only`) → `HaritaSahnesi` →
+  `Harita3B`. `haritaHazir: boolean` propu yerini `stilAdresi: string | null`
+  aldı: tek kaynak, anahtar da beraberinde iniyor.
+- `DroneVideo` sunucu bileşenine dönüştü, tıkla-oynat cephesi
+  `DroneVideoOynatici`'ya ayrıldı. Çağrı yerleri değişmedi.
+- Turnstile ve kurumsal iletişim yedekleri zaten sunucuda okunuyordu;
+  yalnızca ad değişti.
+- `NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID` silindi — sunucudaki
+  `BUNNY_STREAM_LIBRARY_ID` ile aynı değerin ikinci kopyasıydı.
+
+`import 'server-only'` bilinçli: öneki kaldırmak tek başına yetmezdi, ön
+eksiz bir değişken istemci paketinde sessizce `undefined` olur ve harita
+yine açılmazdı — bu sefer sebebi görünmeden.
+
+### Kanıt
+
+Aynı derleme çıktısıyla, iki yön de ölçüldü. Derleme sırasında
+`MAPTILER_ANAHTARI` **tanımsızdı**:
+
+```
+İstemci paketinde api.maptiler.com izi:   yok (yalnızca sunucu chunk'ında)
+
+MAPTILER_ANAHTARI=TEST_ANAHTARI_12345 ile:
+  .../style.json?key=TEST_ANAHTARI_12345   sayfada
+  "Etkileşimli harita hazırlanıyor"        yok
+
+Anahtarsız:
+  api.maptiler.com                          yok
+  "Etkileşimli harita hazırlanıyor"         var
+```
+
+Yani anahtar artık pakete gömülmüyor ve çalışma zamanında okunuyor —
+düzeltilmek istenen şey tam olarak buydu.
+
+### Kapılar
+
+`src/lib/ortam.test.ts` iki yeni testle genişletildi:
+
+1. **Kod `NEXT_PUBLIC_` okumuyor.** Tek muafiyet `src/lib/site.ts`
+   içindeki belgelenmiş derleme zamanı yedeği.
+2. **Kodun okuduğu her değişken compose ile kaba ulaşıyor.** Bu, asıl
+   boşluğu kapatan test: `MAPTILER_ANAHTARI` `.env`de yazılı olabilirdi ve
+   compose onu geçirmediği için yine ölü kalırdı. Belge testi yeşil,
+   harita ölü.
+
+### Yan bulgu: ham NUL baytı grep'i kör ediyordu
+
+Teşhis sırasında `grep -rn "MAPTILER" src/` yalnızca `lib/harita/ayarlar.ts`
+döndürdü ve **"anahtar istemcide kullanılmıyor"** sonucuna götürdü. Yanlıştı:
+`Harita3B.tsx` `stilAdresi()` çağırıyordu.
+
+Sebep: `Harita3B.tsx` içinde MapLibre "hiçbir zaman eşleşme" nöbetçisi
+**ham bir NUL baytı** olarak yazılmıştı. `file` dosyayı "data" görüyor,
+grep ikili sayıp **684 satırın tamamını sessizce atlıyordu.** Aynı desen
+`scripts/lighthouse-ozet.mjs` içinde de vardı (bileşik anahtar ayracı).
+
+İkisi de kaçış dizisine çevrildi — çalışma zamanı değeri birebir aynı,
+dosyalar düz metne döndü. `Harita3B` içinde aynı nöbetçi iki yerde farklı
+yazılmıştı (biri boşluk, biri NUL); tek sabitte birleştirildi.
+
+Bu bilinçli bir tercihti ve `alfabe.test.ts` içinde gerekçesiyle muaf
+tutulmuştu — ama bedeli (araçlara görünmezlik) hesaba katılmamıştı.
+Muafiyet kaldırıldı, yerine `src/lib/kaynakHijyeni.test.ts` geldi: kaynak
+dosyalarda sekme/satır sonu dışında ham kontrol karakteri yasak.
+
+Not: testi yazarken kaçış dizisini örneklemek isterken **aynı hatayı
+tekrar yaptım** — dosyaya ham NUL girdi ve yeni test onu ilk koşumda
+yakaladı. Hatanın ne kadar kolay tekrarlandığının iyi bir ölçüsü.
+
+### Belge düzeltmesi
+
+`.env.production.example` hâlâ `https://aslihangyd.com:8443` yazıyordu.
+O kurgu (Cloudflare origin sertifikası + dolu portlar) kaldırılmış,
+`compose.prod.yml` 80/443 yayınlıyor. Porta takılı bir `SITE_ADRESI`
+arama motoruna ulaşılamayan kanonik adresler bildirir — sessiz SEO hasarı.
+Düzeltildi.
+
+### Bilinen sınır
+
+`ANTHROPIC_API_KEY` ve `ANTHROPIC_ARAMA_MODELI` compose'a **bilinçli
+olarak eklenmedi**: AI arama avukat metinleri gelene kadar ertelendi
+(KVKK — sorgu yurt dışına gidiyor). Anahtarı kaba hiç sokmamak, SiteSections
+anahtarının üstüne ikinci bir kapı. Gerekçe hem compose'da hem testin muaf
+listesinde yazılı.
+
 ### Kod tarafında sırada ne var
 
 Öncelik sırasıyla, ama hepsi **Aslıhan'ın kararına bağlı**:
