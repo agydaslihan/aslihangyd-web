@@ -12,6 +12,7 @@ import { DanismanBasvurulari } from '@/collections/DanismanBasvurulari'
 import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
 import { SOSYAL_YOLU } from '@/components/sosyal/yol'
+import { GOZLEM_ICE_AKTARMA_YOLU } from '@/components/gozlem/yol'
 import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
 import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
@@ -86,12 +87,26 @@ export default buildConfig({
           Component: '@/components/sosyal/SosyalGorunumu#default',
           path: SOSYAL_YOLU,
         },
+
+        /**
+         * Gözlem CSV içe aktarma.
+         *
+         * ⚠️ Diğer özel görünümlerin aksine bu ekran veri YAZAR. Yazma
+         * yolu Local API + `overrideAccess: false`; koleksiyon erişim
+         * kuralları ve `beforeChange` kancası aynen çalışır. Ekran
+         * gövdesinde oturum kapısı zorunlu.
+         */
+        gozlemIceAktarma: {
+          Component: '@/components/gozlem/IceAktarmaGorunumu#default',
+          path: GOZLEM_ICE_AKTARMA_YOLU,
+        },
       },
       // Sihirbaz bir koleksiyon olmadığı için otomatik menüde görünmez;
       // görünmeyen bir araç, olmayan bir araçtır.
       afterNavLinks: [
         '@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi',
         '@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi',
+        '@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi',
       ],
     },
   },
