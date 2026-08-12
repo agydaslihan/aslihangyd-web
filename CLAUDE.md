@@ -193,19 +193,23 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
       `DATABASE_URI` ister.
 
 ## Faz durumu
-- [ ] Faz 1  — MVP (iskelet, veri modeli, EİDS, KVKK, temel sayfalar, CI/CD)
-- [ ] Faz 2  — Harita, hesaplayıcılar, ticari dikey
-- [ ] Faz 2B — Bal küpü modülleri, portföy yönetimi/CRM, sosyal medya
+
+**Planlanan fazların tamamı işlendi.** Sıradaki iş koddan değil, veriden ve
+karardan geliyor — bkz. docs/SENDEN-BEKLENENLER.md.
+
+- [x] Faz 1  — MVP (iskelet, veri modeli, EİDS, KVKK, temel sayfalar, CI/CD)
+- [x] Faz 2  — Harita, hesaplayıcılar, ticari dikey, PostGIS yakınlık
+- [x] Faz 2B — Bal küpü modülleri, portföy yönetimi/CRM, sosyal medya
               (bkz. BAL-KUPU-VE-PORTFOY-YONETIMI.md)
-              Bal küpü modülleri tamam (değerleme, gizli portföy, mahalle
-              eşleştirme testi, yatırım simülatörü, kira mı satın alma mı,
-              bölge radarı, PDF rapor). Portföy giriş sihirbazı tamam.
-              CRM eşleştirme motoru ve sosyal medya materyali kaldı.
-- [ ] Faz 2C — Gözlem giriş sistemi ve endeks altyapısı
-              (bkz. ENDEKS-VERI-YONETIMI.md) — sayfa 6. ayda açılır
-- [ ] Faz 3  — Drone/360 medya, CDN
-- [ ] Faz 4  — Yatırım skoru, AI arama, raporlar
-- [ ] Faz 5  — Çorlu Live zaman serisi
+- [x] Faz 2C — Gözlem giriş sistemi, CSV içe aktarma, endeks altyapısı
+              (bkz. ENDEKS-VERI-YONETIMI.md) — /endeks sayfası veri
+              eşikleri sağlanana kadar KAPALI, tasarım gereği
+- [~] Faz 3  — Drone/360 medya, CDN → talimat gereği ATLANDI.
+              Altyapı hazır bekliyor: medya alanları, oynatıcı iskeleti,
+              boş durum tasarımı. Gerçek medya ve CDN hesabı gerekiyor.
+- [x] Faz 4  — Yatırım skoru, raporlar, AI doğal dil arama
+              ⚠️ AI arama varsayılan KAPALI: anahtar + KVKK metni bekliyor
+- [~] Faz 5  — Çorlu Live zaman serisi → talimat gereği ATLANDI
 
 ## İlgili dokümanlar
 - ASLIHANGYD-PROJE-PLANI.md          genel plan, hukuk, altyapı
