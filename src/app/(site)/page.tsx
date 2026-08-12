@@ -201,7 +201,7 @@ function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
             sıradanlaşır; kural `src/lib/tasarim/disiplin.test.ts` içinde
             denetleniyor.
           */}
-          <Buton href="/degerleme" gorunum="bakir" boyut="buyuk">
+          <Buton href="/degerleme" gorunum="aksan" boyut="buyuk">
             Evimi değerlendir
           </Buton>
           {whatsapp ? (

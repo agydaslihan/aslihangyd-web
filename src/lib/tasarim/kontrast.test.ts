@@ -77,23 +77,81 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
     nerede: 'doğrulanmış ilan rozeti',
   },
   { on: BEYAZ, arka: '--color-lacivert-yuzey', asgari: AA_METIN, nerede: 'WhatsApp butonu, şerit' },
+  // ── Adaçayı: eylem rengi ───────────────────────────────────────────────
   {
-    on: '--color-bakir-metin',
+    on: '--color-aksan-metin',
     arka: '--color-zemin',
     asgari: AA_METIN,
     nerede: '"Erişim talep et →"',
   },
   {
-    on: '--color-bakir-metin',
+    on: '--color-aksan-metin',
     arka: '--color-yuzey',
     asgari: AA_METIN,
     nerede: 'kilitli kart kapanış satırı',
   },
   {
-    on: BEYAZ,
-    arka: '--color-bakir-600',
+    on: '--color-aksan-metin',
+    arka: '--color-yuzey-2',
     asgari: AA_METIN,
-    nerede: 'birincil buton — iki eylem',
+    nerede: 'tint bölümdeki adaçayı bağlantı',
+  },
+  {
+    on: '--color-aksan-metin',
+    arka: '--color-aksan-zemin',
+    asgari: AA_METIN,
+    nerede: 'adaçayı tint rozet',
+  },
+  {
+    on: BEYAZ,
+    arka: '--color-aksan',
+    asgari: AA_METIN,
+    nerede: 'dolu eylem butonu — "Evimi değerlendir"',
+  },
+  {
+    on: BEYAZ,
+    arka: '--color-aksan-koyu',
+    asgari: AA_METIN,
+    nerede: 'dolu eylem butonu, hover',
+  },
+  {
+    on: '--color-aksan',
+    arka: '--color-zemin',
+    asgari: AA_BILESEN,
+    nerede: 'dolu buton zeminin kendisi sayfadan ayrışmalı',
+  },
+
+  // ── Gold: dekoratif ────────────────────────────────────────────────────
+  //
+  // ⚠️ `--color-gold-cizgi` BİLİNÇLİ OLARAK BU LİSTEDE YOK.
+  //
+  // Açık zeminde 2,06:1 verir ve 1.4.11'in 3:1 eşiğini geçmez. Listeye
+  // eklemek testi kırardı; eşiği düşürmek ise kuralı anlamsızlaştırırdı.
+  // Doğru cevap üçüncüsü: gold çizgi HİÇBİR BİLGİYİ TEK BAŞINA TAŞIMAZ,
+  // dolayısıyla 1.4.11 kapsamına girmez (dekoratif içerik muaf). Bu, aşağıda
+  // ayrı bir testle ("gold metin rengi olarak kullanılmıyor") ve
+  // disiplin.test.ts ile korunuyor.
+  //
+  // Anlam taşıyan gold öğe için ayrı jeton var ve o ÖLÇÜLÜYOR:
+  {
+    on: '--color-gold-guclu',
+    arka: '--color-zemin',
+    asgari: AA_BILESEN,
+    nerede: 'anlam taşıyan gold ikon',
+  },
+  /**
+   * ⚠️ Gold rozetin metni `--color-metin` DEĞİL, doğrudan antrasit.
+   *
+   * Gold zemin iki temada da aynı açıklıkta duruyor; koyu temada
+   * `--color-metin` kırık beyaza dönüyor ve gold üzerinde 2,06:1 veriyor.
+   * Yani "tema jetonu kullan" kuralının istisnası: zemin temaya göre
+   * değişmiyorsa üzerindeki metin de değişmemeli. Kontrast testi yakaladı.
+   */
+  {
+    on: '--color-notr-900',
+    arka: '--color-gold-zemin',
+    asgari: AA_METIN,
+    nerede: 'gold dolu rozet — üzerine daima antrasit',
   },
 
   // ── Durum renkleri ─────────────────────────────────────────────────────
@@ -265,69 +323,132 @@ describe.each([
 })
 
 describe('palet bütünlüğü', () => {
-  it('onaylanan lacivert rampası birebir korunur', () => {
-    const beklenen: Record<string, string> = {
-      '--color-lacivert-50': '#f2f7fa',
-      '--color-lacivert-100': '#e4edf4',
-      '--color-lacivert-200': '#cbdce9',
-      '--color-lacivert-300': '#a3bfd9',
-      '--color-lacivert-400': '#6e9ac6',
-      '--color-lacivert-500': '#3a73ac',
-      '--color-lacivert-600': '#26588f',
-      '--color-lacivert-700': '#1d4270',
-      '--color-lacivert-800': '#16304f',
-      '--color-lacivert-900': '#0f1e33',
-      '--color-lacivert-950': '#0a1524',
+  /**
+   * ⚠️ TABAN RENKLER PAZARLIĞA KAPALI.
+   *
+   * Bu altı değer `docs/FRONTEND-YENIDEN-TASARIM.md` §1'de Aslıhan
+   * tarafından verildi. Rampanın geri kalanı türetilmiştir ama BU
+   * basamaklar birebir korunur — türetme algoritması değişse bile paletin
+   * kimliği değişmemeli.
+   */
+  it('dokümandaki taban renkler birebir korunur', () => {
+    const taban: Record<string, string> = {
+      '--color-lacivert-900': '#0f2747', // lacivert
+      '--color-adacayi-600': '#4f7c6a', // adaçayı
+      '--color-notr-50': '#f7f6f2', // kırık beyaz
+      '--color-notr-100': '#e9eceb', // açık gri
+      '--color-gold-400': '#c9a96e', // soft gold
+      '--color-notr-900': '#20252b', // antrasit
     }
 
-    for (const [ad, deger] of Object.entries(beklenen)) {
+    for (const [ad, deger] of Object.entries(taban)) {
       expect(jeton(temalar.acik, ad), ad).toBe(deger)
       // Rampa temaya göre değişmez — anlamsal jetonlar değişir.
       expect(jeton(temalar.koyu, ad), `${ad} (koyu)`).toBe(deger)
     }
   })
 
-  it('onaylanan bakır rampası birebir korunur', () => {
-    const beklenen: Record<string, string> = {
-      '--color-bakir-100': '#f7e6d9',
-      '--color-bakir-200': '#efcbb2',
-      '--color-bakir-300': '#e3a981',
-      '--color-bakir-400': '#d68551',
-      '--color-bakir-500': '#c4682f',
-      '--color-bakir-600': '#a85529',
-      '--color-bakir-700': '#8a4423',
-    }
-
-    for (const [ad, deger] of Object.entries(beklenen)) {
-      expect(jeton(temalar.acik, ad), ad).toBe(deger)
+  it('her rampa on basamaklı ve eksiksiz', () => {
+    const basamaklar = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
+    for (const rampa of ['lacivert', 'adacayi', 'gold', 'notr']) {
+      for (const basamak of basamaklar) {
+        const ad = `--color-${rampa}-${basamak}`
+        expect(() => jeton(temalar.acik, ad), ad).not.toThrow()
+      }
     }
   })
 
-  it('onaylanan nötr rampası birebir korunur', () => {
-    const beklenen: Record<string, string> = {
-      '--color-notr-50': '#f8f7f3',
-      '--color-notr-100': '#efede7',
-      '--color-notr-200': '#e0ddd5',
-      '--color-notr-300': '#c4c1b8',
-      '--color-notr-400': '#9c998f',
-      '--color-notr-500': '#78756d',
-      '--color-notr-700': '#45433e',
-      '--color-notr-900': '#1a1917',
-    }
-
-    for (const [ad, deger] of Object.entries(beklenen)) {
-      expect(jeton(temalar.acik, ad), ad).toBe(deger)
+  /**
+   * ⚠️ Rampa monoton olmalı: her basamak bir öncekinden koyu.
+   *
+   * Bir basamağın sırayı bozması gözle fark edilmez ama "bir ton açığını
+   * al" demek anlamsızlaşır ve türetilmiş her jeton şüpheli hale gelir.
+   */
+  it('rampalar açıktan koyuya monoton', () => {
+    const basamaklar = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
+    for (const rampa of ['lacivert', 'adacayi', 'gold', 'notr']) {
+      let oncekiParlaklik = Number.POSITIVE_INFINITY
+      for (const basamak of basamaklar) {
+        const ad = `--color-${rampa}-${basamak}`
+        const p = bagilParlaklik(jeton(temalar.acik, ad))
+        expect(p, `${ad} kendinden önceki basamaktan açık`).toBeLessThan(oncekiParlaklik)
+        oncekiParlaklik = p
+      }
     }
   })
 
-  it('onaylanan anlamsal renkler birebir korunur', () => {
-    expect(jeton(temalar.acik, '--color-basari')).toBe('#2f6b4f')
-    expect(jeton(temalar.acik, '--color-uyari')).toBe('#a87a1e')
-    expect(jeton(temalar.acik, '--color-hata')).toBe('#a33a32')
-    expect(jeton(temalar.acik, '--color-bilgi')).toBe('#26588f')
-    expect(jeton(temalar.acik, '--color-basari-zemin')).toBe('#eaf2ed')
-    expect(jeton(temalar.acik, '--color-uyari-zemin')).toBe('#faf3e4')
-    expect(jeton(temalar.acik, '--color-hata-zemin')).toBe('#fbedec')
-    expect(jeton(temalar.acik, '--color-bilgi-zemin')).toBe('#f2f7fa')
+  /**
+   * ⚠️ BAKIR TAMAMEN GİTTİ — geri sızmasın.
+   *
+   * Yeniden tasarım bir iyileştirme değil yön değişikliğiydi. Eski rampanın
+   * tek bir jetonu kalsaydı, sonraki bir bileşende "elimde vardı" diye
+   * kullanılır ve iki palet yan yana yaşamaya başlardı.
+   */
+  it('bakır rampasından hiçbir jeton kalmadı', () => {
+    for (const harita of [temalar.acik, temalar.koyu]) {
+      const bakir = [...harita.keys()].filter((ad) => ad.includes('bakir'))
+      expect(bakir, 'bakır jetonları kaldırılmalıydı').toEqual([])
+    }
+  })
+
+  /**
+   * ⚠️ GOLD ASLA METİN RENGİ DEĞİL — dokümanın en net kuralı.
+   *
+   * Ölçüm: gold-400 kırık beyaz üzerinde 2,06:1. Bu bir "zayıf kontrast"
+   * değil, ağır ihlal. Test rengin metin rolü taşıyan bir jetona
+   * bağlanmadığını denetliyor; kullanım tarafını disiplin.test.ts kovuyor.
+   */
+  it('gold hiçbir metin jetonuna bağlı değil', () => {
+    const metinJetonlari = [
+      '--color-metin',
+      '--color-metin-2',
+      '--color-metin-3',
+      '--color-vurgu',
+      '--color-aksan-metin',
+    ]
+
+    for (const [temaAdi, harita] of [
+      ['açık', temalar.acik],
+      ['koyu', temalar.koyu],
+    ] as const) {
+      const goldDegerleri = new Set(
+        [...harita.entries()]
+          .filter(([ad]) => /^--color-gold-\d+$/.test(ad))
+          .map(([, deger]) => deger),
+      )
+
+      for (const ad of metinJetonlari) {
+        expect(goldDegerleri.has(jeton(harita, ad)), `${ad} (${temaAdi}) gold'a bağlanmış`).toBe(
+          false,
+        )
+      }
+    }
+  })
+
+  /**
+   * ⚠️ Adaçayının DOLU ZEMİN değeri metin jetonu olarak kullanılamaz.
+   *
+   * Kırık beyaz üzerinde 4,38:1 — AA'nın altında. Doküman bunu açıkça
+   * yazıyor ve koyulaştırılmış bir varyant istiyor; bu test ikisinin
+   * karışmadığını güvenceye alıyor.
+   */
+  it('adaçayı dolu zemin değeri metin rengi olarak kullanılmıyor', () => {
+    const doluZemin = jeton(temalar.acik, '--color-aksan')
+    expect(jeton(temalar.acik, '--color-aksan-metin')).not.toBe(doluZemin)
+
+    // Ve koyulaştırılmış varyant gerçekten AA'yı geçmeli.
+    const oran = kontrastOrani(
+      jeton(temalar.acik, '--color-aksan-metin'),
+      jeton(temalar.acik, '--color-zemin'),
+    )
+    expect(
+      oraniYuvarla(oran),
+      'adaçayı metin varyantı kırık beyaz üzerinde',
+    ).toBeGreaterThanOrEqual(AA_METIN)
+
+    // Dolu zemin değeri ise METİN olarak AA'yı geçmiyor olmalı —
+    // ayrı bir jeton gerekmesinin sebebi tam olarak bu.
+    const doluOran = kontrastOrani(doluZemin, jeton(temalar.acik, '--color-zemin'))
+    expect(oraniYuvarla(doluOran), 'dolu zemin metin olarak AA geçmemeli').toBeLessThan(AA_METIN)
   })
 })

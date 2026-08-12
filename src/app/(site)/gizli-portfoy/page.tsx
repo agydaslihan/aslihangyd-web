@@ -101,7 +101,7 @@ export default async function GizliPortfoySayfasi() {
             <div className="mt-8 flex justify-center">
               <Buton
                 href="/iletisim?tip=alici&mesaj=Gizli%20portf%C3%B6ye%20eri%C5%9Fim%20talep%20ediyorum."
-                gorunum="bakir"
+                gorunum="aksan"
                 boyut="buyuk"
               >
                 Erişim talep et

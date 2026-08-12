@@ -82,7 +82,7 @@ export function KilitliKart({
             dolu bakır yalnızca gerçek butonun rengi. */}
         <a
           href={talepAdresi}
-          className="text-bakir-metin text-govde-kucuk mt-auto inline-flex min-h-11 items-center gap-1.5 font-medium"
+          className="text-aksan-metin text-govde-kucuk mt-auto inline-flex min-h-11 items-center gap-1.5 font-medium"
         >
           Erişim talep et
           <span aria-hidden>→</span>

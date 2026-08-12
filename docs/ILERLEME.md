@@ -3116,6 +3116,130 @@ olarak eklenmedi**: AI arama avukat metinleri gelene kadar ertelendi
 (KVKK — sorgu yurt dışına gidiyor). Anahtarı kaba hiç sokmamak, SiteSections
 anahtarının üstüne ikinci bir kapı. Gerekçe hem compose'da hem testin muaf
 listesinde yazılı.
+## Frontend yeniden tasarımı — Aşama 1: palet ve tipografi
+
+`docs/FRONTEND-YENIDEN-TASARIM.md` §1, §3 ve §10. Lacivert/bakır sistemi
+tamamen gitti; yerine lacivert/adaçayı/gold geldi.
+
+### Rampalar nasıl üretildi
+
+Aslıhan altı taban renk verdi. Rampaların (50–900) geri kalanı **OKLab'de**
+üretildi: taban renk kendi basamağında sabit, üstü neredeyse beyaza, altı
+çok koyuya doğru algısal olarak eşit aralıklarla interpole edildi.
+
+İlk denemede sRGB'ye yakın bir yaklaşım kullanıldı ve koyu taban renklerde
+açık basamaklar **beyaza çöküyordu** (lacivert-50/100/200 üçü de `#ffffff`
+çıktı). Çapa tabanlı interpolasyona geçilince rampa monotonlaştı; testlerden
+biri artık tam olarak bunu denetliyor ("rampalar açıktan koyuya monoton").
+
+Nötr rampasının ilk iki basamağı **türetilmedi**: 50 = kırık beyaz
+`#F7F6F2`, 100 = açık gri `#E9ECEB`. İkisi farklı sıcaklıkta (biri sarıya,
+diğeri yeşile çalıyor) ve bu paletin kendi tercihi; türetseydik ikisi de
+aynı eksene düşerdi.
+
+### Dokümandaki kontrast iddiaları — ölçüldü
+
+| İddia | Doküman | Ölçülen | Sonuç |
+| --- | --- | --- | --- |
+| Adaçayı zemin + beyaz metin | 4,75 | **4,74** | ✅ AA geçiyor |
+| Adaçayı METİN, kırık beyaz üstünde | 4,41 | **4,38** | ✅ doğru, AA geçmiyor |
+| Gold zemin + antrasit metin | 6,8 | **6,89** | ✅ geçiyor |
+| Gold METİN, kırık beyaz üstünde | 2,23 | **2,06** | ✅ ağır ihlal (dokümandan da kötü) |
+
+Dördünün de **yönü** doğru çıktı. İki değerde küçük sapma var; ikisi de
+kararı değiştirmiyor.
+
+`adacayi-metin` için doküman `#3E6354` civarını öneriyordu. Ölçüm: kırık
+beyazda **6,22:1**, açık gride **5,66:1**. AA'nın epey üstünde, önerilen
+değer aynen alındı. (Eşiği kıl payı geçen en açık varyant `#467361` idi —
+4,99/4,54; pay bırakmak için kullanılmadı.)
+
+### Kontrast testinin yakaladığı beş gerçek sorun
+
+Palet elle "iyi görünüyor" diye onaylanmadı; test **iki temada 94 çiftin**
+hepsini ölçüyor ve beşi ilk denemede kırmızıydı:
+
+1. **Karanlık tema yardımcı metni** `yuzey-2` üzerinde 3,91:1 — gözlem
+   sayısı ("n = 23") çoğu zaman tam olarak orada duruyor. İki basamak açıldı.
+2. **Karanlık tema hata metni** yeni lacivert yüzeyde 4,48:1 — kıl payı
+   altında. Bir basamak açıldı.
+3. **Karanlık tema adaçayı bağlantısı** tint yüzeyde 3,91:1. `300` → `200`.
+4. **Karanlık tema buton hover'ı** 3,55:1 — hover koyu temada *açılıyordu*
+   ve beyaz metni yutuyordu. Hover artık iki temada da koyulaşıyor.
+5. **Gold rozetin metni.** Rozet zemini temaya göre değişmiyor ama
+   `--color-metin` değişiyordu; koyu temada kırık beyaz metin gold üstünde
+   2,06:1 veriyordu. Kural: zemin temaya göre değişmiyorsa üzerindeki metin
+   de değişmez — rozet metni artık doğrudan antrasit.
+
+### Gold'un 3:1 sorunu ve neden muafiyet değil
+
+Açık zeminde gold-400 bir çizgi olarak **2,06:1** veriyor; WCAG 1.4.11'in
+3:1 eşiğinin altında. Üç seçenek vardı: testi kırmak, eşiği düşürmek, ya da
+kuralı doğru ifade etmek. Üçüncüsü seçildi:
+
+- Gold çizgi **hiçbir bilgiyi tek başına taşımaz** — dekoratif içerik
+  1.4.11 kapsamı dışında. Kombinasyon listesine bilinçli olarak eklenmedi
+  ve *neden* eklenmediği listenin içine yazıldı.
+- Anlam taşıyan gold öğe gerekirse ayrı jeton var: `--color-gold-guclu`
+  (gold-600), açık zeminde **5,17:1** — ve o ÖLÇÜLÜYOR.
+- `disiplin.test.ts` ayrıca `text-gold-*` kullanımını kovalıyor. İki ayrı
+  kapı: biri "gold bir metin jetonuna bağlanmış mı", diğeri "bir bileşende
+  gold metin yazılmış mı".
+
+### Bakırın geri sızmaması
+
+Yeniden tasarım bir iyileştirme değil yön değişikliğiydi. Eski rampanın tek
+bir jetonu kalsaydı sonraki bir bileşende "elimde vardı" diye kullanılır ve
+iki palet yan yana yaşamaya başlardı. İki test bunu engelliyor: jeton
+haritasında `bakir` geçen ad kalmadığı, ve eski bakır hex değerlerinin
+kaynağa geri girmediği.
+
+Bakır kuralının **gerekçesi** korundu, rengi değişti: dolu adaçayı zemin
+hâlâ yalnızca "Evimi değerlendir" ve "Erişim talep et" eylemlerinde.
+
+### Tipografi
+
+Ölçek büyüdü (§3): sayfa başlığı 34 → **44** (mobil 30), bölüm başlığı
+22 → **32**, büyük rakam 32 → **40**. `eyebrow` jetonu eklendi: 12px,
+0.08em harf aralığı, büyük harf, adaçayı.
+
+Büyük rakamlara `-0.02em` harf aralığı verildi: `tabular-nums` rakamları
+eşit genişliğe zorluyor ve büyük puntoda aralar açılıyor. Font altyapısı
+(Inter + Source Serif 4, Türkçe alt küme, kendi barındırma) korundu.
+
+### Yol boyunca bulunan ilgisiz bir hata
+
+`bildirimler.entegrasyon.test.ts` içindeki `SIMDI` sabiti `2026-08-07`ye
+sabitlenmişti ama ilanları oluşturan `eidsYayinEngeli` kancası gerçek
+`Date.now()` okuyor ve devre dışı bırakılamıyor. `gunSonra(5)` o tarihten
+tam beş gün sonra — **12 Ağustos 2026'da** — geçmişe düştü ve test o gün
+kendiliğinden kırıldı. Kimse bir şey değiştirmemişti, takvim ilerlemişti.
+
+Temiz ağaçta da kırık olduğu doğrulandı (palet değişikliğiyle ilgisiz).
+`SIMDI` gerçek saate bağlandı: fikstürler artık kancanın gördüğü saatle
+aynı eksende üretiliyor.
+
+### Birleştirmede çıkan kalıntı: harita yedek renkleri
+
+Palet dalı main'e alınırken `src/lib/harita/jetonlar.ts` içinde bir kalıntı
+bulundu. MapLibre CSS değişkeni anlamıyor; bu dosya renkleri çalışma
+zamanında `getComputedStyle` ile okuyor ve tarayıcı dışında **elle yazılmış
+bir yedek listesine** düşüyor.
+
+O liste eski paletten kalmıştı ve içindeki `--color-bakir-600`
+globals.css'ten tamamen silinmişti. `getComputedStyle` bulunmayan jeton için
+boş dize döndürüyor, kod da yedeğe düşüyor — yani **seçili mahalle sütunu,
+palet değişmiş olmasına rağmen bakır çiziliyordu.** Ne derleme ne test hata
+veriyordu; harita yalnızca yanlış renkteydi.
+
+Seçili sütun `--color-aksan`a bağlandı, yedeklerin tamamı yeni palete
+güncellendi ve `jetonlar.test.ts` eklendi: her yedek değerin globals.css'teki
+karşılığıyla birebir aynı olduğunu **ve** başvurulan her jetonun gerçekten
+var olduğunu denetliyor. İkincisi asıl arızayı kapatan kısım.
+
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1217 test, 94'ü kontrast) ✅ `build` ✅
+- Lighthouse ölçümü **yapılmadı** — bileşenler henüz eski düzende; anlamlı
+  sayı Aşama 3'ten sonra çıkar.
 
 ### Kod tarafında sırada ne var
 
