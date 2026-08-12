@@ -18,9 +18,11 @@ export const POI_TIPLERI = [
   { value: 'okul', label: 'Okul' },
   { value: 'universite', label: 'Üniversite' },
   { value: 'hastane', label: 'Hastane / sağlık' },
+  { value: 'eczane', label: 'Eczane' },
   { value: 'market', label: 'Market' },
   { value: 'avm', label: 'AVM' },
   { value: 'park', label: 'Park / yeşil alan' },
+  { value: 'oyun_alani', label: 'Çocuk oyun alanı' },
   { value: 'sanayi', label: 'Sanayi / OSB' },
   { value: 'durak', label: 'Toplu taşıma durağı' },
   { value: 'istasyon', label: 'Tren istasyonu' },
@@ -30,8 +32,26 @@ export const POI_TIPLERI = [
 
 export type PoiTipi = (typeof POI_TIPLERI)[number]['value']
 
-/** Yatırım skorunda "sosyal donatı" bileşenine giren tipler (Faz 4). */
-export const SOSYAL_DONATI_TIPLERI = ['okul', 'hastane', 'market', 'avm', 'park'] as const
+/**
+ * Yatırım skorunda "sosyal donatı" bileşenine giren tipler (Faz 4).
+ *
+ * ⚠️ `eczane` ve `oyun_alani` 12 Ağustos 2026'da Aslıhan'ın kararıyla
+ * eklendi: eczane sağlık erişiminin günlük ölçüsü, oyun alanı ise çocuklu
+ * aile için mahalle kalitesinin doğrudan göstergesi. İkisi de OSM'den
+ * geliyor ve zaten eşlenmeyen tür raporunda görünüyorlardı.
+ *
+ * ⚠️ Restoran BİLİNÇLİ OLARAK DIŞARIDA: sinyal değeri düşük, merkeziyeti
+ * zaten başka kriterlerle ölçüyoruz ve veriye gürültü ekliyor.
+ */
+export const SOSYAL_DONATI_TIPLERI = [
+  'okul',
+  'hastane',
+  'eczane',
+  'market',
+  'avm',
+  'park',
+  'oyun_alani',
+] as const
 
 /** "Ulaşım" bileşenine giren tipler. */
 export const ULASIM_TIPLERI = ['durak', 'istasyon', 'havalimani'] as const

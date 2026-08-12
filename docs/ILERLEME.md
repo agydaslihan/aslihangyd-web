@@ -2859,6 +2859,57 @@ Ayrıca `ortam.test.ts` (ortam değişkeni belgeleme denetimi)
 - **Gerçek Overpass duman testi** — yukarıdaki ölçüm. Test verisi silindi.
 - Kapı: `typecheck` ✅ `lint` ✅ `test` (1185 test) ✅ `build` ✅
 
+### Raporun ilk çıktısı: eczane ve çocuk oyun alanı eklendi
+
+Eşlenmeyen tür raporu tam olarak amaçlandığı işi yaptı. Aslıhan raporu
+okuyup karar verdi (12 Ağustos 2026):
+
+- **`amenity=pharmacy` → `eczane`** — sağlık erişiminin günlük ölçüsü.
+  Hastane "var mı yok mu" sorusunu yanıtlıyor, eczane "yürüme mesafesinde
+  mi" sorusunu.
+- **`leisure=playground` → `oyun_alani`** — çocuklu aile için mahalle
+  kalitesinin doğrudan göstergesi. Parktan **ayrı** sayılıyor: her park
+  oyun alanı içermiyor ve ikisi aynı şey değil.
+- **`amenity=restaurant` → EKLENMEDİ.** Sinyal değeri düşük, merkeziyeti
+  zaten AVM/market/ulaşım kriterleriyle ölçüyoruz, veriye gürültü ekler.
+
+İkisi de yatırım skorunun **sosyal donatı** bileşenine giriyor
+(`SOSYAL_DONATI_TIPLERI`), mahalle sayfasındaki çevre listesinde
+görünüyor ve haritada ilgili renk grubuna düşüyor.
+
+**Bilinçli dışlamalar artık yazılı.** `BILINCLI_DISARIDA` tablosu
+eklendi: raporda düzenli görünen ama almamaya karar verdiğimiz türler,
+gerekçesiyle. Rapor bunları "aktarılmadı, isterseniz ekleriz" diye değil
+**"bilinçli olarak dışarıda — sebebi şu"** diye gösteriyor. Gerekçe
+`/veri-kaynaklari` sayfasında da yayınlanıyor. Yazılı olmasaydı aynı soru
+her içe aktarmada yeniden sorulur ve baştan tartışılırdı.
+
+**Rapor kalıcılaştırıldı.** Önceden kapalı bir `<details>` içindeydi ve
+yalnızca boş değilken görünüyordu. İkisi de değişti:
+
+- Açık geliyor — kapalı bir rapor okunmayan rapordur.
+- Boşken de görünüyor ("dışarıda kalan tür yok"). Yoksa "rapor çalıştı ve
+  temiz çıktı" ile "rapor hiç üretilmedi" ayırt edilemezdi.
+- 40'tan fazla tür varsa kaç türün gizlendiği yazılıyor; sessiz kırpma yok.
+
+**Yayınlanan metodoloji düzeltildi.** `/veri-kaynaklari` sayfası
+"eczane ... içe aktarılmıyor" diyordu; artık yanlıştı.
+
+#### Göç geri alması yine elle düzeltildi
+
+Üretilen `down` doğrudan enum'u yeniden kuruyordu. Tek bir eczane ya da
+oyun alanı kaydı varsa son `USING tip::enum` dönüşümü patlar ve göç yarıda
+kalırdı — `onay_bekliyor` göçündeki tuzağın aynısı.
+
+Kayıtlar önce en yakın anlamlı tipe çekiliyor: `eczane → hastane`
+(tipin etiketi zaten "Hastane / sağlık"), `oyun_alani → park`.
+
+**Gerçek veriyle denendi:** iki kayıt eklendi, `migrate:down` çalıştırıldı,
+kayıtlar `hastane` ve `park` olarak sağ çıktı, enum daraldı, hata yok.
+Sonra göç yeniden uygulandı ve test kayıtları silindi.
+
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1191 test) ✅ `build` ✅
+
 ### Bilinen sınırlar
 
 - Tek seferde 3.000 nokta tavanı (kaza koruması).

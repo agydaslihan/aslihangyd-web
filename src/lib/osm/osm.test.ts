@@ -1,6 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
-import { ESLEME_KURALLARI, eslenmeyenEtiket, sorguFiltreleri, tipiEslestir } from './eslesme'
+import {
+  BILINCLI_DISARIDA,
+  bilincliDisaridaGerekcesi,
+  ESLEME_KURALLARI,
+  eslenmeyenEtiket,
+  sorguFiltreleri,
+  tipiEslestir,
+} from './eslesme'
 import {
   AZAMI_KENAR_DERECE,
   kutuMakulMu,
@@ -28,14 +35,61 @@ describe('kategori eşlemesi', () => {
   })
 
   it('eşleşmeyen etikette null döner — uydurma tip atamaz', () => {
-    expect(tipiEslestir({ amenity: 'pharmacy' })).toBeNull()
     expect(tipiEslestir({ shop: 'bakery' })).toBeNull()
+    expect(tipiEslestir({ amenity: 'bank' })).toBeNull()
     expect(tipiEslestir({})).toBeNull()
     expect(tipiEslestir(undefined)).toBeNull()
   })
 
+  /**
+   * ⚠️ Bu iki tip, eşlenmeyen tür raporuna bakılarak eklendi (12 Ağustos
+   * 2026). Rapor tam olarak bunun için var; test o kararın kodda kaldığını
+   * güvenceye alıyor.
+   */
+  it('eczane ve çocuk oyun alanı eşleniyor — rapordan gelen karar', () => {
+    expect(tipiEslestir({ amenity: 'pharmacy' })?.tip).toBe('eczane')
+    expect(tipiEslestir({ leisure: 'playground' })?.tip).toBe('oyun_alani')
+  })
+
+  /**
+   * ⚠️ Oyun alanı parktan AYRI sayılıyor: her park oyun alanı içermiyor ve
+   * çocuklu aile için ikisi aynı şey değil. Etiket sırası da önemli —
+   * `leisure=park` kuralı `leisure=playground`u yutmamalı.
+   */
+  it('oyun alanı parka düşmüyor', () => {
+    expect(tipiEslestir({ leisure: 'park' })?.tip).toBe('park')
+    expect(tipiEslestir({ leisure: 'playground' })?.tip).not.toBe('park')
+  })
+
+  /**
+   * ⚠️ Restoran bilinçli olarak dışarıda. Kararın kendisi kadar
+   * GEREKÇESİNİN yazılı olması da şart: bu liste `/veri-kaynaklari`
+   * sayfasında yayınlanıyor ve içe aktarma raporunda gösteriliyor.
+   */
+  it('restoran bilinçli dışarıda ve gerekçesi yazılı', () => {
+    expect(tipiEslestir({ amenity: 'restaurant' })).toBeNull()
+
+    const gerekce = bilincliDisaridaGerekcesi('amenity=restaurant')
+    expect(gerekce).not.toBeNull()
+    expect(gerekce!.length).toBeGreaterThan(20)
+
+    // Eşlenen bir tür bu listede olmamalı — ikisi birbirini dışlar.
+    expect(bilincliDisaridaGerekcesi('amenity=pharmacy')).toBeNull()
+  })
+
+  it('bilinçli dışarıda listesindeki hiçbir tür eşleme tablosunda değil', () => {
+    for (const disarida of BILINCLI_DISARIDA) {
+      const cakisma = ESLEME_KURALLARI.find(
+        (kural) => kural.anahtar === disarida.anahtar && kural.deger === disarida.deger,
+      )
+      expect(cakisma, `${disarida.anahtar}=${disarida.deger} hem eşleniyor hem dışarıda`).toBe(
+        undefined,
+      )
+    }
+  })
+
   it('eşleşmeyen etiketi raporlanabilir biçimde özetler', () => {
-    expect(eslenmeyenEtiket({ amenity: 'pharmacy' })).toBe('amenity=pharmacy')
+    expect(eslenmeyenEtiket({ shop: 'bakery' })).toBe('shop=bakery')
     expect(eslenmeyenEtiket({ name: 'X' })).toBe('(tanınmayan etiket)')
     expect(eslenmeyenEtiket(undefined)).toBe('(etiketsiz)')
   })
@@ -208,15 +262,50 @@ describe('overpassCevabiniCoz', () => {
   it('⭐ eşlenmeyeni SESSİZCE ATMAZ — etikete göre sayar', () => {
     const sonuc = overpassCevabiniCoz({
       elements: [
-        { type: 'node', id: 4, lat: 41, lon: 27, tags: { amenity: 'pharmacy', name: 'Eczane A' } },
-        { type: 'node', id: 5, lat: 41, lon: 27, tags: { amenity: 'pharmacy', name: 'Eczane B' } },
+        { type: 'node', id: 4, lat: 41, lon: 27, tags: { amenity: 'bank', name: 'Banka A' } },
+        { type: 'node', id: 5, lat: 41, lon: 27, tags: { amenity: 'bank', name: 'Banka B' } },
         { type: 'node', id: 6, lat: 41, lon: 27, tags: { shop: 'bakery', name: 'Fırın' } },
       ],
     })
 
     expect(sonuc.adaylar).toHaveLength(0)
-    expect(sonuc.eslenmeyenler[0]).toEqual({ etiket: 'amenity=pharmacy', sayi: 2 })
+    expect(sonuc.eslenmeyenler[0]).toEqual({ etiket: 'amenity=bank', sayi: 2 })
     expect(sonuc.eslenmeyenler[1]).toEqual({ etiket: 'shop=bakery', sayi: 1 })
+  })
+
+  /**
+   * ⚠️ Bilinçli dışarıda bırakılan türler de RAPORDA GÖRÜNÜR.
+   *
+   * Raporu okuyan kişi "bu tür neden yok?" diye sorabilmeli ve cevabı
+   * orada bulabilmeli. Sessizce filtrelenselerdi karar görünmez olurdu.
+   */
+  it('bilinçli dışarıda bırakılan tür de raporda sayılır', () => {
+    const sonuc = overpassCevabiniCoz({
+      elements: [
+        { type: 'node', id: 7, lat: 41, lon: 27, tags: { amenity: 'restaurant', name: 'Lokanta' } },
+      ],
+    })
+
+    expect(sonuc.adaylar).toHaveLength(0)
+    expect(sonuc.eslenmeyenler).toEqual([{ etiket: 'amenity=restaurant', sayi: 1 }])
+  })
+
+  it('eczane ve oyun alanı artık aday olarak geliyor', () => {
+    const sonuc = overpassCevabiniCoz({
+      elements: [
+        { type: 'node', id: 8, lat: 41, lon: 27, tags: { amenity: 'pharmacy', name: 'Eczane A' } },
+        {
+          type: 'node',
+          id: 9,
+          lat: 41,
+          lon: 27,
+          tags: { leisure: 'playground', name: 'Oyun Alanı' },
+        },
+      ],
+    })
+
+    expect(sonuc.eslenmeyenler).toEqual([])
+    expect(sonuc.adaylar.map((aday) => aday.tip).sort()).toEqual(['eczane', 'oyun_alani'])
   })
 
   it('bozuk cevapta çökmez', () => {

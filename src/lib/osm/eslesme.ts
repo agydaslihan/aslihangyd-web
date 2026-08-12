@@ -76,6 +76,14 @@ export const ESLEME_KURALLARI: readonly EslemeKurali[] = [
     tip: 'hastane',
     gerekce: 'Muayenehane / aile sağlığı merkezi',
   },
+  {
+    anahtar: 'amenity',
+    deger: 'pharmacy',
+    tip: 'eczane',
+    gerekce:
+      'Eczane — sağlık erişiminin günlük ölçüsü. Hastane "var mı yok mu" ' +
+      'sorusunu, eczane "yürüme mesafesinde mi" sorusunu yanıtlıyor.',
+  },
 
   // ── Alışveriş ──
   { anahtar: 'shop', deger: 'mall', tip: 'avm', gerekce: 'Alışveriş merkezi', onemli: true },
@@ -90,6 +98,14 @@ export const ESLEME_KURALLARI: readonly EslemeKurali[] = [
 
   // ── Yeşil alan ──
   { anahtar: 'leisure', deger: 'park', tip: 'park', gerekce: 'Park' },
+  {
+    anahtar: 'leisure',
+    deger: 'playground',
+    tip: 'oyun_alani',
+    gerekce:
+      'Çocuk oyun alanı — çocuklu aile için mahalle kalitesinin doğrudan ' +
+      'göstergesi. Parktan ayrı sayılıyor: her park oyun alanı içermiyor.',
+  },
 
   // ── Sanayi ──
   {
@@ -131,6 +147,47 @@ export const ESLEME_KURALLARI: readonly EslemeKurali[] = [
   { anahtar: 'amenity', deger: 'post_office', tip: 'resmi', gerekce: 'Postane' },
   { anahtar: 'office', deger: 'government', tip: 'resmi', gerekce: 'Kamu kurumu' },
 ]
+
+/**
+ * Bilinçli olarak eşlenmeyen türler.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN AYRI BİR LİSTE VAR
+ *
+ * Eşlenmeyen tür raporu her içe aktarmada okunuyor. O raporda çok sayıda
+ * kayıtla görünen ama **almamaya karar verdiğimiz** türler var. Karar
+ * yazılı olmasaydı aynı soru her seferinde yeniden sorulur ve her seferinde
+ * baştan tartışılırdı.
+ *
+ * Buradaki türler raporda "aktarılmadı, isterseniz ekleriz" diye değil,
+ * "bilinçli olarak dışarıda — sebebi şu" diye görünüyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export interface DisaridaKurali {
+  anahtar: string
+  deger: string
+  gerekce: string
+}
+
+export const BILINCLI_DISARIDA: readonly DisaridaKurali[] = [
+  {
+    anahtar: 'amenity',
+    deger: 'restaurant',
+    gerekce:
+      'Sinyal değeri düşük: restoran yoğunluğu mahalle değerini tek başına ' +
+      'açıklamıyor ve merkeziyeti zaten AVM, market ve ulaşım kriterleriyle ' +
+      'ölçüyoruz. Eklemek veriye gürültü katardı.',
+  },
+]
+
+const DISARIDA_ETIKETLERI = new Map(
+  BILINCLI_DISARIDA.map((kural) => [`${kural.anahtar}=${kural.deger}`, kural.gerekce]),
+)
+
+/** Bu etiket bilinçli olarak mı dışarıda? Gerekçesini döner, yoksa `null`. */
+export function bilincliDisaridaGerekcesi(etiket: string): string | null {
+  return DISARIDA_ETIKETLERI.get(etiket) ?? null
+}
 
 export interface EslemeSonucu {
   tip: PoiTipi

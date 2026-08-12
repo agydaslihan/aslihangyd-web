@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { useState, useTransition } from 'react'
 
+import { bilincliDisaridaGerekcesi } from '@/lib/osm/eslesme'
 import { osmOnizlemesiHazirla, osmSatirlariniYaz } from '@/lib/osm/eylemler'
 import type { IceAktarmaDurumu, Onizleme, YazmaSonucu } from '@/lib/osm/iceAktarma'
 import { VARSAYILAN_MARJ_METRE } from '@/lib/osm/sorgu'
@@ -130,27 +131,60 @@ function OnizlemeBolumu({
           </span>
         </div>
 
-        {/* ⚠️ Eşlenmeyen etiketler gizlenmiyor: "eczaneleri de alalım mı?"
-            sorusunu ancak neyin dışarıda kaldığını görerek sorabilirsiniz. */}
-        {onizleme.ozet.eslenmeyenler.length > 0 ? (
-          <details className="osm-eslenmeyen">
-            <summary>
-              Eşleme tablomuzda karşılığı olmayan {onizleme.ozet.eslenmeyenler.length} etiket türü —
-              aktarılmadı
-            </summary>
-            <ul>
-              {onizleme.ozet.eslenmeyenler.slice(0, 40).map((e) => (
-                <li key={e.etiket}>
-                  <code>{e.etiket}</code> — {e.sayi} kayıt
-                </li>
-              ))}
-            </ul>
+        {/* ─────────────────────────────────────────────────────────────
+            ⚠️ EŞLENMEYEN TÜR RAPORU KALICIDIR — HER İÇE AKTARMADA OKUNUR.
+
+            Açık geliyor ve boşken bile görünüyor. Kapalı bir `<details>`
+            okunmayan bir rapordur; boşken hiç görünmemesi ise "rapor
+            çalıştı ve temiz çıktı" ile "rapor hiç üretilmedi" arasındaki
+            farkı gizler.
+
+            "Eczaneleri de alalım mı?" sorusu tam olarak buradan çıktı;
+            eczane ve oyun alanı 12 Ağustos 2026'da bu listeye bakılarak
+            eklendi.
+            ───────────────────────────────────────────────────────────── */}
+        <section className="osm-eslenmeyen">
+          <h3>Eşleme tablomuzda karşılığı olmayan türler</h3>
+
+          {onizleme.ozet.eslenmeyenler.length === 0 ? (
             <p className="osm-not">
-              Bunlardan almak istediğiniz bir tür varsa söyleyin; eşleme tablosuna eklenir ve{' '}
-              <Link href="/veri-kaynaklari">/veri-kaynaklari</Link> sayfasında yayınlanır.
+              Bu bölgede gelen her etiketin eşleme tablomuzda karşılığı vardı — dışarıda kalan tür
+              yok.
             </p>
-          </details>
-        ) : null}
+          ) : (
+            <>
+              <ul>
+                {onizleme.ozet.eslenmeyenler.slice(0, 40).map((e) => {
+                  const gerekce = bilincliDisaridaGerekcesi(e.etiket)
+                  return (
+                    <li key={e.etiket}>
+                      <code>{e.etiket}</code> — {e.sayi} kayıt
+                      {gerekce !== null ? (
+                        <>
+                          {' '}
+                          <strong>· bilinçli olarak dışarıda:</strong> {gerekce}
+                        </>
+                      ) : null}
+                    </li>
+                  )
+                })}
+              </ul>
+
+              {onizleme.ozet.eslenmeyenler.length > 40 ? (
+                <p className="osm-not">
+                  İlk 40 tür gösteriliyor; toplam {onizleme.ozet.eslenmeyenler.length} tür var.
+                </p>
+              ) : null}
+
+              <p className="osm-not">
+                Bunlardan almak istediğiniz bir tür varsa söyleyin; eşleme tablosuna eklenir ve{' '}
+                <Link href="/veri-kaynaklari">/veri-kaynaklari</Link> sayfasında yayınlanır.
+                &quot;Bilinçli olarak dışarıda&quot; işaretli olanların kararı zaten verilmiş —
+                gerekçesi yanında yazıyor.
+              </p>
+            </>
+          )}
+        </section>
 
         {onizleme.ozet.adsizAtlandi > 0 || onizleme.ozet.konumsuzAtlandi > 0 ? (
           <p className="osm-not">

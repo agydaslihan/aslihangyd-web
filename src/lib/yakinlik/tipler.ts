@@ -88,7 +88,9 @@ export const CEVRE_GOSTERIM_SIRASI: readonly PoiTipi[] = [
   'okul',
   'avm',
   'market',
+  'eczane',
   'park',
+  'oyun_alani',
   'durak',
   'resmi',
 ] as const

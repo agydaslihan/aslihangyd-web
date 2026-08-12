@@ -2,7 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { POI_TIPLERI, type PoiTipi } from '@/collections/IlgiNoktalari'
-import { ESLEME_KURALLARI } from '@/lib/osm/eslesme'
+import { BILINCLI_DISARIDA, ESLEME_KURALLARI } from '@/lib/osm/eslesme'
 import { mutlakAdres } from '@/lib/site'
 
 export const metadata: Metadata = {
@@ -131,9 +131,26 @@ export default function VeriKaynaklariSayfasi() {
           </div>
 
           <p className="text-metin-3 text-govde-kucuk mt-4">
-            Bu listede olmayan etiketler (eczane, fırın, banka gibi) içe aktarılmıyor. Karşılığı
-            olmayan kayıtlar sessizce atılmıyor; içe aktarma raporunda sayılarıyla listeleniyor.
+            Bu listede olmayan etiketler (fırın, banka, kuaför gibi) içe aktarılmıyor. Karşılığı
+            olmayan kayıtlar sessizce atılmıyor; içe aktarma raporunda sayılarıyla listeleniyor ve o
+            rapor her içe aktarmada okunuyor — eczane ve çocuk oyun alanı tam olarak böyle eklendi.
           </p>
+
+          <h3 className="mt-6 font-sans text-govde font-medium">Bilinçli olarak almadıklarımız</h3>
+          <p className="text-metin-2 mt-1.5 leading-relaxed">
+            Raporda düzenli görünen ama almamaya karar verdiğimiz türler. Kararı burada yazıyoruz ki
+            hem siz hem biz her seferinde baştan tartışmayalım.
+          </p>
+          <ul className="text-metin-2 mt-2 list-disc space-y-1 pl-5 leading-relaxed">
+            {BILINCLI_DISARIDA.map((kural) => (
+              <li key={`${kural.anahtar}=${kural.deger}`}>
+                <code className="text-mikro">
+                  {kural.anahtar}={kural.deger}
+                </code>{' '}
+                — {kural.gerekce}
+              </li>
+            ))}
+          </ul>
         </section>
 
         <section className="mt-10">
