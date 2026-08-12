@@ -1,7 +1,7 @@
 import { APIError } from 'payload'
 import type { CollectionConfig } from 'payload'
 
-import { herkesOlusturur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOlusturur, yalnizcaPanel, yalnizcaYoneticiSiler } from '@/lib/erisim'
 import { talepSkorla } from '@/lib/crm/skorlama'
 import { saklamaBitisi } from '@/lib/kvkk/saklama'
 import { TALEP_DURUMLARI, TALEP_KAYNAKLARI, TALEP_TIPLERI } from '@/lib/secenekler'
@@ -25,7 +25,8 @@ export const Talepler: CollectionConfig = {
     create: herkesOlusturur,
     read: yalnizcaPanel,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   admin: {

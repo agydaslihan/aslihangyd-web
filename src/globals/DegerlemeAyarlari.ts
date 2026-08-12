@@ -1,7 +1,7 @@
 import type { GlobalConfig } from 'payload'
 
 import { BINA_DURUMLARI, KAT_TIPLERI } from '@/lib/degerleme/motor'
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 
 /**
  * Değerleme modeli katsayıları.
@@ -25,7 +25,8 @@ export const DegerlemeAyarlari: GlobalConfig = {
     // Motor istemcide çalışıyor; katsayılar zaten sonuç ekranında tek tek
     // gösteriliyor. Gizlenecek bir şey yok, tersine şeffaflık gereği.
     read: herkesOkur,
-    update: yalnizcaPanel,
+    // ⚠️ Yalnızca yönetici: değerleme katsayıları — tahmin aralığını belirler.
+    update: yalnizcaYonetici,
   },
 
   admin: {

@@ -2466,6 +2466,108 @@ Geçerli bir `ANTHROPIC_API_KEY` olmadığı için **başarılı bir çağrını
 
 ---
 
+## Rol tabanlı yetkilendirme
+
+Teknik borç listesindeki "`Kullanicilar.rol` alanı var ama erişim
+kurallarına bağlı değil" maddesi kapatıldı. Bu bir güvenlik açığıydı:
+`rol` alanı **zorunlu** ve doluydu ama hiçbir yerde okunmuyordu — giriş
+yapan herkes yönetici kadar yetkiliydi.
+
+### İki rol
+
+| | yonetici | danisman |
+| --- | --- | --- |
+| Panele giriş | ✅ | ✅ |
+| İlan, mahalle, POI, medya oluştur/güncelle | ✅ | ✅ |
+| Talep, değerleme, danışman başvurusu güncelle | ✅ | ✅ |
+| Gözlem gir (haftalık endeks rutini) | ✅ | ✅ |
+| **Kayıt silme (her koleksiyon)** | ✅ | ❌ |
+| **Vergi parametreleri** | ✅ | ❌ |
+| **Hukuki sayfalar** (KVKK, gizlilik, kullanım koşulları) | ✅ | ❌ |
+| **Kurumsal bilgiler** (yetki belgesi no) | ✅ | ❌ |
+| **Endeks / değerleme ayarları** | ✅ | ❌ |
+| **Site ve portföy vitrini, altbilgi** | ✅ | ❌ |
+| **Kullanıcı oluştur / sil / rol değiştir** | ✅ | ❌ |
+| Kullanıcı listesi | herkesi görür | yalnızca kendini |
+| Kendi şifresi / telefonu | ✅ | ✅ |
+
+### Kararlar ve gerekçeleri
+
+**1. Emin olmadığım her yetki yöneticide kaldı.** ⭐
+
+Aslıhan yönetici olduğu için danışmanı kısıtlamanın ona maliyeti yok. İki
+yönde hata yapmanın maliyeti ise simetrik değil:
+
+- Fazla kısıtladıysak → danışman "şuraya erişemiyorum" der, açarız.
+- Az kısıtladıysak → yanlış vergi oranı yayınlanır, ilan silinir, biri
+  kendini yönetici yapar. Bunlar geri alınırken kolay değil ve bir kısmı
+  fark bile edilmez.
+
+Gevşetilebilecek yetkilerin listesi SENDEN-BEKLENENLER.md'de.
+
+**2. Silme her yerde yöneticide.**
+
+Silme bu projede diğer işlemlerden farklı: bir ilan silindiğinde EİDS
+kayıtları (taşınmaz numarası, yetki tarihleri) da gider ve bunlar yasal
+dayanak. Bir gözlem silindiğinde endeksin geçmişi değişir. **Güncelleme
+hatası düzeltilir, silme hatası düzeltilmez.**
+
+**3. Üç yetki yükseltme kapısı birlikte kapatıldı.**
+
+Biri açık kalsaydı diğer bütün kısıtlamalar anlamsız olurdu:
+- `create` yöneticide değilse → danışman kendine yönetici hesabı açar
+- `rol` alanı kilitli değilse → danışman kendi kaydından kendini yükseltir
+  (kendi kaydını güncelleyebilmesi gerekiyor: şifre, telefon)
+- `delete` yöneticide değilse → danışman tek yöneticiyi siler
+
+**4. İlk kullanıcı daima yönetici — kilitlenme koruması.** ⚠️
+
+Payload'ın ilk kullanıcı akışı erişim denetimini atlar ve `rol` alanını
+varsayılan "danisman" ile açar. Aslıhan kurulumda bu alanı fark etmezse
+**kendi panelinden kilitlenirdi** ve onu düzeltebilecek bir yönetici de
+olmazdı. Kural saf fonksiyon olarak (`yeniKullanicininRolu`) yazıldı ki
+test edilebilsin — bu hata üretimde, ilk kurulum anında ortaya çıkardı.
+
+**5. Rolü çözülemeyen kullanıcı yönetici SAYILMAZ.**
+
+Eski bir oturumda `rol` gelmiyorsa "herhalde yöneticidir" varsayımı
+yetkilendirmeyi sessizce kapatmanın en yaygın yolu. Testi var.
+
+### Testin yakaladığı gerçek hata
+
+`yeniKullanicininRolu` fonksiyonuna kullanıcı **nesnesinden** rol okuyan
+yardımcı verilmişti; oysa fonksiyona ham **rol dizesi** geliyor. Sonuç:
+fonksiyon her rolü `null` çözüyor ve **her yeni kullanıcıyı sessizce
+danışmana düşürüyordu.** Aslıhan hiç yönetici meslektaş ekleyemezdi ve
+hata mesajı da almazdı — kayıt "başarıyla" oluşurdu.
+
+Entegrasyon testindeki "yönetici vergi parametresi oluşturabilir" satırı
+yakaladı: test yöneticisi aslında danışman olarak yaratılmıştı.
+
+### Doğrulama
+
+- **5 birim testi** — rol çözümleme, ilk kullanıcı kuralı, geçersiz rolün
+  yöneticiye değil danışmana düşmesi
+- **14 entegrasyon testi**, gerçek veritabanına karşı, `overrideAccess:
+  false` ile (panelin kullandığı yolun aynısı). İki yönlü: hem yasakların
+  tuttuğunu hem danışmanın günlük işini yapabildiğini kanıtlıyor.
+- **Panel duman testi:** gerçek danışman hesabıyla giriş yapıldı; `/admin`,
+  ilanlar, vergi parametreleri, kullanıcılar ve kurumsal bilgiler
+  sayfalarının hepsi 200 döndü — fazla sıkı kural paneli çökertmiyor.
+- **HTTP duman testi:** REST API üzerinden vergi parametresi oluşturma,
+  kullanıcı oluşturma ve kurumsal bilgi güncelleme **403** döndü; kullanıcı
+  listesi yalnızca kendi kaydını verdi. Kural yalnızca Local API'de değil,
+  danışmanın gerçekten kullandığı yolda da bağlı.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1118 test) ✅ `build` ✅
+
+### Göç gerekmedi
+
+Şema değişmedi — `rol` alanı zaten vardı. Geliştirme veritabanındaki tek
+kullanıcı zaten `yonetici`, üretim veritabanında hiç kullanıcı yok
+(ilk kurulum yapılmamış). Kimse kilitlenmiyor.
+
+---
+
 ## Bilinen eksikler ve teknik borç
 
 | Konu | Etki | Not |
@@ -2482,7 +2584,7 @@ Geçerli bir `ANTHROPIC_API_KEY` olmadığı için **başarılı bir çağrını
 | PostGIS `tiger`/`topology` şemaları | Disk | Düşük öncelik |
 | `ilgi_noktalari.konum` üzerinde GiST indeks yok | Ölçekte sorgu süresi | Bilinçli. Payload'ın ürettiği göç, elle eklenen indeksi sessizce `DROP` edebilir; kazanç bu ölçekte ölçülemez. Tetik: 10.000+ POI kaydı. |
 | Sürüş süresi (dakika) yok | "OSB'ye 10 dk" denemiyor | Rotalama servisi (OSRM) + yol ağı verisi gerekir. Mesafeler kuş uçuşu olarak, böyle etiketlenerek gösteriliyor. |
-| Rol tabanlı yetkilendirme | — | `Kullanicilar.rol` alanı var ama henüz erişim kurallarına bağlı değil; CRM fazında |
+| ~~Rol tabanlı yetkilendirme~~ | ✅ | Kapatıldı — `yonetici` / `danisman` ayrımı erişim kurallarına bağlandı. Hangi yetkinin nerede olduğu "Rol tabanlı yetkilendirme" başlığında. |
 | Gizli portföy modülü | ✅ | Faz 2B'de tamamlandı |
 | Eşleştirme profili boş | Test sonuç üretmez | `Mahalleler → Eşleştirme profili` 4 alan doldurulmalı; SENDEN-BEKLENENLER md. 8 |
 | Radar en az 4 mahalle ister | Sayfa boş durum gösterir | Verisi olan mahalle sayısı 4'e ulaşınca kendiliğinden açılır |

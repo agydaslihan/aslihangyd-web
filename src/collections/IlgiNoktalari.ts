@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaPanel, yalnizcaYoneticiSiler } from '@/lib/erisim'
 
 /**
  * İlgi noktaları (POI) — okul, sağlık, market, park, sanayi, ulaşım.
@@ -42,7 +42,8 @@ export const IlgiNoktalari: CollectionConfig = {
     read: herkesOkur,
     create: yalnizcaPanel,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   admin: {

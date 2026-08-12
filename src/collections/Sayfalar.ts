@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { yalnizcaPanel, yayimlananlariHerkesOkur } from '@/lib/erisim'
+import { yalnizcaYonetici, yayimlananlariHerkesOkur } from '@/lib/erisim'
 
 import { seoAlanlari, slugAlani } from './ortakAlanlar'
 
@@ -18,9 +18,10 @@ export const Sayfalar: CollectionConfig = {
 
   access: {
     read: yayimlananlariHerkesOkur,
-    create: yalnizcaPanel,
-    update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    create: yalnizcaYonetici,
+    update: yalnizcaYonetici,
+    // ⚠️ Yalnızca yönetici: KVKK, gizlilik ve kullanım koşulları metinleri burada; hukuki sonuç doğurur.
+    delete: yalnizcaYonetici,
   },
 
   admin: {

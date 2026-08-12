@@ -6,7 +6,7 @@ import {
   ILAN_DURUMLARI,
   ILAN_DURUM_ETIKETLERI,
 } from '@/lib/eids'
-import { yalnizcaPanel, yayindakileriHerkesOkur } from '@/lib/erisim'
+import { yalnizcaPanel, yalnizcaYoneticiSiler, yayindakileriHerkesOkur } from '@/lib/erisim'
 import {
   BINA_KULLANIM_DURUMLARI,
   ILAN_KATEGORILERI,
@@ -37,7 +37,8 @@ export const Ilanlar: CollectionConfig = {
     read: yayindakileriHerkesOkur,
     create: yalnizcaPanel,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   admin: {

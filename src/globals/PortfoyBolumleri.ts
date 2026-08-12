@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 import { OLCUTLER } from '@/lib/portfoy/bolumler'
 
 /**
@@ -22,7 +22,8 @@ export const PortfoyBolumleri: GlobalConfig = {
 
   access: {
     read: herkesOkur,
-    update: yalnizcaPanel,
+    // ⚠️ Yalnızca yönetici: portföy tema sıraları — editoryal karar.
+    update: yalnizcaYonetici,
   },
 
   admin: {

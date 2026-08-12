@@ -140,6 +140,21 @@ hesaplar — aksi halde adres çubuğu düzenlenerek sahte rapor üretilebilirdi
 9. Mahalle karşılaştırma
 10. CTA (WhatsApp + değerleme)
 
+## Roller ve yetkilendirme
+İki rol var, ikisi de panele girer:
+- **yonetici** — her şey
+- **danisman** — günlük portföy/talep işi; SİLEMEZ, ayarlara ve hukuki
+  metinlere dokunamaz, kullanıcı yönetemez
+
+Emin olunmayan yetki YÖNETİCİDE kalır: fazla kısıtlama düzeltilebilir,
+az kısıtlama fark edilmeden zarar verir.
+
+⚠️ Üç kapı birlikte kapalı tutulmalı, biri açılırsa diğerleri anlamsızlaşır:
+kullanıcı `create`, `rol` alanı (alan seviyesi), kullanıcı `delete`.
+⚠️ Sistemdeki ilk kullanıcı daima yönetici olur (`yeniKullanicininRolu`) —
+yoksa kurulumu yapan kişi kendi panelinden kilitlenir.
+⚠️ Rolü çözülemeyen kullanıcı yönetici SAYILMAZ.
+
 ## Kod standartları
 - TypeScript strict, `any` yasak (gerekçesiz)
 - Server Components varsayılan; 'use client' sadece gerektiğinde

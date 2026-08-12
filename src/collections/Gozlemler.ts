@@ -7,7 +7,7 @@ import {
   ODA_TIPLERI,
 } from '@/lib/endeks/tipler'
 import { m2FiyatiHesapla } from '@/lib/endeks/kalite'
-import { yalnizcaPanel } from '@/lib/erisim'
+import { yalnizcaPanel, yalnizcaYoneticiSiler } from '@/lib/erisim'
 
 /**
  * Gözlemler — Çorlu Konut Endeksi'nin ham verisi.
@@ -32,7 +32,8 @@ export const Gozlemler: CollectionConfig = {
     read: yalnizcaPanel,
     create: yalnizcaPanel,
     update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    // ⚠️ Silme yalnızca yöneticide — bkz. lib/erisim.ts gerekçesi.
+    delete: yalnizcaYoneticiSiler,
   },
 
   admin: {

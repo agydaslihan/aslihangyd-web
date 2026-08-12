@@ -1,7 +1,7 @@
 import { revalidatePath } from 'next/cache'
 import type { GlobalConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 import { BOLUMLER } from '@/lib/siteBolumleri'
 
 /**
@@ -23,7 +23,8 @@ export const SiteBolumleri: GlobalConfig = {
 
   access: {
     read: herkesOkur,
-    update: yalnizcaPanel,
+    // ⚠️ Yalnızca yönetici: ana sayfa vitrini — editoryal karar.
+    update: yalnizcaYonetici,
   },
 
   admin: {

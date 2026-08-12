@@ -1,6 +1,6 @@
 import type { CollectionConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 
 /** Altbilgi sütunları — şartnamedeki dört sütun. */
 export const ALTBILGI_SUTUNLARI = [
@@ -40,9 +40,10 @@ export const AltbilgiBaglantilari: CollectionConfig = {
 
   access: {
     read: herkesOkur,
-    create: yalnizcaPanel,
-    update: yalnizcaPanel,
-    delete: yalnizcaPanel,
+    create: yalnizcaYonetici,
+    update: yalnizcaYonetici,
+    // ⚠️ Yalnızca yönetici: sitenin altbilgisi — editoryal/kurumsal karar.
+    delete: yalnizcaYonetici,
   },
 
   defaultSort: 'siraNo',

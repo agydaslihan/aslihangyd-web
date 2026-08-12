@@ -1,6 +1,6 @@
 import type { GlobalConfig } from 'payload'
 
-import { herkesOkur, yalnizcaPanel } from '@/lib/erisim'
+import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 
 /**
  * "Danışman ol" sayfasının içeriği.
@@ -19,7 +19,8 @@ export const DanismanOl: GlobalConfig = {
 
   access: {
     read: herkesOkur,
-    update: yalnizcaPanel,
+    // ⚠️ Yalnızca yönetici: danışman ilanı metni — kurumsal karar.
+    update: yalnizcaYonetici,
   },
 
   admin: {
