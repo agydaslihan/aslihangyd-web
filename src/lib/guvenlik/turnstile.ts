@@ -29,8 +29,23 @@ export interface TurnstileSonucu {
   hata: string | null
 }
 
+/**
+ * Turnstile site anahtarı — widget'a verilecek, herkese açık değer.
+ *
+ * ⚠️ ÖN EKSİZ VE BU BİLİNÇLİ.
+ *
+ * Anahtar ziyaretçiye görünür ama `NEXT_PUBLIC_` öneki **gerektirmez.**
+ * Önek, değeri derleme anında pakete gömer; üretim imajımız bu değişkenler
+ * tanımlı değilken derlendiği için anahtar yayında boş dizeydi ve
+ * `turnstileEtkinMi()` daima `false` dönüyordu — yani danışman başvuru
+ * formu üretimde bot korumasız çalışıyordu.
+ *
+ * ⚠️ Bu fonksiyon SUNUCUDA çağrılır; değeri istemci bileşenine prop olarak
+ * iner (bkz. `app/(site)/danisman-ol/page.tsx` → `BasvuruFormu`).
+ * Gerekçenin tamamı `lib/harita/sunucu.ts` içinde.
+ */
 export function turnstileSiteAnahtari(): string {
-  return process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI ?? ''
+  return process.env.TURNSTILE_SITE_ANAHTARI ?? ''
 }
 
 function gizliAnahtar(): string {

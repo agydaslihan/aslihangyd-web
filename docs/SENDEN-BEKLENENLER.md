@@ -10,6 +10,38 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 ## Acil (yayın engelleyici)
 
+- [ ] **Sunucudaki `.env` dosyasında değişken adlarını güncelle** — bu
+      değişiklik yayına çıktıktan SONRA, kabı yeniden başlatmadan önce
+
+      Dokuz değişkenin adı değişti. Eski adlar (`NEXT_PUBLIC_` önekli)
+      **zaten çalışmıyordu**: Next.js onları derleme anında imaja gömüyor ve
+      imaj bu değerler tanımsızken derleniyordu. Yani bugün yayında harita
+      açılmıyor, bot koruması kapalı, analitik yüklenmiyor ve drone
+      videoları "yapılandırılmadı" diyor. Yeni adlar çalışma zamanında
+      okunuyor — artık `.env`'i değiştirip kabı yeniden başlatmak yetiyor.
+
+      | Eski ad | Yeni ad |
+      | --- | --- |
+      | `NEXT_PUBLIC_MAPTILER_API_KEY` | `MAPTILER_ANAHTARI` |
+      | `NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI` | `TURNSTILE_SITE_ANAHTARI` |
+      | `NEXT_PUBLIC_WHATSAPP_NUMARA` | `WHATSAPP_NUMARA` |
+      | `NEXT_PUBLIC_ILETISIM_TELEFON` | `ILETISIM_TELEFON` |
+      | `NEXT_PUBLIC_ILETISIM_EPOSTA` | `ILETISIM_EPOSTA` |
+      | `NEXT_PUBLIC_UMAMI_URL` | `UMAMI_URL` |
+      | `NEXT_PUBLIC_UMAMI_SITE_ID` | `UMAMI_SITE_ID` |
+      | `NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME` | `BUNNY_STREAM_CDN_HOSTNAME` |
+      | `NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID` | (silin — `BUNNY_STREAM_LIBRARY_ID` ile birleşti) |
+
+      `NEXT_PUBLIC_SERVER_URL` kalıyor; yanındaki `SITE_ADRESI` ile aynı
+      değeri taşımaya devam etmeli.
+
+      Doğrulama (kabı yeniden başlattıktan sonra):
+      ```bash
+      curl -s http://127.0.0.1:3000/harita | grep -c api.maptiler.com   # 1+ olmalı
+      ```
+      Olmazsa: `/harita` boş durumda kalır ve OSM'den içe aktardığımız ilgi
+      noktalarının görüneceği başka yer yok.
+
 - [ ] **Taşınmaz Ticareti Yetki Belgesi numarası**
       Nereye: Payload admin → Ayarlar → Kurumsal Bilgiler → Yetki Belgesi No
       Olmazsa: `/hakkimizda` sayfasında zorunlu yasal bilgi eksik kalır, ilan
@@ -26,11 +58,13 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       içerik metinlerini ben yazmıyorum (CLAUDE.md kural 3).
 
 - [ ] **WhatsApp iş numarası** (uluslararası biçimde, örn. 905XXXXXXXXX)
-      Nereye: `.env` → `NEXT_PUBLIC_WHATSAPP_NUMARA`
+      Nereye: Payload admin → Ayarlar → Kurumsal Bilgiler → WhatsApp
+              (yedek olarak `.env` → `WHATSAPP_NUMARA`)
       Olmazsa: Tüm WhatsApp CTA'ları gizlenir (kırılmaz ama dönüşüm kaybı).
 
 - [ ] **İletişim e-postası ve telefon**
-      Nereye: `.env` → `NEXT_PUBLIC_ILETISIM_EPOSTA`, `NEXT_PUBLIC_ILETISIM_TELEFON`
+      Nereye: Payload admin → Ayarlar → Kurumsal Bilgiler
+              (yedek olarak `.env` → `ILETISIM_EPOSTA`, `ILETISIM_TELEFON`)
 
 ## Önemli (içerik eksikliği)
 
@@ -140,8 +174,13 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 - [ ] **MapTiler API anahtarı** (Faz 2)
       Nereden: maptiler.com → hesap aç → Account → API Keys
-      Nereye: `.env` → `NEXT_PUBLIC_MAPTILER_API_KEY`
-      Olmazsa: `/harita` sayfası ve mini haritalar çalışmaz.
+      Nereye: `.env` → `MAPTILER_ANAHTARI`
+      Olmazsa: `/harita` sayfası boş durum gösterir — OSM'den içe aktarılan
+      ilgi noktalarının göründüğü tek yer orasıdır.
+      ⚠️ Anahtarı aldıktan sonra MapTiler panelinden **alan adı kısıtı**
+      koyun (Account → API Keys → anahtar → Allowed origins →
+      `aslihangyd.com`). Anahtar harita isteklerinin içinde tarayıcıya
+      gider ve gizlenemez; tek gerçek koruma bu kısıttır.
 
 - [ ] **Güncel vergi/harç oranları** (Faz 2 — hesaplayıcılar)
       Tapu harcı oranı, döner sermaye ücreti, DASK tarifesi, kira geliri
@@ -153,7 +192,48 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 - [ ] **POI verisi** — okul, hastane, market, park, sanayi, durak konumları
       Nereye: Payload admin → İlgi Noktaları
-      Alternatif: OpenStreetMap'ten toplu içe aktarma yazabilirim, söyle.
+      ⬆️ **OpenStreetMap içe aktarma HAZIR** (senin kararın).
+      Nerede: Payload admin → sol menü → **POI içe aktar (OpenStreetMap)**
+
+      ⚠️ **Önce mahalle merkezlerini gir** (yukarıdaki madde). Arama alanı
+      onlardan hesaplanıyor — Çorlu'nun koordinatlarını koda gömmedim ki
+      yeni mahalle eklediğinde alan kendiliğinden büyüsün.
+
+      Akış: payı seç → **Önizle** → listeyi gör → aktar.
+
+      Gerçek ölçüm (3 km pay ile): **277 nokta** eşleşti. Elle girsen
+      haftalar sürerdi.
+
+      ⚠️ Elle düzelttiğin kayıt bir daha ezilmez. Bir noktanın adını ya da
+      konumunu düzelttiğinde kayıt işaretlenir, sonraki içe aktarmalar onu
+      atlar ve raporda "korundu" der.
+
+      ⚠️ Atıf zorunlu (ODbL): içe aktarılan noktalar sitede "© OpenStreetMap
+      katkıcıları" ile gösteriliyor, lisans ve kategori eşlemesi
+      `/veri-kaynaklari` sayfasında yayınlanıyor. Bu ibareleri kaldırma.
+
+- [ ] **Eşleme tablosuna eklemek istediğin tür var mı?** ⬅️ *karar bekliyor*
+
+      İçe aktarma, eşleme tablomuzda karşılığı olmayanları da sayıyor ve
+      önizlemede gösteriyor. Çorlu'da (3 km pay) dışarıda kalanların
+      ilk sıraları:
+
+      | OSM etiketi | Adet | Bizde karşılığı |
+      | --- | --- | --- |
+      | leisure=playground (oyun alanı) | 60 | yok |
+      | amenity=parking (otopark) | 50 | yok |
+      | leisure=pitch (spor sahası) | 42 | yok |
+      | amenity=restaurant | 34 | yok |
+      | amenity=cafe | 29 | yok |
+      | amenity=place_of_worship (cami vb.) | 27 | yok |
+      | amenity=pharmacy (eczane) | 21 | yok |
+
+      Bence **eczane** ve **oyun alanı** sosyal donatı sayılabilir; ikisi de
+      "yürüme mesafesinde ne var" sorusuna cevap veriyor. Restoran/kafe daha
+      çok yaşam tarzı göstergesi — istersen ayrı bir tip açarız.
+
+      Söyle, eşleme tablosuna eklerim ve `/veri-kaynaklari` sayfasında
+      yayınlanır.
 
       ⬆️ **Bu madde artık daha değerli.** Yakınlık sorguları yazıldı; her
       kayıt üç yeri birden besliyor:
@@ -183,7 +263,7 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       Olmazsa: Lead geldiğinde sana e-posta gitmez (kayıt yine de düşer).
 
 - [ ] **Umami analitik kurulumu** (Faz 2)
-      Nereye: `.env` → `NEXT_PUBLIC_UMAMI_URL`, `NEXT_PUBLIC_UMAMI_SITE_ID`
+      Nereye: `.env` → `UMAMI_URL`, `UMAMI_SITE_ID`
       Not: Çerez onayı alınmadan yüklenmez (CLAUDE.md kural 8).
 
 - [ ] **Sunucu / deploy erişimi** (Faz 1.10 — CI/CD)
@@ -236,21 +316,18 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       bu aktarımın eklenmesi gerekiyor ve o metni ben yazmıyorum**
       (CLAUDE.md kural 3). Metin hazır olmadan anahtarı üretime koyma.
 
-- [ ] **AI arama için model tercihi — maliyet kararı senin** ⬅️ *karar bekliyor*
-      Nereye: `.env` → `ANTHROPIC_ARAMA_MODELI` (boş bırakırsan `claude-opus-5`)
+- [x] ~~**AI arama için model tercihi**~~ — **ERTELENDİ** (senin kararın).
+      Sebep maliyet değil KVKK. Avukat onayı sonrası konuşacağız; o zamana
+      kadar `.env` → `ANTHROPIC_ARAMA_MODELI` boş kalabilir.
+      Hatırlatma: hız sınırı dakikada 10 arama — betikle fatura şişirmeyi
+      durdurur, gerçek ziyaretçiyi rahatsız etmez.
 
-      Her arama ücretli bir API isteği. Yaptığı iş dar ve mekanik: kısa bir
-      cümleyi filtre alanlarına çevirmek — taşınmaz yorumlamıyor, metin
-      yazmıyor. Bu tür bir iş daha küçük bir modelle de yapılabilir ve
-      arama başına maliyet doğrudan bu seçime bağlı.
-
-      Varsayılanı en yetenekli modele koydum çünkü doğruluk burada
-      dönüşüme etki ediyor; ama bunu senin adına maliyet kararı olarak
-      veremem. Anahtar geldiğinde iki modeli aynı cümlelerle deneyip
-      farkı birlikte görebiliriz.
-
-      Ayrıca hız sınırı koydum: dakikada 10 arama. Gerçek ziyaretçiyi
-      rahatsız etmez, betikle fatura şişirmeyi durdurur.
+- [ ] **AI arama KVKK maddesi — avukata ver** ⚠️ *özelliği açan tek şey bu*
+      Ver: `docs/AI-ARAMA-KVKK-NOTU.md` (hangi veri, nereye, ne amaçla
+      gidiyor; ne saklanıyor; ziyaretçi ne görüyor; beş somut soru)
+      Al: aydınlatma metnine eklenecek madde + "açık rıza gerekir mi" cevabı
+      Sonra: Sayfalar'a metni gir → `.env`'e anahtarı koy → Site
+      Bölümleri'nden aç. Üçü birden yapılmadan kutu görünmez.
 
 - [x] ~~**Bakım anahtarı**~~ — `.env`'e eklendi.
 

@@ -10,6 +10,9 @@ import * as migration_20260806_094944_faz_d_site_bolumleri from './20260806_0949
 import * as migration_20260807_112409_bakim_durumu from './20260807_112409_bakim_durumu';
 import * as migration_20260808_074503_gorsel_butcesi from './20260808_074503_gorsel_butcesi';
 import * as migration_20260812_172431_onay_bekliyor_durumu from './20260812_172431_onay_bekliyor_durumu';
+import * as migration_20260812_174328_ai_arama_bolumu from './20260812_174328_ai_arama_bolumu';
+import * as migration_20260812_175841_osm_poi_kaynak from './20260812_175841_osm_poi_kaynak';
+import * as migration_20260812_203042_poi_eczane_oyun_alani from './20260812_203042_poi_eczane_oyun_alani';
 
 export const migrations = [
   {
@@ -70,6 +73,21 @@ export const migrations = [
   {
     up: migration_20260812_172431_onay_bekliyor_durumu.up,
     down: migration_20260812_172431_onay_bekliyor_durumu.down,
-    name: '20260812_172431_onay_bekliyor_durumu'
+    name: '20260812_172431_onay_bekliyor_durumu',
+  },
+  {
+    up: migration_20260812_174328_ai_arama_bolumu.up,
+    down: migration_20260812_174328_ai_arama_bolumu.down,
+    name: '20260812_174328_ai_arama_bolumu',
+  },
+  {
+    up: migration_20260812_175841_osm_poi_kaynak.up,
+    down: migration_20260812_175841_osm_poi_kaynak.down,
+    name: '20260812_175841_osm_poi_kaynak',
+  },
+  {
+    up: migration_20260812_203042_poi_eczane_oyun_alani.up,
+    down: migration_20260812_203042_poi_eczane_oyun_alani.down,
+    name: '20260812_203042_poi_eczane_oyun_alani'
   },
 ];

@@ -77,6 +77,19 @@ derinleştirme (PDF rapor, kişiye özel analiz) için istenir.
 Hiçbir API anahtarı, şifre, token koda girmez. Hepsi .env.
 .env dosyaları .gitignore'da. Örnekler .env.example'da placeholder ile.
 
+### 7b. NEXT_PUBLIC_ yasak (SITE_ADRESI yedeği hariç)
+Next.js `NEXT_PUBLIC_*` değişkenlerini DERLEME ANINDA gömer. Üretim imajı
+CI'da, bu değişkenler tanımsızken derleniyor → değer yayında BOŞ olur ve
+hata vermez. 12 Ağustos 2026'da dokuz değişken birden bu yüzden ölüydü
+(harita, Turnstile, Umami, Bunny, iletişim yedekleri).
+
+→ Yapılandırma ön eksiz adla, SUNUCUDA, çalışma zamanında okunur.
+→ İstemci bileşenine prop olarak iner. Örnek: `lib/harita/sunucu.ts`.
+→ Sunucu-istemci sınırı `import 'server-only'` ile derleme hatasına
+  çevrilir; ön eksiz değişken istemcide sessizce `undefined` olur.
+→ Kodun okuduğu her değişken `compose.prod.yml` ile kaba ulaşmalı.
+→ İkisi de `src/lib/ortam.test.ts` içinde test edilir. Muafiyet ekleme.
+
 ### 8. Çerez onayı
 Onay alınmadan analitik/pazarlama scripti YÜKLENMEZ. Banner göstermek
 yetmez; script enjeksiyonu onaya bağlı olmalı.
@@ -154,6 +167,29 @@ kullanıcı `create`, `rol` alanı (alan seviyesi), kullanıcı `delete`.
 ⚠️ Sistemdeki ilk kullanıcı daima yönetici olur (`yeniKullanicininRolu`) —
 yoksa kurulumu yapan kişi kendi panelinden kilitlenir.
 ⚠️ Rolü çözülemeyen kullanıcı yönetici SAYILMAZ.
+
+## OpenStreetMap POI verisi
+⚠️ ODbL — ATIF ZORUNLU. POI verisinin göründüğü her yerde "© OpenStreetMap
+katkıcıları"; lisans ve kategori eşlemesi /veri-kaynaklari sayfasında.
+Bu ibareleri kaldırma.
+
+⚠️ Elle düzeltilen kayıt bir daha EZİLMEZ (`elleDuzenlendi`). İçe aktarıcı
+kendi yazmalarında `context.osmIceAktarma = true` gönderir; bu olmadan
+kanca içe aktarıcıyı insan sanar ve ikinci içe aktarma hiçbir şeyi
+güncelleyemez.
+⚠️ Arama alanı mahalle merkezlerinden türetilir — Çorlu koordinatı koda
+gömülmez.
+⚠️ Bu, kural 6'daki scraping yasağıyla çelişmez: OSM açık veridir ve
+Overpass API resmî arayüzdür.
+
+## AI doğal dil arama — KAPALI
+⚠️ Varsayılan KAPALI ve bu bir KVKK kararı, teknik değil: ziyaretçinin
+yazdığı metin Anthropic'in (ABD) sunucularına gidiyor — yurt dışına veri
+aktarımı. Aydınlatma metni avukattan gelmeden AÇILMAZ.
+
+İki koşul birden: Site Bölümleri → `ai_arama` açık VE `ANTHROPIC_API_KEY`
+tanımlı. Ham sorgu hiçbir yere yazılmaz (ne veritabanı ne günlük).
+Veri akışı tarifi: docs/AI-ARAMA-KVKK-NOTU.md
 
 ## İlan yayın onayı
 Danışman hazırlar → `onay_bekliyor` → yönetici doğrular → `yayinda`.

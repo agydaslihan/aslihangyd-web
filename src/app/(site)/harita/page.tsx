@@ -8,7 +8,7 @@ import {
   type MahalleVerisi,
 } from '@/components/harita/HaritaSahnesi'
 import { paraKisaYaz } from '@/lib/bicimlendirme'
-import { haritaHazirMi } from '@/lib/harita/ayarlar'
+import { haritaStilAdresi } from '@/lib/harita/sunucu'
 import { kabaMerkez, type Konum } from '@/lib/harita/sutunlar'
 import { mutlakAdres } from '@/lib/site'
 import { ilanlariGetir } from '@/lib/veri/ilanlar'
@@ -163,7 +163,7 @@ export default async function HaritaSayfasi() {
           mahalleler={mahalleler}
           noktalar={noktalar}
           noktaKatmanlari={noktaKatmanlari}
-          haritaHazir={haritaHazirMi()}
+          stilAdresi={haritaStilAdresi()}
         />
       </div>
     </>

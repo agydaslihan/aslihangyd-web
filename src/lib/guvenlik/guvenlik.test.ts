@@ -145,7 +145,7 @@ describe('turnstile', () => {
 
   it('anahtar yoksa etkin değil ve doğrulama atlanır', async () => {
     delete process.env.TURNSTILE_GIZLI_ANAHTAR
-    delete process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI
+    delete process.env.TURNSTILE_SITE_ANAHTARI
 
     expect(turnstileEtkinMi()).toBe(false)
     await expect(turnstileDogrula(null)).resolves.toEqual({ gecerli: true, hata: null })
@@ -153,13 +153,13 @@ describe('turnstile', () => {
 
   it('yalnızca site anahtarı varsa etkin sayılmaz', () => {
     delete process.env.TURNSTILE_GIZLI_ANAHTAR
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI = '0x4AAA'
+    process.env.TURNSTILE_SITE_ANAHTARI = '0x4AAA'
     expect(turnstileEtkinMi()).toBe(false)
   })
 
   it('etkinken jetonsuz gönderimi reddeder', async () => {
     process.env.TURNSTILE_GIZLI_ANAHTAR = 'gizli'
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI = '0x4AAA'
+    process.env.TURNSTILE_SITE_ANAHTARI = '0x4AAA'
 
     const sonuc = await turnstileDogrula('')
     expect(sonuc.gecerli).toBe(false)
@@ -168,7 +168,7 @@ describe('turnstile', () => {
 
   it('Cloudflare başarılı derse geçirir', async () => {
     process.env.TURNSTILE_GIZLI_ANAHTAR = 'gizli'
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI = '0x4AAA'
+    process.env.TURNSTILE_SITE_ANAHTARI = '0x4AAA'
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify({ success: true }), { status: 200 })),
@@ -179,7 +179,7 @@ describe('turnstile', () => {
 
   it('Cloudflare başarısız derse reddeder', async () => {
     process.env.TURNSTILE_GIZLI_ANAHTAR = 'gizli'
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI = '0x4AAA'
+    process.env.TURNSTILE_SITE_ANAHTARI = '0x4AAA'
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response(JSON.stringify({ success: false }), { status: 200 })),
@@ -194,7 +194,7 @@ describe('turnstile', () => {
    */
   it('Cloudflare erişilemezse gönderimi reddeder', async () => {
     process.env.TURNSTILE_GIZLI_ANAHTAR = 'gizli'
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI = '0x4AAA'
+    process.env.TURNSTILE_SITE_ANAHTARI = '0x4AAA'
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => {
@@ -209,7 +209,7 @@ describe('turnstile', () => {
 
   it('HTTP hatasında da reddeder', async () => {
     process.env.TURNSTILE_GIZLI_ANAHTAR = 'gizli'
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI = '0x4AAA'
+    process.env.TURNSTILE_SITE_ANAHTARI = '0x4AAA'
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => new Response('hata', { status: 500 })),
@@ -220,7 +220,7 @@ describe('turnstile', () => {
 
   it('hata mesajında teknik ayrıntı sızdırmaz', async () => {
     process.env.TURNSTILE_GIZLI_ANAHTAR = 'cok-gizli-anahtar'
-    process.env.NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI = '0x4AAA'
+    process.env.TURNSTILE_SITE_ANAHTARI = '0x4AAA'
     vi.stubGlobal(
       'fetch',
       vi.fn(async () => {

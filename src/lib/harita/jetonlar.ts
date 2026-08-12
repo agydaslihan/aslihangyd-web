@@ -14,18 +14,30 @@
  * içindir; normal akışta hiç kullanılmazlar.
  */
 
+/**
+ * ⚠️ BU DEĞERLER ELLE KOPYALANMIŞ VE SESSİZCE BAYATLAYABİLİR.
+ *
+ * Palet yeniden tasarımında tam olarak öyle oldu: liste eski paletten
+ * kalmıştı ve `--color-bakir-600` artık globals.css'te YOK. `getComputedStyle`
+ * boş dönünce kod yedeğe düşüyordu — yani seçili sütun, palet değişmiş
+ * olmasına rağmen **bakır** çiziliyordu. Kimse hata görmezdi.
+ *
+ * Bu yüzden `jetonlar.test.ts` her değerin globals.css'teki açık tema
+ * karşılığıyla birebir aynı olduğunu denetliyor. Buraya bir satır eklerken
+ * jetonun gerçekten var olduğundan emin olun; test yoksa uyarır.
+ */
 const YEDEKLER: Record<string, string> = {
-  '--color-zemin': '#f8f7f3',
+  '--color-zemin': '#f7f6f2',
   '--color-yuzey': '#ffffff',
-  '--color-kenar': '#e0ddd5',
-  '--color-kenar-guclu': '#c4c1b8',
-  '--color-metin': '#1a1917',
-  '--color-metin-3': '#5f5c55',
-  '--color-lacivert-100': '#e4edf4',
-  '--color-lacivert-200': '#cbdce9',
-  '--color-lacivert-300': '#a3bfd9',
-  '--color-lacivert-600': '#26588f',
-  '--color-bakir-600': '#a85529',
+  '--color-kenar': '#cdd0d0',
+  '--color-kenar-guclu': '#b1b5b6',
+  '--color-metin': '#20252b',
+  '--color-metin-3': '#64696d',
+  '--color-lacivert-100': '#dbe0e8',
+  '--color-lacivert-200': '#bec7d3',
+  '--color-lacivert-300': '#a3aebe',
+  '--color-lacivert-600': '#556781',
+  '--color-aksan': '#4f7c6a',
 }
 
 /** Jetonun çalışma zamanındaki değeri. Tarayıcı dışında yedeğe düşer. */
@@ -63,7 +75,7 @@ export function haritaRenkleri(): HaritaRenkleri {
     // ⚠️ Sütunlar TEK RENK. Fiyat yalnızca yükseklikle kodlanır.
     sutun: jetonRengi('--color-lacivert-600'),
     // Tek istisna: seçili mahalle. Vurgu için, veri için değil.
-    sutunSecili: jetonRengi('--color-bakir-600'),
+    sutunSecili: jetonRengi('--color-aksan'),
     etiket: jetonRengi('--color-metin'),
     etiketHalesi: jetonRengi('--color-yuzey'),
     bina: jetonRengi('--color-lacivert-200'),

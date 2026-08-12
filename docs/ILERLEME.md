@@ -2645,8 +2645,15 @@ güvencesi ve kaybetmenin karşılığı yok — alan `required`, kanca her
 oluşturmada rolü yazıyor, alan erişimi yalnızca güncellemede alanı düşürür
 ve güncellemede sütun eski değerini korur.
 
-⚠️ **Sonraki `migrate:create` çağrıları bu satırı yeniden önerecek;
-yeniden silin.** Fark bilinçli.
+⚠️ **Düzeltme:** İlk yazdığımda "sonraki `migrate:create` çağrıları bu
+satırı yeniden önerecek" demiştim; **yanlış.** Payload canlı veritabanıyla
+değil, göç dosyasının yanındaki `.json` anlık görüntüsüyle karşılaştırıyor
+ve o görüntü sütunu zaten nullable kaydetti. Yani öneri tekrarlanmayacak.
+
+Kalan fark şu: **anlık görüntü nullable diyor, veritabanı NOT NULL.**
+Zararsız, çünkü hiçbir göç kısıtı düşürmüyor — göçlerden sıfırdan kurulan
+bir veritabanı da NOT NULL olur. Fark yalnızca diff dosyasında.
+(`ai_arama` göçü üretilirken doğrulandı: satır yeniden önerilmedi.)
 
 `down` da düzeltildi: üretilen hâli enum'u doğrudan daraltıyordu ve
 kuyrukta tek bir ilan varsa son dönüşüm patlayıp göçü yarıda bırakırdı.
@@ -2669,6 +2676,249 @@ daraltılıyor.
 - **Panel duman testi:** yönetici panelinde "1 ilan yayın onayı bekliyor"
   göründü, aynı anda danışman panelinde **görünmedi**.
 - Kapı: `typecheck` ✅ `lint` ✅ `test` (1143 test) ✅ `build` ✅
+
+---
+
+## AI arama — KVKK onayına kadar KAPALI
+
+Aslıhan'ın kararı: özelliği maliyet yüzünden değil, **yurt dışına veri
+aktarımı** yüzünden ertele. Avukat metinleri gelmeden açılmayacak.
+
+### Ne yapıldı
+
+- `ai_arama` site bölümü eklendi, **varsayılan KAPALI**
+- `/portfoy` kutusu artık **iki** koşula bağlı: bölüm açık **VE** anahtar tanımlı
+- `docs/AI-ARAMA-KVKK-NOTU.md` — avukat için veri akışı notu
+- Ham sorgunun hiçbir yere yazılmadığı doğrulandı
+
+### Kararlar
+
+**1. İki koşul, tek değil.**
+
+Önceden yalnızca `ANTHROPIC_API_KEY` kontrol ediliyordu. Anahtarın bir gün
+başka bir amaçla (örn. sunucu tarafı rapor üretimi) tanımlanması, arama
+kutusunu istemeden açardı. Artık bölüm anahtarı ayrı bir karar noktası.
+
+**2. Bölüm modeli genişletildi: her bölüm bir sayfa değil.**
+
+`ai_arama`'nın rotası yok — mevcut bir sayfanın üzerindeki bileşen.
+`rotalar: []` artık geçerli. Testteki değişmez kural zayıflatılmadı,
+daraltıldı: "her bölümün rotası vardır" → **"rotasız bölüm gezinmede
+görünmez"** (rotasız bir bölümü altbilgiye koymak hiçbir yere gitmeyen bir
+bağlantı üretirdi).
+
+Varsayılan kapalı bölümlerin listesi de teste açıkça yazıldı; "kapalı
+olanları atla" demek, yeni bir bölümün yanlışlıkla kapalı doğmasını
+gizlerdi.
+
+**3. Ham sorgu saklanmıyor — zaten saklanmıyordu.**
+
+Karar "ham sorguları loglama, sadece türetilmiş filtreyi sakla" idi.
+Mevcut durum bundan daha katı: **hiçbir şey saklanmıyor.** Ne sorgu, ne
+filtre; veritabanına da günlüğe de yazılmıyor. Türetilen filtre yalnızca
+ziyaretçinin adres çubuğunda yaşıyor.
+
+Filtre analitiği istenirse ayrı bir iş — istenmeden veri toplamaya
+başlamıyorum. Günlüğe yalnızca yapılandırma hataları yazılıyor ve o
+kayıtlar sorgu metnini içermiyor (kodda doğrulandı).
+
+**4. Avukat notu hukuki metin değil.**
+
+CLAUDE.md kural 3: hukuki metinleri ben yazmam. `AI-ARAMA-KVKK-NOTU.md`
+bir aydınlatma metni değil, **avukatın metni yazabilmesi için teknik
+tarif**: hangi veri, nereye, ne amaçla, ne saklanıyor, ziyaretçi ne
+görüyor. Sonunda beş somut soru var (açık rıza gerekir mi, VERBİS'e
+beyan gerekir mi, …).
+
+### Göç notundaki hatam — düzeltildi
+
+Önceki bölümde "sonraki `migrate:create` çağrıları `rol` NOT NULL düşürme
+satırını yeniden önerecek" yazmıştım. **Yanlıştı.** Payload canlı
+veritabanıyla değil, göçün yanındaki `.json` anlık görüntüsüyle
+karşılaştırıyor; o görüntü sütunu zaten nullable kaydetmiş. `ai_arama`
+göçü üretilirken doğrulandı: satır tekrarlanmadı. Not düzeltildi.
+
+### Doğrulama
+
+- 4 yeni bölüm testi (varsayılan kapalı, rotasız, gezinmede yok, 404 yapmıyor)
+- Mevcut bölüm değişmezleri güncellendi, zayıflatılmadı
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1147 test) ✅ `build` ✅
+
+### Açmak için üç adım (sırayla)
+
+1. Avukat metni → Payload admin → Sayfalar
+2. `.env` → `ANTHROPIC_API_KEY`
+3. Payload admin → Ayarlar → Site Bölümleri → "AI doğal dil arama" aç
+
+Üçü birden yapılmadan kutu ziyaretçiye görünmez.
+
+---
+
+## OpenStreetMap POI içe aktarma
+
+Aslıhan'ın kararı: yaz — en yüksek kaldıraçlı iş, elle giriş aylar alır.
+Şartları: ODbL atıf, `kaynak: osm` işareti, elle düzeltilmiş kayıt
+ezilmesin, Çorlu sınırıyla kısıtla, kategori eşlemesi belgelensin.
+
+### Ne yapıldı
+
+- `IlgiNoktalari`: `kaynak`, `osmKimlik`, `elleDuzenlendi` alanları
+- `src/lib/osm/eslesme.ts` — kategori eşleme tablosu (gerekçeleriyle)
+- `src/lib/osm/sorgu.ts` — Overpass sorgusu ve cevap çözümleyici
+- `src/lib/osm/iceAktarma.ts` — uzlaştırma ve yazma
+- `/admin/osm-poi-ice-aktar` — önizlemeli sihirbaz (yalnızca yönetici)
+- `/veri-kaynaklari` — ODbL lisansı ve kategori eşlemesi (yayında)
+- `CevreBolumu` — POI görünen her yerde "© OpenStreetMap katkıcıları"
+
+### Kararlar ve gerekçeleri
+
+**1. Çorlu sınırı MAHALLE MERKEZLERİNDEN türetiliyor.** ⭐
+
+Sabit bir Çorlu kutusu koda yazılmadı. İki sebep:
+- **Uydurma veri riski:** Çorlu'nun sınır koordinatlarını ezberden yazmak,
+  doğrulanmamış bir rakamı koda gömmek olurdu (CLAUDE.md kural 2).
+- **Kendiliğinden doğru kalır:** yeni mahalle eklendiğinde kutu büyür;
+  sabit bir kutu o mahalleyi dışarıda bırakır ve kimse fark etmezdi.
+
+Merkez yoksa içe aktarma çalışmaz ve sebebini söyler. Kutu ülke ölçeğine
+şişerse (bir mahallenin merkezi yanlış ile girilmişse) reddedilir.
+
+**2. Elle düzeltilen kayıt ezilmez — iki parçalı koruma.** ⭐
+
+`osmElleDuzenlemeIzi` kancası insan düzenlemesini işaretler; içe aktarma
+işaretli kaydı atlar ve "korundu" diye sayar. İçe aktarıcı kendi
+yazmalarında `context.osmIceAktarma = true` gönderiyor — bu bayrak
+olmasaydı ilk içe aktarma her kaydı "elle düzenlendi" işaretler ve ikinci
+içe aktarmada hiçbir şey güncellenmezdi.
+
+**3. Sorgu, eşleme tablosundan türetiliyor.**
+
+Sorgu elle yazılsaydı tabloya yeni bir tip eklenip sorguya eklenmemesi
+(ya da tersi) an meselesiydi.
+
+**4. Geniş sorulan anahtarlar — "neyin dışarıda kaldığını" görebilmek için.**
+
+⚠️ İlk yazımda sorgu yalnızca eşlediğimiz **değerleri** istiyordu. Duman
+testinde ortaya çıktı ki bu, "eşlenmeyen etiketler" raporunu **daima boş**
+bırakıyor: sorduğumuz her şey zaten eşleşiyordu. Yani kodda ve arayüzde
+verdiğim "eczaneleri de alalım mı sorusunu görerek sorabilirsiniz" sözü
+tutulmuyordu.
+
+`amenity`, `shop`, `leisure`, `office` artık **değer süzgeci olmadan**
+soruluyor. `highway`, `railway`, `landuse`, `aeroway` dar kalıyor —
+geniş sorulsa ilçedeki bütün yol ağı ve ray parçaları inerdi.
+
+Gerçek ölçüm (Çorlu, 3 km pay): 277 eşleşen nokta, **126 eşlenmeyen tür** —
+60 oyun alanı, 50 otopark, 34 restoran, 27 ibadethane, 21 eczane.
+Artık soru sorulabilir.
+
+**5. Adsız nokta atlanır ve sayılır.**
+
+"En yakın okul: (isimsiz)" bilgi değil gürültü. Aynı ölçümde 111 adsız
+nokta atlandı.
+
+**6. Yalnızca yönetici.**
+
+Yüzlerce kayıt oluşturuyor ve dış servise sorgu atıyor; danışmanın günlük
+işi değil. Menü bağlantısı da danışmana gösterilmiyor — tıklayınca
+"yetkiniz yok" diyen bir bağlantı, kullanılamayan bir menü öğesidir.
+
+**7. Atıf kayıt bazında.**
+
+Mesafe sorgusu artık `kaynak` da taşıyor; atıf yalnızca gerçekten OSM
+kaydı gösterildiğinde basılıyor. **Elle toplanmış veriyi OSM'e atfetmek,
+atfı unutmak kadar yanlış olurdu.**
+
+**8. Scraping yasağıyla çelişmiyor.**
+
+CLAUDE.md kural 6 ilan platformlarının kullanım koşullarını ihlal eden
+otomatik veri çekmeye ait. OSM açık veridir, ODbL ile yeniden kullanım
+için lisanslanmıştır ve Overpass API bu iş için yapılmış resmî arayüzdür.
+
+### Testlerin yakaladığı gerçek hata
+
+**Elle düzeltme koruması tamamen çalışmıyordu.** Kanca yalnızca
+`data.elleDuzenlendi === false` kontrol ediyordu; oysa Payload kısmi
+güncellemede kaydın mevcut `false` değerini de `data` içinde gönderiyor.
+Sonuç: her insan düzenlemesi "kullanıcı işareti kaldırdı" sanılıyor ve iz
+basılmadan geçiyordu — yani özelliğin tek vaadi tutmuyordu.
+
+Doğru ayrım öncekiyle karşılaştırmak: işaret **daha önce true idi ve şimdi
+false geldiyse** kullanıcı bilerek kaldırmıştır.
+
+Ayrıca `ortam.test.ts` (ortam değişkeni belgeleme denetimi)
+`OVERPASS_ADRESI`'nin `.env.example`'da eksik olduğunu yakaladı.
+
+### Doğrulama
+
+- **24 birim testi** — eşleme, kutu hesabı (boylam düzeltmesi dahil), ülke
+  ölçeğine şişmiş kutunun reddi, sorgu biçimi, cevap çözümleme
+- **6 entegrasyon testi** — kaynak izi, içe aktarıcının kendi yazmasının iz
+  bırakmaması, **panelden düzenlemenin işaretlemesi**, **işaretli kaydın
+  ezilmemesi**, işaretin kaldırılabilmesi, elle girilmiş kayda iz basılmaması
+- **Gerçek Overpass duman testi** — yukarıdaki ölçüm. Test verisi silindi.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1185 test) ✅ `build` ✅
+
+### Raporun ilk çıktısı: eczane ve çocuk oyun alanı eklendi
+
+Eşlenmeyen tür raporu tam olarak amaçlandığı işi yaptı. Aslıhan raporu
+okuyup karar verdi (12 Ağustos 2026):
+
+- **`amenity=pharmacy` → `eczane`** — sağlık erişiminin günlük ölçüsü.
+  Hastane "var mı yok mu" sorusunu yanıtlıyor, eczane "yürüme mesafesinde
+  mi" sorusunu.
+- **`leisure=playground` → `oyun_alani`** — çocuklu aile için mahalle
+  kalitesinin doğrudan göstergesi. Parktan **ayrı** sayılıyor: her park
+  oyun alanı içermiyor ve ikisi aynı şey değil.
+- **`amenity=restaurant` → EKLENMEDİ.** Sinyal değeri düşük, merkeziyeti
+  zaten AVM/market/ulaşım kriterleriyle ölçüyoruz, veriye gürültü ekler.
+
+İkisi de yatırım skorunun **sosyal donatı** bileşenine giriyor
+(`SOSYAL_DONATI_TIPLERI`), mahalle sayfasındaki çevre listesinde
+görünüyor ve haritada ilgili renk grubuna düşüyor.
+
+**Bilinçli dışlamalar artık yazılı.** `BILINCLI_DISARIDA` tablosu
+eklendi: raporda düzenli görünen ama almamaya karar verdiğimiz türler,
+gerekçesiyle. Rapor bunları "aktarılmadı, isterseniz ekleriz" diye değil
+**"bilinçli olarak dışarıda — sebebi şu"** diye gösteriyor. Gerekçe
+`/veri-kaynaklari` sayfasında da yayınlanıyor. Yazılı olmasaydı aynı soru
+her içe aktarmada yeniden sorulur ve baştan tartışılırdı.
+
+**Rapor kalıcılaştırıldı.** Önceden kapalı bir `<details>` içindeydi ve
+yalnızca boş değilken görünüyordu. İkisi de değişti:
+
+- Açık geliyor — kapalı bir rapor okunmayan rapordur.
+- Boşken de görünüyor ("dışarıda kalan tür yok"). Yoksa "rapor çalıştı ve
+  temiz çıktı" ile "rapor hiç üretilmedi" ayırt edilemezdi.
+- 40'tan fazla tür varsa kaç türün gizlendiği yazılıyor; sessiz kırpma yok.
+
+**Yayınlanan metodoloji düzeltildi.** `/veri-kaynaklari` sayfası
+"eczane ... içe aktarılmıyor" diyordu; artık yanlıştı.
+
+#### Göç geri alması yine elle düzeltildi
+
+Üretilen `down` doğrudan enum'u yeniden kuruyordu. Tek bir eczane ya da
+oyun alanı kaydı varsa son `USING tip::enum` dönüşümü patlar ve göç yarıda
+kalırdı — `onay_bekliyor` göçündeki tuzağın aynısı.
+
+Kayıtlar önce en yakın anlamlı tipe çekiliyor: `eczane → hastane`
+(tipin etiketi zaten "Hastane / sağlık"), `oyun_alani → park`.
+
+**Gerçek veriyle denendi:** iki kayıt eklendi, `migrate:down` çalıştırıldı,
+kayıtlar `hastane` ve `park` olarak sağ çıktı, enum daraldı, hata yok.
+Sonra göç yeniden uygulandı ve test kayıtları silindi.
+
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1191 test) ✅ `build` ✅
+
+### Bilinen sınırlar
+
+- Tek seferde 3.000 nokta tavanı (kaza koruması).
+- İçe aktarma mahalle ilişkisini kurmuyor — POI'nin hangi mahallede olduğu
+  boş kalıyor. Mahalle sınırı (polygon) verisi girildiğinde PostGIS ile
+  otomatikleştirilebilir; şimdilik yakınlık hesapları mahalle ilişkisine
+  değil koordinata bakıyor, yani eksiklik bir şeyi bozmuyor.
+- Overpass herkese açık sunucu kullanıyor; yoğun saatlerde yavaş olabilir.
+  `OVERPASS_ADRESI` ile ayna adres verilebilir.
 
 ---
 
@@ -2720,6 +2970,152 @@ olacağıyla birlikte.
 
 ---
 
+## Çalışma zamanı yapılandırması — üretimde dokuz değişken ölüydü
+
+Frontend yeniden tasarımına başlamadan önce Aslıhan'ın istediği ön kontrol
+(*"NEXT_PUBLIC_* taraması yapıldı mı? Harita şu an çalışıyor mu?"*) gerçek
+bir arıza ortaya çıkardı ve arıza tek bir değişkenden büyüktü.
+
+### Ne bozuktu
+
+Next.js `NEXT_PUBLIC_*` değişkenlerini **derleme anında** pakete gömer —
+sunucu tarafında bile. Üretim imajı GitHub Actions'ta derleniyor ve:
+
+- `docker/Dockerfile` derleme aşamasında bu değişkenler için `ARG` yoktu,
+- `.github/workflows/imaj.yml` `build-args` vermiyordu,
+- `docker/compose.prod.yml` üçünü çalışma zamanı `environment:` olarak
+  veriyordu — çoktan derlenmiş bir pakete etkisi yok.
+
+Sonuç: yayına giden imajda dokuz değişken de boş dizeydi.
+
+**Canlı sunucuda doğrulandı** (salt okunur):
+
+```
+$ docker exec aslihangyd-uygulama sh -c 'env | grep -i maptiler'
+(çıktı yok)
+
+$ curl -s http://127.0.0.1:3000/harita | grep -c api.maptiler.com
+0
+```
+
+| Ne | Belirtisi |
+| --- | --- |
+| MapTiler anahtarı | `/harita` kalıcı boş durumda |
+| Turnstile site anahtarı | Danışman başvuru formu bot korumasız |
+| Umami | Analitik betiği hiç yüklenmiyor |
+| Bunny kütüphane + CDN | Videolar "oynatıcı yapılandırılmadı" |
+| WhatsApp / telefon / e-posta | CMS boşsa yedek de boş |
+
+Hiçbiri hata vermiyordu. Harita özellikle can sıkıcı: OSM'den içe
+aktardığımız POI verisinin göründüğü **tek yer** orası.
+
+### Neden derleme argümanı değil, çalışma zamanı
+
+İki seçenek vardı. `Dockerfile`a `ARG` ekleyip CI'da `build-args` geçmek
+~25 satırla biterdi ve hiçbir bileşene dokunmayı gerektirmezdi. Yine de
+çalışma zamanı seçildi, çünkü asıl düzeltilen şey **sessiz yanlış
+yapılandırma** ve derleme argümanları onu yeni bir biçimde geri getiriyor:
+
+- Değer GitHub ayarlarında yaşar; depodaki hiçbir test onu denetleyemez.
+  Aslıhan on değişkenden dokuzunu girse harita çalışır, WhatsApp sessizce
+  boş kalır.
+- Telefon numarasını değiştirmek imajı yeniden derlemeyi ve yeniden
+  dağıtmayı gerektirir.
+
+Çalışma zamanında değer `.env` içinde — `PAYLOAD_SECRET`in yanında, zaten
+düzenlenen tek dosyada — ve `ortam.test.ts` onun belgelendiğini **ve**
+compose ile kaba ulaştığını denetleyebiliyor. Desen zaten `src/lib/site.ts`
+içinde `SITE_ADRESI` için kurulmuştu; yalnızca yayılmamıştı.
+
+### Ne yapıldı
+
+Dokuz değişken ön eksiz adlara taşındı. Değerler sunucuda okunuyor,
+istemci bileşenlerine prop olarak iniyor:
+
+- `lib/harita/sunucu.ts` (yeni, `server-only`) → `HaritaSahnesi` →
+  `Harita3B`. `haritaHazir: boolean` propu yerini `stilAdresi: string | null`
+  aldı: tek kaynak, anahtar da beraberinde iniyor.
+- `DroneVideo` sunucu bileşenine dönüştü, tıkla-oynat cephesi
+  `DroneVideoOynatici`'ya ayrıldı. Çağrı yerleri değişmedi.
+- Turnstile ve kurumsal iletişim yedekleri zaten sunucuda okunuyordu;
+  yalnızca ad değişti.
+- `NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID` silindi — sunucudaki
+  `BUNNY_STREAM_LIBRARY_ID` ile aynı değerin ikinci kopyasıydı.
+
+`import 'server-only'` bilinçli: öneki kaldırmak tek başına yetmezdi, ön
+eksiz bir değişken istemci paketinde sessizce `undefined` olur ve harita
+yine açılmazdı — bu sefer sebebi görünmeden.
+
+### Kanıt
+
+Aynı derleme çıktısıyla, iki yön de ölçüldü. Derleme sırasında
+`MAPTILER_ANAHTARI` **tanımsızdı**:
+
+```
+İstemci paketinde api.maptiler.com izi:   yok (yalnızca sunucu chunk'ında)
+
+MAPTILER_ANAHTARI=TEST_ANAHTARI_12345 ile:
+  .../style.json?key=TEST_ANAHTARI_12345   sayfada
+  "Etkileşimli harita hazırlanıyor"        yok
+
+Anahtarsız:
+  api.maptiler.com                          yok
+  "Etkileşimli harita hazırlanıyor"         var
+```
+
+Yani anahtar artık pakete gömülmüyor ve çalışma zamanında okunuyor —
+düzeltilmek istenen şey tam olarak buydu.
+
+### Kapılar
+
+`src/lib/ortam.test.ts` iki yeni testle genişletildi:
+
+1. **Kod `NEXT_PUBLIC_` okumuyor.** Tek muafiyet `src/lib/site.ts`
+   içindeki belgelenmiş derleme zamanı yedeği.
+2. **Kodun okuduğu her değişken compose ile kaba ulaşıyor.** Bu, asıl
+   boşluğu kapatan test: `MAPTILER_ANAHTARI` `.env`de yazılı olabilirdi ve
+   compose onu geçirmediği için yine ölü kalırdı. Belge testi yeşil,
+   harita ölü.
+
+### Yan bulgu: ham NUL baytı grep'i kör ediyordu
+
+Teşhis sırasında `grep -rn "MAPTILER" src/` yalnızca `lib/harita/ayarlar.ts`
+döndürdü ve **"anahtar istemcide kullanılmıyor"** sonucuna götürdü. Yanlıştı:
+`Harita3B.tsx` `stilAdresi()` çağırıyordu.
+
+Sebep: `Harita3B.tsx` içinde MapLibre "hiçbir zaman eşleşme" nöbetçisi
+**ham bir NUL baytı** olarak yazılmıştı. `file` dosyayı "data" görüyor,
+grep ikili sayıp **684 satırın tamamını sessizce atlıyordu.** Aynı desen
+`scripts/lighthouse-ozet.mjs` içinde de vardı (bileşik anahtar ayracı).
+
+İkisi de kaçış dizisine çevrildi — çalışma zamanı değeri birebir aynı,
+dosyalar düz metne döndü. `Harita3B` içinde aynı nöbetçi iki yerde farklı
+yazılmıştı (biri boşluk, biri NUL); tek sabitte birleştirildi.
+
+Bu bilinçli bir tercihti ve `alfabe.test.ts` içinde gerekçesiyle muaf
+tutulmuştu — ama bedeli (araçlara görünmezlik) hesaba katılmamıştı.
+Muafiyet kaldırıldı, yerine `src/lib/kaynakHijyeni.test.ts` geldi: kaynak
+dosyalarda sekme/satır sonu dışında ham kontrol karakteri yasak.
+
+Not: testi yazarken kaçış dizisini örneklemek isterken **aynı hatayı
+tekrar yaptım** — dosyaya ham NUL girdi ve yeni test onu ilk koşumda
+yakaladı. Hatanın ne kadar kolay tekrarlandığının iyi bir ölçüsü.
+
+### Belge düzeltmesi
+
+`.env.production.example` hâlâ `https://aslihangyd.com:8443` yazıyordu.
+O kurgu (Cloudflare origin sertifikası + dolu portlar) kaldırılmış,
+`compose.prod.yml` 80/443 yayınlıyor. Porta takılı bir `SITE_ADRESI`
+arama motoruna ulaşılamayan kanonik adresler bildirir — sessiz SEO hasarı.
+Düzeltildi.
+
+### Bilinen sınır
+
+`ANTHROPIC_API_KEY` ve `ANTHROPIC_ARAMA_MODELI` compose'a **bilinçli
+olarak eklenmedi**: AI arama avukat metinleri gelene kadar ertelendi
+(KVKK — sorgu yurt dışına gidiyor). Anahtarı kaba hiç sokmamak, SiteSections
+anahtarının üstüne ikinci bir kapı. Gerekçe hem compose'da hem testin muaf
+listesinde yazılı.
 ## Frontend yeniden tasarımı — Aşama 1: palet ve tipografi
 
 `docs/FRONTEND-YENIDEN-TASARIM.md` §1, §3 ve §10. Lacivert/bakır sistemi
@@ -2823,7 +3219,25 @@ Temiz ağaçta da kırık olduğu doğrulandı (palet değişikliğiyle ilgisiz)
 `SIMDI` gerçek saate bağlandı: fikstürler artık kancanın gördüğü saatle
 aynı eksende üretiliyor.
 
-- Kapı: `typecheck` ✅ `lint` ✅ `test` (1158 test, 94'ü kontrast) ✅ `build` ✅
+### Birleştirmede çıkan kalıntı: harita yedek renkleri
+
+Palet dalı main'e alınırken `src/lib/harita/jetonlar.ts` içinde bir kalıntı
+bulundu. MapLibre CSS değişkeni anlamıyor; bu dosya renkleri çalışma
+zamanında `getComputedStyle` ile okuyor ve tarayıcı dışında **elle yazılmış
+bir yedek listesine** düşüyor.
+
+O liste eski paletten kalmıştı ve içindeki `--color-bakir-600`
+globals.css'ten tamamen silinmişti. `getComputedStyle` bulunmayan jeton için
+boş dize döndürüyor, kod da yedeğe düşüyor — yani **seçili mahalle sütunu,
+palet değişmiş olmasına rağmen bakır çiziliyordu.** Ne derleme ne test hata
+veriyordu; harita yalnızca yanlış renkteydi.
+
+Seçili sütun `--color-aksan`a bağlandı, yedeklerin tamamı yeni palete
+güncellendi ve `jetonlar.test.ts` eklendi: her yedek değerin globals.css'teki
+karşılığıyla birebir aynı olduğunu **ve** başvurulan her jetonun gerçekten
+var olduğunu denetliyor. İkincisi asıl arızayı kapatan kısım.
+
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1217 test, 94'ü kontrast) ✅ `build` ✅
 - Lighthouse ölçümü **yapılmadı** — bileşenler henüz eski düzende; anlamlı
   sayı Aşama 3'ten sonra çıkar.
 
