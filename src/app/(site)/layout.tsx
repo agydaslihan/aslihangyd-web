@@ -6,7 +6,16 @@ import { Analitik } from '@/components/analitik/Analitik'
 import { CerezBanneri } from '@/components/cerez/CerezBanneri'
 import { Altbilgi } from '@/components/duzen/Altbilgi'
 import { Baslik, IcerigeAtla } from '@/components/duzen/Baslik'
-import { kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
+import { UstSerit } from '@/components/duzen/UstSerit'
+import { menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
+import { endeksSayfasiAcikMi } from '@/lib/veri/endeks'
+import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
+import {
+  iletisimEpostasi,
+  iletisimTelefonu,
+  kurumsalBilgileriGetir,
+  whatsappNumarasi,
+} from '@/lib/kurumsal'
 import { cerezOnayiniOku } from '@/lib/kvkk/sunucu'
 import { SITE_ACIKLAMASI, SITE_ADI, SITE_ADRESI } from '@/lib/site'
 
@@ -111,13 +120,56 @@ export const viewport: Viewport = {
 }
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const [kurumsal, onay] = await Promise.all([kurumsalBilgileriGetir(), cerezOnayiniOku()])
+  const [kurumsal, onay, bolumDurumlari] = await Promise.all([
+    kurumsalBilgileriGetir(),
+    cerezOnayiniOku(),
+    bolumDurumlariniGetir(),
+  ])
+
+  /**
+   * ⚠️ Menü SUNUCUDA süzülüyor.
+   *
+   * Bazı öğeler site bölümü anahtarına bağlı — örn. `/endeks` veri eşikleri
+   * sağlanana kadar `notFound()` dönüyor. Süzmeyi istemciye bırakmak,
+   * kapalı bir bağlantının ilk karede görünüp tıklanabilmesi demekti.
+   */
+  const acikAnahtarlar = new Set(
+    Object.entries(bolumDurumlari)
+      .filter(([, acik]) => acik)
+      .map(([anahtar]) => anahtar),
+  )
+
+  /**
+   * ⚠️ ENDEKS'İN İKİ KAPISI VAR — bölüm anahtarı tek başına YETMEZ.
+   *
+   * `/endeks` bölüm açık olsa bile veri eşikleri sağlanmadıysa 404 dönüyor
+   * (CLAUDE.md 6c: katman başına en az 8 gözlem, en az 6 ay geçmiş).
+   * Aşama 2'de bu gözden kaçtı: bölüm dev veritabanında açıktı, menüye
+   * "Endeks" düştü ve bağlantı 404'e gidiyordu — duman testinde yakalandı.
+   *
+   * Karar sayfanınkiyle AYNI yardımcıdan geliyor (`endeksSayfasiAcikMi`),
+   * iki yerde ayrı yazılmıyor.
+   *
+   * ⚠️ Sıra bilinçli: ucuz olan bölüm kontrolü önce. Endeks hesabı gözlem
+   * okuyup seri üretiyor; bölüm kapalıyken onu her sayfa isteğinde
+   * çalıştırmanın karşılığı yok.
+   */
+  if (acikAnahtarlar.has('endeks') && !(await endeksSayfasiAcikMi())) {
+    acikAnahtarlar.delete('endeks')
+  }
+
+  const menu = menuyuSuz(UST_MENU_YAPISI, acikAnahtarlar)
 
   return (
     <html lang="tr" className={`${yaziArayuz.variable} ${yaziBaslik.variable}`}>
       <body className="flex min-h-dvh flex-col antialiased">
         <IcerigeAtla />
-        <Baslik whatsapp={whatsappNumarasi(kurumsal)} />
+        <UstSerit
+          telefon={iletisimTelefonu(kurumsal)}
+          eposta={iletisimEpostasi(kurumsal)}
+          whatsapp={whatsappNumarasi(kurumsal)}
+        />
+        <Baslik menu={menu} whatsapp={whatsappNumarasi(kurumsal)} />
 
         <main id="icerik" className="flex-1">
           {children}

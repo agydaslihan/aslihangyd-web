@@ -1,5 +1,6 @@
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
+import { GuvenSeridi } from '@/components/duzen/GuvenSeridi'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
@@ -7,21 +8,59 @@ import { DogrulanmisIkon, GrafikIkon, KonumIkon, OkIkon } from '@/components/ui/
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
 import { whatsappMesaji } from '@/lib/site'
-import { oneCikanIlanlariGetir } from '@/lib/veri/ilanlar'
+import { ilanlariGetir, oneCikanIlanlariGetir } from '@/lib/veri/ilanlar'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 
 export default async function AnaSayfa() {
-  const [ilanlar, mahalleler, kurumsal] = await Promise.all([
+  const [ilanlar, mahalleler, kurumsal, portfoy] = await Promise.all([
     oneCikanIlanlariGetir(3),
     mahalleleriGetir(),
     kurumsalBilgileriGetir(),
+    // Yalnızca sayaç için; ilk sayfa yeterli, `toplam` tüm kümeyi verir.
+    ilanlariGetir({}, 1, 1),
   ])
 
   const whatsapp = whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())
 
+  /**
+   * Güven şeridi — şartname §5.2.
+   *
+   * ⚠️ HİÇBİR RAKAM UYDURULMADI (CLAUDE.md kural 2).
+   *
+   * Portföy ve mahalle sayısı veritabanından sayılıyor. "Ortalama işlem
+   * süresi" ise ölçülebilir bir veri değil — Aslıhan'ın geçmiş işlem
+   * kayıtlarına bağlı ve elimizde yok; `null` geçiliyor ve hücre kendi boş
+   * durumunu gösteriyor. Sıfır yazmak yanlış bilgi, hücreyi gizlemek ise
+   * dört sütunluk düzeni bozardı.
+   */
+  const guvenOgeleri = [
+    {
+      etiket: 'Aktif portföy',
+      deger: portfoy.toplam > 0 ? String(portfoy.toplam) : null,
+      aciklama: 'Yayındaki taşınmaz',
+    },
+    {
+      etiket: 'Mahalle',
+      deger: mahalleler.length > 0 ? String(mahalleler.length) : null,
+      aciklama: 'Veri tuttuğumuz mahalle',
+    },
+    {
+      etiket: 'Ortalama işlem süresi',
+      deger: null,
+      aciklama: 'Geçmiş işlem kayıtları girilince',
+    },
+    {
+      etiket: 'Yetki belgesi',
+      deger: kurumsal?.yetkiBelgesiNo ?? null,
+      aciklama: 'Taşınmaz Ticareti Yetki Belgesi No',
+    },
+  ]
+
   return (
     <>
       <Kahraman whatsapp={whatsapp} />
+
+      <GuvenSeridi ogeler={guvenOgeleri} />
 
       <YaklasimBolumu />
 

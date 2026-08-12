@@ -180,13 +180,22 @@ function KategoriSatiri({
   )
 }
 
-/** Altbilgiden tercih ekranını yeniden açar. */
+/**
+ * Altbilgiden tercih ekranını yeniden açar.
+ *
+ * ⚠️ Renk BELİRTİLMİYOR, `currentColor` devralınıyor.
+ *
+ * Bu düğme lacivert altbilginin içinde yaşıyor ve oradaki metin rengi
+ * temaya göre değişmiyor (zemin de değişmiyor). Kendi `text-*` sınıfını
+ * taşısaydı altbilgi rengi değiştiğinde sessizce uyumsuz kalırdı — aynı
+ * tuzağa gold rozetinde ve harita yedeklerinde düşülmüştü.
+ */
 export function CerezTercihleriBaglantisi() {
   return (
     <button
       type="button"
       onClick={() => window.dispatchEvent(new Event(TERCIH_OLAYI))}
-      className="hover:text-metin underline-offset-2 hover:underline"
+      className="underline-offset-2 transition-opacity hover:underline hover:opacity-100 opacity-90"
     >
       Çerez tercihleri
     </button>

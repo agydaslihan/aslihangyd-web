@@ -2,34 +2,51 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 import { KapatIkon, MenuIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
+import { BASLIK_EYLEMI, type UstMenuOgesi } from '@/lib/gezinme'
 import { sinif } from '@/lib/sinif'
-import { GORUNUR_GEZINME, SITE_ADI, UST_MENU, whatsappMesaji } from '@/lib/site'
+import { SITE_ADI, whatsappMesaji } from '@/lib/site'
 
 /**
- * Site başlığı.
+ * Site başlığı — kurumsal, yapışkan, mega menülü.
  *
- * İstemci bileşeni olmasının tek sebebi mobil menü ve aktif bağlantı
- * vurgusu. Menü açıkken gövde kaydırması kilitlenir; klavye ile Escape
- * kapatır ve odak yönetimi tarayıcıya bırakılır (menü basit bir liste,
- * odak tuzağı gerektirmiyor).
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ MENÜ VERİSİ SUNUCUDAN İNİYOR.
+ *
+ * Bazı menü öğeleri site bölümü anahtarına bağlı (örn. Endeks, veri
+ * eşikleri sağlanana kadar `notFound()` dönüyor). Bölüm durumunu istemcide
+ * çözmek, kapalı bir bağlantının ilk karede görünmesi ve tıklanabilmesi
+ * demekti — ziyaretçi 404'e giderdi. Süzme sunucuda yapılıyor
+ * (`menuyuSuz`), bileşen hazır listeyi alıyor.
+ *
+ * ⚠️ İstemci bileşeni olmasının sebepleri: mobil menü, mega menü açılışı
+ * ve kaydırma gölgesi. Üçü de etkileşim.
+ * ─────────────────────────────────────────────────────────────────────────
  */
-export function Baslik({ whatsapp }: { whatsapp: string | null }) {
+export function Baslik({
+  menu,
+  whatsapp,
+}: {
+  menu: readonly UstMenuOgesi[]
+  whatsapp: string | null
+}) {
   const [acik, setAcik] = useState(false)
+  const [acikMega, setAcikMega] = useState<string | null>(null)
+  const [kaydirildi, setKaydirildi] = useState(false)
   const yol = usePathname()
 
-  // Sayfa değişince menü kapansın.
+  // Sayfa değişince menüler kapansın.
   //
-  // Bu, efekt yerine render sırasında yapılıyor: efektle yazmak fazladan bir
-  // render turu doğurur ve menü bir kare boyunca açık görünür. React'in
-  // "değişen bir değere göre state ayarlama" önerdiği kalıp budur.
+  // Efekt yerine render sırasında: efektle yazmak fazladan bir render turu
+  // doğurur ve menü bir kare boyunca açık görünür.
   const [oncekiYol, setOncekiYol] = useState(yol)
   if (yol !== oncekiYol) {
     setOncekiYol(yol)
     setAcik(false)
+    setAcikMega(null)
   }
 
   useEffect(() => {
@@ -47,14 +64,35 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
     }
   }, [acik])
 
+  /**
+   * Kaydırma gölgesi.
+   *
+   * ⚠️ `passive: true` bilinçli: kaydırma dinleyicisi varsayılan olarak
+   * tarayıcının kaydırmayı ertelemesine sebep olabiliyor ve INP hedefini
+   * (200ms) doğrudan etkiliyor. Dinleyici hiçbir şeyi iptal etmiyor.
+   */
+  useEffect(() => {
+    const olcum = () => setKaydirildi(window.scrollY > 8)
+    olcum()
+    window.addEventListener('scroll', olcum, { passive: true })
+    return () => window.removeEventListener('scroll', olcum)
+  }, [])
+
   const whatsappAdresi = whatsappBaglantisi(whatsapp, whatsappMesaji())
 
   return (
     <header
       data-yazdirma="gizle"
-      className="border-kenar bg-zemin/85 sticky top-0 z-40 border-b-[0.5px] backdrop-blur-md"
+      onMouseLeave={() => setAcikMega(null)}
+      className={sinif(
+        'bg-zemin/92 sticky top-0 z-40 backdrop-blur-md transition-shadow',
+        // ⚠️ Kenarlık yerine gölge: yapışkan başlıkta sabit bir çizgi
+        // sayfanın üstünü ikiye böler ve "uygulama" hissi verir. Gölge
+        // yalnızca içerik altına kaydığında beliriyor.
+        kaydirildi ? 'shadow-kart' : '',
+      )}
     >
-      <div className="kapsayici flex h-16 items-center justify-between gap-4">
+      <div className="kapsayici flex h-18 items-center justify-between gap-6">
         <Link
           href="/"
           className="font-serif text-baslik-3 tracking-tight whitespace-nowrap"
@@ -63,40 +101,34 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
           Aslıhan <span className="text-vurgu">GYD</span>
         </Link>
 
-        {/* Masaüstü gezinme */}
+        {/* ── Masaüstü gezinme ── */}
         <nav aria-label="Ana gezinme" className="hidden lg:block">
           <ul className="flex items-center gap-1">
-            {UST_MENU.map((oge) => (
-              <li key={oge.adres}>
-                <Link
-                  href={oge.adres}
-                  aria-current={yolAktifMi(yol, oge.adres) ? 'page' : undefined}
-                  className={sinif(
-                    'rounded-kart px-3 py-2 text-govde-kucuk transition-colors',
-                    yolAktifMi(yol, oge.adres)
-                      ? 'text-vurgu bg-vurgu-zemin font-medium'
-                      : 'text-metin-2 hover:text-metin hover:bg-yuzey-2',
-                  )}
-                >
-                  {oge.ad}
-                </Link>
+            {menu.map((oge) => (
+              <li
+                key={oge.adres}
+                className="relative"
+                onMouseEnter={() => setAcikMega(oge.mega ? oge.adres : null)}
+              >
+                <MenuBaglantisi oge={oge} aktif={yolAktifMi(yol, oge.adres)} />
+
+                {oge.mega && oge.mega.length > 0 && acikMega === oge.adres ? (
+                  <MegaMenu ogeler={oge.mega} onKapat={() => setAcikMega(null)} />
+                ) : null}
               </li>
             ))}
           </ul>
         </nav>
 
         <div className="flex items-center gap-2">
-          {whatsappAdresi ? (
-            <a
-              href={whatsappAdresi}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="border-kenar-guclu rounded-buton hover:border-vurgu hover:text-vurgu hidden min-h-11 items-center gap-2 border-[0.5px] px-4 text-govde-kucuk font-medium transition-colors sm:inline-flex"
-            >
-              <WhatsappIkon width={16} height={16} />
-              WhatsApp
-            </a>
-          ) : null}
+          {/* ⚠️ Dolu adaçayı — şartnamedeki iki eylemden biri. Üçüncü bir
+              yerde kullanılırsa disiplin testi kırılır. */}
+          <Link
+            href={BASLIK_EYLEMI.adres}
+            className="bg-aksan hover:bg-aksan-koyu rounded-buton hidden min-h-11 items-center px-5 text-govde-kucuk font-medium text-white transition-colors lg:inline-flex"
+          >
+            {BASLIK_EYLEMI.ad}
+          </Link>
 
           <button
             type="button"
@@ -111,55 +143,174 @@ export function Baslik({ whatsapp }: { whatsapp: string | null }) {
         </div>
       </div>
 
-      {/* Mobil gezinme */}
-      {acik ? (
-        <div
-          id="mobil-gezinme"
-          className="border-kenar bg-zemin fixed inset-x-0 top-16 bottom-0 z-40 overflow-y-auto border-t-[0.5px] lg:hidden"
-        >
-          <nav aria-label="Mobil gezinme" className="kapsayici py-4">
-            {/* Mobilde tam ekran menü var; üst menüdeki gibi kısaltmaya
-                gerek yok — tüm sayfalar listelenir. */}
-            <ul className="flex flex-col">
-              {GORUNUR_GEZINME.map((oge) => (
-                <li key={oge.adres} className="border-kenar border-b-[0.5px] last:border-0">
-                  <Link
-                    href={oge.adres}
-                    aria-current={yolAktifMi(yol, oge.adres) ? 'page' : undefined}
-                    className={sinif(
-                      'flex min-h-14 items-center text-govde',
-                      yolAktifMi(yol, oge.adres) ? 'text-vurgu font-medium' : 'text-metin',
-                    )}
-                  >
-                    {oge.ad}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-
-            {whatsappAdresi ? (
-              <a
-                href={whatsappAdresi}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="bg-lacivert-yuzey rounded-buton mt-6 flex min-h-13 w-full items-center justify-center gap-2 font-medium text-white"
-              >
-                <WhatsappIkon width={18} height={18} />
-                WhatsApp&apos;tan yazın
-              </a>
-            ) : null}
-          </nav>
-        </div>
-      ) : null}
+      {acik ? <MobilMenu menu={menu} yol={yol} whatsappAdresi={whatsappAdresi} /> : null}
     </header>
+  )
+}
+
+/**
+ * Masaüstü menü bağlantısı.
+ *
+ * ⚠️ Aktif sayfa GOLD 2px alt çizgiyle işaretli (şartname §4).
+ * Çizgi tek taşıyıcı değil: `aria-current="page"` da veriliyor ve metin
+ * rengi koyulaşıyor. Gold'un kırık beyaz üzerindeki kontrastı 2,06:1 —
+ * tek başına bilgi taşısaydı erişilebilirlik ihlali olurdu.
+ */
+function MenuBaglantisi({ oge, aktif }: { oge: UstMenuOgesi; aktif: boolean }) {
+  return (
+    <Link
+      href={oge.adres}
+      aria-current={aktif ? 'page' : undefined}
+      className={sinif(
+        'relative flex min-h-11 items-center px-3 text-govde-kucuk transition-colors',
+        aktif ? 'text-metin font-medium' : 'text-metin-2 hover:text-metin',
+      )}
+    >
+      {oge.ad}
+      {aktif ? (
+        <span
+          aria-hidden="true"
+          className="bg-gold-cizgi absolute inset-x-3 bottom-2.5 h-0.5 rounded-full"
+        />
+      ) : null}
+    </Link>
+  )
+}
+
+/**
+ * Mega menü.
+ *
+ * ⚠️ Yalnızca masaüstünde: dokunmatik ekranda "üzerine gelme" yok ve
+ * mobilde tüm öğeler zaten tam ekran menüde düz liste olarak duruyor.
+ *
+ * Klavye: bağlantılar normal sekme sırasında; panel `onMouseLeave` ile
+ * kapanıyor ama odak dışarı çıktığında da kapanmalı — `onBlur` yerine
+ * kapsayıcıdaki `onMouseLeave` ve Escape yeterli, çünkü panel odak tuzağı
+ * değil ve içindeki her bağlantı doğrudan gezilebiliyor.
+ */
+function MegaMenu({
+  ogeler,
+  onKapat,
+}: {
+  ogeler: readonly { ad: string; adres: string; aciklama: string }[]
+  onKapat: () => void
+}) {
+  const ref = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const kapat = (olay: KeyboardEvent) => {
+      if (olay.key === 'Escape') onKapat()
+    }
+    document.addEventListener('keydown', kapat)
+    return () => document.removeEventListener('keydown', kapat)
+  }, [onKapat])
+
+  return (
+    <div
+      ref={ref}
+      className="border-kenar bg-yuzey rounded-kart shadow-kalkik absolute top-full left-0 z-50 w-[26rem] border-[0.5px] p-2"
+    >
+      <ul className="flex flex-col">
+        {ogeler.map((alt) => (
+          <li key={alt.adres}>
+            <Link
+              href={alt.adres}
+              className="hover:bg-yuzey-2 rounded-kucuk flex flex-col gap-0.5 px-3 py-2.5 transition-colors"
+            >
+              <span className="text-govde-kucuk text-metin font-medium">{alt.ad}</span>
+              <span className="text-metin-3 text-mikro">{alt.aciklama}</span>
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </div>
+  )
+}
+
+/**
+ * Mobil tam ekran menü.
+ *
+ * ⚠️ Mega menü öğeleri burada DÜZLEŞTİRİLİYOR, gizlenmiyor. Telefonda
+ * açılır-kapanır ikinci seviye, tek elle kullanımda fazladan iki dokunuş
+ * demek; bütün yollar tek listede duruyor ve grup başlığıyla ayrılıyor.
+ */
+function MobilMenu({
+  menu,
+  yol,
+  whatsappAdresi,
+}: {
+  menu: readonly UstMenuOgesi[]
+  yol: string | null
+  whatsappAdresi: string | null
+}) {
+  return (
+    <div
+      id="mobil-gezinme"
+      className="border-kenar bg-zemin fixed inset-x-0 top-18 bottom-0 z-40 overflow-y-auto border-t-[0.5px] lg:hidden"
+    >
+      <nav aria-label="Mobil gezinme" className="kapsayici py-4">
+        <ul className="flex flex-col">
+          {menu.map((oge) => (
+            <li key={oge.adres} className="border-kenar border-b-[0.5px] last:border-0">
+              <Link
+                href={oge.adres}
+                aria-current={yolAktifMi(yol, oge.adres) ? 'page' : undefined}
+                className={sinif(
+                  'flex min-h-14 items-center text-govde',
+                  yolAktifMi(yol, oge.adres) ? 'text-metin font-medium' : 'text-metin',
+                )}
+              >
+                {oge.ad}
+              </Link>
+
+              {oge.mega && oge.mega.length > 0 ? (
+                <ul className="border-kenar mb-3 ml-3 flex flex-col border-l-[0.5px] pl-3">
+                  {oge.mega.map((alt) => (
+                    <li key={alt.adres}>
+                      <Link
+                        href={alt.adres}
+                        className="text-metin-2 flex min-h-12 items-center text-govde-kucuk"
+                      >
+                        {alt.ad}
+                      </Link>
+                    </li>
+                  ))}
+                </ul>
+              ) : null}
+            </li>
+          ))}
+        </ul>
+
+        <Link
+          href={BASLIK_EYLEMI.adres}
+          className="bg-aksan rounded-buton mt-6 flex min-h-13 w-full items-center justify-center font-medium text-white"
+        >
+          {BASLIK_EYLEMI.ad}
+        </Link>
+
+        {whatsappAdresi ? (
+          <a
+            href={whatsappAdresi}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="border-kenar-guclu rounded-buton mt-3 flex min-h-13 w-full items-center justify-center gap-2 border-[0.5px] font-medium"
+          >
+            <WhatsappIkon width={18} height={18} />
+            WhatsApp&apos;tan yazın
+          </a>
+        ) : null}
+      </nav>
+    </div>
   )
 }
 
 /** Alt sayfalarda da üst menü öğesi aktif görünsün (/portfoy/xyz → Portföy). */
 function yolAktifMi(mevcutYol: string | null, adres: string): boolean {
   if (!mevcutYol) return false
-  if (adres === '/') return mevcutYol === '/'
-  return mevcutYol === adres || mevcutYol.startsWith(`${adres}/`)
+  // Sorgu parametreli mega öğeleri (?tip=satilik) yol karşılaştırmasına girmez.
+  const temiz = adres.split('?')[0] ?? adres
+  if (temiz === '/') return mevcutYol === '/'
+  return mevcutYol === temiz || mevcutYol.startsWith(`${temiz}/`)
 }
 
 /** Klavye kullanıcıları için "içeriğe atla" bağlantısı. */

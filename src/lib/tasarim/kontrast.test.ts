@@ -154,6 +154,49 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
     nerede: 'gold dolu rozet — üzerine daima antrasit',
   },
 
+  // ── Sabit lacivert yüzeyler (üst şerit, altbilgi) ──────────────────────
+  //
+  // ⚠️ BU ÇİFTLER TEMA JETONU KULLANMIYOR VE BU BİLİNÇLİ.
+  //
+  // Üst şerit ve altbilgi iki temada da lacivert. Zemin değişmiyorsa
+  // üzerindeki metin de değişmemeli: `--color-metin` açık temada antrasite
+  // dönüyor ve lacivert üzerinde okunmuyor. Aynı tuzağa gold rozetinde
+  // düşülmüştü; orada da çözüm rampanın sabit basamağına bağlamaktı.
+  //
+  // Rampa basamakları temaya göre değişmediği için bu ölçümler iki temada
+  // da aynı sonucu verir — ama listede durmaları şart: biri değişirse
+  // (örn. altbilgi lacivert-800'e çekilirse) kapı kırılsın.
+  {
+    on: '--color-notr-50',
+    arka: '--color-lacivert-900',
+    asgari: AA_METIN,
+    nerede: 'altbilgi başlıkları ve üst şerit metni',
+  },
+  {
+    on: '--color-notr-300',
+    arka: '--color-lacivert-900',
+    asgari: AA_METIN,
+    nerede: 'altbilgi bağlantıları',
+  },
+  {
+    on: '--color-notr-400',
+    arka: '--color-lacivert-900',
+    asgari: AA_METIN,
+    nerede: 'altbilgi künyesi, feragat metni, adres',
+  },
+  {
+    on: '--color-gold-400',
+    arka: '--color-lacivert-900',
+    asgari: AA_BILESEN,
+    nerede: 'altbilgi üst çizgisi ve logo aksanı',
+  },
+  {
+    on: '--color-lacivert-700',
+    arka: '--color-lacivert-900',
+    asgari: 1.5,
+    nerede: 'altbilgi künye ayracı — yalnızca görünür olmalı, bilgi taşımaz',
+  },
+
   // ── Durum renkleri ─────────────────────────────────────────────────────
   { on: '--color-basari', arka: '--color-yuzey', asgari: AA_METIN, nerede: 'artış değeri' },
   { on: '--color-basari', arka: '--color-zemin', asgari: AA_METIN, nerede: 'artış değeri' },

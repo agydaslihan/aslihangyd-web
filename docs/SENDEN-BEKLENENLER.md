@@ -68,6 +68,19 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 ## Önemli (içerik eksikliği)
 
+- [ ] **Bülten (e-bülten) için KVKK açık rıza metni + e-posta sağlayıcısı**
+      Nereye: metin avukattan → Payload admin → Sayfalar; sağlayıcı `.env` → SMTP_*
+      Olmazsa: Altbilgideki bülten bandı EKLENMEDİ ve eklenemez.
+
+      Gerekçe: pazarlama e-postası, iletişim formundaki rızadan **ayrı bir
+      açık rıza** gerektiriyor (KVKK). O metni ben yazmıyorum (CLAUDE.md
+      kural 3). Ayrıca gönderim için bağlı bir sağlayıcı yok.
+
+      Çalışmayan bir abonelik kutusu koymak bal küpü kuralının tersi
+      olurdu: değer vermeden iletişim bilgisi istemek. Metin ve sağlayıcı
+      gelince banda bir aşamada eklenir.
+
+
 - [ ] **6 pilot mahalle için "Neden bu mahalle?" analiz metni — her biri min 800 kelime**
       Mahalleler: Muhittin, Alipaşa, Şeyhsinan, Hıdırağa, Velimeşe, Önerler
       Nereye: Payload admin → Mahalleler → [mahalle] → İçerik

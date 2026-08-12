@@ -96,5 +96,15 @@ export const endeksVerisiniGetir = cache(async (): Promise<EndeksVerisi> => {
  */
 export async function endeksSayfasiAcikMi(): Promise<boolean> {
   const veri = await endeksVerisiniGetir()
-  return veri.yayinIsaretli && veri.kontrol.yayinlanabilir
+
+  /**
+   * ⚠️ `seri !== null` şartı da BURADA olmalı.
+   *
+   * Sayfanın kendi kapısı üç koşula bakıyor (`yayinIsaretli`,
+   * `kontrol.yayinlanabilir`, `seri`). Bu yardımcı yalnızca ikisine
+   * bakarsa, üçüncüsünün tuttuğu bir durumda gezinme "Endeks" bağlantısı
+   * gösterir ve ziyaretçi 404'e gider. İki yerde ayrı yazılan bir koşul,
+   * er ya da geç ayrışan bir koşuldur.
+   */
+  return veri.yayinIsaretli && veri.kontrol.yayinlanabilir && veri.seri !== null
 }
