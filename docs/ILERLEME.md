@@ -2645,8 +2645,15 @@ güvencesi ve kaybetmenin karşılığı yok — alan `required`, kanca her
 oluşturmada rolü yazıyor, alan erişimi yalnızca güncellemede alanı düşürür
 ve güncellemede sütun eski değerini korur.
 
-⚠️ **Sonraki `migrate:create` çağrıları bu satırı yeniden önerecek;
-yeniden silin.** Fark bilinçli.
+⚠️ **Düzeltme:** İlk yazdığımda "sonraki `migrate:create` çağrıları bu
+satırı yeniden önerecek" demiştim; **yanlış.** Payload canlı veritabanıyla
+değil, göç dosyasının yanındaki `.json` anlık görüntüsüyle karşılaştırıyor
+ve o görüntü sütunu zaten nullable kaydetti. Yani öneri tekrarlanmayacak.
+
+Kalan fark şu: **anlık görüntü nullable diyor, veritabanı NOT NULL.**
+Zararsız, çünkü hiçbir göç kısıtı düşürmüyor — göçlerden sıfırdan kurulan
+bir veritabanı da NOT NULL olur. Fark yalnızca diff dosyasında.
+(`ai_arama` göçü üretilirken doğrulandı: satır yeniden önerilmedi.)
 
 `down` da düzeltildi: üretilen hâli enum'u doğrudan daraltıyordu ve
 kuyrukta tek bir ilan varsa son dönüşüm patlayıp göçü yarıda bırakırdı.
@@ -2669,6 +2676,249 @@ daraltılıyor.
 - **Panel duman testi:** yönetici panelinde "1 ilan yayın onayı bekliyor"
   göründü, aynı anda danışman panelinde **görünmedi**.
 - Kapı: `typecheck` ✅ `lint` ✅ `test` (1143 test) ✅ `build` ✅
+
+---
+
+## AI arama — KVKK onayına kadar KAPALI
+
+Aslıhan'ın kararı: özelliği maliyet yüzünden değil, **yurt dışına veri
+aktarımı** yüzünden ertele. Avukat metinleri gelmeden açılmayacak.
+
+### Ne yapıldı
+
+- `ai_arama` site bölümü eklendi, **varsayılan KAPALI**
+- `/portfoy` kutusu artık **iki** koşula bağlı: bölüm açık **VE** anahtar tanımlı
+- `docs/AI-ARAMA-KVKK-NOTU.md` — avukat için veri akışı notu
+- Ham sorgunun hiçbir yere yazılmadığı doğrulandı
+
+### Kararlar
+
+**1. İki koşul, tek değil.**
+
+Önceden yalnızca `ANTHROPIC_API_KEY` kontrol ediliyordu. Anahtarın bir gün
+başka bir amaçla (örn. sunucu tarafı rapor üretimi) tanımlanması, arama
+kutusunu istemeden açardı. Artık bölüm anahtarı ayrı bir karar noktası.
+
+**2. Bölüm modeli genişletildi: her bölüm bir sayfa değil.**
+
+`ai_arama`'nın rotası yok — mevcut bir sayfanın üzerindeki bileşen.
+`rotalar: []` artık geçerli. Testteki değişmez kural zayıflatılmadı,
+daraltıldı: "her bölümün rotası vardır" → **"rotasız bölüm gezinmede
+görünmez"** (rotasız bir bölümü altbilgiye koymak hiçbir yere gitmeyen bir
+bağlantı üretirdi).
+
+Varsayılan kapalı bölümlerin listesi de teste açıkça yazıldı; "kapalı
+olanları atla" demek, yeni bir bölümün yanlışlıkla kapalı doğmasını
+gizlerdi.
+
+**3. Ham sorgu saklanmıyor — zaten saklanmıyordu.**
+
+Karar "ham sorguları loglama, sadece türetilmiş filtreyi sakla" idi.
+Mevcut durum bundan daha katı: **hiçbir şey saklanmıyor.** Ne sorgu, ne
+filtre; veritabanına da günlüğe de yazılmıyor. Türetilen filtre yalnızca
+ziyaretçinin adres çubuğunda yaşıyor.
+
+Filtre analitiği istenirse ayrı bir iş — istenmeden veri toplamaya
+başlamıyorum. Günlüğe yalnızca yapılandırma hataları yazılıyor ve o
+kayıtlar sorgu metnini içermiyor (kodda doğrulandı).
+
+**4. Avukat notu hukuki metin değil.**
+
+CLAUDE.md kural 3: hukuki metinleri ben yazmam. `AI-ARAMA-KVKK-NOTU.md`
+bir aydınlatma metni değil, **avukatın metni yazabilmesi için teknik
+tarif**: hangi veri, nereye, ne amaçla, ne saklanıyor, ziyaretçi ne
+görüyor. Sonunda beş somut soru var (açık rıza gerekir mi, VERBİS'e
+beyan gerekir mi, …).
+
+### Göç notundaki hatam — düzeltildi
+
+Önceki bölümde "sonraki `migrate:create` çağrıları `rol` NOT NULL düşürme
+satırını yeniden önerecek" yazmıştım. **Yanlıştı.** Payload canlı
+veritabanıyla değil, göçün yanındaki `.json` anlık görüntüsüyle
+karşılaştırıyor; o görüntü sütunu zaten nullable kaydetmiş. `ai_arama`
+göçü üretilirken doğrulandı: satır tekrarlanmadı. Not düzeltildi.
+
+### Doğrulama
+
+- 4 yeni bölüm testi (varsayılan kapalı, rotasız, gezinmede yok, 404 yapmıyor)
+- Mevcut bölüm değişmezleri güncellendi, zayıflatılmadı
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1147 test) ✅ `build` ✅
+
+### Açmak için üç adım (sırayla)
+
+1. Avukat metni → Payload admin → Sayfalar
+2. `.env` → `ANTHROPIC_API_KEY`
+3. Payload admin → Ayarlar → Site Bölümleri → "AI doğal dil arama" aç
+
+Üçü birden yapılmadan kutu ziyaretçiye görünmez.
+
+---
+
+## OpenStreetMap POI içe aktarma
+
+Aslıhan'ın kararı: yaz — en yüksek kaldıraçlı iş, elle giriş aylar alır.
+Şartları: ODbL atıf, `kaynak: osm` işareti, elle düzeltilmiş kayıt
+ezilmesin, Çorlu sınırıyla kısıtla, kategori eşlemesi belgelensin.
+
+### Ne yapıldı
+
+- `IlgiNoktalari`: `kaynak`, `osmKimlik`, `elleDuzenlendi` alanları
+- `src/lib/osm/eslesme.ts` — kategori eşleme tablosu (gerekçeleriyle)
+- `src/lib/osm/sorgu.ts` — Overpass sorgusu ve cevap çözümleyici
+- `src/lib/osm/iceAktarma.ts` — uzlaştırma ve yazma
+- `/admin/osm-poi-ice-aktar` — önizlemeli sihirbaz (yalnızca yönetici)
+- `/veri-kaynaklari` — ODbL lisansı ve kategori eşlemesi (yayında)
+- `CevreBolumu` — POI görünen her yerde "© OpenStreetMap katkıcıları"
+
+### Kararlar ve gerekçeleri
+
+**1. Çorlu sınırı MAHALLE MERKEZLERİNDEN türetiliyor.** ⭐
+
+Sabit bir Çorlu kutusu koda yazılmadı. İki sebep:
+- **Uydurma veri riski:** Çorlu'nun sınır koordinatlarını ezberden yazmak,
+  doğrulanmamış bir rakamı koda gömmek olurdu (CLAUDE.md kural 2).
+- **Kendiliğinden doğru kalır:** yeni mahalle eklendiğinde kutu büyür;
+  sabit bir kutu o mahalleyi dışarıda bırakır ve kimse fark etmezdi.
+
+Merkez yoksa içe aktarma çalışmaz ve sebebini söyler. Kutu ülke ölçeğine
+şişerse (bir mahallenin merkezi yanlış ile girilmişse) reddedilir.
+
+**2. Elle düzeltilen kayıt ezilmez — iki parçalı koruma.** ⭐
+
+`osmElleDuzenlemeIzi` kancası insan düzenlemesini işaretler; içe aktarma
+işaretli kaydı atlar ve "korundu" diye sayar. İçe aktarıcı kendi
+yazmalarında `context.osmIceAktarma = true` gönderiyor — bu bayrak
+olmasaydı ilk içe aktarma her kaydı "elle düzenlendi" işaretler ve ikinci
+içe aktarmada hiçbir şey güncellenmezdi.
+
+**3. Sorgu, eşleme tablosundan türetiliyor.**
+
+Sorgu elle yazılsaydı tabloya yeni bir tip eklenip sorguya eklenmemesi
+(ya da tersi) an meselesiydi.
+
+**4. Geniş sorulan anahtarlar — "neyin dışarıda kaldığını" görebilmek için.**
+
+⚠️ İlk yazımda sorgu yalnızca eşlediğimiz **değerleri** istiyordu. Duman
+testinde ortaya çıktı ki bu, "eşlenmeyen etiketler" raporunu **daima boş**
+bırakıyor: sorduğumuz her şey zaten eşleşiyordu. Yani kodda ve arayüzde
+verdiğim "eczaneleri de alalım mı sorusunu görerek sorabilirsiniz" sözü
+tutulmuyordu.
+
+`amenity`, `shop`, `leisure`, `office` artık **değer süzgeci olmadan**
+soruluyor. `highway`, `railway`, `landuse`, `aeroway` dar kalıyor —
+geniş sorulsa ilçedeki bütün yol ağı ve ray parçaları inerdi.
+
+Gerçek ölçüm (Çorlu, 3 km pay): 277 eşleşen nokta, **126 eşlenmeyen tür** —
+60 oyun alanı, 50 otopark, 34 restoran, 27 ibadethane, 21 eczane.
+Artık soru sorulabilir.
+
+**5. Adsız nokta atlanır ve sayılır.**
+
+"En yakın okul: (isimsiz)" bilgi değil gürültü. Aynı ölçümde 111 adsız
+nokta atlandı.
+
+**6. Yalnızca yönetici.**
+
+Yüzlerce kayıt oluşturuyor ve dış servise sorgu atıyor; danışmanın günlük
+işi değil. Menü bağlantısı da danışmana gösterilmiyor — tıklayınca
+"yetkiniz yok" diyen bir bağlantı, kullanılamayan bir menü öğesidir.
+
+**7. Atıf kayıt bazında.**
+
+Mesafe sorgusu artık `kaynak` da taşıyor; atıf yalnızca gerçekten OSM
+kaydı gösterildiğinde basılıyor. **Elle toplanmış veriyi OSM'e atfetmek,
+atfı unutmak kadar yanlış olurdu.**
+
+**8. Scraping yasağıyla çelişmiyor.**
+
+CLAUDE.md kural 6 ilan platformlarının kullanım koşullarını ihlal eden
+otomatik veri çekmeye ait. OSM açık veridir, ODbL ile yeniden kullanım
+için lisanslanmıştır ve Overpass API bu iş için yapılmış resmî arayüzdür.
+
+### Testlerin yakaladığı gerçek hata
+
+**Elle düzeltme koruması tamamen çalışmıyordu.** Kanca yalnızca
+`data.elleDuzenlendi === false` kontrol ediyordu; oysa Payload kısmi
+güncellemede kaydın mevcut `false` değerini de `data` içinde gönderiyor.
+Sonuç: her insan düzenlemesi "kullanıcı işareti kaldırdı" sanılıyor ve iz
+basılmadan geçiyordu — yani özelliğin tek vaadi tutmuyordu.
+
+Doğru ayrım öncekiyle karşılaştırmak: işaret **daha önce true idi ve şimdi
+false geldiyse** kullanıcı bilerek kaldırmıştır.
+
+Ayrıca `ortam.test.ts` (ortam değişkeni belgeleme denetimi)
+`OVERPASS_ADRESI`'nin `.env.example`'da eksik olduğunu yakaladı.
+
+### Doğrulama
+
+- **24 birim testi** — eşleme, kutu hesabı (boylam düzeltmesi dahil), ülke
+  ölçeğine şişmiş kutunun reddi, sorgu biçimi, cevap çözümleme
+- **6 entegrasyon testi** — kaynak izi, içe aktarıcının kendi yazmasının iz
+  bırakmaması, **panelden düzenlemenin işaretlemesi**, **işaretli kaydın
+  ezilmemesi**, işaretin kaldırılabilmesi, elle girilmiş kayda iz basılmaması
+- **Gerçek Overpass duman testi** — yukarıdaki ölçüm. Test verisi silindi.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1185 test) ✅ `build` ✅
+
+### Raporun ilk çıktısı: eczane ve çocuk oyun alanı eklendi
+
+Eşlenmeyen tür raporu tam olarak amaçlandığı işi yaptı. Aslıhan raporu
+okuyup karar verdi (12 Ağustos 2026):
+
+- **`amenity=pharmacy` → `eczane`** — sağlık erişiminin günlük ölçüsü.
+  Hastane "var mı yok mu" sorusunu yanıtlıyor, eczane "yürüme mesafesinde
+  mi" sorusunu.
+- **`leisure=playground` → `oyun_alani`** — çocuklu aile için mahalle
+  kalitesinin doğrudan göstergesi. Parktan **ayrı** sayılıyor: her park
+  oyun alanı içermiyor ve ikisi aynı şey değil.
+- **`amenity=restaurant` → EKLENMEDİ.** Sinyal değeri düşük, merkeziyeti
+  zaten AVM/market/ulaşım kriterleriyle ölçüyoruz, veriye gürültü ekler.
+
+İkisi de yatırım skorunun **sosyal donatı** bileşenine giriyor
+(`SOSYAL_DONATI_TIPLERI`), mahalle sayfasındaki çevre listesinde
+görünüyor ve haritada ilgili renk grubuna düşüyor.
+
+**Bilinçli dışlamalar artık yazılı.** `BILINCLI_DISARIDA` tablosu
+eklendi: raporda düzenli görünen ama almamaya karar verdiğimiz türler,
+gerekçesiyle. Rapor bunları "aktarılmadı, isterseniz ekleriz" diye değil
+**"bilinçli olarak dışarıda — sebebi şu"** diye gösteriyor. Gerekçe
+`/veri-kaynaklari` sayfasında da yayınlanıyor. Yazılı olmasaydı aynı soru
+her içe aktarmada yeniden sorulur ve baştan tartışılırdı.
+
+**Rapor kalıcılaştırıldı.** Önceden kapalı bir `<details>` içindeydi ve
+yalnızca boş değilken görünüyordu. İkisi de değişti:
+
+- Açık geliyor — kapalı bir rapor okunmayan rapordur.
+- Boşken de görünüyor ("dışarıda kalan tür yok"). Yoksa "rapor çalıştı ve
+  temiz çıktı" ile "rapor hiç üretilmedi" ayırt edilemezdi.
+- 40'tan fazla tür varsa kaç türün gizlendiği yazılıyor; sessiz kırpma yok.
+
+**Yayınlanan metodoloji düzeltildi.** `/veri-kaynaklari` sayfası
+"eczane ... içe aktarılmıyor" diyordu; artık yanlıştı.
+
+#### Göç geri alması yine elle düzeltildi
+
+Üretilen `down` doğrudan enum'u yeniden kuruyordu. Tek bir eczane ya da
+oyun alanı kaydı varsa son `USING tip::enum` dönüşümü patlar ve göç yarıda
+kalırdı — `onay_bekliyor` göçündeki tuzağın aynısı.
+
+Kayıtlar önce en yakın anlamlı tipe çekiliyor: `eczane → hastane`
+(tipin etiketi zaten "Hastane / sağlık"), `oyun_alani → park`.
+
+**Gerçek veriyle denendi:** iki kayıt eklendi, `migrate:down` çalıştırıldı,
+kayıtlar `hastane` ve `park` olarak sağ çıktı, enum daraldı, hata yok.
+Sonra göç yeniden uygulandı ve test kayıtları silindi.
+
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1191 test) ✅ `build` ✅
+
+### Bilinen sınırlar
+
+- Tek seferde 3.000 nokta tavanı (kaza koruması).
+- İçe aktarma mahalle ilişkisini kurmuyor — POI'nin hangi mahallede olduğu
+  boş kalıyor. Mahalle sınırı (polygon) verisi girildiğinde PostGIS ile
+  otomatikleştirilebilir; şimdilik yakınlık hesapları mahalle ilişkisine
+  değil koordinata bakıyor, yani eksiklik bir şeyi bozmuyor.
+- Overpass herkese açık sunucu kullanıyor; yoğun saatlerde yavaş olabilir.
+  `OVERPASS_ADRESI` ile ayna adres verilebilir.
 
 ---
 

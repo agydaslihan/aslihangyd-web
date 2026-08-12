@@ -1,3 +1,5 @@
+import Link from 'next/link'
+
 import { POI_TIPLERI, type PoiTipi } from '@/collections/IlgiNoktalari'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { KonumIkon } from '@/components/ui/Ikon'
@@ -47,6 +49,8 @@ export function CevreBolumu({
     )
   }
 
+  const osmVar = mesafeler.some((mesafe) => mesafe.kaynak === 'osm')
+
   // Gösterim sırası önem sırasıdır: değer sürücüleri üstte.
   const sirali = [...mesafeler].sort((a, b) => {
     const sira = (tip: PoiTipi) => {
@@ -95,6 +99,42 @@ export function CevreBolumu({
         veya süresi değildir. Yalnızca sisteme girilmiş noktalar hesaba katılır — listede olmayan
         bir donatı, olmadığı anlamına gelmez.
       </p>
+
+      {/*
+        ⚠️ ODbL ATIF YÜKÜMLÜLÜĞÜ — kaldırılamaz.
+
+        OpenStreetMap verisi Open Database License altında; yeniden kullanım
+        serbest ama atıf zorunlu. Atıf yalnızca gerçekten OSM kaydı
+        gösterildiğinde basılıyor: elle toplanmış veriyi OSM'e atfetmek,
+        atfı unutmak kadar yanlış olurdu.
+      */}
+      {osmVar ? <OsmAtfi /> : null}
     </div>
+  )
+}
+
+/**
+ * OpenStreetMap atfı.
+ *
+ * ⚠️ ODbL gereği zorunlu ve kaldırılamaz. Lisans açıklaması ve kategori
+ * eşlemesi /veri-kaynaklari sayfasında.
+ */
+export function OsmAtfi({ sinifAdi }: { sinifAdi?: string }) {
+  return (
+    <p className={sinif('text-metin-3 text-mikro leading-relaxed', sinifAdi)}>
+      Bazı çevre noktaları{' '}
+      <a
+        href="https://www.openstreetmap.org/copyright"
+        target="_blank"
+        rel="noreferrer"
+        className="underline underline-offset-2"
+      >
+        © OpenStreetMap katkıcıları
+      </a>{' '}
+      verisinden alınmıştır (ODbL).{' '}
+      <Link href="/veri-kaynaklari" className="underline underline-offset-2">
+        Veri kaynakları ve eşleme
+      </Link>
+    </p>
   )
 }

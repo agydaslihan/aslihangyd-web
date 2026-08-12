@@ -614,9 +614,11 @@ export interface IlgiNoktalari {
     | 'okul'
     | 'universite'
     | 'hastane'
+    | 'eczane'
     | 'market'
     | 'avm'
     | 'park'
+    | 'oyun_alani'
     | 'sanayi'
     | 'durak'
     | 'istasyon'
@@ -638,6 +640,18 @@ export interface IlgiNoktalari {
    */
   onemli?: boolean | null;
   detay?: string | null;
+  /**
+   * İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı kayıtlar sitede "© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği).
+   */
+  kaynak: 'elle' | 'osm';
+  /**
+   * Örn. "node/123456". Yeniden içe aktarmada aynı kaydı bulmak için kullanılır.
+   */
+  osmKimlik?: string | null;
+  /**
+   * Bu kaydı panelden düzenlediğinizde otomatik işaretlenir ve yeniden içe aktarma onu EZMEZ. İşareti kaldırırsanız kayıt tekrar OSM'den güncellenir.
+   */
+  elleDuzenlendi?: boolean | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1197,6 +1211,9 @@ export interface IlgiNoktalariSelect<T extends boolean = true> {
   mahalle?: T;
   onemli?: T;
   detay?: T;
+  kaynak?: T;
+  osmKimlik?: T;
+  elleDuzenlendi?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1573,6 +1590,10 @@ export interface SiteBolumleri {
    */
   simulator?: boolean | null;
   /**
+   * ⚠️ Portföy sayfasındaki "kendi cümlenizle arayın" kutusu. Ziyaretçinin yazdığı metin Anthropic'in (ABD) sunucularına gider — yurt dışına veri aktarımı. Aydınlatma metni avukattan gelmeden AÇMAYIN.
+   */
+  ai_arama?: boolean | null;
+  /**
    * Mahalle medyanına göre fırsat ve risk sinyalleri.
    */
   bolge_radari?: boolean | null;
@@ -1799,6 +1820,7 @@ export interface SiteBolumleriSelect<T extends boolean = true> {
   gizli_portfoy?: T;
   mahalle_testi?: T;
   simulator?: T;
+  ai_arama?: T;
   bolge_radari?: T;
   updatedAt?: T;
   createdAt?: T;
