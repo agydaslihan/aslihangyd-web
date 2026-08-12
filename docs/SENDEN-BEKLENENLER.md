@@ -123,9 +123,31 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       Olmazsa: Hesaplayıcılar "parametre tanımlı değil" uyarısı gösterir ve
       hesaplama yapmaz. Ben bu oranları koda gömmüyorum (CLAUDE.md kural 4).
 
-- [ ] **POI verisi** — okul, hastane, market, park, sanayi, durak konumları (Faz 2)
+- [ ] **POI verisi** — okul, hastane, market, park, sanayi, durak konumları
       Nereye: Payload admin → İlgi Noktaları
       Alternatif: OpenStreetMap'ten toplu içe aktarma yazabilirim, söyle.
+
+      ⬆️ **Bu madde artık daha değerli.** Yakınlık sorguları yazıldı; her
+      kayıt üç yeri birden besliyor:
+
+      1. Mahalle sayfası → "Konum ve çevre" bölümü (en yakın nokta + mesafe)
+      2. İlan detayı → "Çevre ve erişim" bölümü
+      3. `/admin/skor-onerileri` → yatırım skorunun üç bileşeni için
+         gerekçeli puan önerisi
+
+      Haritadan **bağımsız** çalışıyor: MapTiler anahtarı gelmese bile
+      nokta girdiğin anda bu bölümler dolmaya başlar.
+
+      ⚠️ İki şart: mahallenin **merkez noktası** girilmiş olmalı (yukarıdaki
+      madde) ve mesafeler **kuş uçuşu** gösterilir — sürüş süresi değil.
+
+      ⚠️ Önce en çok fark yaratanları gir: OSB'ler, tren istasyonu,
+      havalimanı, şehir hastanesi. Bunlar Çorlu'nun değer sürücüleri ve
+      skor önerisinde en ağır kalemler.
+
+      Not: Bir tür için **hiç kayıt yoksa** sistem o türü hesaba katmaz —
+      mahalleyi "o donatısı yok" diye cezalandırmaz. Kayıt eksikliğini
+      olguya çevirmiyoruz.
 
 - [ ] **SMTP bilgileri** (e-posta bildirimleri için)
       Nereye: `.env` → `SMTP_HOST`, `SMTP_PORT`, `SMTP_USER`, `SMTP_PASS`,
@@ -140,6 +162,24 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       GitHub repo → Settings → Secrets: `SSH_HOST`, `SSH_PORT`, `SSH_USER`,
       `SSH_PRIVATE_KEY`, `DATABASE_URI`, `PAYLOAD_SECRET`
       Olmazsa: Otomatik deploy çalışmaz; workflow hazır bekler.
+
+- [ ] **Cloudflare DNS — deploy sırasında iki tıklık iş** ⚠️ ZAMANLAMASI ÖNEMLİ
+      Deploy'dan **önce**: DNS → Records → `aslihangyd.com` ve `www` A
+      kayıtlarını **DNS only** (gri bulut) yap.
+      Sertifika alındıktan **sonra**: ikisini de **Proxied** (turuncu) geri al.
+      Neden: Caddy sertifikayı Let's Encrypt'ten alıyor ve doğrulama
+      origin'e doğrudan bağlanıyor; turuncu bulutta doğrulama başarısız
+      olur. Adım adım: `docs/ISLETME-REHBERI.md` §5.2 ADIM 0 ve Adım 6.
+      Olmazsa: Site HTTPS'te açılmaz. Kalıcı hasar yok ama körlemesine
+      tekrar denemek Let's Encrypt oran sınırına takabilir.
+
+- [ ] **Deploy sonrası: eski sertifikayı iptal et**
+      `docker/certs/origin.key` ve `origin.pem` dosyalarını sunucudan sil,
+      Cloudflare panelinde SSL/TLS → Origin Server → sertifikayı **Revoke**
+      et. Yordam: `ISLETME-REHBERI.md` §5.5 "Eski kurgudan kalanlar".
+      Neden: 8443 + origin sertifikası kurgusu kaldırıldı; kullanılmayan
+      bir özel anahtarı diskte tutmanın hiçbir faydası yok.
+      ⚠️ Deploy **doğrulandıktan sonra** yap, önce değil.
 
 - [ ] **Yedekleme hedefi** (Faz 1.10)
       Cloudflare R2 veya Backblaze B2 hesabı + restic şifre cümlesi
@@ -195,7 +235,25 @@ yapmak istiyorum, kendi başıma gevşetmem.
 
 **Aciliyet:** Kiralık portföy girmeye başlayana kadar bekleyebilir.
 
-### 2. Kişisel veri saklama süresi 24 ay uygun mu?
+### 2. Cloudflare Web Analytics çerez onayına tabi mi?
+
+**Bağlam:** Deploy sonrası gerçek kullanıcı hız ölçümü (Core Web Vitals)
+kuracağız. İki seçenek var: Umami (bizim yüklediğimiz betik) ya da
+Cloudflare Web Analytics (proxy seviyesinde, sayfaya betik eklemeden).
+
+**Şu anki davranış:** Analitik betiği onay alınmadan **yüklenmiyor**
+(CLAUDE.md kural 8, kod seviyesinde zorlanıyor). Umami seçilirse bu kapı
+aynen geçerli.
+
+**Senden istediğim:** Cloudflare Web Analytics için avukatına sor.
+"Sayfaya betik eklenmiyor, ölçüm proxy'de yapılıyor" gerekçesi onay
+zorunluluğunu kaldırıyor mu? Ziyaret ölçümü kişisel veri işleme sayıldığı
+için ben **kaldırmadığını varsayıyorum** ve onaya bağlı tutuyorum —
+gevşetmeyi kendi başıma yapmam.
+
+**Aciliyet:** Deploy sonrası, ölçüm kurulmadan önce.
+
+### 3. Kişisel veri saklama süresi 24 ay uygun mu?
 
 **Şu anki davranış:** Siteden gelen her talep kaydına oluşturulduğu anda
 "saklama bitiş tarihi" yazılıyor (onay + 24 ay). Süresi dolan kayıtlar
@@ -205,7 +263,7 @@ günlük bakım göreviyle otomatik siliniyor.
 Avukatın farklı bir süre belirlerse söyle, tek satırda değiştiriyorum
 (`src/lib/kvkk/saklama.ts` → `VARSAYILAN_SAKLAMA_AYI`).
 
-### 3. Değerleme katsayıları — senin saha bilgin gerekiyor
+### 4. Değerleme katsayıları — senin saha bilgin gerekiyor
 
 **Şu anki durum:** Değerleme aracı (`/degerleme`) çalışıyor ama katsayılar
 boş. Bu yüzden kat, bina yaşı ve yapı durumu tahmine **hiç katılmıyor** ve
@@ -227,7 +285,7 @@ Katsayılar çarpımsal: `1,00` etkisiz, `1,05` %5 artırır, `0,90` %10 düşü
 **Ayrıca:** Mahalle rakamları (ortalama m² satış + gözlem sayısı) girilmeden
 değerleme aracı hiçbir mahalle için sonuç üretemez. Bu, bilinçli bir kapı.
 
-### 4. ✅ Cevaplandı — kalan bal küpü modülleri yapıldı
+### 5. ✅ Cevaplandı — kalan bal küpü modülleri yapıldı
 
 Talimatın üzerine dördü de yazıldı: Mahalle Eşleştirme Testi, Yatırım
 Simülatörü, Kira mı Satın Alma mı, Bölge Radarı. PDF rapor da eklendi.
@@ -279,7 +337,7 @@ Adımı kaldırmadım (maliyeti ~1 sn) ama yorumuna şu an bir şey yapmadığı
 yazdım. Kaldırmamı istersen söyle. Ayrıntı `docs/ILERLEME.md` → "CI derleme
 önbelleği ölçümü".
 
-### 5. Endeks sepet ağırlıkları — senin saha bilgin gerekiyor
+### 6. Endeks sepet ağırlıkları — senin saha bilgin gerekiyor
 
 **Şu anki durum:** Endeks motoru hazır ve test edildi, ama sepet ağırlıkları
 boş. Ağırlık olmadan endeks hesaplanamaz.
@@ -295,7 +353,7 @@ Başlangıçta saha bilginle tahmin et; TÜİK bina sayımı veya belediye veris
 bulursan iyileştirirsin. **Ağırlıklar yılda bir kez, Ocak ayında güncellenir**
 — ay ay değişirse endeks anlamını kaybeder.
 
-### 6. Gözlem toplamaya bugün başla
+### 7. Gözlem toplamaya bugün başla
 
 Endeks sayfası şu koşullar sağlanana kadar **404 dönüyor** (kod seviyesinde):
 en az 6 ay veri, 500 gözlem, ağırlığın %70'ini kapsayan katmanlarda her ay
@@ -351,7 +409,7 @@ Aynı daireyi üç sırada göstermek portföyü olduğundan küçük gösterir.
 
 ---
 
-### 7. ✅ Cevaplandı — palet onaylandı, üç noktada onayına ihtiyacım var
+### 8. ✅ Cevaplandı — palet onaylandı, üç noktada onayına ihtiyacım var
 
 Onayladığın lacivert / bakır / sıcak nötr paleti, tipografi ölçeği ve
 bileşen kuralları uygulandı. Değerler `src/app/(site)/globals.css` içinde

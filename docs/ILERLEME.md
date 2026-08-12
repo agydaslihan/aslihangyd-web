@@ -18,7 +18,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 1.8 | Mahalle sayfaları | ✅ |
 | 1.9 | Lead formu + WhatsApp | ✅ |
 | 1.10 | SEO, CI/CD, yedekleme, dokümantasyon | ✅ |
-| 2 | Harita, hesaplayıcılar, ticari dikey | ✅ |
+| 2 | Harita, hesaplayıcılar, ticari dikey | ✅ (PostGIS yakınlık dahil) |
 | 2B | Bal küpü modülleri, CRM, portföy yönetimi | 🟡 Kısmi — bkz. aşağısı |
 | 2B+ | Kalan bal küpü modülleri + raporlar | ✅ 4 modül + PDF rapor — bkz. aşağısı |
 | 2B++ | Portföy giriş sihirbazı | ✅ Admin'in yanında, EİDS canlı geri bildirimli |
@@ -2129,6 +2129,110 @@ düşürmek**.
 
 ---
 
+## Faz 2 kalanı — PostGIS yakınlık sorguları
+
+Faz 2'nin tamamlanmamış tek maddesi buydu: "sanayiye 10 dakika" tipi
+yakınlık sorguları. Kapatıldı.
+
+### Ne yapıldı
+
+- `src/lib/yakinlik/` — saf motor: mesafe → 0–100 puan eğrileri, veri
+  kapsamı korumaları, karşılaştırmalı yoğunluk. 15 birim testi.
+- `src/lib/veri/yakinlik.ts` — ham parametreli PostGIS sorguları
+  (`ST_Distance` + `geography`). 8 entegrasyon testi.
+- `CevreBolumu` bileşeni — mahalle sayfası 5. bölümünde ve ilan
+  detayında; en yakın nokta + 1 km içindeki kayıt sayısı.
+- `/admin/skor-onerileri` — üç skor bileşeni için gerekçeli öneri ekranı.
+- `/yatirim-skoru-metodolojisi` — eğriler ve ağırlıklar yayınlandı.
+- `mesafeYaz` biçimlendiricisi (`850 m` / `3,4 km`).
+
+### Kararlar ve gerekçeleri
+
+**1. Dakika değil, kilometre — ve "kuş uçuşu" etiketiyle.**
+
+PROJE-PLANI.md "sanayiye 10 dakika" diyor. Süre üretmek için yol ağı ve
+rotalama motoru (OSRM/Valhalla) gerekir; elimizde yok. Mesafeyi varsayılan
+bir hıza bölüp "12 dakika" yazmak, bilmediğimiz bir şeyi iddia etmek
+olurdu — CLAUDE.md kural 2 kapsamında uydurma veri. Arayüzde her yerde
+"kuş uçuşu" etiketi var. Rotalama gelirse etiket değişir, veri modeli
+değişmez.
+
+**2. Türetilen puan skora OTOMATİK YAZILMIYOR.** ⭐ En önemli karar
+
+Sanayi yakınlığı, ulaşım ve sosyal donatı bileşenleri koordinatlardan
+hesaplanabiliyor. Doğrudan yazmak kolaydı ve yanlış olurdu:
+
+> **POI kaydının yokluğu, donatının yokluğu değildir.**
+
+Hıdırağa'ya henüz tek okul girilmediyse otomatik hesap onu "donatısı
+zayıf" diye damgalar. Veri eksikliği bir kez skora yazıldığında olguya
+dönüşür ve kimse geri dönüp sorgulamaz. Bu yüzden ekran **öneri** üretir,
+gerekçesini satır satır gösterir, veri boşluklarını söyler; alanı Aslıhan
+doldurur.
+
+Aynı ilkenin daha önceki örnekleri: skorda %70 kapsam eşiği, eşleştirmede
+%60, endekste katman başına 8 gözlem.
+
+**3. Sosyal donatıda mutlak eşik yerine karşılaştırma.**
+
+"1 km içinde 8 donatı iyidir" gibi bir eşiği biz uydurmuş oluruz. Bunun
+yerine en yoğun mahalle 100 puan, diğerleri ona oranlanır — eşleştirme
+motorundaki bütçe puanıyla aynı yöntem. En az 3 mahalle şartı var; ikisiyle
+"en yoğun olan 100" demek kıyas değil etiketlemedir.
+
+**4. Sanayi eğrisi monoton değil.**
+
+OSB'ye işe gidilebilir mesafede olmak değerli; OSB'nin dibinde oturmak
+gürültü ve ağır araç trafiği. En yüksek puan 2–7 km bandında. Havalimanı
+kalemi de aynı gerekçeyle plato biçimli.
+
+**5. Eğri sayıları metodoloji sayfasına koddan basılıyor.**
+
+`/yatirim-skoru-metodolojisi` sayfası kırılım noktalarını `SANAYI_EGRISI`
+ve `ULASIM_KALEMLERI`den okuyor, elle yazmıyor. Yayınlanan metodolojinin en
+sık görülen sessiz yalanı, kod değişip sayfanın eski kalmasıdır.
+
+**6. Mesafe listesi haritadan bağımsız.**
+
+MapTiler anahtarı gelmeden de çalışır: ilgi noktası girildiği anda dolar.
+En değerli bilgi (neye ne kadar uzak) en ucuz veriye bağlandı. Harita boş
+durumu bunun altında duruyor.
+
+**7. Ham SQL erişim denetimini atlar — iki koruma kondu.**
+
+- Ziyaretçiye açık yol (`noktayaGoreYakinlik`) yalnızca **koordinat** alır;
+  mahalle zaten Payload üzerinden erişim denetimiyle çekilmiştir.
+  Sorgulanan `ilgi_noktalari` koleksiyonu zaten herkese açık.
+- Panel yolu (`tumMahallelerinYakinligi`) yayında olmayan mahalleleri de
+  döndürür; görünümde `if (!req.user) return null` kapısı var. Oturumsuz
+  istekte gövdenin hiç basılmadığı duman testiyle doğrulandı.
+
+### Ölçüm ve doğrulama
+
+- Birim: 15 test (eğri uçları, doğrusal geçiş, kapsam koruması, kıyas eşiği)
+- Entegrasyon: 8 test, gerçek PostGIS'e karşı. İki tuzağı kapatıyorlar:
+  **boylam/enlem sırası** (karışırsa Çorlu Somali açıklarına gider) ve
+  **SRID** (sütun `geometry(Point)`, SRID'siz açılmış; `ST_SetSRID`
+  olmadan `geography` dönüşümü kırılgan).
+- Duman testi: geçici veriyle mahalle sayfası — 3,3 km / 2,2 km / 666 m /
+  444 m / 222 m doğru sırayla basıldı, "Öne çıkan" rozetleri doğru
+  kayıtlara düştü. Test verisi sonrasında silindi.
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1009 test) ✅ `build` ✅
+
+### Bilerek yapılmayan
+
+- **GiST uzamsal indeks eklenmedi.** `ilgi_noktalari.konum` üzerinde
+  indeks yok. Gerekçe: Payload'ın ürettiği göç dosyaları kendi şemasını
+  temel alıyor; elle eklenen bir indeksi ileride sessizce `DROP` edebilir.
+  Kazanç ise bu ölçekte ölçülemez — Çorlu'da POI sayısı yüzlerle ifade
+  edilecek, sıralı tarama milisaniyenin altında. Tetik: kayıt sayısı
+  10.000'i geçerse indeks eklenmeli ve göç üretiminden sonra korunduğu
+  doğrulanmalı.
+- **Rotalama (sürüş süresi) yapılmadı.** Ayrı bir servis (OSRM) ve yol ağı
+  verisi gerektirir; 3,2 GB RAM'de barındırma kararı ayrıca verilmeli.
+
+---
+
 ## Faz 2C kalanı — Gözlem CSV içe aktarma
 
 Faz 2C'nin tamamlanmamış tek maddesi buydu. ILERLEME'de "Aslıhan'ın mevcut
@@ -2259,6 +2363,8 @@ entegrasyon testi onu doğrudan çağırıyor.
 | E-posta bildirimi kodu yok | — | SMTP bilgileri gelince `yetkisiBitecekleriBildir` görevine eklenecek |
 | `sharp` 0.34'e sabit | — | Payload sürüm yükseltmesinde 0.35 tekrar denenebilir |
 | PostGIS `tiger`/`topology` şemaları | Disk | Düşük öncelik |
+| `ilgi_noktalari.konum` üzerinde GiST indeks yok | Ölçekte sorgu süresi | Bilinçli. Payload'ın ürettiği göç, elle eklenen indeksi sessizce `DROP` edebilir; kazanç bu ölçekte ölçülemez. Tetik: 10.000+ POI kaydı. |
+| Sürüş süresi (dakika) yok | "OSB'ye 10 dk" denemiyor | Rotalama servisi (OSRM) + yol ağı verisi gerekir. Mesafeler kuş uçuşu olarak, böyle etiketlenerek gösteriliyor. |
 | Rol tabanlı yetkilendirme | — | `Kullanicilar.rol` alanı var ama henüz erişim kurallarına bağlı değil; CRM fazında |
 | Gizli portföy modülü | ✅ | Faz 2B'de tamamlandı |
 | Eşleştirme profili boş | Test sonuç üretmez | `Mahalleler → Eşleştirme profili` 4 alan doldurulmalı; SENDEN-BEKLENENLER md. 8 |

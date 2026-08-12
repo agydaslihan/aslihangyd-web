@@ -13,6 +13,7 @@ import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
 import { SOSYAL_YOLU } from '@/components/sosyal/yol'
 import { GOZLEM_ICE_AKTARMA_YOLU } from '@/components/gozlem/yol'
+import { YAKINLIK_YOLU } from '@/components/yakinlik/yol'
 import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
 import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
@@ -100,6 +101,20 @@ export default buildConfig({
           Component: '@/components/gozlem/IceAktarmaGorunumu#default',
           path: GOZLEM_ICE_AKTARMA_YOLU,
         },
+
+        /**
+         * Yakınlıktan skor önerileri.
+         *
+         * ⚠️ Bu ekran da hiçbir şey KAYDETMEZ. İlgi noktası
+         * koordinatlarından üç skor bileşeni türetip gerekçesiyle
+         * gösterir; alanı Aslıhan doldurur. Otomatik yazım, POI kaydı
+         * eksik olan mahalleyi "donatısı zayıf" diye damgalardı —
+         * veri eksikliğini olguya çevirmek olurdu.
+         */
+        skorOnerileri: {
+          Component: '@/components/yakinlik/SkorOnerileriGorunumu#default',
+          path: YAKINLIK_YOLU,
+        },
       },
       // Sihirbaz bir koleksiyon olmadığı için otomatik menüde görünmez;
       // görünmeyen bir araç, olmayan bir araçtır.
@@ -107,6 +122,7 @@ export default buildConfig({
         '@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi',
         '@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi',
         '@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi',
+        '@/components/yakinlik/YakinlikNavBaglantisi#YakinlikNavBaglantisi',
       ],
     },
   },
