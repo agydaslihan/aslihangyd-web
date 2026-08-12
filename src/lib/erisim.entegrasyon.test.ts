@@ -139,6 +139,29 @@ describe('yetki yükseltme kapıları', () => {
     ).rejects.toThrow()
   })
 
+  it('danışman YÖNETİCİNİN ŞİFRESİNİ değiştiremez — hesap ele geçirme', async () => {
+    // ⭐ En tehlikeli yol. Danışman kendi kaydını güncelleyebiliyor; bu
+    // yetki başka bir kayda taşsaydı yöneticinin şifresini değiştirip
+    // hesabı devralabilirdi. Rol alanını kilitlemek tek başına yetmez —
+    // güncelleme kuralının KAYIT KAPSAMI da daralmış olmalı.
+    await expect(
+      payload.update({
+        collection: 'kullanicilar',
+        id: yonetici.id,
+        data: { password: 'Saldirgan-9999-parola' },
+        user: danisman,
+        ...PANEL,
+      }),
+    ).rejects.toThrow()
+
+    // Yöneticinin kendi şifresi hâlâ çalışıyor.
+    const giris = await payload.login({
+      collection: 'kullanicilar',
+      data: { email: `${ONEK.toLowerCase()}-yonetici@ornek.test`, password: 'Deneme-1234-parola' },
+    })
+    expect(giris.user?.id).toBe(yonetici.id)
+  })
+
   it('danışman BAŞKA kullanıcının kaydını göremez', async () => {
     const liste = await payload.find({
       collection: 'kullanicilar',
