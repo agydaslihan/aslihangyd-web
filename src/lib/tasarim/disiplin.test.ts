@@ -19,7 +19,7 @@ import { describe, expect, it } from 'vitest'
  * testle yaşamayı normalleştirmemekti: bir kez olduğunda testin uyarı
  * değeri biter.
  *
- * Bakır kuralı (3) ise ilk günden tüm koda uygulandı — kural nadirlik
+ * Aksan kuralı (3) ise ilk günden tüm koda uygulandı — kural nadirlik
  * üzerine kurulu, kademeli uygulanamaz.
  */
 
@@ -128,51 +128,77 @@ describe('font ağırlığı 500 ile sınırlı', () => {
   })
 })
 
-describe('bakır kuralı', () => {
+describe('adaçayı ve gold kuralı', () => {
   /**
    * Dolu bakır zemine izin verilen dosyalar.
    *
    * ⚠️ BU LİSTEYE EKLEME YAPMAK TASARIM KARARIDIR.
    *
-   * Bakır aksan yalnızca iki eylemde kullanılır: "Evimi değerlendir" ve
-   * "Erişim talep et". Üçüncü bir yerde kullanıldığı anda ikisi de
-   * sıradanlaşır ve kural işlevini kaybeder. Yeni bir satır eklemeden önce
-   * sorulacak soru: bu gerçekten o iki eylemden biri mi?
+   * Dolu adaçayı zemin yalnızca ASIL EYLEMDE kullanılır: "Evimi
+   * değerlendir" ve "Erişim talep et". Üçüncü bir yerde kullanıldığı anda
+   * ikisi de sıradanlaşır ve kural işlevini kaybeder. Yeni bir satır
+   * eklemeden önce sorulacak soru: bu gerçekten o iki eylemden biri mi?
+   *
+   * ⚠️ Kural bakırdan devralındı. Renk değişti, nadirlik gerekçesi aynı.
    */
-  const IZINLI_DOLU_BAKIR = new Set([
+  const IZINLI_DOLU_AKSAN = new Set([
     // Görünümün kendisi burada tanımlanır; başka yerde sınıf yazılmaz.
     'components/ui/Buton.tsx',
     // Stil rehberi bileşenleri sergiler; yalnızca geliştirme ortamında açık.
     'app/(site)/stil-rehberi/page.tsx',
   ])
 
-  /** `bg-bakir-400` … `bg-bakir-700` — dolu zemin. Tint (100/200) serbest. */
-  const DOLU_BAKIR = /\bbg-bakir-([4-7]00)\b/g
+  /** `bg-adacayi-500` … `bg-adacayi-800` ve `bg-aksan` — dolu zemin. */
+  const DOLU_AKSAN = /\bbg-(adacayi-[5-8]00|aksan)\b/g
 
-  it('dolu bakır zemin yalnızca izinli dosyalarda geçiyor', () => {
+  it('dolu adaçayı zemin yalnızca izinli dosyalarda geçiyor', () => {
     const ihlaller = hepsi
-      .filter((dosya) => !IZINLI_DOLU_BAKIR.has(dosya.yol))
+      .filter((dosya) => !IZINLI_DOLU_AKSAN.has(dosya.yol))
       .flatMap((dosya) => {
-        const bulunan = yorumsuz(dosya.icerik).match(DOLU_BAKIR) ?? []
+        const bulunan = yorumsuz(dosya.icerik).match(DOLU_AKSAN) ?? []
         return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
       })
 
-    expect(ihlaller, 'bakır aksan iki eylem dışında kullanılmış').toEqual([])
+    expect(ihlaller, 'dolu adaçayı iki eylem dışında kullanılmış').toEqual([])
   })
 
-  it('bakır buton görünümü sayılabilir kadar az çağrılıyor', () => {
+  /**
+   * ⚠️ GOLD ASLA METİN RENGİ DEĞİL.
+   *
+   * Kırık beyaz üzerinde 2,06:1 — ağır ihlal. Kontrast testi jetonun
+   * bağlantısını denetliyor; bu test KULLANIMI kovalıyor. İkisi ayrı
+   * kapılar: biri "gold bir metin jetonuna bağlanmış mı", diğeri "bir
+   * bileşende text-gold-* yazılmış mı".
+   */
+  it('gold metin rengi olarak kullanılmıyor', () => {
+    const METIN_GOLD = /\btext-gold(-\d+)?\b/g
+    const ihlaller = hepsi.flatMap((dosya) => {
+      const bulunan = yorumsuz(dosya.icerik).match(METIN_GOLD) ?? []
+      return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
+    })
+
+    expect(
+      ihlaller,
+      'gold metin rengi olamaz (kırık beyaz üzerinde 2,06:1). ' +
+        'Anlam taşıyan bir öğe gerekiyorsa --color-gold-guclu kullanın.',
+    ).toEqual([])
+  })
+
+  it('adaçayı buton görünümü sayılabilir kadar az çağrılıyor', () => {
     const cagrilar = hepsi.flatMap((dosya) => {
       if (dosya.yol === 'components/ui/Buton.tsx') return []
-      const bulunan = yorumsuz(dosya.icerik).match(/gorunum="bakir"/g) ?? []
+      const bulunan = yorumsuz(dosya.icerik).match(/gorunum="aksan"/g) ?? []
       return bulunan.map(() => dosya.yol)
     })
 
     /**
      * Üst sınır 4: iki eylem × (ana sayfa + kendi sayfası) kadar yer
-     * tutuyor. Stil rehberi de bunun içinde. Sınır aşıldığında bakır
+     * tutuyor. Stil rehberi de bunun içinde. Sınır aşıldığında adaçayı
      * seyrekliğini kaybetmiş demektir.
      */
-    expect(cagrilar.length, `bakır buton çağrıları: ${cagrilar.join(', ')}`).toBeLessThanOrEqual(4)
+    expect(cagrilar.length, `adaçayı buton çağrıları: ${cagrilar.join(', ')}`).toBeLessThanOrEqual(
+      4,
+    )
   })
 })
 
@@ -215,13 +241,16 @@ describe('sosyal medya görseli onaylı palete bağlı', () => {
   })
 
   /**
-   * ⚠️ Bakır kuralı — pazarlığa kapalı. Bakır yalnızca "Evimi değerlendir"
+   * ⚠️ Aksan kuralı — pazarlığa kapalı. Dolu adaçayı yalnızca "Evimi değerlendir"
    * ve "Erişim talep et" eylemlerinde kullanılır; bir ilan görseli
    * bunların hiçbiri değil.
    */
   it('bakır kullanmaz', () => {
     const kaynak = readFileSync(path.join(KOK, ROTA), 'utf8')
-    const BAKIR = /#(F7E6D9|EFCBB2|E3A981|D68551|C4682F|A85529|8A4423)\b/gi
-    expect(yorumsuz(kaynak).match(BAKIR) ?? []).toEqual([])
+    const ESKI_BAKIR = /#(F7E6D9|EFCBB2|E3A981|D68551|C4682F|A85529|8A4423)\b/gi
+    expect(
+      yorumsuz(kaynak).match(ESKI_BAKIR) ?? [],
+      'bakır palet kaldırıldı; bu hex değerleri geri sızmamalı',
+    ).toEqual([])
   })
 })

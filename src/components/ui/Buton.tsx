@@ -17,14 +17,14 @@ import { sinif } from '@/lib/sinif'
  * görünüm `ikincil`dir (çerçeveli): bir butonun dolu olması bilinçli bir
  * karar olmalı, varsayılanın yan etkisi değil.
  *
- * ⚠️ `bakir` görünümü pazarlığa kapalı bir kuralın taşıyıcısıdır: dolu
- * bakır zemin YALNIZCA "Evimi değerlendir" ve "Erişim talep et"
+ * ⚠️ `aksan` görünümü pazarlığa kapalı bir kuralın taşıyıcısıdır: dolu
+ * adaçayı zemin YALNIZCA "Evimi değerlendir" ve "Erişim talep et"
  * eylemlerinde kullanılır. Kural `src/lib/tasarim/disiplin.test.ts`
  * içinde denetlenir; yeni bir çağrı yeri eklemek testi kırar.
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-type Gorunum = 'ikincil' | 'hayalet' | 'lacivert' | 'whatsapp' | 'bakir'
+type Gorunum = 'ikincil' | 'hayalet' | 'lacivert' | 'whatsapp' | 'aksan'
 type Boyut = 'kucuk' | 'orta' | 'buyuk'
 
 const GORUNUMLER: Record<Gorunum, string> = {
@@ -36,15 +36,20 @@ const GORUNUMLER: Record<Gorunum, string> = {
    * Form gönderimi ve akış içi birincil eylem.
    *
    * Şartnamede yoktu; şartnamedeki hiyerarşi uygulanınca "Gönder" ile
-   * "Vazgeç" görsel olarak eşitleniyordu. Bakırı ikinci bir eyleme açmak
-   * yerine markanın kendi rengi kullanıldı — bakır nadir kalıyor, gönderim
-   * butonu yine de tıklanabilir görünüyor.
+   * "Vazgeç" görsel olarak eşitleniyordu. Adaçayıyı ikinci bir eyleme
+   * açmak yerine markanın kendi rengi kullanıldı — adaçayı nadir kalıyor,
+   * gönderim butonu yine de tıklanabilir görünüyor.
    */
   lacivert: 'bg-lacivert-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
   // WhatsApp'ın kurumsal yeşili bilinçli olarak kullanılmıyor: sayfadaki
   // tek parlak renk olurdu ve sakin paleti bozardı. Tanınırlık ikondan gelir.
   whatsapp: 'bg-lacivert-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
-  bakir: 'bg-bakir-600 text-white border-[0.5px] border-transparent hover:bg-bakir-700',
+  /**
+   * ⚠️ Metin BEYAZ ve bu ölçülmüş bir zorunluluk: adaçayı-600 üzerinde
+   * beyaz 4,74:1 verir. Aynı yeşili metin rengi olarak kırık beyaz zemine
+   * koymak 4,38:1'e düşer — o yüzden ayrı bir `aksan-metin` jetonu var.
+   */
+  aksan: 'bg-aksan text-white border-[0.5px] border-transparent hover:bg-aksan-koyu',
 }
 
 const BOYUTLAR: Record<Boyut, string> = {

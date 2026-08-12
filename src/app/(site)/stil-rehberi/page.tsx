@@ -126,6 +126,8 @@ function Rampa({
    Sayfa
    ══════════════════════════════════════════════════════════════════════════ */
 
+const BASAMAKLAR = [50, 100, 200, 300, 400, 500, 600, 700, 800, 900]
+
 export default function StilRehberiSayfasi() {
   // ⚠️ Üretimde bu sayfa yoktur. Derleme sırasında da buradan döner.
   if (process.env.NODE_ENV === 'production') notFound()
@@ -157,26 +159,32 @@ export default function StilRehberiSayfasi() {
           not="Rampalar temaya göre değişmez; anlamsal jetonlar rampanın farklı basamağına bağlanır. Kontrast oranları src/lib/tasarim/kontrast.test.ts içinde her derlemede ölçülür."
         >
           <Rampa
-            baslik="Lacivert — ana"
+            baslik="Lacivert — ana · taban 900 basamağı (header, başlıklar, koyu tema zemini)"
             onEk="lacivert"
-            basamaklar={[50, 100, 200, 300, 400, 500, 600, 700, 800, 900, 950]}
+            basamaklar={BASAMAKLAR}
             jetonlar={acik}
           />
           <Rampa
-            baslik="Bakır — aksan (dolu zemin yalnızca iki eylemde)"
-            onEk="bakir"
-            basamaklar={[100, 200, 300, 400, 500, 600, 700]}
+            baslik="Adaçayı — eylem · taban 600 (dolu zemin yalnızca iki eylemde; metin için aksan-metin)"
+            onEk="adacayi"
+            basamaklar={BASAMAKLAR}
             jetonlar={acik}
           />
           <Rampa
-            baslik="Sıcak nötr"
+            baslik="Soft gold — dekoratif · taban 400 (ASLA metin rengi değil)"
+            onEk="gold"
+            basamaklar={BASAMAKLAR}
+            jetonlar={acik}
+          />
+          <Rampa
+            baslik="Nötr — 50 kırık beyaz, 100 açık gri, 900 antrasit"
             onEk="notr"
-            basamaklar={[50, 100, 200, 300, 400, 500, 600, 700, 900]}
+            basamaklar={BASAMAKLAR}
             jetonlar={acik}
           />
 
           <Ornek etiket="Anlamsal — metin (beyaz üzerinde kontrast)">
-            {(['metin', 'metin-2', 'metin-3', 'metin-pasif', 'vurgu', 'bakir-metin'] as const).map(
+            {(['metin', 'metin-2', 'metin-3', 'metin-pasif', 'vurgu', 'aksan-metin'] as const).map(
               (ad) => (
                 <Kutucuk
                   key={ad}
@@ -270,7 +278,7 @@ export default function StilRehberiSayfasi() {
           not="Varsayılan görünüm çerçevelidir: bir butonun dolu olması bilinçli bir karar olmalı. Dokunma hedefi en az 44px."
         >
           <Ornek etiket="Görünümler">
-            <Buton gorunum="bakir">Evimi değerlendir</Buton>
+            <Buton gorunum="aksan">Evimi değerlendir</Buton>
             <Buton gorunum="lacivert">Talebi gönder</Buton>
             <Buton>İkincil eylem</Buton>
             <Buton gorunum="hayalet">Hayalet</Buton>

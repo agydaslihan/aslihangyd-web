@@ -129,7 +129,7 @@ export default async function HaritaSayfasi() {
     {
       anahtar: KATMAN_PORTFOY,
       etiket: 'Portföyüm',
-      renk: 'var(--color-bakir-500)',
+      renk: 'var(--color-gold-guclu)',
       adet: say(KATMAN_PORTFOY),
     },
     {

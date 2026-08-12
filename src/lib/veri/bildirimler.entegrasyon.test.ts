@@ -26,7 +26,22 @@ let payload: Payload
 let mahalleId: number
 
 const ONEK = 'TEST-BILDIRIM'
-const SIMDI = new Date('2026-08-07T12:00:00.000Z')
+/**
+ * ⚠️ GERÇEK SAAT — sabit bir tarih OLAMAZ.
+ *
+ * Bu dosya iki ayrı saate bağlı: sorgular `SIMDI`yi parametre olarak alıyor
+ * ama ilanları oluşturan `eidsYayinEngeli` kancası gerçek `Date.now()`
+ * okuyor ve devre dışı bırakılamıyor (yasal kural, CLAUDE.md §1).
+ *
+ * `SIMDI` bir süre `2026-08-07`ye sabitliydi. `gunSonra(5)` o tarihten tam
+ * beş gün sonra — 12 Ağustos 2026'da — geçmişe düştü; kanca "yetki süresi
+ * 1 gün önce doldu" diyerek ilanı reddetti ve test o gün kendiliğinden
+ * kırıldı. Kimse bir şey değiştirmemişti, yalnızca takvim ilerlemişti.
+ *
+ * Gerçek saati kullanmak sabit tarihten daha belirleyici: fikstürler
+ * kancanın gördüğü saatle aynı eksende üretiliyor.
+ */
+const SIMDI = new Date()
 
 /** Bugünden N gün sonrası — yetki bitişlerini konumlandırmak için. */
 function gunSonra(gun: number): string {
