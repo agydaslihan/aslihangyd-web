@@ -280,3 +280,13 @@ export function KapatIkon(ozellikler: IkonOzellikleri) {
     </Govde>
   )
 }
+
+/** Arama — hero widget'ının gönder butonunda. */
+export function AraIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <circle cx="11" cy="11" r="7" />
+      <path d="m20 20-3.5-3.5" />
+    </Govde>
+  )
+}
