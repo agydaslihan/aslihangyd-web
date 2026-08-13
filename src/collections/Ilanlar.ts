@@ -1,5 +1,7 @@
 import type { CollectionConfig } from 'payload'
 
+import { CEPHE_YONLERI } from '@/lib/gunes/cephe'
+
 import {
   EIDS_DURUMLARI,
   EIDS_DURUM_ETIKETLERI,
@@ -469,6 +471,32 @@ export const Ilanlar: CollectionConfig = {
                   admin: { width: '50%', condition: (data) => data?.kategori === 'konut' },
                 },
               ],
+            },
+            {
+              /**
+               * Cephe yönü — Güneş Haritası'nın girdisi.
+               *
+               * ⚠️ ÇOKLU SEÇİM: köşe daireler iki cephe alır ve ikisi de
+               * ayrı ayrı raporlanıyor.
+               *
+               * ⚠️ BOŞ BIRAKILABİLİR VE TAHMİN EDİLMEZ. Bir dairenin
+               * cephesi koordinattan çıkarılamaz; bilinmiyorsa güneş
+               * verileri yine gösteriliyor (gün doğumu/batımı konuma
+               * bağlı) ama cephe analizi boş durum gösteriyor.
+               * "Muhtemelen güney" demek, alım kararı doğrudan bu bilgiye
+               * dayandığı için uydurma veri yasağının en pahalı ihlali
+               * olurdu.
+               */
+              name: 'cepheYonu',
+              type: 'select',
+              hasMany: true,
+              label: 'Cephe yönü',
+              options: CEPHE_YONLERI.map((yon) => ({ value: yon.value, label: yon.label })),
+              admin: {
+                description:
+                  'Taşınmazın hangi yöne baktığı. Köşe daireler için birden fazla seçin. ' +
+                  'Bilmiyorsanız BOŞ BIRAKIN — tahmin edilmez, güneş haritasında boş durum gösterilir.',
+              },
             },
             {
               type: 'row',

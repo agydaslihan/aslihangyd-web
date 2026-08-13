@@ -270,6 +270,10 @@ export interface Ilanlar {
   odaSayisi?: ('1+0' | '1+1' | '2+1' | '3+1' | '4+1' | '5+1') | null;
   banyoSayisi?: number | null;
   /**
+   * Taşınmazın hangi yöne baktığı. Köşe daireler için birden fazla seçin. Bilmiyorsanız BOŞ BIRAKIN — tahmin edilmez, güneş haritasında boş durum gösterilir.
+   */
+  cepheYonu?: ('kuzey' | 'kuzeydogu' | 'dogu' | 'guneydogu' | 'guney' | 'guneybati' | 'bati' | 'kuzeybati')[] | null;
+  /**
    * Örn: 3, Zemin, Bahçe katı
    */
   bulunduguKat?: string | null;
@@ -1105,6 +1109,7 @@ export interface IlanlarSelect<T extends boolean = true> {
   netM2?: T;
   odaSayisi?: T;
   banyoSayisi?: T;
+  cepheYonu?: T;
   bulunduguKat?: T;
   toplamKat?: T;
   binaYasi?: T;

@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
 import { KiraGetirisiFormu } from '@/components/hesaplayici/KiraGetirisiFormu'
 import { IlanGalerisi } from '@/components/ilan/IlanGalerisi'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
@@ -34,6 +35,7 @@ import {
   TAPU_DURUMLARI,
 } from '@/lib/secenekler'
 import { sinif } from '@/lib/sinif'
+import { konumuCoz } from '@/lib/veri/ilgiNoktalari'
 import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { ilanGetir } from '@/lib/veri/ilanlar'
@@ -94,6 +96,18 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
   const telefon = iletisimTelefonu(kurumsal)
 
+  /**
+   * Güneş haritası için koordinat.
+   *
+   * ⚠️ İlanın kendi konumu yoksa MAHALLE MERKEZİ kullanılıyor ve bu
+   * kabul edilebilir: gün doğumu/batımı Çorlu ölçeğinde mahalleden
+   * mahalleye saniyeler farkeder. Cephe analizi zaten koordinata değil
+   * girilen cephe yönüne bağlı.
+   */
+  const gunesKonumu = konumuCoz(
+    ilan.konum ?? (typeof ilan.mahalle === 'object' ? ilan.mahalle?.merkez : null),
+  )
+
   const satilik = ilan.tip === 'satilik'
   const gostergeVar = satilik && (ilan.kiraCarpani !== null || ilan.brutGetiri !== null)
 
@@ -145,6 +159,16 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
             {/* ── Nitelikler ── */}
             <NitelikTablosu ilan={ilan} />
+
+            {/* ⭐ Güneş haritası — Türkiye'de "güney cephe" alım kararının
+                merkezinde ve hiçbir emlak sitesi veriyle göstermiyor. */}
+            {gunesKonumu !== null ? (
+              <GunesHaritasi
+                enlem={gunesKonumu.enlem}
+                boylam={gunesKonumu.boylam}
+                cepheler={ilan.cepheYonu ?? []}
+              />
+            ) : null}
 
             {/* ── Açıklama ── */}
             {ilan.aciklama ? (

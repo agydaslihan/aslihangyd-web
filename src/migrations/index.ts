@@ -13,6 +13,7 @@ import * as migration_20260812_172431_onay_bekliyor_durumu from './20260812_1724
 import * as migration_20260812_174328_ai_arama_bolumu from './20260812_174328_ai_arama_bolumu';
 import * as migration_20260812_175841_osm_poi_kaynak from './20260812_175841_osm_poi_kaynak';
 import * as migration_20260812_203042_poi_eczane_oyun_alani from './20260812_203042_poi_eczane_oyun_alani';
+import * as migration_20260813_133647_cephe_yonu from './20260813_133647_cephe_yonu';
 
 export const migrations = [
   {
@@ -88,6 +89,11 @@ export const migrations = [
   {
     up: migration_20260812_203042_poi_eczane_oyun_alani.up,
     down: migration_20260812_203042_poi_eczane_oyun_alani.down,
-    name: '20260812_203042_poi_eczane_oyun_alani'
+    name: '20260812_203042_poi_eczane_oyun_alani',
+  },
+  {
+    up: migration_20260813_133647_cephe_yonu.up,
+    down: migration_20260813_133647_cephe_yonu.down,
+    name: '20260813_133647_cephe_yonu'
   },
 ];

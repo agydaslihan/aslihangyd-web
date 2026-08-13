@@ -23,6 +23,8 @@ import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
+import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
+import { konumuCoz } from '@/lib/veri/ilgiNoktalari'
 import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
@@ -66,6 +68,9 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
     // Merkez noktası girilmemişse sorgu hiç çalışmaz, boş dizi döner.
     mahalleCevresiGetir(mahalle.merkez),
   ])
+
+  /** Güneş haritası için mahalle merkezi. */
+  const mahalleKonumu = konumuCoz(mahalle.merkez)
 
   const whatsapp = whatsappBaglantisi(
     whatsappNumarasi(kurumsal),
@@ -188,6 +193,18 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                 neyeGore={`${mahalle.ad} Mahallesi merkezinden`}
                 sinifAdi="mb-4"
               />
+
+              {/* Güneş haritası — mahalle merkezine göre, cephe analizi olmadan.
+                  ⚠️ Mahallenin cephesi olmaz; `cepheler` boş geçiliyor ve bileşen
+                  kendi boş durumunu gösteriyor. */}
+              {mahalleKonumu !== null ? (
+                <GunesHaritasi
+                  enlem={mahalleKonumu.enlem}
+                  boylam={mahalleKonumu.boylam}
+                  cepheler={[]}
+                  baslik={`${mahalle.ad} Mahallesi — güneş haritası`}
+                />
+              ) : null}
 
               <YakindaBolumu
                 oran="aspect-16/9"
