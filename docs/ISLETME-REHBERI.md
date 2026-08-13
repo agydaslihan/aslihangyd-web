@@ -122,6 +122,40 @@ onları derleme anında koda gömer — sunucu tarafında bile. Uygulamanın
 gerçekten okuduğu, ön eksiz `SITE_ADRESI`. İkisini de aynı değerle yazın;
 `.env.production.example` bunu zaten böyle gösteriyor.
 
+### ⚠️ `up -d` yeni imajı ÇEKMEZ — `pull` şart
+
+13 Ağustos 2026'da bir düzeltme "dağıtıldı" sanıldı ama uygulama eski
+kodla çalışmaya devam etti. Sebep:
+
+- `git pull` yapıldı → `compose.prod.yml` güncellendi
+- `up -d` çalıştırıldı → compose değişiklikleri uygulandı, kap yeniden
+  başladı
+- **ama `:latest` etiketi yerel önbellekteki ESKİ digest'e işaret etmeye
+  devam etti**
+
+Sonuç kafa karıştırıcıydı: yeni ortam değişkenleri kapta görünüyordu
+(compose'dan geliyorlar) ama kod onları okumuyordu (imaj eski).
+
+**Doğru sıra:**
+
+```bash
+cd /srv/aslihangyd/app
+git pull
+docker compose --env-file .env -f docker/compose.prod.yml pull uygulama
+docker compose --env-file .env -f docker/compose.prod.yml up -d
+```
+
+Hangi kodun çalıştığını doğrulamak için:
+
+```bash
+docker image inspect ghcr.io/agydaslihan/aslihangyd-web:latest \
+  --format '{{index .Config.Labels "org.opencontainers.image.revision"}}'
+```
+
+Çıkan commit SHA'sı `git log -1 --format=%H` ile aynı olmalı. Değilse imaj
+çekilmemiş ya da CI henüz derlemeyi bitirmemiştir
+(`gh run list --workflow=imaj.yml`).
+
 ### Hangi `.env` değişkeni ne zaman etkili olur
 
 Bu tablo tek bir soruyu yanıtlıyor: **bir değeri değiştirdim, ne yapmam

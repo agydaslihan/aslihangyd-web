@@ -142,6 +142,28 @@ export const UST_MENU_YAPISI: readonly UstMenuOgesi[] = [
 export const BASLIK_EYLEMI = { ad: 'Evimi değerlendir', adres: '/degerleme' } as const
 
 /**
+ * Endeks üst menüde görünmeli mi?
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ İKİ KAPI BİRLİKTE ÇALIŞIR — biri tek başına yetmez.
+ *
+ *  1. `bolumAcik`  — Aslıhan'ın SiteSections anahtarı
+ *  2. `sayfaAcik`  — veri eşikleri (`endeksSayfasiAcikMi`): katman başına
+ *                    en az 8 gözlem, en az 6 ay geçmiş (CLAUDE.md 6c)
+ *
+ * Yalnızca bölüm anahtarına bakılsaydı menü 404'e bağlanırdı; bu tam olarak
+ * bir kez oldu ve duman testinde yakalandı. Yalnızca eşiğe bakılsaydı
+ * Aslıhan'ın "henüz yayınlamayalım" kararı yok sayılırdı.
+ *
+ * ⚠️ Eşik sağlandığı anda menü KENDİLİĞİNDEN görünür; elle açılacak
+ * ikinci bir yer yok. Unutulacak bir adım bırakmamak bilinçli.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function endeksMenudeGorunurMu(bolumAcik: boolean, sayfaAcik: boolean): boolean {
+  return bolumAcik && sayfaAcik
+}
+
+/**
  * Kapalı bölümlerin öğelerini düşürür.
  *
  * Sunucuda çağrılır; istemci menüsü hazır listeyi alır. Bölüm durumunu
