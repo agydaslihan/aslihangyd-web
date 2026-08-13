@@ -154,6 +154,17 @@ describe('theme-color meta etiketi paletle aynı', () => {
    * Bu test o boşluğu kapatıyor: değerler `zemin` jetonunun iki temadaki
    * karşılığıyla birebir aynı olmalı.
    */
+  /**
+   * ⚠️ İKİ DEĞER HÂLÂ VAR AMA ARTIK OS TERCİHİNE BAĞLI DEĞİL.
+   *
+   * Tema `data-tema` özniteliğiyle seçiliyor; `themeColor` meta etiketi
+   * ise yalnızca medya sorgusu destekliyor. Bu yüzden etiketin AÇIK değeri
+   * varsayılanı temsil ediyor ve koyu temaya geçildiğinde `TemaAnahtari`
+   * meta'yı çalışma zamanında güncelliyor.
+   *
+   * Test yine iki değeri de denetliyor: ikisi de paletten gelmeli ki
+   * anahtar hangi rengi yazacağını kodun tek yerinden alsın.
+   */
   it('açık ve koyu değerler zemin jetonuyla aynı', () => {
     const kaynak = readFileSync(path.join(KOK, 'app/(site)/layout.tsx'), 'utf8')
     const css = readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')
@@ -170,6 +181,27 @@ describe('theme-color meta etiketi paletle aynı', () => {
     expect(bulunan[1], 'koyu tema adres çubuğu = koyu temanın zemini').toBe(
       jeton(temalar.koyu, '--color-zemin').toLowerCase(),
     )
+  })
+})
+
+describe('tema anahtarı paletle aynı rengi yazıyor', () => {
+  /**
+   * ⚠️ `TemaAnahtari` adres çubuğu rengini çalışma zamanında güncelliyor
+   * ve bunu somut hex ile yapmak zorunda (meta etiketi `var()` çözmez).
+   * Üçüncü bir yerde elle yazılan renk demek — palet değişince geride
+   * kalması kaçınılmaz. Test onu paletle bağlıyor.
+   */
+  it('anahtarın yazdığı iki renk zemin jetonlarıyla aynı', () => {
+    const kaynak = readFileSync(path.join(KOK, 'components/duzen/TemaAnahtari.tsx'), 'utf8')
+    const css = readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')
+    const temalar = temalariCoz(css)
+
+    const bulunan = [...kaynak.matchAll(/'(#[0-9a-f]{6})'/gi)].map((e) => e[1]!.toLowerCase())
+
+    expect(bulunan, 'anahtar iki renk yazmalı').toContain(
+      jeton(temalar.koyu, '--color-zemin').toLowerCase(),
+    )
+    expect(bulunan).toContain(jeton(temalar.acik, '--color-zemin').toLowerCase())
   })
 })
 
@@ -199,6 +231,15 @@ describe('ham hex kullanılmıyor', () => {
    */
   const MUAF = new Set<string>([
     'app/(site)/layout.tsx',
+    /**
+     * ⚠️ Tema anahtarı MUAF — ama denetimsiz değil.
+     *
+     * `themeColor` meta etiketi `var()` çözmüyor; tema değişince adres
+     * çubuğu rengini güncellemek için somut hex yazmak zorunlu. Muafiyetin
+     * bedeli hemen üstteki "tema anahtarı paletle aynı rengi yazıyor"
+     * testiyle ödeniyor: iki değer de `zemin` jetonundan gelmeli.
+     */
+    'components/duzen/TemaAnahtari.tsx',
     'app/(site)/api/sosyal/gorsel/[bicim]/[id]/route.tsx',
   ])
 

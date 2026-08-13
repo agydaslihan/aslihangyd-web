@@ -169,6 +169,31 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
 
   return (
     <html lang="tr" className={`${yaziArayuz.variable} ${yaziBaslik.variable}`}>
+      <head>
+        {/*
+          ⚠️ TİTREME ÖNLEYİCİ — paint'ten ÖNCE çalışmak zorunda.
+
+          Tema tercihi `localStorage`'da (çerezde değil: çerez sunucuya
+          gider ve KVKK kapsamında bir tercih çerezi olurdu). Sunucu bu
+          yüzden tercihi bilmiyor ve HTML'i daima açık temayla üretiyor.
+
+          Bu satır olmasaydı koyu tema seçen kullanıcı her sayfa
+          geçişinde bir kare beyaz ekran görürdü. `beforeInteractive`
+          değil ham `<script>`: Next'in script stratejileri bile
+          yeterince erken değil, öznitelik ilk boyamadan önce yazılmalı.
+
+          `try/catch` gerekli: gizli sekmede `localStorage` erişimi
+          bazı tarayıcılarda istisna fırlatıyor ve o istisna sayfanın
+          tamamını durdururdu.
+        */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html:
+              "try{if(localStorage.getItem('aslihangyd-tema')==='koyu')" +
+              "document.documentElement.setAttribute('data-tema','koyu')}catch(e){}",
+          }}
+        />
+      </head>
       <body className="flex min-h-dvh flex-col antialiased">
         <IcerigeAtla />
         <UstSerit
