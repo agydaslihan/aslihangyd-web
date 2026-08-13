@@ -191,6 +191,12 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
     nerede: 'altbilgi üst çizgisi ve logo aksanı',
   },
   {
+    on: '--color-adacayi-300',
+    arka: '--color-lacivert-900',
+    asgari: AA_METIN,
+    nerede: 'lacivert bölümlerdeki eyebrow etiketi (hero, gizli portföy)',
+  },
+  {
     on: '--color-lacivert-700',
     arka: '--color-lacivert-900',
     asgari: 1.5,

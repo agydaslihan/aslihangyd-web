@@ -67,7 +67,7 @@ export function IlanKarti({
       )}
     >
       {/* ── Görsel ── */}
-      <div className="bg-yuzey-2 relative h-[124px] overflow-hidden">
+      <div className="bg-yuzey-2 relative aspect-[4/3] overflow-hidden">
         {kapak?.url ? (
           <Image
             src={kapak.url}
@@ -92,7 +92,7 @@ export function IlanKarti({
             yoksa hiç gösterilmez (CLAUDE.md kural 1). */}
         {ilan.tasinmazNo ? (
           <span
-            className="bg-yuzey/94 text-vurgu absolute top-2 left-2 inline-flex items-center gap-1 rounded-rozet px-1.5 py-1"
+            className="bg-yuzey/94 text-aksan-metin absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-rozet px-2 py-1"
             title={`Doğrulanmış İlan — Taşınmaz no: ${ilan.tasinmazNo}`}
           >
             <DogrulanmisIkon width={13} height={13} />
@@ -127,8 +127,8 @@ export function IlanKarti({
       </div>
 
       {/* ── Gövde ── */}
-      <div className="flex flex-1 flex-col gap-1.5 p-3">
-        <p className="rakam text-baslik-3 leading-none font-medium">
+      <div className="flex flex-1 flex-col gap-2 p-4">
+        <p className="rakam text-kart-fiyat leading-none font-medium">
           {fiyat ?? <span className="text-metin-3 text-govde-kucuk">Fiyat görüşülür</span>}
           {ilan.tip === 'kiralik' && fiyat ? (
             <span className="text-metin-3 text-mikro font-normal"> / ay</span>
@@ -136,10 +136,10 @@ export function IlanKarti({
         </p>
 
         {/* ⚠️ Yatırımcının ilk hesabı. Fiyat ve m² varsa daima gösterilir. */}
-        <p className="text-metin-3 text-minik">{m2Fiyati ?? 'm² fiyatı için brüt m² gerekiyor'}</p>
+        <p className="text-metin-3 text-mikro">{m2Fiyati ?? 'm² fiyatı için brüt m² gerekiyor'}</p>
 
         {/* Başlık cümle düzeninde, iki satırda kırpılır. */}
-        <h3 className="text-govde-kucuk leading-snug font-normal">
+        <h3 className="text-govde leading-snug font-normal">
           {/* Tüm kart tıklanabilir olsun ama DOM'da tek bağlantı kalsın. */}
           <Link
             href={`/portfoy/${ilan.slug}`}
@@ -149,16 +149,19 @@ export function IlanKarti({
           </Link>
         </h3>
 
-        <p className="text-metin-2 text-mikro">
+        <p className="text-metin-2 text-govde-kucuk">
           {mahalleAdi ? `${mahalleAdi} · ${ilan.ilce}` : ilan.ilce}
         </p>
 
         {nitelikler.length > 0 ? (
-          <p className="text-metin-3 text-minik">{nitelikler.join(' · ')}</p>
+          <p className="text-metin-3 text-mikro">{nitelikler.join(' · ')}</p>
         ) : null}
 
-        {/* ── Kapanış satırı — kartın en önemli rakamı ── */}
-        <p className="border-kenar text-mikro mt-auto border-t-[0.5px] pt-2">
+        {/* ── Kapanış satırı — kartın en önemli rakamı ──
+            ⚠️ Ayraç GOLD ve bu şartnamenin gold'a ayırdığı üç yerden biri
+            (§6). Çizgi dekoratif: satırın kendisi zaten "Kira çarpanı"
+            yazıyor, renk tek taşıyıcı değil. */}
+        <p className="border-gold-cizgi text-govde-kucuk mt-auto border-t pt-2.5">
           {carpan ? (
             <>
               <span className="text-metin-2">Kira çarpanı </span>
@@ -204,7 +207,7 @@ function katYaz(kat: unknown): string | null {
 export function IlanKartiIskeleti() {
   return (
     <div className="bg-yuzey rounded-kart overflow-hidden border-[0.5px] border-kenar" aria-hidden>
-      <div className="iskelet h-[124px] rounded-none" />
+      <div className="iskelet aspect-[4/3] rounded-none" />
       <div className="flex flex-col gap-2 p-3">
         <div className="iskelet h-5 w-24" />
         <div className="iskelet h-3 w-20" />

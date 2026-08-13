@@ -68,6 +68,21 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 ## Önemli (içerik eksikliği)
 
+- [ ] **Çorlu'nun havadan çekilmiş hero görseli** (kullanım hakkı bize ait)
+      Nereye: `src/app/(site)/page.tsx` → `Kahraman` bölümünün zemini
+      Olmazsa: Hero şu an düz lacivert zemin. Şartname tam genişlik görsel +
+      lacivert overlay istiyor; stok fotoğraf koymadım çünkü şartnamenin
+      kendisi "stok fotoğraf estetiği"ni yasaklıyor ve hero LCP ögesi —
+      yanlış görsel hem performans hedefini hem tonu bozar.
+      ⚠️ Görsel AVIF olmalı, mobilde ≤80 kB. Geldiğinde tek yapılacak
+      zemini `background-image` ile değiştirmek; metin katmanı aynen kalır.
+
+- [ ] **Aslıhan'ın portre fotoğrafı**
+      Nereye: `src/app/(site)/page.tsx` → `AslihanBolumu`
+      Olmazsa: "Fotoğraf hazırlanıyor" boş durumu görünür. Stok görsel
+      koymadım: "kurumsal güven" anlatısının tam tersini yapardı.
+
+
 - [ ] **Bülten (e-bülten) için KVKK açık rıza metni + e-posta sağlayıcısı**
       Nereye: metin avukattan → Payload admin → Sayfalar; sağlayıcı `.env` → SMTP_*
       Olmazsa: Altbilgideki bülten bandı EKLENMEDİ ve eklenemez.
