@@ -39,7 +39,9 @@ export default function VeriKaynaklariSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       <article className="max-w-2xl">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Veri kaynakları ve lisanslar</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Veri kaynakları ve lisanslar
+        </h1>
 
         <p className="text-metin-2 text-baslik-3 mt-4 leading-relaxed">
           Sitedeki her rakamın bir kaynağı var ve o kaynağı söylemek zorundayız — hem lisans gereği
@@ -48,9 +50,7 @@ export default function VeriKaynaklariSayfasi() {
         </p>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">
-            Çevre noktaları — OpenStreetMap
-          </h2>
+          <h2 className="text-baslik-3 font-medium">Çevre noktaları — OpenStreetMap</h2>
 
           <p className="text-metin-2 mt-3 leading-relaxed">
             Mahalle ve ilan sayfalarındaki &quot;çevre ve erişim&quot; listelerinde görünen okul,
@@ -100,7 +100,7 @@ export default function VeriKaynaklariSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Kategori eşlemesi</h2>
+          <h2 className="text-baslik-3 font-medium">Kategori eşlemesi</h2>
 
           <p className="text-metin-2 mt-3 leading-relaxed">
             OpenStreetMap etiketlerini kendi kategorilerimize şöyle çeviriyoruz. Bu eşleme bir ölçüm
@@ -154,7 +154,7 @@ export default function VeriKaynaklariSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Mesafeler</h2>
+          <h2 className="text-baslik-3 font-medium">Mesafeler</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Tüm mesafeler <strong className="text-metin font-medium">kuş uçuşudur</strong>. Sürüş
             süresi için yol ağı verisi ve rotalama motoru gerekir; elimizde yok. Mesafeyi varsayılan
@@ -163,7 +163,7 @@ export default function VeriKaynaklariSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Fiyat ve kira gözlemleri</h2>
+          <h2 className="text-baslik-3 font-medium">Fiyat ve kira gözlemleri</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Mahalle rakamları kendi tuttuğumuz gözlem kayıtlarından gelir. Yöntem, eşikler ve gözlem
             sayıları{' '}

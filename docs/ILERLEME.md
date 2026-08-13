@@ -3342,6 +3342,108 @@ Duman testinde gerçek verilerle doğrulandı: 6 ilan, 3 mahalle, iki hücre
 - Lighthouse hâlâ ölçülmedi: kart ve listeleme düzeni Aşama 3–4'te
   değişiyor, şimdi ölçülen sayı yanıltıcı olur.
 
+---
+
+## Frontend yeniden tasarımı — Aşama 3–6
+
+Aşamalar 3, 4, 5 ve 6 sırayla yapıldı; her biri kendi dalında ve PR'ında.
+Ayrıntılar PR açıklamalarında, burada kalıcı olması gereken kararlar var.
+
+### Aşama 3 — kart ve ana sayfa
+
+Kart 4:3 görsele geçti, fiyat 22px kendi jetonuyla, kira çarpanı satırının
+üst çizgisi **gold** (şartnamenin gold'a ayırdığı üç yerden biri).
+
+Ana sayfa şartnamenin bölüm sırasına kuruldu; hero arama widget'ı
+listeleme sayfasının parametre sözleşmesini kullanıyor.
+
+**Uydurulmayan iki şey:** hero görseli ve Aslıhan'ın fotoğrafı. Şartname
+"Çorlu havadan" istiyor ama kullanım hakkı bize ait böyle bir görsel yok;
+stok fotoğraf şartnamenin kendi yasağı (§2) ve hero LCP ögesi. İkisi de
+tasarlanmış boş durumla duruyor, SENDEN-BEKLENENLER'de yazılı.
+
+### Aşama 4 — listeleme ve yatırım filtreleri
+
+Kira çarpanı, brüt getiri ve sanayiye mesafe filtreleri eklendi.
+
+⚠️ **Şartname "dk" istiyordu, km kullanıldı.** Yol ağı verisi ve rotalama
+motorumuz yok; tüm mesafeler kuş uçuşu ve `/veri-kaynaklari` sayfasında
+bunu ziyaretçiye açıkça söylüyoruz. Filtrede "dk" yazmak o sayfayı
+yalancı çıkarırdı.
+
+⚠️ **Kaydırıcı yerine sayı kutusu.** Çift uçlu kaydırıcı klavyede iki
+tutamağı ayırt ettirmiyor, ekran okuyucuda "hangi uç" belirsiz ve
+dokunmatikte 44px hedefi iki tutamak için sağlanamıyor.
+
+Sayfalama "Daha fazla göster"e döndü; sayfa boyutu 12 → 24. `goster`
+URL'de tutuluyor — istemci state'i olsaydı liste SSR'dan çıkardı ve arama
+motoru yalnızca ilk 24'ü görürdü.
+
+`filtreSozlesmesi.test.ts` eklendi: aynı parametre adlarını üç dosya
+kullanıyor ve biri saparsa hiçbir şey patlamaz, filtre sessizce uygulanmaz.
+
+### Aşama 5 — ilan detayı
+
+Yatırım göstergeleri sağ yapışkan karta taşındı (gold çerçeve, açık gri
+zemin). Gömülü hesaplayıcı **ikinci bir hesap yazılarak değil**, araç
+sayfasındaki formun kendisi ilanın rakamlarıyla doldurularak yapıldı —
+aynı formülün iki yerde yaşaması ve ayrışması engellendi.
+
+⚠️ Taşıma sırasında **yatırım tavsiyesi feragatini düşürmüştüm**; lint
+"kullanılmayan import" diye yakaladı. Getiri rakamının göründüğü her yerde
+o metin zorunlu (CLAUDE.md kural 5).
+
+### Aşama 6 — ölçek disiplini ve bundle bütçesi
+
+Sayfalarda **64 ayrı elle yazılmış punto** vardı (`text-[2rem]`,
+`text-[1.375rem]`, `text-[0.9375rem]`…). Her biri tek başına makuldü ama
+toplamı bir ölçek değil yığındı: iki sayfanın "bölüm başlığı" farklı
+boydaydı ve kimse fark etmiyordu. Hepsi jetonlara bağlandı; gerçekten
+ölçek dışı olan tek değer için yeni bir jeton açıldı (`--text-skor`, 48px).
+
+`disiplin.test.ts` artık keyfi puntoyu da kovalıyor. Testi susturmanın
+doğru yolu muafiyet değil, jeton eklemek.
+
+#### ⭐ Tek sabit 63 kB taşıyordu
+
+Bundle bütçesi ölçülünce `/portfoy` **274,9 kB gzip** çıktı (hedef 220) ve
+en büyük ikinci parça **zod**du. Sebep: `AkilliArama` istemci bileşeni
+`AZAMI_SORGU_UZUNLUGU` sabitini `sema.ts`ten alıyordu ve o dosya en üstte
+zod import ediyor. Paketleyici bir modülü parça parça alamaz — tek bir
+sayı için zod'un tamamı istemciye giriyordu.
+
+Üstelik AI arama **varsayılan kapalı** (KVKK, aydınlatma metni bekliyor):
+hiçbir ziyaretçi o kodu çalıştırmıyor ama herkes indiriyordu.
+
+Sabit zod'suz bir modüle (`lib/arama/sabitler.ts`) taşındı, `sema.ts`
+onu yeniden dışa aktarıyor (tek kaynak korundu).
+
+**Ölçüm — aynı yöntemle önce ve sonra:**
+
+| Sayfa | Önce | Sonra |
+| --- | --- | --- |
+| `/` (ana sayfa) | 201,9 kB | **201,9 kB** |
+| `/portfoy` | 274,9 kB | **211,5 kB** |
+| `/portfoy/[slug]` | 210,8 kB | **210,8 kB** |
+
+Üçü de 220 kB bütçesinin altında. Şartnamenin bütçesi yalnızca ana sayfa
+için ama listeleme sayfası da artık sınırın altında.
+
+⚠️ Ölçüm yöntemi: çalışan sunucudan sayfa çekilip `<script src>` listesi
+çıkarıldı ve her parça `Accept-Encoding: gzip` ile indirilip toplandı.
+Derleme çıktısı bu sürümde rota başına boyut basmıyor.
+
+⚠️ `/harita` 443,8 kB — maplibre-gl. Bilinçli ve belgeli: `next/dynamic`
++ `ssr: false` ile yalnızca o sayfada yükleniyor, başka hiçbir sayfaya
+girmiyor.
+
+#### Denenip geri alınan bir değişiklik
+
+Önce `AkilliArama`yı `next/dynamic` ile yüklemeyi denedim. Ölçümde fark
+yaratmadı (275,9 vs 274,9 — gürültü) çünkü sorun render değil import
+zinciriydi. Kanıtlayamadığım bir iyileştirmeyi ve onu iddia eden yorumu
+bırakmak yanlış olurdu; geri alındı ve asıl sebep bulunana kadar arandı.
+
 ### Kod tarafında sırada ne var
 
 Öncelik sırasıyla, ama hepsi **Aslıhan'ın kararına bağlı**:

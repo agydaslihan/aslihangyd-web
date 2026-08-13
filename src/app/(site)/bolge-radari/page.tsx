@@ -52,7 +52,9 @@ export default async function BolgeRadariSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Bölge Radarı</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Bölge Radarı
+        </h1>
         <p className="text-metin-2 leading-relaxed">
           Radar <strong className="font-medium">yeni bir puan üretmez.</strong> Mahalleleri
           birbirine göre tarar ve yalnızca veriyle desteklenen sinyalleri gösterir — her birinin
@@ -103,9 +105,7 @@ export default async function BolgeRadariSayfasi() {
           )}
 
           <section className="mt-10 max-w-2xl">
-            <h2 className="font-sans text-[1.375rem] leading-tight">
-              Sinyaller neye göre hesaplandı?
-            </h2>
+            <h2 className="text-baslik-3 font-medium">Sinyaller neye göre hesaplandı?</h2>
 
             <div className="border-kenar rounded-kart mt-4 overflow-x-auto border-[0.5px]">
               <table className="w-full min-w-[26rem] border-collapse text-govde-kucuk">
@@ -221,9 +221,7 @@ function SinyalKarti({ sinyal }: { sinyal: Sinyal }) {
         </Link>
       </div>
 
-      <h3 className="mt-2.5 font-sans text-[0.9375rem] leading-snug font-medium">
-        {sinyal.baslik}
-      </h3>
+      <h3 className="mt-2.5 font-sans text-govde leading-snug font-medium">{sinyal.baslik}</h3>
       <p className="text-metin-2 mt-1.5 text-govde-kucuk leading-relaxed">{sinyal.gerekce}</p>
     </li>
   )

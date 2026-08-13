@@ -27,7 +27,7 @@ export default function MetodolojiSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       <article className="max-w-2xl">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
           Çorlu Konut Endeksi — metodoloji
         </h1>
 
@@ -37,7 +37,7 @@ export default function MetodolojiSayfasi() {
         </p>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Ne ölçüyoruz?</h2>
+          <h2 className="text-baslik-3 font-medium">Ne ölçüyoruz?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Çorlu&apos;da konutların{' '}
             <strong className="text-metin font-medium">istenen fiyatlarının</strong> aylık seyrini.
@@ -52,7 +52,7 @@ export default function MetodolojiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Nasıl hesaplıyoruz?</h2>
+          <h2 className="text-baslik-3 font-medium">Nasıl hesaplıyoruz?</h2>
 
           <h3 className="mt-6 font-sans text-govde font-medium">1. Katmanlara ayırma</h3>
           <p className="text-metin-2 mt-2 leading-relaxed">
@@ -96,9 +96,7 @@ export default function MetodolojiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">
-            Endeksi ne zaman yayınlıyoruz?
-          </h2>
+          <h2 className="text-baslik-3 font-medium">Endeksi ne zaman yayınlıyoruz?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Şu koşulların <strong className="text-metin font-medium">hepsi</strong> sağlanmadan
             endeks sayfası açılmaz. Bu kontrol yazılıma gömülüdür; elle atlanamaz:
@@ -119,7 +117,7 @@ export default function MetodolojiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Şeffaflık kuralları</h2>
+          <h2 className="text-baslik-3 font-medium">Şeffaflık kuralları</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Her yayında şunlar görünür: toplam gözlem sayısı, hangi katmanların değerinin taşındığı,
             verinin istenen fiyat olduğu ve güncelleme tarihi.
@@ -127,7 +125,7 @@ export default function MetodolojiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Veriyi nasıl topluyoruz?</h2>
+          <h2 className="text-baslik-3 font-medium">Veriyi nasıl topluyoruz?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Gözlemleri <strong className="text-metin font-medium">elle</strong> kaydediyoruz:
             mahalle, oda tipi, metrekare, fiyat ve tarih. Otomatik veri çekme (bot, script)
@@ -145,7 +143,7 @@ export default function MetodolojiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Kendimizi nasıl denetliyoruz?</h2>
+          <h2 className="text-baslik-3 font-medium">Kendimizi nasıl denetliyoruz?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Üç ayda bir, endeksimizi TCMB&apos;nin Tekirdağ konut fiyat endeksiyle
             karşılaştırıyoruz. Belirgin bir sapma varsa önce kendi verimizden şüpheleniyoruz.
@@ -153,7 +151,7 @@ export default function MetodolojiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Bu endeks ne DEĞİLDİR?</h2>
+          <h2 className="text-baslik-3 font-medium">Bu endeks ne DEĞİLDİR?</h2>
           <ul className="text-metin-2 mt-3 list-disc space-y-1.5 pl-5 leading-relaxed">
             <li>Bir gayrimenkul değerleme raporu değildir.</li>
             <li>Belirli bir taşınmazın değerini göstermez.</li>
@@ -163,7 +161,7 @@ export default function MetodolojiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Kullanım</h2>
+          <h2 className="text-baslik-3 font-medium">Kullanım</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Endeksi atıf şartıyla serbestçe kullanabilirsiniz. Sorularınız için{' '}
             <Link href="/iletisim" className="text-vurgu underline underline-offset-2">

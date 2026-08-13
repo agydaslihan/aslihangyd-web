@@ -74,7 +74,7 @@ export function SayiAlani({
             if (sayi !== null) onDegisim(sayiyiYaz(sayi))
           }}
           className={sinif(
-            'border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu rakam min-h-11 w-full border-[0.5px] px-3.5 text-[0.9375rem] transition-colors',
+            'border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu rakam min-h-11 w-full border-[0.5px] px-3.5 text-govde transition-colors',
             birim && 'pr-12',
           )}
         />
@@ -121,7 +121,7 @@ export function SecimAlani<T extends string>({
         id={id}
         value={deger}
         onChange={(olay) => onDegisim(olay.target.value as T)}
-        className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3 text-[0.9375rem]"
+        className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3 text-govde"
       >
         {secenekler.map((secenek) => (
           <option key={secenek.value} value={secenek.value}>
@@ -197,7 +197,7 @@ export function SonucSatiri({
       <dd
         className={sinif(
           'rakam shrink-0 text-right font-medium',
-          vurgulu ? 'text-baslik-3' : 'text-[0.9375rem]',
+          vurgulu ? 'text-baslik-3' : 'text-govde',
           tonlar[ton],
         )}
       >

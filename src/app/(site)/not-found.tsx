@@ -11,7 +11,7 @@ export default function BulunamadiSayfasi() {
     <div className="kapsayici flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
       <p className="text-vurgu rakam text-mikro font-medium tracking-[0.1em]">404</p>
 
-      <h1 className="mt-3 text-[1.75rem] leading-tight sm:text-[2.25rem]">
+      <h1 className="mt-3 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
         Aradığınız sayfayı bulamadık
       </h1>
 

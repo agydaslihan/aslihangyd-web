@@ -25,7 +25,9 @@ export default function HataSayfasi({
 
   return (
     <div className="kapsayici flex min-h-[60vh] flex-col items-center justify-center py-16 text-center">
-      <h1 className="text-[1.75rem] leading-tight sm:text-[2.25rem]">Bir şeyler ters gitti</h1>
+      <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        Bir şeyler ters gitti
+      </h1>
 
       <p className="text-metin-2 mt-4 max-w-md leading-relaxed">
         Sayfayı yüklerken beklenmedik bir sorun oluştu. Genellikle geçicidir — tekrar denemek çoğu

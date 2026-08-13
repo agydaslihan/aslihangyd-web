@@ -33,7 +33,9 @@ export default async function HakkimizdaSayfasi() {
     <>
       <div className="kapsayici py-10 sm:py-14">
         <header className="mb-8 flex max-w-2xl flex-col gap-3">
-          <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Hakkımızda</h1>
+          <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+            Hakkımızda
+          </h1>
           <p className="text-metin-2 leading-relaxed">
             Çorlu&apos;da gayrimenkul danışmanlığı yapıyoruz. İşimizin merkezinde ilan değil, karar
             var.
@@ -58,7 +60,7 @@ export default async function HakkimizdaSayfasi() {
 
       <Bolum zemin="yuzey">
         <div className="flex max-w-3xl flex-col gap-4">
-          <h2 className="flex items-center gap-2 text-[1.5rem] leading-tight">
+          <h2 className="flex items-center gap-2 font-serif text-baslik-2-mobil font-medium">
             <DogrulanmisIkon width={22} height={22} className="text-basari shrink-0" />
             Yasal bilgiler
           </h2>

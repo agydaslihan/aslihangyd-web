@@ -70,7 +70,7 @@ export function RaporKabugu({
         </div>
 
         <header className="border-kenar border-b-[0.5px] pb-5">
-          <h1 className="text-[1.75rem] leading-tight font-medium sm:text-[2rem]">{baslik}</h1>
+          <h1 className="font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">{baslik}</h1>
           <p className="text-metin-2 mt-2 leading-relaxed">{altBaslik}</p>
           <p className="text-metin-3 text-mikro mt-3">
             Rapor tarihi: {tarihiYaz(uretimTarihi)} · aslihangyd.com
@@ -134,7 +134,7 @@ export function RaporBolumu({
 }) {
   return (
     <section className="mt-8">
-      <h2 className="font-sans text-[1.125rem] leading-tight font-medium">{baslik}</h2>
+      <h2 className="text-baslik-3 font-medium">{baslik}</h2>
       {aciklama ? (
         <p className="text-metin-2 mt-1.5 text-govde-kucuk leading-relaxed">{aciklama}</p>
       ) : null}

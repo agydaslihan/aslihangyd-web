@@ -64,7 +64,7 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
             type="date"
             value={alisTarihi}
             onChange={(olay) => setAlisTarihi(olay.target.value)}
-            className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3.5 text-[0.9375rem]"
+            className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3.5 text-govde"
           />
         </div>
 
@@ -79,7 +79,7 @@ export function DegerArtisFormu({ parametreler }: { parametreler: VergiParametre
             type="date"
             value={satisTarihi}
             onChange={(olay) => setSatisTarihi(olay.target.value)}
-            className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3.5 text-[0.9375rem]"
+            className="border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu min-h-11 w-full border-[0.5px] px-3.5 text-govde"
           />
         </div>
 

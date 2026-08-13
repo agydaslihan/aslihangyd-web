@@ -78,6 +78,65 @@ describe('kapsam', () => {
   })
 })
 
+describe('tipografi ölçeğinden sapılmıyor', () => {
+  /**
+   * ⚠️ NEDEN VAR: ÖLÇEK ELDE TUTULMAZSA DAĞILIR.
+   *
+   * Yeniden tasarımdan önce sayfalarda 64 ayrı elle yazılmış punto vardı:
+   * `text-[2rem]`, `text-[1.375rem]`, `text-[0.9375rem]`… Her biri tek
+   * başına makuldü ama toplamı bir ölçek değil, bir yığındı — iki sayfanın
+   * "bölüm başlığı" farklı boydaydı ve kimse fark etmiyordu.
+   *
+   * Ölçek artık `globals.css` içinde tanımlı (`--text-*`). Bir bileşen
+   * ölçeğin dışına çıkmak zorundaysa önce oraya bir jeton eklenir; jeton
+   * eklemek, "bu boyut sistemin parçası" demenin bedelidir ve o bedel
+   * bilinçli olarak ödenmelidir.
+   *
+   * ⚠️ Bu testi susturmanın doğru yolu muafiyet eklemek DEĞİL, jeton
+   * eklemektir. `--text-skor` tam olarak böyle doğdu.
+   */
+  const KEYFI_PUNTO = /\btext-\[[0-9.]+rem\]/g
+
+  it('bileşenlerde ve sayfalarda keyfi punto yok', () => {
+    const ihlaller = hepsi.flatMap((dosya) => {
+      const bulunan = yorumsuz(dosya.icerik).match(KEYFI_PUNTO) ?? []
+      return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
+    })
+
+    expect(
+      ihlaller,
+      'Tipografi ölçeğinin dışında punto kullanılmış. Ölçek globals.css ' +
+        'içinde tanımlı; gerçekten yeni bir boyut gerekiyorsa oraya jeton ' +
+        'ekleyin (örn. --text-skor).\n' +
+        `İhlaller:\n  ${ihlaller.join('\n  ')}`,
+    ).toEqual([])
+  })
+
+  /**
+   * ⚠️ Ağırlık 600/700 yasağı zaten ayrı bir testte; burada ölçeğin
+   * KENDİSİNİN eksiksiz olduğunu doğruluyoruz. Bir jeton silinirse onu
+   * kullanan sayfa sessizce varsayılan puntoya düşerdi.
+   */
+  it('ölçeğin taşıyıcı jetonları tanımlı', () => {
+    const css = readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')
+    for (const jeton of [
+      '--text-baslik-1',
+      '--text-baslik-1-mobil',
+      '--text-baslik-2',
+      '--text-baslik-2-mobil',
+      '--text-baslik-3',
+      '--text-govde',
+      '--text-eyebrow',
+      '--text-rakam',
+      '--text-rakam-buyuk',
+      '--text-kart-fiyat',
+      '--text-skor',
+    ]) {
+      expect(css.includes(`${jeton}:`), `${jeton} globals.css içinde yok`).toBe(true)
+    }
+  })
+})
+
 describe('ham hex kullanılmıyor', () => {
   /**
    * Muafiyet listesi.

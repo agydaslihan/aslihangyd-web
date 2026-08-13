@@ -172,7 +172,7 @@ function SonucEkrani({
       <div className="border-kenar bg-yuzey shadow-kart rounded-kart border-[0.5px] p-6 sm:p-8">
         <p className="text-metin-3 text-mikro font-medium">Tahmini değer aralığı</p>
 
-        <p className="rakam mt-2 text-[1.75rem] leading-tight font-medium sm:text-[2.25rem]">
+        <p className="rakam text-rakam mt-2 font-medium sm:text-rakam-buyuk">
           {paraYaz(sonuc.altDeger)}
           <span className="text-metin-3 mx-2 font-normal">–</span>
           {paraYaz(sonuc.ustDeger)}
@@ -336,7 +336,7 @@ function Secim({
           value={deger}
           onChange={(olay) => onDegisim(olay.target.value)}
           className={sinif(
-            'border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu mt-1.5 min-h-11 w-full border-[0.5px] px-3 text-[0.9375rem] font-normal',
+            'border-kenar-giris bg-yuzey rounded-buton focus:border-vurgu mt-1.5 min-h-11 w-full border-[0.5px] px-3 text-govde font-normal',
           )}
         >
           <option value="">{bosEtiket}</option>

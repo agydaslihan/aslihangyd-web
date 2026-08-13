@@ -46,7 +46,7 @@ export default async function EndeksSayfasi() {
     <>
       <div className="kapsayici py-10 sm:py-14">
         <header className="mb-8 flex max-w-2xl flex-col gap-3">
-          <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">
+          <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
             Çorlu Konut İstenen Fiyat Endeksi
           </h1>
           <p className="text-metin-2 leading-relaxed">
@@ -74,7 +74,7 @@ export default async function EndeksSayfasi() {
             <p className="text-metin-3 text-mikro font-medium">
               {sonAy.ay} · Endeks değeri (baz: {veri.seri.bazAy} = 100)
             </p>
-            <p className="rakam mt-2 text-[2.5rem] leading-none font-medium">
+            <p className="rakam text-rakam-buyuk mt-2 font-medium">
               {sonAy.endeks?.toLocaleString('tr-TR') ?? '—'}
             </p>
 
@@ -141,7 +141,9 @@ export default async function EndeksSayfasi() {
 
       <Bolum zemin="yuzey">
         <div className="max-w-2xl">
-          <h2 className="text-[1.5rem] leading-tight">Veriyi kullanmak isterseniz</h2>
+          <h2 className="font-serif text-baslik-2-mobil font-medium">
+            Veriyi kullanmak isterseniz
+          </h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Bu endeksi atıf şartıyla serbestçe kullanabilirsiniz. Haber, rapor veya akademik
             çalışmada kaynak göstermeniz yeterli. Ham veriye veya ayrıntılı kırılıma ihtiyacınız

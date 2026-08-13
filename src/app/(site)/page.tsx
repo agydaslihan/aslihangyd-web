@@ -208,7 +208,7 @@ function Kahraman({
                 Çift kontrast testinde ölçülüyor. */}
             <p className="text-adacayi-300 text-eyebrow font-medium uppercase">Çorlu · Tekirdağ</p>
 
-            <h1 className="text-notr-50 mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1 lg:text-[3.25rem] lg:leading-[1.08]">
+            <h1 className="text-notr-50 mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
               Gayrimenkul kararı hisle değil, rakamla verilir.
             </h1>
 
@@ -493,7 +493,7 @@ function YaklasimBolumu() {
               <Ikon width={20} height={20} />
             </span>
             <h3 className="font-sans text-govde font-medium">{baslik}</h3>
-            <p className="text-metin-2 text-[0.9375rem] leading-relaxed">{metin}</p>
+            <p className="text-metin-2 text-govde leading-relaxed">{metin}</p>
           </div>
         ))}
       </div>

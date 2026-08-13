@@ -42,7 +42,9 @@ export default function SkorMetodolojisiSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       <article className="max-w-2xl">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Yatırım Skoru metodolojisi</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Yatırım Skoru metodolojisi
+        </h1>
 
         <p className="text-metin-2 mt-4 text-baslik-3 leading-relaxed">
           Bir mahalleye puan vermek kolaydır; o puanın arkasında durmak zordur. Bu sayfa skorun
@@ -50,7 +52,7 @@ export default function SkorMetodolojisiSayfasi() {
         </p>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Altı bileşen</h2>
+          <h2 className="text-baslik-3 font-medium">Altı bileşen</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Skor 0–100 arasıdır ve altı bileşenin ağırlıklı ortalamasıdır. Her bileşen kendi içinde
             0–100&apos;e ölçeklenir.
@@ -91,7 +93,7 @@ export default function SkorMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Bazı bileşenler ters yönlüdür</h2>
+          <h2 className="text-baslik-3 font-medium">Bazı bileşenler ters yönlüdür</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             <strong className="text-metin font-medium">Kira çarpanı:</strong> düşük çarpan yatırımcı
             lehinedir (taşınmaz kendini daha kısa sürede öder), bu yüzden düşük çarpan yüksek puan
@@ -110,7 +112,7 @@ export default function SkorMetodolojisiSayfasi() {
           en sık görülen sessiz yalanıdır.
         */}
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">
+          <h2 className="text-baslik-3 font-medium">
             Konum bileşenleri mesafeden nasıl türetilir?
           </h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
@@ -204,9 +206,7 @@ export default function SkorMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">
-            Fiyat trendi neden göreli ölçülüyor?
-          </h2>
+          <h2 className="text-baslik-3 font-medium">Fiyat trendi neden göreli ölçülüyor?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Yüksek enflasyon ortamında her mahallenin fiyatı yükselir. Mutlak artışı puanlasaydık,
             her mahalleye yüksek puan verirdik ve skor hiçbir şey ayırt etmezdi.
@@ -236,9 +236,7 @@ export default function SkorMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">
-            Yetersiz veriyle skor vermiyoruz
-          </h2>
+          <h2 className="text-baslik-3 font-medium">Yetersiz veriyle skor vermiyoruz</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Bir mahallenin skoru, bileşenlerin en az{' '}
             <strong className="text-metin font-medium">%{ASGARI_KAPSAM * 100}</strong>
@@ -258,7 +256,7 @@ export default function SkorMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Veri kaynakları</h2>
+          <h2 className="text-baslik-3 font-medium">Veri kaynakları</h2>
           <ul className="text-metin-2 mt-3 list-disc space-y-1.5 pl-5 leading-relaxed">
             <li>
               <strong className="text-metin font-medium">Fiyat trendi ve kira çarpanı:</strong>{' '}
@@ -284,7 +282,7 @@ export default function SkorMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Bu skor ne DEĞİLDİR?</h2>
+          <h2 className="text-baslik-3 font-medium">Bu skor ne DEĞİLDİR?</h2>
           <ul className="text-metin-2 mt-3 list-disc space-y-1.5 pl-5 leading-relaxed">
             <li>Belirli bir taşınmazın değerini veya getirisini göstermez.</li>
             <li>Gelecekteki fiyat hareketini tahmin etmez.</li>
@@ -298,7 +296,7 @@ export default function SkorMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Ağırlıklar değişir mi?</h2>
+          <h2 className="text-baslik-3 font-medium">Ağırlıklar değişir mi?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Ağırlıkları değiştirirsek bunu bu sayfada tarih vererek duyururuz. Sessizce değiştirilen
             bir metodoloji, metodoloji değildir.

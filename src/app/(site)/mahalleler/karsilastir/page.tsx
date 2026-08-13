@@ -47,7 +47,9 @@ export default async function KarsilastirmaSayfasi({
       </nav>
 
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Mahalle karşılaştırma</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Mahalle karşılaştırma
+        </h1>
         <p className="text-metin-2 leading-relaxed">
           En fazla {AZAMI_SECIM} mahalleyi yan yana koyun. Her rakamın yanında kaç gözleme
           dayandığını (n) gösteriyoruz — az gözleme dayanan bir ortalama, ortalama değildir.
