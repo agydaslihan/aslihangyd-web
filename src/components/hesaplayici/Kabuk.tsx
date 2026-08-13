@@ -35,7 +35,7 @@ export function HesaplayiciKabugu({
   return (
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">{baslik}</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">{baslik}</h1>
         <p className="text-metin-2 leading-relaxed">{aciklama}</p>
       </header>
 

@@ -286,6 +286,17 @@
    * ölçeğine bağlansaydı bölüm başlığı büyüdüğünde kart fiyatı da
    * büyürdü ve kart düzeni bozulurdu.
    */
+  /**
+   * Yatırım skoru — mahalle sayfasının en büyük rakamı.
+   *
+   * Kendi jetonu var çünkü ölçek dışı: 48px, `rakam-buyuk`tan (40) bir
+   * basamak yukarı. Skor sayfanın tek "manşet rakamı" ve onunla aynı
+   * boyda ikinci bir şey yok.
+   */
+  --text-skor: 3rem; /* 48 */
+  --text-skor--line-height: 1;
+  --text-skor--letter-spacing: -0.02em;
+
   --text-kart-fiyat: 1.375rem; /* 22 */
   --text-kart-fiyat--line-height: 1.1;
   --text-kart-fiyat--letter-spacing: -0.02em;

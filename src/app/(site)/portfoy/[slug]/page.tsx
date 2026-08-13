@@ -119,7 +119,9 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               ) : null}
             </div>
 
-            <h1 className="mt-3 text-[1.875rem] leading-tight sm:text-[2.375rem]">{ilan.baslik}</h1>
+            <h1 className="mt-3 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+              {ilan.baslik}
+            </h1>
 
             {mahalle ? (
               <p className="text-metin-2 mt-3 flex items-center gap-2">
@@ -211,7 +213,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               <p className="text-metin-3 text-mikro font-medium">
                 {satilik ? 'Satış fiyatı' : 'Aylık kira'}
               </p>
-              <p className="rakam mt-1 text-[2rem] leading-none font-medium">
+              <p className="rakam text-rakam mt-1 font-medium">
                 {paraYaz(ilan.fiyat, paraBirimi) ?? (
                   <span className="text-metin-2 text-baslik-3 font-normal">Görüşmeye açık</span>
                 )}

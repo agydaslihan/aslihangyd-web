@@ -6,7 +6,7 @@ import { useState, useTransition } from 'react'
 import { Rozet } from '@/components/ui/Rozet'
 import { akilliAramaCoz } from '@/lib/arama/eylemler'
 import type { AramaSonucu } from '@/lib/arama/motor'
-import { AZAMI_SORGU_UZUNLUGU } from '@/lib/arama/sema'
+import { AZAMI_SORGU_UZUNLUGU } from '@/lib/arama/sabitler'
 import { paraKisaYaz } from '@/lib/bicimlendirme'
 import { etiketBul, ILAN_KATEGORILERI, ILAN_TIPLERI } from '@/lib/secenekler'
 

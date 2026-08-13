@@ -269,7 +269,7 @@ function Sonuclar({
         <p className="text-metin-3 text-mikro font-medium tracking-wide">
           {veri.son.yil} YIL SONUNDA
         </p>
-        <p className="mt-1.5 text-[1.375rem] leading-snug font-medium sm:text-[1.625rem]">
+        <p className="text-baslik-3 mt-1.5 font-medium sm:text-baslik-2-mobil">
           {satinAlmaOnde ? 'Satın almak' : 'Kiralamak'} önde:{' '}
           <span className={satinAlmaOnde ? 'text-basari' : 'text-hata'}>
             {paraYaz(Math.abs(veri.son.fark))}

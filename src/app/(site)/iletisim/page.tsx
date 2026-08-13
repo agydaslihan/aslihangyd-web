@@ -48,7 +48,7 @@ export default async function IletisimSayfasi({
   return (
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-10 flex max-w-2xl flex-col gap-3">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">İletişim</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">İletişim</h1>
         <p className="text-metin-2 leading-relaxed">
           Alım, satım, kiralama veya değerleme — hangisi olursa olsun önce sizi dinliyoruz. Formu
           doldurmak zorunda değilsiniz; WhatsApp genellikle en hızlı yol.

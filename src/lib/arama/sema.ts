@@ -2,6 +2,8 @@ import { z } from 'zod'
 
 import { ILAN_KATEGORILERI, ILAN_TIPLERI, ODA_SAYILARI } from '@/lib/secenekler'
 
+import { AZAMI_SORGU_UZUNLUGU } from './sabitler'
+
 /**
  * AI doğal dil aramasının çıktı şeması.
  *
@@ -25,7 +27,10 @@ import { ILAN_KATEGORILERI, ILAN_TIPLERI, ODA_SAYILARI } from '@/lib/secenekler'
 export const AZAMI_FIYAT = 1_000_000_000
 
 /** Ziyaretçinin yazabileceği azami sorgu uzunluğu. */
-export const AZAMI_SORGU_UZUNLUGU = 300
+// ⚠️ Sabit `sabitler.ts` içinde yaşıyor: istemci onu zod'suz alabilsin
+// diye. Buradan yeniden dışa aktarılıyor ki sunucu tarafı çağrılar
+// değişmesin ve tek kaynak korunsun.
+export { AZAMI_SORGU_UZUNLUGU } from './sabitler'
 
 const tipDegerleri = ILAN_TIPLERI.map((t) => t.value) as [string, ...string[]]
 const kategoriDegerleri = ILAN_KATEGORILERI.map((k) => k.value) as [string, ...string[]]

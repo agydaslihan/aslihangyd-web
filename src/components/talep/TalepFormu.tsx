@@ -213,7 +213,7 @@ function Alan({
   const aciklayanlar = [ipucu ? ipucuId : null, hata ? hataId : null].filter(Boolean).join(' ')
 
   const siniflar = sinif(
-    'w-full rounded-buton border-[0.5px] bg-yuzey px-3.5 py-2.5 text-[0.9375rem]',
+    'w-full rounded-buton border-[0.5px] bg-yuzey px-3.5 py-2.5 text-govde',
     'focus:border-vurgu transition-colors',
     hata ? 'border-hata' : 'border-kenar-giris',
   )
@@ -290,7 +290,7 @@ function SecimAlani({
         aria-describedby={hata ? hataId : undefined}
         aria-invalid={hata ? true : undefined}
         className={sinif(
-          'rounded-buton bg-yuzey focus:border-vurgu min-h-11 w-full border-[0.5px] px-3 text-[0.9375rem]',
+          'rounded-buton bg-yuzey focus:border-vurgu min-h-11 w-full border-[0.5px] px-3 text-govde',
           hata ? 'border-hata' : 'border-kenar-giris',
         )}
       >

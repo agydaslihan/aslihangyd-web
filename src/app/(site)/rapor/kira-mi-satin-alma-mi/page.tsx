@@ -93,7 +93,7 @@ export default async function KiraMiSatinAlmaMiRaporu({
     >
       <RaporBolumu baslik="Sonuç">
         <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
-          <p className="text-[1.25rem] leading-snug font-medium">
+          <p className="text-baslik-3 font-medium">
             {veri.son.yil} yıl sonunda {satinAlmaOnde ? 'satın almak' : 'kiralamak'} önde:{' '}
             <span className="rakam">{paraYaz(Math.abs(veri.son.fark))}</span>
           </p>

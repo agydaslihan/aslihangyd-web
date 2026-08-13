@@ -31,7 +31,9 @@ export default async function MahalleTestiSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-3 text-center">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">Mahalle Eşleştirme Testi</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Mahalle Eşleştirme Testi
+        </h1>
         <p className="text-metin-2 leading-relaxed">
           Çorlu&apos;da &quot;hangi mahalle iyi?&quot; sorusunun tek bir cevabı yok — cevap kimin
           sorduğuna göre değişir. 7 soruda önceliklerinizi anlayıp size en uygun üç mahalleyi ve{' '}

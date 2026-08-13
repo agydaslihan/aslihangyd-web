@@ -31,7 +31,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       <article className="max-w-2xl">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
           Mahalle Eşleştirme metodolojisi
         </h1>
 
@@ -45,7 +45,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
         </p>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Önce en önemli iki cümle</h2>
+          <h2 className="text-baslik-3 font-medium">Önce en önemli iki cümle</h2>
           <div className="border-kenar bg-vurgu-zemin rounded-kart mt-4 border-[0.5px] p-5">
             <p className="leading-relaxed">
               <strong>Eşleştirme, portföyümüzdeki ilanlardan tamamen bağımsızdır.</strong> Bir
@@ -60,7 +60,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Dokuz ölçüt</h2>
+          <h2 className="text-baslik-3 font-medium">Dokuz ölçüt</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Her mahalle dokuz ölçütte 0–100 arası puanlanır. Ağırlıklar cevaplarınıza göre değişir;
             aşağıdaki tablo iki uç profili gösteriyor. Testi çözdüğünüzde{' '}
@@ -113,9 +113,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">
-            Cevaplarınız ağırlıkları nasıl değiştirir?
-          </h2>
+          <h2 className="text-baslik-3 font-medium">Cevaplarınız ağırlıkları nasıl değiştirir?</h2>
           <ul className="text-metin-2 mt-3 list-disc space-y-2 pl-5 leading-relaxed">
             <li>
               <strong>Hanede çocuk varsa</strong> okul erişimi ağırlığı belirgin biçimde artar,
@@ -142,7 +140,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Bütçe nasıl puanlanıyor?</h2>
+          <h2 className="text-baslik-3 font-medium">Bütçe nasıl puanlanıyor?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Mutlak bir eşik <strong>kullanılmıyor</strong>. &quot;70 m² altı yetersizdir&quot;
             demek, bizim uydurduğumuz bir yaşam standardını size dayatmak olurdu. Bunun yerine
@@ -156,7 +154,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Veriler nereden geliyor?</h2>
+          <h2 className="text-baslik-3 font-medium">Veriler nereden geliyor?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Dört ölçüt —{' '}
             <Link href="/yatirim-skoru-metodolojisi" className="text-vurgu underline">
@@ -174,7 +172,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Ne zaman sonuç üretilmez?</h2>
+          <h2 className="text-baslik-3 font-medium">Ne zaman sonuç üretilmez?</h2>
           <p className="text-metin-2 mt-3 leading-relaxed">
             Bir mahallenin ölçüt ağırlıklarının en az{' '}
             <strong>%{Math.round(ASGARI_KAPSAM * 100)}&apos;i</strong> dolu değilse o mahalle için
@@ -189,7 +187,7 @@ export default function EslestirmeMetodolojisiSayfasi() {
         </section>
 
         <section className="mt-10">
-          <h2 className="font-sans text-[1.375rem] leading-tight">Testin ölçmedikleri</h2>
+          <h2 className="text-baslik-3 font-medium">Testin ölçmedikleri</h2>
           <ul className="text-metin-2 mt-3 list-disc space-y-2 pl-5 leading-relaxed">
             <li>
               <strong>Sürüş süresi ölçülmez.</strong> Mesafeler kuş uçuşudur. Gerçek sürüş süresi

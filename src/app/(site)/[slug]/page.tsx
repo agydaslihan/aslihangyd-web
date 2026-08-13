@@ -53,7 +53,9 @@ export default async function CmsSayfasi({ params }: SayfaOzellikleri) {
       </nav>
 
       <article className="max-w-2xl">
-        <h1 className="text-[2rem] leading-tight sm:text-[2.5rem]">{sayfa.baslik}</h1>
+        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          {sayfa.baslik}
+        </h1>
 
         {sayfa.hukukiMetin ? (
           <p className="text-metin-3 mt-3 text-govde-kucuk">

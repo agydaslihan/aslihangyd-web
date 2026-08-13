@@ -187,7 +187,7 @@ export function EslestirmeTesti({
       </div>
 
       <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-6 sm:p-8">
-        <h2 className="text-[1.375rem] leading-snug font-medium sm:text-[1.5rem]">{adim.soru}</h2>
+        <h2 className="text-baslik-3 font-medium sm:text-baslik-2-mobil">{adim.soru}</h2>
         {adim.yardim ? (
           <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">{adim.yardim}</p>
         ) : null}
@@ -395,7 +395,7 @@ function KartSecimi<T extends string>({
               : 'border-kenar-guclu hover:border-vurgu',
           )}
         >
-          <span className="text-[0.9375rem] font-medium">{secenek.etiket}</span>
+          <span className="text-govde font-medium">{secenek.etiket}</span>
           {secenek.aciklama ? (
             <span className="text-metin-2 mt-0.5 text-govde-kucuk leading-snug">
               {secenek.aciklama}
@@ -455,7 +455,7 @@ function Sonuclar({
   return (
     <div className="mx-auto max-w-3xl">
       <header className="mb-6 text-center">
-        <h2 className="text-[1.75rem] leading-tight font-medium sm:text-[2rem]">
+        <h2 className="font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">
           Size en uygun {sonuc.eslesmeler.length} mahalle
         </h2>
         <p className="text-metin-2 mx-auto mt-2 max-w-xl text-govde-kucuk leading-relaxed">
@@ -537,13 +537,11 @@ function EslesmeKarti({ eslesme, sira }: { eslesme: MahalleEslesmesi; sira: numb
   return (
     <li className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
-        <h3 className="text-[1.25rem] font-medium">
+        <h3 className="text-baslik-3 font-medium">
           <span className="text-metin-3 mr-2">{sira}.</span>
           {eslesme.ad}
         </h3>
-        <p className="rakam text-vurgu text-[1.5rem] font-medium">
-          {yuzdeYaz(eslesme.uyum, 0)} uyum
-        </p>
+        <p className="rakam text-vurgu text-rakam font-medium">{yuzdeYaz(eslesme.uyum, 0)} uyum</p>
       </div>
 
       {eslesme.butceyleAlinabilirM2 !== null ? (

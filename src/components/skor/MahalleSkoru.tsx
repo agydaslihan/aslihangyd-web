@@ -52,7 +52,7 @@ export function MahalleSkoru({
         {/* Skor + radar */}
         <div className="flex flex-col items-center gap-3">
           <div className="text-center">
-            <p className="rakam text-[3rem] leading-none font-medium">
+            <p className="rakam text-skor font-medium">
               {veri.toplam}
               <span className="text-metin-3 text-baslik-2 font-normal">/100</span>
             </p>

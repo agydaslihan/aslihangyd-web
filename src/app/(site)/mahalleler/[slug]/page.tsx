@@ -215,7 +215,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
             {/* 7 ── Neden bu mahalle? */}
             <section aria-labelledby="neden">
-              <h2 id="neden" className="mb-4 font-sans text-[1.5rem] leading-tight">
+              <h2 id="neden" className="mb-4 font-sans font-serif text-baslik-2-mobil font-medium">
                 Neden {mahalle.ad} Mahallesi?
               </h2>
 
@@ -243,7 +243,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                   <div className="border-kenar divide-kenar divide-y rounded-kart border-[0.5px]">
                     {mahalle.sikSorulanlar.map((kayit) => (
                       <details key={kayit.id ?? kayit.soru} className="group px-4 py-3">
-                        <summary className="cursor-pointer list-none text-[0.9375rem] font-medium marker:content-none">
+                        <summary className="cursor-pointer list-none text-govde font-medium marker:content-none">
                           <span className="flex items-center justify-between gap-3">
                             {kayit.soru}
                             <span className="text-metin-3 transition-transform group-open:rotate-45">
@@ -399,7 +399,7 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
             </nav>
 
             <h1
-              className={`text-[2rem] leading-tight sm:text-[2.75rem] ${poster?.url ? 'text-white' : ''}`}
+              className={`font-serif text-baslik-1-mobil font-medium sm:text-baslik-1 ${poster?.url ? 'text-white' : ''}`}
             >
               {mahalle.ad} Mahallesi
             </h1>

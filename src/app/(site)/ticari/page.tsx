@@ -51,7 +51,7 @@ export default async function TicariSayfasi() {
               Ticari gayrimenkul
             </p>
 
-            <h1 className="mt-4 text-[2.25rem] leading-[1.1] sm:text-[3rem]">
+            <h1 className="mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
               Fabrika, depo, sanayi arsası
             </h1>
 
@@ -114,7 +114,7 @@ export default async function TicariSayfasi() {
                 <Ikon width={20} height={20} />
               </span>
               <h3 className="font-sans text-govde font-medium">{baslik}</h3>
-              <p className="text-metin-2 text-[0.9375rem] leading-relaxed">{metin}</p>
+              <p className="text-metin-2 text-govde leading-relaxed">{metin}</p>
             </div>
           ))}
         </div>
@@ -157,10 +157,10 @@ export default async function TicariSayfasi() {
       <Bolum zemin="lacivert">
         <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
-            <h2 className="text-[1.75rem] leading-tight text-white sm:text-[2.25rem]">
+            <h2 className="font-serif text-baslik-1-mobil font-medium text-white sm:text-baslik-1">
               Ticari taşınmazınızı mı değerlendirmek istiyorsunuz?
             </h2>
-            <p className="mt-3 text-[0.9375rem] leading-relaxed text-white/75">
+            <p className="mt-3 text-govde leading-relaxed text-white/75">
               Fabrika, depo veya sanayi arsanız için gerçek piyasa karşılığını ve doğru alıcı
               profilini konuşalım. Ticari tarafta alıcı sayısı azdır ama doğru alıcıyı bulmak
               işlemin tamamını belirler.
