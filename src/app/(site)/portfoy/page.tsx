@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import { Suspense } from 'react'
 
 import { AkilliArama } from '@/components/ilan/AkilliArama'
-import { IlanFiltreleri } from '@/components/ilan/IlanFiltreleri'
+import { FiltrePaneli } from '@/components/ilan/FiltrePaneli'
+import { Siralama } from '@/components/ilan/Siralama'
 import { aiAramaAcikMi } from '@/lib/arama/motor'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
@@ -10,11 +11,15 @@ import { SiraOgesi, YataySira } from '@/components/ilan/YataySira'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { KilitliKart } from '@/components/ui/KilitliKart'
-import { Sayfalama } from '@/components/ui/Sayfalama'
 import { sayiYaz } from '@/lib/bicimlendirme'
 import type { IlanKategorisi, IlanTipi } from '@/lib/secenekler'
 import { mutlakAdres } from '@/lib/site'
-import { ilanlariGetir, type IlanFiltresi } from '@/lib/veri/ilanlar'
+import {
+  AZAMI_GOSTER,
+  ilanlariGetir,
+  SAYFA_BASINA_ILAN,
+  type IlanFiltresi,
+} from '@/lib/veri/ilanlar'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 import { temaSiralariniGetir, type TemaSirasi } from '@/lib/veri/portfoy'
 
@@ -35,7 +40,20 @@ export default async function PortfoySayfasi({
 }) {
   const parametreler = await searchParams
   const filtre = parametreleriCoz(parametreler)
-  const sayfa = sayiCoz(parametreler.sayfa) ?? 1
+
+  /**
+   * ⚠️ SAYFALAMA DEĞİL "DAHA FAZLA GÖSTER" (şartname §7).
+   *
+   * `goster` kaç ilanın basılacağını söylüyor ve URL'de tutuluyor. Bu
+   * bilinçli: istemci state'iyle yapsaydık liste SSR'dan çıkar, arama
+   * motoru yalnızca ilk 24'ü görürdü — oysa bu sayfa SEO motoru.
+   * Bağlantı paylaşıldığında da aynı sayıda sonuç açılıyor.
+   *
+   * Üst sınır kaza koruması: `?goster=999999` ile tüm portföyü tek
+   * istekte çekmeyi engelliyor.
+   */
+  const istenen = sayiCoz(parametreler.goster) ?? SAYFA_BASINA_ILAN
+  const goster = Math.min(Math.max(istenen, SAYFA_BASINA_ILAN), AZAMI_GOSTER)
 
   /**
    * Tema sıraları yalnızca FİLTRESİZ görünümde gösterilir.
@@ -50,7 +68,7 @@ export default async function PortfoySayfasi({
   )
 
   const [sonuc, mahalleler, siralar, bolumler] = await Promise.all([
-    ilanlariGetir(filtre, sayfa),
+    ilanlariGetir(filtre, 1, goster),
     mahalleleriGetir(),
     filtresizMi ? temaSiralariniGetir() : Promise.resolve([]),
     bolumDurumlariniGetir(),
@@ -90,38 +108,55 @@ export default async function PortfoySayfasi({
           hâlükârda çalışır; AI arama onların yerine değil yanına konuyor. */}
       {aiAramaGoster ? <AkilliArama /> : null}
 
-      <Suspense fallback={<div className="iskelet h-24" />}>
-        <IlanFiltreleri mahalleler={mahalleler} />
-      </Suspense>
+      {/* ⚠️ İki sütun: solda yapışkan filtre paneli (280px), sağda sonuç.
+          Şartname §7 — dönüşümün olduğu yer burası. */}
+      <div className="grid gap-8 lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-10">
+        <Suspense fallback={<div className="iskelet h-96" />}>
+          <FiltrePaneli
+            mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
+            sonucSayisi={sonuc.toplam}
+          />
+        </Suspense>
 
-      <p className="text-metin-3 text-govde-kucuk mt-6 mb-4" aria-live="polite">
-        {sonuc.toplam > 0 ? `${sayiYaz(sonuc.toplam)} taşınmaz listeleniyor` : 'Sonuç bulunamadı'}
-      </p>
+        <div>
+          <div className="border-kenar mb-5 flex flex-wrap items-center justify-between gap-3 border-b-[0.5px] pb-4">
+            <p className="text-metin-2 text-govde-kucuk" aria-live="polite">
+              {sonuc.toplam > 0
+                ? `${sayiYaz(sonuc.toplam)} taşınmaz listeleniyor`
+                : 'Sonuç bulunamadı'}
+            </p>
 
-      {sonuc.ilanlar.length > 0 ? (
-        <>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-            {sonuc.ilanlar.map((ilan, sira) => (
-              <IlanKarti key={ilan.id} ilan={ilan} oncelikli={filtresizMi ? false : sira < 3} />
-            ))}
+            <Suspense fallback={null}>
+              <Siralama />
+            </Suspense>
           </div>
 
-          <Sayfalam sonuc={sonuc} parametreler={parametreler} />
-        </>
-      ) : (
-        <BosDurum
-          baslik="Bu kriterlere uyan taşınmaz yok"
-          neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
-          eylem={
-            <div className="flex flex-col gap-2 sm:flex-row">
-              <Buton href="/portfoy" gorunum="ikincil">
-                Filtreleri temizle
-              </Buton>
-              <Buton href="/iletisim">Aradığınızı anlatın</Buton>
-            </div>
-          }
-        />
-      )}
+          {sonuc.ilanlar.length > 0 ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:gap-5">
+                {sonuc.ilanlar.map((ilan, sira) => (
+                  <IlanKarti key={ilan.id} ilan={ilan} oncelikli={filtresizMi ? false : sira < 3} />
+                ))}
+              </div>
+
+              <DahaFazla toplam={sonuc.toplam} goster={goster} parametreler={parametreler} />
+            </>
+          ) : (
+            <BosDurum
+              baslik="Bu kriterlere uyan taşınmaz yok"
+              neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
+              eylem={
+                <div className="flex flex-col gap-2 sm:flex-row">
+                  <Buton href="/portfoy" gorunum="ikincil">
+                    Filtreleri temizle
+                  </Buton>
+                  <Buton href="/iletisim">Aradığınızı anlatın</Buton>
+                </div>
+              }
+            />
+          )}
+        </div>
+      </div>
     </div>
   )
 }
@@ -178,29 +213,46 @@ function TemaBolumu({ sira }: { sira: TemaSirasi }) {
   )
 }
 
-function Sayfalam({
-  sonuc,
+/**
+ * "Daha fazla göster" — sayfalama yerine (şartname §7).
+ *
+ * ⚠️ BUTON DEĞİL BAĞLANTI. Sunucu tarafında render edilen bir liste için
+ * doğru öge bu: JavaScript olmadan da çalışıyor, arama motoru izleyebiliyor
+ * ve orta tuşla yeni sekmede açılabiliyor. Bir `<button>` üçünü de kaybederdi.
+ */
+function DahaFazla({
+  toplam,
+  goster,
   parametreler,
 }: {
-  sonuc: { sayfa: number; toplamSayfa: number }
+  toplam: number
+  goster: number
   parametreler: AramaParametreleri
 }) {
-  if (sonuc.toplamSayfa <= 1) return null
+  if (goster >= toplam) return null
+
+  const sonraki = Math.min(goster + SAYFA_BASINA_ILAN, AZAMI_GOSTER)
+  const sorgu = new URLSearchParams()
+  for (const [anahtar, deger] of Object.entries(parametreler)) {
+    if (typeof deger === 'string' && deger !== '' && anahtar !== 'goster') {
+      sorgu.set(anahtar, deger)
+    }
+  }
+  sorgu.set('goster', String(sonraki))
+
+  const kalan = toplam - goster
 
   return (
-    <Sayfalama
-      mevcutSayfa={sonuc.sayfa}
-      toplamSayfa={sonuc.toplamSayfa}
-      adresUret={(hedef) => {
-        const sorgu = new URLSearchParams()
-        for (const [anahtar, deger] of Object.entries(parametreler)) {
-          if (typeof deger === 'string' && anahtar !== 'sayfa') sorgu.set(anahtar, deger)
-        }
-        if (hedef > 1) sorgu.set('sayfa', String(hedef))
-        const metin = sorgu.toString()
-        return metin ? `/portfoy?${metin}` : '/portfoy'
-      }}
-    />
+    <div className="mt-8 flex flex-col items-center gap-2">
+      <Buton href={`/portfoy?${sorgu.toString()}`} gorunum="ikincil" boyut="buyuk">
+        Daha fazla göster
+      </Buton>
+      <p className="text-metin-3 text-mikro">
+        <span className="rakam">{sayiYaz(goster)}</span> /{' '}
+        <span className="rakam">{sayiYaz(toplam)}</span> gösteriliyor
+        {goster >= AZAMI_GOSTER ? null : ` · ${sayiYaz(kalan)} taşınmaz daha var`}
+      </p>
+    </div>
   )
 }
 
@@ -222,6 +274,18 @@ function parametreleriCoz(parametreler: AramaParametreleri): IlanFiltresi {
     odaSayisi: metin('oda'),
     enAzFiyat: sayiCoz(parametreler.enAz),
     enCokFiyat: sayiCoz(parametreler.enCok),
+    enAzM2: sayiCoz(parametreler.m2EnAz),
+    enCokM2: sayiCoz(parametreler.m2EnCok),
+    /**
+     * ⚠️ Yatırım filtreleri ONDALIK kabul ediyor.
+     *
+     * `sayiCoz` `parseInt` kullanıyor ve "%7,5 brüt getiri" gibi bir değeri
+     * sessizce 7'ye yuvarlardı — kullanıcı yazdığından farklı bir sonuç
+     * görür ve sebebini anlamaz. Bu üçü için ayrı bir çözücü var.
+     */
+    carpanEnCok: ondalikCoz(parametreler.carpan),
+    getiriEnAz: ondalikCoz(parametreler.getiri),
+    sanayiKm: ondalikCoz(parametreler.sanayi),
     siralama: SIRALAMALAR.includes(siralama ?? '')
       ? (siralama as IlanFiltresi['siralama'])
       : undefined,
@@ -230,6 +294,13 @@ function parametreleriCoz(parametreler: AramaParametreleri): IlanFiltresi {
 
 const KATEGORILER = ['konut', 'isyeri', 'arsa', 'depo', 'fabrika']
 const SIRALAMALAR = ['yeni', 'fiyat_artan', 'fiyat_azalan', 'carpan_artan']
+
+/** Ondalık kabul eden çözücü — yatırım filtreleri için. */
+function ondalikCoz(deger: string | string[] | undefined): number | undefined {
+  if (typeof deger !== 'string' || deger.trim() === '') return undefined
+  const sayi = Number.parseFloat(deger.replace(',', '.'))
+  return Number.isFinite(sayi) && sayi > 0 ? sayi : undefined
+}
 
 function sayiCoz(deger: string | string[] | undefined): number | undefined {
   if (typeof deger !== 'string') return undefined

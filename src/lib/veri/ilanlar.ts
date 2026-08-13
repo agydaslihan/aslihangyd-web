@@ -5,12 +5,30 @@ import { cache } from 'react'
 import type { Where } from 'payload'
 
 import { HERKESE_ACIK_DURUMLAR } from '@/lib/eids'
+import { tumMahallelerinYakinligi } from '@/lib/veri/yakinlik'
 import type { IlanKategorisi, IlanTipi } from '@/lib/secenekler'
 import type { Ilanlar } from '@/payload-types'
 
 import { payloadGetir, ZIYARETCI } from './istemci'
 
-export const SAYFA_BASINA_ILAN = 12
+/**
+ * Bir seferde basılan ilan sayısı.
+ *
+ * ⚠️ 12 → 24: şartname §7 "SEO için ilk 24 SSR" diyor. Listeleme sayfası
+ * arama motorunun portföyü gezdiği ana yol; ilk basımda ne kadar çok
+ * gerçek kart varsa o kadar iyi. 24 kart ~3 ekran, LCP'yi bozmuyor
+ * (görseller `loading="lazy"` ve ızgara düzeninde lazy gerçekten çalışıyor).
+ */
+export const SAYFA_BASINA_ILAN = 24
+
+/**
+ * "Daha fazla göster" üst sınırı — kaza koruması.
+ *
+ * `?goster=999999` ile tüm portföyü tek istekte çekmeyi engelliyor.
+ * Sınıra ulaşıldığında buton kaybolur; o noktada filtre kullanmak
+ * kaydırmaya devam etmekten hızlı.
+ */
+export const AZAMI_GOSTER = 120
 
 export interface IlanFiltresi {
   tip?: IlanTipi
@@ -20,6 +38,36 @@ export interface IlanFiltresi {
   odaSayisi?: string
   enAzFiyat?: number
   enCokFiyat?: number
+  enAzM2?: number
+  enCokM2?: number
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * YATIRIM FİLTRELERİ — bizim ayrıştırıcımız.
+   *
+   * Türkiye'de hiçbir emlak sitesinde yok. Yatırımcı "3+1 ara kat" diye
+   * değil, "kaç yılda kendini öder" diye arıyor.
+   *
+   * `kiraCarpani` ve `brutGetiri` gerçek veritabanı alanları (kayıt
+   * kancasıyla hesaplanıyor), dolayısıyla sorgu tarafında ucuzlar.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  /** Kira çarpanı en fazla N yıl. Düşük olan yatırımcı lehine. */
+  carpanEnCok?: number
+  /** Brüt getiri en az %N. */
+  getiriEnAz?: number
+  /**
+   * Sanayiye en fazla N **kilometre**.
+   *
+   * ⚠️ ŞARTNAME "dk" İSTİYORDU, km KULLANILDI VE BU BİLİNÇLİ.
+   *
+   * Elimizde yol ağı verisi ve rotalama motoru yok; tüm mesafeler kuş
+   * uçuşu. Mesafeyi varsayılan bir hıza bölüp "10 dakika" yazmak,
+   * bilmediğimiz bir şeyi iddia etmek olurdu — `/veri-kaynaklari`
+   * sayfasında bunu ziyaretçiye açıkça söylüyoruz. Filtrede "dk"
+   * yazmak o sayfayı yalancı çıkarırdı.
+   */
+  sanayiKm?: number
   siralama?: 'yeni' | 'fiyat_artan' | 'fiyat_azalan' | 'carpan_artan'
 }
 
@@ -44,7 +92,7 @@ function temelKosul(): Where {
   }
 }
 
-function filtreyiKosulaCevir(filtre: IlanFiltresi): Where {
+function filtreyiKosulaCevir(filtre: IlanFiltresi, mahalleSluglari?: string[]): Where {
   const kosullar: Where[] = [temelKosul()]
 
   if (filtre.tip) kosullar.push({ tip: { equals: filtre.tip } })
@@ -57,6 +105,31 @@ function filtreyiKosulaCevir(filtre: IlanFiltresi): Where {
   if (typeof filtre.enCokFiyat === 'number') {
     kosullar.push({ fiyat: { less_than_equal: filtre.enCokFiyat } })
   }
+  if (typeof filtre.enAzM2 === 'number') {
+    kosullar.push({ brutM2: { greater_than_equal: filtre.enAzM2 } })
+  }
+  if (typeof filtre.enCokM2 === 'number') {
+    kosullar.push({ brutM2: { less_than_equal: filtre.enCokM2 } })
+  }
+
+  /**
+   * ⚠️ Yatırım filtreleri kaydın HESAPLANMIŞ alanına bakar.
+   *
+   * Kira verisi girilmemiş ilanlarda `kiraCarpani` boş kalıyor (uydurma
+   * veri yasağı) ve bu ilanlar filtre uygulandığında listeden düşüyor.
+   * Doğru davranış bu: "kira çarpanı en fazla 15 yıl" diyen biri, çarpanı
+   * BİLİNMEYEN bir ilanı görmek istemiyor — göstermek, bilmediğimiz bir
+   * şeyi koşulu sağlıyormuş gibi sunmak olurdu.
+   */
+  if (typeof filtre.carpanEnCok === 'number') {
+    kosullar.push({ kiraCarpani: { less_than_equal: filtre.carpanEnCok } })
+  }
+  if (typeof filtre.getiriEnAz === 'number') {
+    kosullar.push({ brutGetiri: { greater_than_equal: filtre.getiriEnAz } })
+  }
+  if (mahalleSluglari !== undefined) {
+    kosullar.push({ 'mahalle.slug': { in: mahalleSluglari } })
+  }
 
   return { and: kosullar }
 }
@@ -68,6 +141,29 @@ export interface IlanListesi {
   toplamSayfa: number
 }
 
+/**
+ * Sanayiye mesafe filtresini mahalle listesine çevirir.
+ *
+ * ⚠️ Mesafe İLANDA DEĞİL, MAHALLEDE. Bir ilanın kendi koordinatı olsa bile
+ * sanayi mesafesi mahalle merkezinden ölçülüyor; ilan bazında ölçmek her
+ * sorguda tüm portföy × tüm POI çarpımı demekti.
+ *
+ * Eşiği sağlayan mahalle yoksa BOŞ DİZİ dönüyor — `undefined` değil.
+ * Aradaki fark önemli: boş dizi "hiçbir mahalle uymuyor" (sonuç boş
+ * çıkmalı), `undefined` ise "filtre yok" demek olurdu ve filtre sessizce
+ * yok sayılırdı.
+ */
+async function sanayiyeYakinMahalleler(km: number): Promise<string[]> {
+  const metre = km * 1000
+  const yakinliklar = await tumMahallelerinYakinligi()
+
+  return yakinliklar
+    .filter((mahalle) =>
+      mahalle.mesafeler.some((olcum) => olcum.tip === 'sanayi' && olcum.enYakinMetre <= metre),
+    )
+    .map((mahalle) => mahalle.slug)
+}
+
 export async function ilanlariGetir(
   filtre: IlanFiltresi = {},
   sayfa = 1,
@@ -75,9 +171,13 @@ export async function ilanlariGetir(
 ): Promise<IlanListesi> {
   const payload = await payloadGetir()
 
+  // PostGIS sorgusu yalnızca filtre gerçekten kullanıldığında koşuyor.
+  const mahalleSluglari =
+    typeof filtre.sanayiKm === 'number' ? await sanayiyeYakinMahalleler(filtre.sanayiKm) : undefined
+
   const sonuc = await payload.find({
     collection: 'ilanlar',
-    where: filtreyiKosulaCevir(filtre),
+    where: filtreyiKosulaCevir(filtre, mahalleSluglari),
     sort: SIRALAMALAR[filtre.siralama ?? 'yeni'],
     page: sayfa,
     limit,
