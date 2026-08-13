@@ -484,11 +484,13 @@ cd /srv/aslihangyd/app
 docker compose --env-file .env -f docker/compose.prod.yml pull
 docker compose --env-file .env -f docker/compose.prod.yml --profile gocmen pull gocmen
 
-# 2. Bekleyen göç var mı — UYGULAMADAN ÖNCE bak.
+# 2. ZORUNLU ADIM — bekleyen göç var mı? Atlanabilir DEĞİL.
 docker compose --env-file .env -f docker/compose.prod.yml \
   --profile gocmen run --rm gocmen pnpm payload migrate:status
 
-# 3. Varsa uygula. Yoksa bu adımı atlayın.
+# 3. ZORUNLU ADIM — göçü uygula.
+#    Bekleyen göç yoksa bu komut hiçbir şey yapmaz ve saniyeler sürer;
+#    "şema değişmiş mi" diye düşünmek zorunda kalmamak için koşulsuz.
 docker compose --env-file .env -f docker/compose.prod.yml \
   --profile gocmen run --rm gocmen
 
@@ -501,6 +503,25 @@ curl -f https://aslihangyd.com/api/saglik
 # 6. Eski imajları temizle — 3.2 GB'lık sunucuda disk gerçek bir kısıt.
 docker image prune -f
 ```
+
+> ### ⚠️ 2. ve 3. ADIMLARI ATLAMAYIN — 13 Ağustos 2026'da site 500 verdi
+>
+> O gün yalnızca imaj çekilip uygulama başlatıldı; göç adımı atlandı.
+> Yeni sürüm ilanlara `cepheYonu` alanı eklemişti ve Payload artık her
+> ilan sorgusuna o tabloyu ekliyordu:
+>
+> ```
+> error: relation "ilanlar_cephe_yonu" does not exist
+> ```
+>
+> **Ana sayfa 500 döndü.** Belirti kafa karıştırıcıydı: `/portfoy` 200
+> dönüyordu (boş listeyle), imaj commit'i doğruydu, ortam değişkenleri
+> yerindeydi. Yalnızca ana sayfa öne çıkan ilanları çektiği için patlıyordu.
+>
+> Adım o gün "şema değişikliği varsa uygulayın" diye KOŞULLU yazılıydı ve
+> "bu sürümde şema değişti mi?" sorusunun cevabını dağıtımı yapan kişinin
+> bilmesi bekleniyordu. Artık koşulsuz: bekleyen göç yoksa komut zaten
+> hiçbir şey yapmıyor.
 
 ⚠️ `git pull` **gerekmiyor**: uygulama artık depoyu değil, GHCR'daki imajı
 kullanıyor. Depoyu yine de güncel tutmak isterseniz zararı yok, ama
