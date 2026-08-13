@@ -325,7 +325,7 @@ describe('jeton çözümleyici', () => {
         --color-lacivert-300: #a3bfd9;
         --color-vurgu: var(--color-lacivert-700);
       }
-      @media (prefers-color-scheme: dark) {
+      :root[data-tema='koyu'] {
         @theme {
           --color-vurgu: var(--color-lacivert-300);
         }

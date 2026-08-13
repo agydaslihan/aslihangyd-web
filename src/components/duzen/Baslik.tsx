@@ -4,6 +4,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef, useState } from 'react'
 
+import { TemaAnahtari } from '@/components/duzen/TemaAnahtari'
 import { KapatIkon, MenuIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { BASLIK_EYLEMI, type UstMenuOgesi } from '@/lib/gezinme'
@@ -121,6 +122,8 @@ export function Baslik({
         </nav>
 
         <div className="flex items-center gap-2">
+          <TemaAnahtari />
+
           {/* ⚠️ Dolu adaçayı — şartnamedeki iki eylemden biri. Üçüncü bir
               yerde kullanılırsa disiplin testi kırılır. */}
           <Link

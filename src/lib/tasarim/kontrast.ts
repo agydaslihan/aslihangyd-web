@@ -141,14 +141,18 @@ function referanslariCoz(ham: Map<string, string>): JetonHaritasi {
 /**
  * globals.css içeriğinden açık ve koyu tema jeton haritalarını üretir.
  *
- * Koyu tema bloğu `@media (prefers-color-scheme: dark)` ile başlar; ondan
+ * Koyu tema bloğu `:root[data-tema='koyu']` ile başlar; ondan
  * önceki her şey açık tema, blok içindekiler ise açık temanın üzerine
  * binen geçersiz kılmalardır. Ayrıştırma bilinçli olarak basit tutuldu —
  * amaç genel bir CSS ayrıştırıcı yazmak değil, bu dosyanın bilinen
  * yapısını okumak.
  */
 export function temalariCoz(css: string): CozulmusTemalar {
-  const koyuIsaret = css.indexOf('@media (prefers-color-scheme: dark)')
+  // ⚠️ Koyu tema artık OS tercihine değil `data-tema` özniteliğine bağlı.
+  // Seçici değişirse burası da değişmeli; test bunu yakalayamaz çünkü
+  // bulunamayan blok "koyu tema yok" gibi görünür ve testler sessizce
+  // yalnızca açık temayı ölçmeye devam ederdi.
+  const koyuIsaret = css.indexOf("[data-tema='koyu']")
 
   const acikKaynak = koyuIsaret === -1 ? css : css.slice(0, koyuIsaret)
   const koyuKaynak = koyuIsaret === -1 ? '' : css.slice(koyuIsaret)

@@ -361,74 +361,100 @@
    Yalnızca ANLAMSAL jetonlar değişir; rampalar sabit kalır. Tüm
    kombinasyonlar `src/lib/tasarim/kontrast.test.ts` içinde AA'ya karşı
    ölçülür — göz kararı değil, hesap.
+
+   ⚠️ KOYU TEMA OTOMATİK AÇILMAZ — VARSAYILAN DAİMA AÇIK.
+
+   Önce `@media (prefers-color-scheme: dark)` kullanılıyordu ve site,
+   işletim sistemi koyu moddaysa kendiliğinden koyuya geçiyordu. Sonuç:
+   ziyaretçilerin çoğu siteyi lacivert zeminde görüyordu — oysa şartname
+   §1 kırık beyazı ANA ARKA PLAN olarak tanımlıyor ve palet o eksende
+   kuruldu.
+
+   Artık koyu tema `<html data-tema="koyu">` ile açılıyor ve bunu yalnızca
+   kullanıcı seçimi yapıyor (tercih `localStorage`'da). İşletim sistemi
+   tercihi OKUNMUYOR: "sistemim koyu" ile "bu siteyi koyu istiyorum" aynı
+   şey değil ve ikincisi bizim tasarım kararımızı ezmemeli.
    ========================================================================== */
 
-@media (prefers-color-scheme: dark) {
-  @theme {
-    /* Eksen: lacivert zemin + kırık beyaz metin (FRONTEND-YENIDEN-TASARIM §1). */
-    --color-zemin: var(--color-lacivert-900);
-    --color-yuzey: var(--color-lacivert-800);
-    --color-yuzey-2: var(--color-lacivert-700);
-    --color-kenar: var(--color-lacivert-700);
-    --color-kenar-guclu: var(--color-lacivert-600);
-    --color-kenar-giris: var(--color-notr-400);
+/* ⚠️ SEÇİCİ `@media (prefers-color-scheme: dark)` DEĞİL, `[data-tema]`.
+   Gerekçe yukarıda. Kontrast testi bu seçiciyi arıyor; değiştirilirse
+   `src/lib/tasarim/kontrast.ts` içindeki çözümleyici de güncellenmeli. */
+/* ⚠️ BURADA `@theme` KULLANILMAZ — DÜZ ÖZEL ÖZELLİK BİLDİRİMİ.
 
-    --color-metin: var(--color-notr-50);
-    /**
-     * ⚠️ İkincil ve yardımcı metin açık temadakinden ÇOK daha açık.
-     *
-     * Karanlık temada okunabilir aralık dar: nötr rampasının orta
-     * basamakları lacivert yüzeylerin üzerinde hızla AA'nın altına düşüyor.
-     * İlk denemede `metin-3` notr-400'dü ve `yuzey-2` üzerinde 3,91:1
-     * veriyordu — gözlem sayısı ("n = 23") çoğu zaman tam olarak orada
-     * duruyor. Kontrast testi yakaladı; iki basamak açıldı.
-     */
-    --color-metin-2: var(--color-notr-100);
-    --color-metin-3: var(--color-notr-200);
-    --color-metin-pasif: var(--color-notr-500);
+   İlk denemede koyu tema `:root[data-tema='koyu'] { @theme { … } }` diye
+   yazıldı. Tailwind 4 `@theme` bloklarını derleme anında toplayıp KÖK
+   kapsama taşıyor; sonuç, koyu tema değerlerinin varsayılanı EZMESİ oldu.
+   Üretilen CSS'te tek bir `--color-zemin` kaldı ve değeri lacivertti —
+   yani site, öznitelik olmasa bile daima koyu görünüyordu.
 
-    --color-vurgu: var(--color-lacivert-200);
-    --color-vurgu-zemin: var(--color-lacivert-800);
-    /* Koyu temada dolu lacivert zemin sayfa zeminiyle aynı olamaz; bir
-       basamak açılıyor ki bant yüzeyden ayrışsın. */
-    --color-lacivert-yuzey: var(--color-lacivert-700);
-    --color-gosterge: var(--color-lacivert-300);
+   Derlenmiş CSS okunarak yakalandı: `--color-zemin` bildirimi bir tane ve
+   kök kapsamdaydı. Düz bildirim doğru araç: Tailwind yardımcıları zaten
+   `var(--color-*)` okuyor, değeri çalışma zamanında bir seçiciyle
+   değiştirmek yeterli. */
+:root[data-tema='koyu'] {
+  /* Eksen: lacivert zemin + kırık beyaz metin (FRONTEND-YENIDEN-TASARIM §1). */
+  --color-zemin: var(--color-lacivert-900);
+  --color-yuzey: var(--color-lacivert-800);
+  --color-yuzey-2: var(--color-lacivert-700);
+  --color-kenar: var(--color-lacivert-700);
+  --color-kenar-guclu: var(--color-lacivert-600);
+  --color-kenar-giris: var(--color-notr-400);
 
-    /* Dolu eylem zemini iki temada da AYNI: üzerindeki beyaz metinle
-       oranı (4,74:1) sayfa zeminine bağlı değil. Değiştirmek gereksiz
-       yere ikinci bir yeşil üretirdi. */
-    --color-aksan: var(--color-adacayi-600);
-    /* ⚠️ Hover koyu temada da KOYULAŞIR, açılmaz: buton metni her iki
-       temada beyaz ve açılan bir zemin o metni yutuyor (3,55:1). */
-    --color-aksan-koyu: var(--color-adacayi-700);
-    /* ⚠️ 300 basamağı tint yüzeyde (lacivert-700) 3,91:1'e düşüyordu. */
-    --color-aksan-metin: var(--color-adacayi-200);
-    --color-aksan-zemin: var(--color-adacayi-800);
+  --color-metin: var(--color-notr-50);
+  /**
+   * ⚠️ İkincil ve yardımcı metin açık temadakinden ÇOK daha açık.
+   *
+   * Karanlık temada okunabilir aralık dar: nötr rampasının orta
+   * basamakları lacivert yüzeylerin üzerinde hızla AA'nın altına düşüyor.
+   * İlk denemede `metin-3` notr-400'dü ve `yuzey-2` üzerinde 3,91:1
+   * veriyordu — gözlem sayısı ("n = 23") çoğu zaman tam olarak orada
+   * duruyor. Kontrast testi yakaladı; iki basamak açıldı.
+   */
+  --color-metin-2: var(--color-notr-100);
+  --color-metin-3: var(--color-notr-200);
+  --color-metin-pasif: var(--color-notr-500);
 
-    /* Gold koyu zeminde zaten 6,69:1 — anlam taşısa bile eşiği geçiyor,
-       bu yüzden iki jeton da aynı basamağa bağlanabiliyor. */
-    --color-gold-cizgi: var(--color-gold-400);
-    --color-gold-guclu: var(--color-gold-300);
-    --color-gold-zemin: var(--color-gold-400);
+  --color-vurgu: var(--color-lacivert-200);
+  --color-vurgu-zemin: var(--color-lacivert-800);
+  /* Koyu temada dolu lacivert zemin sayfa zeminiyle aynı olamaz; bir
+     basamak açılıyor ki bant yüzeyden ayrışsın. */
+  --color-lacivert-yuzey: var(--color-lacivert-700);
+  --color-gosterge: var(--color-lacivert-300);
 
-    --color-yetki-zemin: var(--color-gold-800);
-    --color-yetki-metin: var(--color-gold-300);
+  /* Dolu eylem zemini iki temada da AYNI: üzerindeki beyaz metinle
+     oranı (4,74:1) sayfa zeminine bağlı değil. Değiştirmek gereksiz
+     yere ikinci bir yeşil üretirdi. */
+  --color-aksan: var(--color-adacayi-600);
+  /* ⚠️ Hover koyu temada da KOYULAŞIR, açılmaz: buton metni her iki
+     temada beyaz ve açılan bir zemin o metni yutuyor (3,55:1). */
+  --color-aksan-koyu: var(--color-adacayi-700);
+  /* ⚠️ 300 basamağı tint yüzeyde (lacivert-700) 3,91:1'e düşüyordu. */
+  --color-aksan-metin: var(--color-adacayi-200);
+  --color-aksan-zemin: var(--color-adacayi-800);
 
-    --color-basari: var(--color-adacayi-300);
-    --color-basari-zemin: var(--color-adacayi-800);
-    --color-uyari: #e0b45c;
-    --color-uyari-metin: #e0b45c;
-    --color-uyari-zemin: #3a2e12;
-    /* ⚠️ Bir basamak açıldı: yeni lacivert yüzeyin üzerinde eski değer
-       4,48:1 veriyordu — form hata metni için AA'nın kıl payı altı. */
-    --color-hata: #eb9a92;
-    --color-hata-zemin: #3d1d1a;
-    --color-bilgi: var(--color-lacivert-300);
-    --color-bilgi-zemin: var(--color-lacivert-800);
+  /* Gold koyu zeminde zaten 6,69:1 — anlam taşısa bile eşiği geçiyor,
+     bu yüzden iki jeton da aynı basamağa bağlanabiliyor. */
+  --color-gold-cizgi: var(--color-gold-400);
+  --color-gold-guclu: var(--color-gold-300);
+  --color-gold-zemin: var(--color-gold-400);
 
-    --shadow-kart: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.25);
-    --shadow-kalkik: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.35);
-  }
+  --color-yetki-zemin: var(--color-gold-800);
+  --color-yetki-metin: var(--color-gold-300);
+
+  --color-basari: var(--color-adacayi-300);
+  --color-basari-zemin: var(--color-adacayi-800);
+  --color-uyari: #e0b45c;
+  --color-uyari-metin: #e0b45c;
+  --color-uyari-zemin: #3a2e12;
+  /* ⚠️ Bir basamak açıldı: yeni lacivert yüzeyin üzerinde eski değer
+     4,48:1 veriyordu — form hata metni için AA'nın kıl payı altı. */
+  --color-hata: #eb9a92;
+  --color-hata-zemin: #3d1d1a;
+  --color-bilgi: var(--color-lacivert-300);
+  --color-bilgi-zemin: var(--color-lacivert-800);
+
+  --shadow-kart: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.25);
+  --shadow-kalkik: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.35);
 }
 
 /* ==========================================================================
@@ -437,8 +463,15 @@
 
 @layer base {
   :root {
-    color-scheme: light dark;
+    /* ⚠️ Varsayılan AÇIK. `light dark` yazsaydık tarayıcı form
+       denetimlerini ve kaydırma çubuğunu OS tercihine göre boyar ve site
+       açık temadayken koyu bir kaydırma çubuğu belirirdi. */
+    color-scheme: light;
     accent-color: var(--color-vurgu);
+  }
+
+  :root[data-tema='koyu'] {
+    color-scheme: dark;
   }
 
   html {
