@@ -3241,6 +3241,107 @@ var olduğunu denetliyor. İkincisi asıl arızayı kapatan kısım.
 - Lighthouse ölçümü **yapılmadı** — bileşenler henüz eski düzende; anlamlı
   sayı Aşama 3'ten sonra çıkar.
 
+---
+
+## Frontend yeniden tasarımı — Aşama 2: çerçeve
+
+`docs/FRONTEND-YENIDEN-TASARIM.md` §2, §4, §9.
+
+### Yapılanlar
+
+**Üst şerit** (`UstSerit`) — ince lacivert bant: telefon, e-posta, WhatsApp.
+Masaüstünde görünür, mobilde gizli: 12px'lik bir çubuk telefonda 44px
+dokunma hedefini karşılayamıyor ve ekranın üstünden yer çalıyor; aynı
+bilgiler mobil menüde tam boyutta duruyor.
+
+**Header** (`Baslik`) — yapışkan, kaydırınca gölge (kenarlık değil: sabit
+bir çizgi sayfanın üstünü ikiye böler ve "uygulama" hissi verir). İki mega
+menü, aktif sayfada gold 2px alt çizgi, sağda dolu adaçayı
+"Evimi değerlendir".
+
+**Altbilgi** — lacivert zemin, üstünde gold ince çizgi, dört sütun.
+Yasal yükümlülükler aynen korundu: yetki belgesi numarası (boşsa görünür
+uyarı), MERSİS, yatırım tavsiyesi feragati.
+
+**Bölüm ilkelleri** — `Eyebrow` (12px, 0.08em, büyük harf, adaçayı),
+`GoldAyrac` (dekoratif), `GuvenSeridi`. Dikey ritim 48/64/80px'den
+56/80/112px'e çıktı; şartname masaüstünde 96–128px istiyor ve gerekçesi
+görsel değil: "büyük şirket" hissinin en ucuz taşıyıcısı cömert boşluktur.
+
+### Menü 404'e bağlanmıştı — duman testinde yakalandı
+
+Şartname §4 "Endeks"i üst menüye koyuyor. Öğe site bölümü anahtarına
+bağlandı ve yeterli sanıldı. Değildi: **`/endeks`in İKİ kapısı var** —
+bölüm anahtarı VE veri eşikleri (CLAUDE.md 6c: katman başına en az 8
+gözlem, en az 6 ay geçmiş).
+
+Geliştirme veritabanında bölüm **açıktı**, eşikler sağlanmıyordu. Menüde
+"Endeks" görünüyor, tıklayan **404** alıyordu. Derleme geçiyordu, testler
+yeşildi; yalnızca gerçek sayfayı açınca görüldü.
+
+Karar artık sayfanınkiyle **aynı yardımcıdan** geliyor
+(`endeksSayfasiAcikMi`). O yardımcı da düzeltildi: sayfanın kapısı üç
+koşula bakıyordu (`yayinIsaretli`, `kontrol.yayinlanabilir`, `seri`),
+yardımcı yalnızca ikisine — üçüncüsünün tuttuğu bir durumda menü yine
+404'e bağlanırdı.
+
+⚠️ Sıra bilinçli: ucuz olan bölüm kontrolü önce, endeks hesabı sonra.
+Bölüm kapalıyken gözlem okuyup seri üretmenin her sayfa isteğinde
+karşılığı yok.
+
+**Aynı hata ikinci bir yerde daha vardı:** yatırım simülatörü de bölüm
+anahtarına bağlı (`simulator`) ve mega menü onu koşulsuz gösteriyordu.
+Bu yüzden anahtar artık **elle yazılmıyor**, `BOLUMLER[].rotalar`
+üzerinden otomatik bulunuyor — unutulması imkânsız.
+
+`gezinme.test.ts` eklendi: her menü adresinin karşılığında gerçek bir
+`page.tsx` olduğunu, kapatılabilir her sayfanın bölüm anahtarı taşıdığını
+ve araçlar menüsünün `ARACLAR` listesinin tamamını kapsadığını denetliyor.
+
+### Disiplin testlerinin yakaladıkları
+
+Altbilgi logosunda "GYD" gold yazılmıştı. Lacivert üzerinde gold 6,69:1
+ile **okunur** olurdu — ama "gold asla metin rengi değildir" kuralı
+mutlak. İstisna açıldığı anda bir sonraki kullanım açık zeminde olur ve
+2,06:1'e düşer. Kural korundu, aksan `notr-300`e çekildi.
+
+Header'daki dolu adaçayı CTA ise kuralın izin verdiği iki eylemden biri;
+`Baslik.tsx` gerekçesiyle izin listesine eklendi.
+
+### Sabit lacivert yüzeyler kontrast testine girdi
+
+Üst şerit ve altbilgi iki temada da lacivert. Zemin temaya göre
+değişmiyorsa üzerindeki metin de değişmemeli — `--color-metin` açık temada
+antrasite dönüyor ve lacivert üzerinde okunmazdı. Aynı tuzağa gold
+rozetinde düşülmüştü. Beş yeni çift ölçülüyor (13,85 / 7,24 / 5,34 / 6,69).
+
+### Bülten bandı ERTELENDİ
+
+Şartname §9 altbilgide bülten aboneliği istiyor. Yapılmadı ve sebebi
+teknik değil: pazarlama e-postası için **ayrı bir KVKK açık rızası**
+gerekiyor ve o metni ben yazmıyorum (CLAUDE.md kural 3). Ayrıca gönderim
+için bir e-posta sağlayıcısı bağlı değil.
+
+Çalışmayan bir abonelik kutusu göstermek, bal küpü kuralının tersi olurdu:
+değer vermeden iletişim bilgisi istemek. Metin ve sağlayıcı gelince
+eklenecek; `docs/SENDEN-BEKLENENLER.md` içinde yazılı.
+
+### Güven şeridi — uydurma rakam yok
+
+Portföy ve mahalle sayısı veritabanından sayılıyor. "Ortalama işlem
+süresi" ölçülebilir bir veri değil (Aslıhan'ın geçmiş işlem kayıtlarına
+bağlı, elimizde yok) — `null` geçiliyor ve hücre kendi boş durumunu
+gösteriyor. Sıfır yazmak yanlış bilgi, hücreyi gizlemek dört sütunluk
+düzeni bozardı.
+
+Duman testinde gerçek verilerle doğrulandı: 6 ilan, 3 mahalle, iki hücre
+"Hazırlanıyor".
+
+- Kapı: `typecheck` ✅ `lint` ✅ `test` (1238 test) ✅ `build` ✅
+- Menüdeki 17 bağlantının hepsi çalışan sayfaya gidiyor (elle doğrulandı).
+- Lighthouse hâlâ ölçülmedi: kart ve listeleme düzeni Aşama 3–4'te
+  değişiyor, şimdi ölçülen sayı yanıltıcı olur.
+
 ### Kod tarafında sırada ne var
 
 Öncelik sırasıyla, ama hepsi **Aslıhan'ın kararına bağlı**:

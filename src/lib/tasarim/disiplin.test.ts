@@ -146,6 +146,12 @@ describe('adaçayı ve gold kuralı', () => {
     'components/ui/Buton.tsx',
     // Stil rehberi bileşenleri sergiler; yalnızca geliştirme ortamında açık.
     'app/(site)/stil-rehberi/page.tsx',
+    /**
+     * Header'daki "Evimi değerlendir" — şartname §4'ün istediği eylem ve
+     * kuralın izin verdiği iki eylemden biri. Masaüstünde bir, mobil menüde
+     * bir kez geçiyor; ikisi de AYNI eylem, iki farklı kırılım noktası.
+     */
+    'components/duzen/Baslik.tsx',
   ])
 
   /** `bg-adacayi-500` … `bg-adacayi-800` ve `bg-aksan` — dolu zemin. */

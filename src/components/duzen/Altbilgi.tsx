@@ -73,16 +73,25 @@ export async function Altbilgi() {
   const whatsapp = whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())
 
   return (
-    <footer className="border-kenar bg-yuzey-2/50 mt-auto border-t-[0.5px]">
-      <div className="kapsayici py-12 lg:py-16">
+    <footer className="bg-lacivert-900 mt-auto">
+      {/* ⚠️ Gold ince çizgi — DEKORATİF. Altbilgiyi sayfadan ayırıyor,
+          bilgi taşımıyor. Kontrastı (lacivert üzerinde 6,69:1) zaten
+          eşiğin üstünde ama rolü yine de dekoratif. */}
+      <div aria-hidden="true" className="bg-gold-cizgi h-px w-full" />
+
+      <div className="kapsayici py-14 lg:py-20">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
           {/* ── Kurumsal ── */}
           <Sutun baslik="Kurumsal">
             <div className="mb-3 flex flex-col gap-2">
-              <span className="font-serif text-baslik-3">
-                Aslıhan <span className="text-vurgu">GYD</span>
+              <span className="font-serif text-baslik-3 text-notr-50">
+                {/* ⚠️ Aksan GOLD DEĞİL. Lacivert üzerinde gold 6,69:1 ile
+                    okunur olurdu ama "gold asla metin rengi değildir" kuralı
+                    mutlak: istisna açıldığı anda bir sonraki kullanım açık
+                    zeminde olur ve 2,06:1'e düşer. Disiplin testi yakaladı. */}
+                Aslıhan <span className="text-notr-300">GYD</span>
               </span>
-              <p className="text-metin-2 text-govde-kucuk">
+              <p className="text-notr-300 text-govde-kucuk">
                 Çorlu ve çevresinde gayrimenkul danışmanlığı. Kararlarınızı hisle değil, rakamla
                 verin.
               </p>
@@ -91,12 +100,12 @@ export async function Altbilgi() {
             <BaglantiListesi baglantilar={baglantilar.kurumsal} />
 
             {/* Site sayfaları — kapalı bölümler kendiliğinden düşer. */}
-            <ul className="text-metin-2 text-govde-kucuk flex flex-col">
+            <ul className="text-notr-300 text-govde-kucuk flex flex-col">
               {sayfalar.map((sayfa) => (
                 <li key={sayfa.adres}>
                   <Link
                     href={sayfa.adres}
-                    className="hover:text-metin inline-flex min-h-9 items-center underline-offset-2 hover:underline"
+                    className="hover:text-notr-50 inline-flex min-h-9 items-center underline-offset-2 transition-colors hover:underline"
                   >
                     {sayfa.ad}
                   </Link>
@@ -112,12 +121,12 @@ export async function Altbilgi() {
 
           {/* ── Hukuksal metinler ── */}
           <Sutun baslik="Hukuksal metinler">
-            <ul className="text-metin-2 text-govde-kucuk flex flex-col">
+            <ul className="text-notr-300 text-govde-kucuk flex flex-col">
               {HUKUKI_SAYFALAR.map((sayfa) => (
                 <li key={sayfa.adres}>
                   <Link
                     href={sayfa.adres}
-                    className="hover:text-metin inline-flex min-h-9 items-center underline-offset-2 hover:underline"
+                    className="hover:text-notr-50 inline-flex min-h-9 items-center underline-offset-2 transition-colors hover:underline"
                   >
                     {sayfa.ad}
                   </Link>
@@ -132,12 +141,12 @@ export async function Altbilgi() {
 
           {/* ── İletişim ── */}
           <Sutun baslik="İletişim">
-            <ul className="text-metin-2 text-govde-kucuk flex flex-col">
+            <ul className="text-notr-300 text-govde-kucuk flex flex-col">
               {telefon ? (
                 <li>
                   <a
                     href={`tel:${telefon.replace(/\s/g, '')}`}
-                    className="hover:text-metin inline-flex min-h-9 items-center gap-2"
+                    className="hover:text-notr-50 inline-flex min-h-9 items-center gap-2 transition-colors"
                   >
                     <TelefonIkon width={15} height={15} className="shrink-0" />
                     {telefon}
@@ -148,7 +157,7 @@ export async function Altbilgi() {
                 <li>
                   <a
                     href={`mailto:${eposta}`}
-                    className="hover:text-metin inline-flex min-h-9 items-center gap-2"
+                    className="hover:text-notr-50 inline-flex min-h-9 items-center gap-2 transition-colors"
                   >
                     <PostaIkon width={15} height={15} className="shrink-0" />
                     {eposta}
@@ -161,7 +170,7 @@ export async function Altbilgi() {
                     href={whatsapp}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="hover:text-metin inline-flex min-h-9 items-center gap-2"
+                    className="hover:text-notr-50 inline-flex min-h-9 items-center gap-2 transition-colors"
                   >
                     <WhatsappIkon width={15} height={15} className="shrink-0" />
                     WhatsApp
@@ -173,18 +182,18 @@ export async function Altbilgi() {
             <BaglantiListesi baglantilar={baglantilar.iletisim} />
 
             {kurumsal?.adres ? (
-              <address className="text-metin-3 text-mikro not-italic">{kurumsal.adres}</address>
+              <address className="text-notr-400 text-mikro not-italic">{kurumsal.adres}</address>
             ) : null}
           </Sutun>
         </div>
 
         {/* ── Yasal künye — koşulsuz ── */}
-        <div className="border-kenar mt-10 flex flex-col gap-3 border-t-[0.5px] pt-6">
-          <ul className="text-metin-3 text-mikro flex flex-wrap gap-x-4 gap-y-1">
+        <div className="border-lacivert-700 mt-12 flex flex-col gap-3 border-t-[0.5px] pt-6">
+          <ul className="text-notr-400 text-mikro flex flex-wrap gap-x-4 gap-y-1">
             <li>
               Taşınmaz Ticareti Yetki Belgesi No:{' '}
               {kurumsal?.yetkiBelgesiNo ? (
-                <span className="rakam text-metin-2">{kurumsal.yetkiBelgesiNo}</span>
+                <span className="rakam text-notr-50">{kurumsal.yetkiBelgesiNo}</span>
               ) : (
                 /* ⚠️ Numara uydurulmaz. Eksikliği görünür kılmak, gizlemekten iyi. */
                 <span className="text-uyari-metin">girilmedi — yönetim panelinden eklenmeli</span>
@@ -192,14 +201,14 @@ export async function Altbilgi() {
             </li>
             {kurumsal?.mersisNo ? (
               <li>
-                MERSİS: <span className="rakam text-metin-2">{kurumsal.mersisNo}</span>
+                MERSİS: <span className="rakam text-notr-50">{kurumsal.mersisNo}</span>
               </li>
             ) : null}
           </ul>
 
-          <p className="text-metin-3 text-mikro max-w-4xl">{ALTBILGI_FERAGATI}</p>
+          <p className="text-notr-400 text-mikro max-w-4xl">{ALTBILGI_FERAGATI}</p>
 
-          <p className="text-metin-3 text-mikro">
+          <p className="text-notr-400 text-mikro">
             © {yil} {kurumsal?.ticaretUnvani || SITE_UNVANI}
           </p>
         </div>
@@ -211,7 +220,7 @@ export async function Altbilgi() {
 function Sutun({ baslik, children }: { baslik: string; children: ReactNode }) {
   return (
     <nav aria-label={baslik} className="flex flex-col gap-3">
-      <h2 className="text-mikro font-medium tracking-[0.08em] uppercase">{baslik}</h2>
+      <h2 className="text-notr-50 text-eyebrow font-medium uppercase">{baslik}</h2>
       {children}
     </nav>
   )
@@ -228,13 +237,13 @@ function BaglantiListesi({ baglantilar }: { baglantilar: readonly AltbilgiBaglan
   if (baglantilar.length === 0) return null
 
   return (
-    <ul className="text-metin-2 text-govde-kucuk flex flex-col">
+    <ul className="text-notr-300 text-govde-kucuk flex flex-col">
       {baglantilar.map((baglanti) => (
         <li key={baglanti.id}>
           {baglanti.dahiliMi ? (
             <Link
               href={baglanti.url}
-              className="hover:text-metin inline-flex min-h-9 items-center underline-offset-2 hover:underline"
+              className="hover:text-notr-50 inline-flex min-h-9 items-center underline-offset-2 transition-colors hover:underline"
             >
               {baglanti.baslik}
             </Link>
@@ -243,7 +252,7 @@ function BaglantiListesi({ baglantilar }: { baglantilar: readonly AltbilgiBaglan
               href={baglanti.url}
               target="_blank"
               rel="noopener noreferrer"
-              className="hover:text-metin inline-flex min-h-9 items-center gap-1.5 underline-offset-2 hover:underline"
+              className="hover:text-notr-50 inline-flex min-h-9 items-center gap-1.5 underline-offset-2 transition-colors hover:underline"
             >
               {baglanti.baslik}
               <DisBaglantiIkon width={12} height={12} className="shrink-0" />
