@@ -7,7 +7,7 @@ import { CerezBanneri } from '@/components/cerez/CerezBanneri'
 import { Altbilgi } from '@/components/duzen/Altbilgi'
 import { Baslik, IcerigeAtla } from '@/components/duzen/Baslik'
 import { UstSerit } from '@/components/duzen/UstSerit'
-import { menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
+import { endeksMenudeGorunurMu, menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
 import { endeksSayfasiAcikMi } from '@/lib/veri/endeks'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import {
@@ -161,7 +161,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
    * okuyup seri üretiyor; bölüm kapalıyken onu her sayfa isteğinde
    * çalıştırmanın karşılığı yok.
    */
-  if (acikAnahtarlar.has('endeks') && !(await endeksSayfasiAcikMi())) {
+  if (acikAnahtarlar.has('endeks') && !endeksMenudeGorunurMu(true, await endeksSayfasiAcikMi())) {
     acikAnahtarlar.delete('endeks')
   }
 

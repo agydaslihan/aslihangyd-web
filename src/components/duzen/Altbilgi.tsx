@@ -67,6 +67,32 @@ export async function Altbilgi() {
       .map((bolum) => ({ ad: bolum.ad, adres: bolum.adres })),
   ]
 
+  /**
+   * ⚠️ SAYFALAR İKİ SÜTUNA AYRILIYOR (şartname §9).
+   *
+   * Önce hepsi "Kurumsal" sütununa dökülüyordu: on iki bağlantı tek bir
+   * listede alt alta ve okunmuyordu. Şartname dört sütun istiyor ve
+   * gerekçesi doğru — ziyaretçi "portföye nasıl bakarım" ile "bu firma
+   * kim" sorularını ayrı ayrı soruyor.
+   *
+   * Ayrım ADRESE göre yapılıyor, elle listelenmiyor: yeni bir bölüm
+   * açıldığında (örn. Ticari) kendi grubuna düşsün, kimse hatırlamak
+   * zorunda kalmasın.
+   */
+  const PORTFOY_ADRESLERI = new Set([
+    '/portfoy',
+    '/gizli-portfoy',
+    '/ticari',
+    '/harita',
+    '/mahalleler',
+    '/mahalle-testi',
+    '/bolge-radari',
+    '/endeks',
+  ])
+
+  const portfoySayfalari = sayfalar.filter((sayfa) => PORTFOY_ADRESLERI.has(sayfa.adres))
+  const kurumsalSayfalari = sayfalar.filter((sayfa) => !PORTFOY_ADRESLERI.has(sayfa.adres))
+
   const yil = new Date().getFullYear()
   const telefon = iletisimTelefonu(kurumsal)
   const eposta = iletisimEpostasi(kurumsal)
@@ -80,7 +106,7 @@ export async function Altbilgi() {
       <div aria-hidden="true" className="bg-gold-cizgi h-px w-full" />
 
       <div className="kapsayici py-14 lg:py-20">
-        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-4">
+        <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {/* ── Kurumsal ── */}
           <Sutun baslik="Kurumsal">
             <div className="mb-3 flex flex-col gap-2">
@@ -101,7 +127,7 @@ export async function Altbilgi() {
 
             {/* Site sayfaları — kapalı bölümler kendiliğinden düşer. */}
             <ul className="text-notr-300 text-govde-kucuk flex flex-col">
-              {sayfalar.map((sayfa) => (
+              {kurumsalSayfalari.map((sayfa) => (
                 <li key={sayfa.adres}>
                   <Link
                     href={sayfa.adres}
@@ -111,6 +137,30 @@ export async function Altbilgi() {
                   </Link>
                 </li>
               ))}
+            </ul>
+          </Sutun>
+
+          {/* ── Portföy ── */}
+          <Sutun baslik="Portföy">
+            <ul className="text-notr-300 text-govde-kucuk flex flex-col">
+              {portfoySayfalari.map((sayfa) => (
+                <li key={sayfa.adres}>
+                  <Link
+                    href={sayfa.adres}
+                    className="hover:text-notr-50 inline-flex min-h-9 items-center underline-offset-2 transition-colors hover:underline"
+                  >
+                    {sayfa.ad}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href="/araclar"
+                  className="hover:text-notr-50 inline-flex min-h-9 items-center underline-offset-2 transition-colors hover:underline"
+                >
+                  Yatırımcı araçları
+                </Link>
+              </li>
             </ul>
           </Sutun>
 

@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
 import { ARACLAR } from '@/lib/araclar'
-import { BASLIK_EYLEMI, menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
+import { BASLIK_EYLEMI, endeksMenudeGorunurMu, menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
 import { BOLUMLER } from '@/lib/siteBolumleri'
 
 /**
@@ -158,5 +158,34 @@ describe('menuyuSuz', () => {
     expect(sonuc.find((oge) => oge.adres === '/araclar')?.mega).toHaveLength(
       UST_MENU_YAPISI.find((oge) => oge.adres === '/araclar')!.mega!.length,
     )
+  })
+})
+
+/**
+ * Endeksin iki kapısı.
+ *
+ * ⚠️ Bu kural bir kez ihlal edildi ve menü 404'e bağlandı: bölüm anahtarı
+ * açıktı, veri eşikleri sağlanmıyordu, öğe menüde göründü. Kural artık saf
+ * bir fonksiyonda ve test ediliyor.
+ */
+describe('endeksMenudeGorunurMu', () => {
+  it('iki kapı da açıksa görünür', () => {
+    expect(endeksMenudeGorunurMu(true, true)).toBe(true)
+  })
+
+  it('bölüm kapalıysa görünmez — Aslıhan henüz yayınlamak istemiyor', () => {
+    expect(endeksMenudeGorunurMu(false, true)).toBe(false)
+  })
+
+  /**
+   * ⚠️ En kritik hâl: bölüm açık ama veri yetersiz. Sayfa 404 dönüyor;
+   * menüde göstermek ziyaretçiyi doğrudan hataya yollamak olurdu.
+   */
+  it('veri eşiği sağlanmadıysa görünmez, bölüm açık olsa bile', () => {
+    expect(endeksMenudeGorunurMu(true, false)).toBe(false)
+  })
+
+  it('ikisi de kapalıysa görünmez', () => {
+    expect(endeksMenudeGorunurMu(false, false)).toBe(false)
   })
 })

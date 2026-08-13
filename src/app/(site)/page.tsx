@@ -3,6 +3,7 @@ import Link from 'next/link'
 import { AramaWidgeti, type MahalleSecenegi } from '@/components/ilan/AramaWidgeti'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
+import { EndeksSeridi } from '@/components/endeks/EndeksSeridi'
 import { GuvenSeridi } from '@/components/duzen/GuvenSeridi'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
@@ -126,6 +127,8 @@ export default async function AnaSayfa() {
       </Bolum>
 
       {bolumler.gizli_portfoy ? <GizliPortfoyTeaser sayi={gizliSayi} /> : null}
+
+      <EndeksSeridi />
 
       <Bolum>
         <BolumBasligi
@@ -339,24 +342,51 @@ function UcYolAyrimi() {
  * satmaya çalışmak olurdu.
  */
 function GizliPortfoyTeaser({ sayi }: { sayi: number }) {
-  if (sayi <= 0) return null
+  /**
+   * ⚠️ KAYIT YOKKEN DE GÖRÜNÜR — boş durum birinci sınıf bileşen.
+   *
+   * Önce `sayi <= 0` iken `null` dönüyordu ve bölüm ana sayfadan tamamen
+   * kayboluyordu. Yanlıştı: site aylarca kısmi veriyle çalışacak ve
+   * "gizli portföy diye bir şeyimiz var" bilgisi kayıt sayısından bağımsız
+   * olarak ziyaretçiye söylenmesi gereken bir şey. Bölümün kaybolması,
+   * ayrıştırıcı bir hizmetin hiç var olmadığı izlenimi veriyordu.
+   *
+   * ⚠️ SAYI YOKSA SAYI GÖSTERİLMEZ. "0 taşınmaz" yazmak, olmayan bir
+   * değeri satmaya çalışmaktır; başlık sayısız kuruluyor.
+   */
+  const doluMu = sayi > 0
 
   return (
     <Bolum zemin="lacivert">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <p className="text-adacayi-300 text-eyebrow font-medium uppercase">Gizli portföy</p>
+
           <h2 className="text-notr-50 mt-2.5 font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">
-            Yayınlanmayan <span className="rakam">{sayi}</span> taşınmaz
+            {doluMu ? (
+              <>
+                Yayınlanmayan <span className="rakam">{sayi}</span> taşınmaz
+              </>
+            ) : (
+              'Yayınlanmayan portföyümüz'
+            )}
           </h2>
+
           <p className="text-notr-300 mt-3 text-govde">
-            Bazı mülk sahipleri ilanının herkese açık yayınlanmasını istemiyor. Bu taşınmazlar
-            portföyümüzde var ama listede görünmüyor — erişim talebiyle paylaşıyoruz.
+            {doluMu
+              ? 'Bazı mülk sahipleri ilanının herkese açık yayınlanmasını istemiyor. Bu taşınmazlar portföyümüzde var ama listede görünmüyor — erişim talebiyle paylaşıyoruz.'
+              : 'Bazı taşınmazlar ilan sitelerinde yayınlanmaz. Şu an hazırlık aşamasında; aradığınızı anlatın, portföyümüze girdiğinde ilk siz haberdar olun.'}
           </p>
         </div>
 
-        <Buton href="/gizli-portfoy" gorunum="aksan" boyut="buyuk">
-          Erişim talep et
+        {/* ⚠️ TEK CTA YUVASI — iki ayrı buton değil.
+            Dolu adaçayı yalnızca iki eylemde kullanılıyor ve bu onlardan
+            biri (gizli portföy erişimi). Veri durumuna göre değişen şey
+            eylemin KENDİSİ değil ETİKETİ; iki ayrı `<Buton>` yazmak
+            disiplin testinin saydığı çağrı sayısını şişiriyordu ve
+            kuralın nadirliğini yanlış yerden aşındırıyordu. */}
+        <Buton href={doluMu ? '/gizli-portfoy' : '/iletisim'} gorunum="aksan" boyut="buyuk">
+          {doluMu ? 'Erişim talep et' : 'Aradığınızı anlatın'}
           <OkIkon width={18} height={18} />
         </Buton>
       </div>
