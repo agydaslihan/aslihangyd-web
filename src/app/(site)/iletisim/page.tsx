@@ -13,6 +13,7 @@ import {
 import { TALEP_TIPLERI } from '@/lib/secenekler'
 import { mutlakAdres, whatsappMesaji } from '@/lib/site'
 
+import { turnstileSiteAnahtari } from '@/lib/guvenlik/turnstile'
 import { talepGonder } from './eylemler'
 
 export const metadata: Metadata = {
@@ -59,6 +60,7 @@ export default async function IletisimSayfasi({
         <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-8">
           <TalepFormu
             eylem={talepGonder}
+            turnstileSiteAnahtari={turnstileSiteAnahtari()}
             varsayilanTip={varsayilanTip}
             ilgiliIlan={metin('ilan')}
             ilgiliMahalle={metin('mahalle')}

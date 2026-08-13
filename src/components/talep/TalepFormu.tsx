@@ -1,5 +1,7 @@
 'use client'
 
+import Script from 'next/script'
+
 import Link from 'next/link'
 import { useActionState, useEffect, useId, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
@@ -33,8 +35,15 @@ export function TalepFormu({
   ilgiliMahalle,
   baslik = 'Bize yazın',
   aciklama,
+  turnstileSiteAnahtari = '',
 }: {
   eylem: (oncekiDurum: FormDurumu, form: FormData) => Promise<FormDurumu>
+  /**
+   * Turnstile site anahtarı. Boşsa widget hiç basılmaz ve form yine
+   * çalışır — anahtar girilene kadar formu kapatmak, kimsenin
+   * ulaşamaması demek olurdu.
+   */
+  turnstileSiteAnahtari?: string
   varsayilanTip?: string
   ilgiliIlan?: string
   ilgiliMahalle?: string
@@ -144,6 +153,19 @@ export function TalepFormu({
         ad="pazarlamaOnayi"
         etiket="Çorlu gayrimenkul raporlarını ve yeni portföy bildirimlerini e-posta ile almak istiyorum. (isteğe bağlı)"
       />
+
+      {/* ⚠️ Bot koruması. 13 Ağustos 2026'ya kadar bu formda Turnstile
+          yoktu: widget yalnızca /danisman-ol'a bağlıydı ve o bölüm kapalı
+          olduğu için üretimde çalışan tek public form korumasızdı. */}
+      {turnstileSiteAnahtari !== '' ? (
+        <>
+          <Script
+            src="https://challenges.cloudflare.com/turnstile/v0/api.js"
+            strategy="lazyOnload"
+          />
+          <div className="cf-turnstile" data-sitekey={turnstileSiteAnahtari} data-language="tr" />
+        </>
+      ) : null}
 
       <GonderButonu />
 
