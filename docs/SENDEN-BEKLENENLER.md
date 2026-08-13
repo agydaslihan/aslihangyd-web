@@ -68,6 +68,20 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 ## Önemli (içerik eksikliği)
 
+- [ ] **İlanlara cephe yönü girin** (Güneş Haritası için)
+      Nereye: Payload admin → İlanlar → [ilan] → Cephe yönü (çoklu seçim)
+      Olmazsa: Güneş haritası gün doğumu/batımı/gündüz süresini yine
+      gösterir (bunlar konuma bağlı) ama **cephe analizi boş durum
+      gösterir**. Cephe yönü koordinattan çıkarılamaz ve TAHMİN EDİLMEZ —
+      alım kararı doğrudan bu bilgiye dayanıyor.
+      ⚠️ Köşe daireler için birden fazla yön seçin.
+
+- [ ] **Mahallelere merkez koordinatı girin**
+      Nereye: Payload admin → Mahalleler → [mahalle] → Merkez
+      Olmazsa: Güneş haritası o mahallede ve konumu olmayan ilanlarında
+      hiç görünmez; harita sütunları da çizilmez.
+
+
 - [ ] **Çorlu'nun havadan çekilmiş hero görseli** (kullanım hakkı bize ait)
       Nereye: `src/app/(site)/page.tsx` → `Kahraman` bölümünün zemini
       Olmazsa: Hero şu an düz lacivert zemin. Şartname tam genişlik görsel +
