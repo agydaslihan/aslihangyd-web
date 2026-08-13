@@ -108,14 +108,21 @@ export const viewport: Viewport = {
    * Tarayıcı arayüz rengi (mobil adres çubuğu).
    *
    * ⚠️ Burada CSS değişkeni kullanılamıyor: `themeColor` HTML meta
-   * etiketine somut renk yazar ve tarayıcı `var()` çözmez. Değerler
-   * onaylanan paletin `zemin` jetonuyla birebir aynı — açık temada
-   * notr-50, koyu temada lacivert-950. Palet değişirse burası da
-   * güncellenmeli; kontrast testi bu iki değeri görmez.
+   * etiketine somut renk yazar ve tarayıcı `var()` çözmez.
+   *
+   * ⚠️ PALET DEĞİŞİNCE BURASI GERİDE KALDI VE KİMSE GÖRMEDİ.
+   *
+   * Yeniden tasarımda tüm palet değişti ama bu iki değer eski paletten
+   * (`#f8f7f3` / `#0a1524`) kaldı; mobil adres çubuğu haftalarca eski
+   * lacivertle boyandı. Kontrast testi jetonları okuyor, bu meta etiketini
+   * görmüyordu.
+   *
+   * Artık `disiplin.test.ts` bu iki değerin `--color-notr-50` ve
+   * `--color-lacivert-900` ile birebir aynı olduğunu denetliyor.
    */
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f8f7f3' },
-    { media: '(prefers-color-scheme: dark)', color: '#0a1524' },
+    { media: '(prefers-color-scheme: light)', color: '#f7f6f2' },
+    { media: '(prefers-color-scheme: dark)', color: '#0f2747' },
   ],
 }
 

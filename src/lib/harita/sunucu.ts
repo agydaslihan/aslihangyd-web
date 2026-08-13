@@ -1,3 +1,4 @@
+import { ayar } from '@/lib/ayarlar'
 import 'server-only'
 
 /**
@@ -33,7 +34,7 @@ import 'server-only'
  */
 
 function maptilerAnahtari(): string {
-  return (process.env.MAPTILER_ANAHTARI ?? '').trim()
+  return ayar('MAPTILER_ANAHTARI')
 }
 
 /**

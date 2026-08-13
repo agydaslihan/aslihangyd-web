@@ -2,6 +2,7 @@ import 'server-only'
 
 import type { Payload } from 'payload'
 
+import { eksikAyarlar, eskiAdlaOkunanlar } from '@/lib/ayarlar'
 import { GOREV_KUNYELERI } from '@/lib/bakim/kunye'
 import {
   bildirimleriUret,
@@ -11,6 +12,7 @@ import {
   type BakimGorevDurumu,
 } from '@/lib/bildirim/motor'
 import { HERKESE_ACIK_DURUMLAR, YETKI_UYARI_ESIGI_GUN } from '@/lib/eids'
+import { SITE_ADRESI } from '@/lib/site'
 
 /**
  * Panel bildirimleri için sayım katmanı.
@@ -238,6 +240,22 @@ export async function bildirimleriGetir(
         gozlemsizMahalle,
         yetkiBelgesiVar,
         onayBekleyenIlan: onayBekleyen.totalDocs,
+        /**
+         * ⚠️ Ayar durumu VERİTABANINDAN DEĞİL ortamdan geliyor ve bu
+         * bilinçli: yapılandırma arızası tam da veritabanına hiç
+         * ulaşamadığımız durumda da görünmeli.
+         */
+        eksikAyarlar: eksikAyarlar().map((durum) => ({
+          ad: durum.ad,
+          aciklama: durum.tanim.aciklama,
+          eksikseNeOlur: durum.tanim.eksikseNeOlur,
+          kritik: durum.tanim.kritik === true,
+        })),
+        eskiAdliAyarlar: eskiAdlaOkunanlar().map((durum) => ({
+          ad: durum.ad,
+          aciklama: durum.tanim.aciklama,
+        })),
+        siteAdresindePortVar: /:\d+$/.test(SITE_ADRESI),
       },
       simdi,
     )

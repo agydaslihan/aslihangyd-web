@@ -14,6 +14,8 @@
  * ─────────────────────────────────────────────────────────────────────────
  */
 
+import { ayar } from '@/lib/ayarlar'
+
 /**
  * Kütüphane kimliği ve oynatma alan adı.
  *
@@ -34,8 +36,8 @@
  * bileşeni). İstemci paketinde ön eksiz değişkenler `undefined` gelir.
  */
 export function bunnyAyarlari(): { kutuphaneId: string; alanAdi: string } | null {
-  const kutuphaneId = process.env.BUNNY_STREAM_LIBRARY_ID ?? ''
-  const alanAdi = process.env.BUNNY_STREAM_CDN_HOSTNAME ?? ''
+  const kutuphaneId = ayar('BUNNY_STREAM_LIBRARY_ID')
+  const alanAdi = ayar('BUNNY_STREAM_CDN_HOSTNAME')
 
   if (kutuphaneId.trim() === '' || alanAdi.trim() === '') return null
   return { kutuphaneId: kutuphaneId.trim(), alanAdi: alanAdi.trim().replace(/^https?:\/\//, '') }

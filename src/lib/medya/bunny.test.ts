@@ -4,9 +4,20 @@ import { bunnyGommeAdresi, bunnyKapakAdresi, gecerliVideoKimligi } from './bunny
 
 const KIMLIK = '1c9d4f2e-7a3b-4c8d-9e1f-2a3b4c5d6e7f'
 
+/**
+ * ⚠️ ESKİ ADLAR DA TEMİZLENİYOR.
+ *
+ * `lib/ayarlar.ts` yeni adı bulamazsa eski `NEXT_PUBLIC_` adına düşüyor
+ * (13 Ağustos 2026'daki üretim arızasından sonra eklendi: sunucudaki .env
+ * eski adlarda kalmıştı). Test "ayar yok" durumunu kurarken yalnızca yeni
+ * adı boşaltsaydı, geliştiricinin .env'inde duran eski bir değer teste
+ * sızar ve "eksikse null döner" testi yanlış yere geçer/kalırdı.
+ */
 function ayarla(kutuphane: string | undefined, alan: string | undefined) {
   vi.stubEnv('BUNNY_STREAM_LIBRARY_ID', kutuphane ?? '')
   vi.stubEnv('BUNNY_STREAM_CDN_HOSTNAME', alan ?? '')
+  vi.stubEnv('NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID', '')
+  vi.stubEnv('NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME', '')
 }
 
 afterEach(() => {

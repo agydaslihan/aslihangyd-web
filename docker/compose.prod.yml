@@ -66,8 +66,41 @@ services:
       # ⚠️ Buraya yeni bir `NEXT_PUBLIC_` satırı EKLEMEYİN. `pnpm test`
       # içindeki ortam kapısı kodda böyle bir okuma kalmadığını denetliyor.
 
+      # ── Geriye dönük uyum ────────────────────────────────────────────
+      #
+      # ⚠️ ESKİ `NEXT_PUBLIC_*` ADLARI DA GEÇİRİLİYOR VE BU BİLİNÇLİ.
+      #
+      # 12 Ağustos'ta değişkenler ön eksiz adlara taşındı. Kod doğruydu ama
+      # SUNUCUDAKİ `.env` eski adlarda kaldı ve yeni adlar boş geldi:
+      # harita açılmadı, iletişim bilgileri kayboldu ve en kötüsü Turnstile
+      # SİTE anahtarı boş kalıp formları bot korumasız bıraktı. Gizli anahtar
+      # doluydu, yani hata "yarı yapılandırılmış" göründüğü için sessizdi.
+      #
+      # Uygulama artık yeni adı bulamazsa eskisine düşüyor (`lib/ayarlar.ts`)
+      # — ama bu ancak eski ad KABA ULAŞIRSA çalışır. Aşağıdaki satırlar
+      # tam olarak onun için.
+      #
+      # ⚠️ Bunlar geçici. `.env` yeni adlara taşındığında kaldırılabilir;
+      # panel bildirimi hangi ayarın hâlâ eski adla okunduğunu söylüyor.
+      NEXT_PUBLIC_SERVER_URL: ${NEXT_PUBLIC_SERVER_URL:-}
+      NEXT_PUBLIC_MAPTILER_API_KEY: ${NEXT_PUBLIC_MAPTILER_API_KEY:-}
+      NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI: ${NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI:-}
+      NEXT_PUBLIC_WHATSAPP_NUMARA: ${NEXT_PUBLIC_WHATSAPP_NUMARA:-}
+      NEXT_PUBLIC_ILETISIM_TELEFON: ${NEXT_PUBLIC_ILETISIM_TELEFON:-}
+      NEXT_PUBLIC_ILETISIM_EPOSTA: ${NEXT_PUBLIC_ILETISIM_EPOSTA:-}
+      NEXT_PUBLIC_UMAMI_URL: ${NEXT_PUBLIC_UMAMI_URL:-}
+      NEXT_PUBLIC_UMAMI_SITE_ID: ${NEXT_PUBLIC_UMAMI_SITE_ID:-}
+      NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID: ${NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID:-}
+      NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME: ${NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME:-}
+
+      # ── Asıl adlar ───────────────────────────────────────────────────
+
       # Kanonik URL'ler, site haritası ve OG etiketleri bu değerden üretilir.
-      SITE_ADRESI: ${SITE_ADRESI:-https://aslihangyd.com}
+      #
+      # ⚠️ PORT YAZMAYIN. Caddy 80/443 yayınlıyor; `:8443` eski kurgudan
+      # kalma ve kanonik adreslere sızarsa arama motoruna ULAŞILAMAYAN
+      # adresler bildirir. Panel bu durumu bildirim olarak gösteriyor.
+      SITE_ADRESI: ${SITE_ADRESI:-${NEXT_PUBLIC_SERVER_URL:-https://aslihangyd.com}}
 
       # Harita. Boşsa /harita boş durum gösterir (kırık gri kutu değil).
       MAPTILER_ANAHTARI: ${MAPTILER_ANAHTARI:-}

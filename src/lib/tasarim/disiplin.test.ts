@@ -4,6 +4,8 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
+import { jeton, temalariCoz } from './kontrast'
+
 /**
  * Tasarım disiplini denetimi.
  *
@@ -134,6 +136,40 @@ describe('tipografi ölçeğinden sapılmıyor', () => {
     ]) {
       expect(css.includes(`${jeton}:`), `${jeton} globals.css içinde yok`).toBe(true)
     }
+  })
+})
+
+describe('theme-color meta etiketi paletle aynı', () => {
+  /**
+   * ⚠️ NEDEN VAR: PALET DEĞİŞTİ, BU İKİ DEĞER GERİDE KALDI.
+   *
+   * `themeColor` mobil tarayıcının adres çubuğunu boyuyor ve HTML meta
+   * etiketine SOMUT renk yazmak zorunda — `var()` çözülmüyor. Bu yüzden
+   * jeton sisteminin dışında kalan iki hex var.
+   *
+   * Yeniden tasarımda tüm palet değişti ama bu ikisi eski paletten kaldı
+   * (`#0a1524`, artık var olmayan bir lacivert). Kontrast testi jetonları
+   * okuyor, meta etiketini görmüyordu; kimse fark etmedi.
+   *
+   * Bu test o boşluğu kapatıyor: değerler `zemin` jetonunun iki temadaki
+   * karşılığıyla birebir aynı olmalı.
+   */
+  it('açık ve koyu değerler zemin jetonuyla aynı', () => {
+    const kaynak = readFileSync(path.join(KOK, 'app/(site)/layout.tsx'), 'utf8')
+    const css = readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')
+    const temalar = temalariCoz(css)
+
+    const bulunan = [...kaynak.matchAll(/color: '(#[0-9a-f]{6})'/gi)].map((e) =>
+      e[1]!.toLowerCase(),
+    )
+
+    expect(bulunan, 'themeColor iki değer taşımalı (açık + koyu)').toHaveLength(2)
+    expect(bulunan[0], 'açık tema adres çubuğu = açık temanın zemini').toBe(
+      jeton(temalar.acik, '--color-zemin').toLowerCase(),
+    )
+    expect(bulunan[1], 'koyu tema adres çubuğu = koyu temanın zemini').toBe(
+      jeton(temalar.koyu, '--color-zemin').toLowerCase(),
+    )
   })
 })
 
