@@ -78,6 +78,14 @@ export const talepSemasi = z
      * bot, engellendiğini anlamaz ve yeniden denemez.
      */
     websitesi: istegeBagliMetin,
+    /**
+     * Turnstile jetonu — istemciden gelir, sunucuda doğrulanır.
+     *
+     * ⚠️ İsteğe bağlı: Turnstile yapılandırılmamışsa istemci hiç jeton
+     * göndermiyor ve form yine çalışmalı. Zorunlu kılmak, anahtar
+     * girilene kadar formu tamamen kapatmak olurdu.
+     */
+    turnstileJetonu: istegeBagliMetin,
   })
   .refine((veri) => veri.telefon !== '' || veri.eposta !== '', {
     message: 'Size ulaşabilmemiz için telefon veya e-posta adresinizden birini yazın.',

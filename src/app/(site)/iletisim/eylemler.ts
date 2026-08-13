@@ -2,6 +2,8 @@
 
 import { headers } from 'next/headers'
 
+import { hizSinirindaMi, istemciAnahtari, istemciIpsi } from '@/lib/guvenlik/hizSiniri'
+import { turnstileDogrula } from '@/lib/guvenlik/turnstile'
 import { payloadGetir } from '@/lib/veri/istemci'
 import { hatalariCoz, talepSemasi, type FormDurumu } from '@/lib/talep/sema'
 
@@ -16,6 +18,19 @@ import { hatalariCoz, talepSemasi, type FormDurumu } from '@/lib/talep/sema'
  * - Bal küpü alanı doluysa kayıt yapılmaz ama kullanıcıya başarı döner;
  *   bot engellendiğini anlamaz.
  * - Hata mesajlarında veritabanı ayrıntısı sızdırılmaz.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ HIZ SINIRI VE TURNSTILE 13 AĞUSTOS 2026'DA EKLENDİ.
+ *
+ * O güne kadar bu form yalnızca bal küpü ve Zod ile korunuyordu. Turnstile
+ * `/danisman-ol` formuna bağlanmıştı ve o bölüm KAPALIYDI (404) — yani
+ * üretimde çalışan tek public form tam da korumasız olandı.
+ *
+ * Üstelik site genelindeki bütün "iletişime geç" yolları buraya akıyor:
+ * gizli portföy erişim talebi, boş durum CTA'ları, ilan sayfasındaki
+ * "randevu isteyin". Tek form olması, korumasının da tek yerde ve eksiksiz
+ * olmasını zorunlu kılıyor.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 export async function talepGonder(_oncekiDurum: FormDurumu, form: FormData): Promise<FormDurumu> {
   const sonuc = talepSemasi.safeParse({
@@ -30,6 +45,7 @@ export async function talepGonder(_oncekiDurum: FormDurumu, form: FormData): Pro
     kvkkOnay: form.get('kvkkOnay') === 'on',
     pazarlamaOnayi: form.get('pazarlamaOnayi') === 'on',
     websitesi: form.get('websitesi') ?? '',
+    turnstileJetonu: form.get('cf-turnstile-response') ?? '',
   })
 
   if (!sonuc.success) {
@@ -41,6 +57,54 @@ export async function talepGonder(_oncekiDurum: FormDurumu, form: FormData): Pro
   // Bal küpü: sessizce başarılı görün, kaydetme.
   if (veri.websitesi !== '') {
     return { basarili: true }
+  }
+
+  const sinirBasliklari = await headers()
+
+  /**
+   * ⚠️ IP belirlenemiyorsa hız sınırı UYGULANMAZ.
+   *
+   * Ortak bir "bilinmeyen" kovasına yazmak, ters vekil yapılandırmasındaki
+   * bir hatayı doğrudan hizmet kesintisine çevirirdi: tüm ziyaretçiler aynı
+   * kovaya düşer ve form beşinci gönderimden sonra HERKESE kapanır.
+   * `/danisman-ol` ile aynı gerekçe ve aynı yardımcı.
+   */
+  const sinirAnahtari = istemciAnahtari(sinirBasliklari, 'talep')
+
+  if (sinirAnahtari === null) {
+    if (process.env.NODE_ENV === 'production') {
+      console.warn(
+        '[guvenlik] İstemci IP başlığı yok — talep formunda hız sınırı ' +
+          'uygulanamadı. Caddy trusted_proxies / header_up yapılandırmasını ' +
+          'kontrol edin (docs/ISLETME-REHBERI.md §5.5).',
+      )
+    }
+  } else {
+    const sinir = hizSinirindaMi(sinirAnahtari)
+    if (!sinir.gecebilir) {
+      const dakika = Math.ceil(sinir.yenidenDeneSaniye / 60)
+      return {
+        basarili: false,
+        genelHata:
+          `Kısa sürede çok fazla mesaj gönderildi. ${dakika} dakika sonra tekrar ` +
+          'deneyebilirsiniz.',
+      }
+    }
+  }
+
+  /**
+   * ⚠️ Turnstile yapılandırılmamışsa doğrulama ATLANIR, form çalışır.
+   *
+   * Anahtar yokken formu kapatmak, Aslıhan hesabı açana kadar kimsenin
+   * ulaşamaması demekti. Kapı `turnstile.ts` içinde: anahtar VARSA
+   * doğrulama zorunlu ve başarısızlık gönderimi reddediyor.
+   */
+  const turnstile = await turnstileDogrula(
+    veri.turnstileJetonu,
+    istemciIpsi(sinirBasliklari) ?? undefined,
+  )
+  if (!turnstile.gecerli) {
+    return { basarili: false, genelHata: turnstile.hata ?? undefined }
   }
 
   try {
