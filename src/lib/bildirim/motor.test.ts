@@ -18,6 +18,10 @@ const temiz = (ek: Partial<BildirimGirdisi> = {}): BildirimGirdisi => ({
   ilgisizPortfoy: 0,
   gozlemsizMahalle: 0,
   yetkiBelgesiVar: true,
+  // Varsayılan: yapılandırma eksiksiz. Eksiklik senaryoları ayrı testlerde.
+  eksikAyarlar: [],
+  eskiAdliAyarlar: [],
+  siteAdresindePortVar: false,
   onayBekleyenIlan: 0,
   ...ek,
 })
@@ -276,5 +280,89 @@ describe('onay bekleyen ilan bildirimi', () => {
     // görsel ağırlıkta göstermek yasal olanı görünmez kılar.
     const bildirimler = bildirimleriUret(temiz({ onayBekleyenIlan: 2 }), SIMDI)
     expect(bildirimler.find((b) => b.anahtar === 'onay-bekleyen-ilan')?.oncelik).toBe('onemli')
+  })
+})
+
+/**
+ * Çalışma zamanı yapılandırması bildirimleri.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN VAR: EKSİK AYAR SESSİZDİ VE ÜRETİMDE FORMLARI KORUMASIZ BIRAKTI.
+ *
+ * 13 Ağustos 2026'da canlıda dokuz çalışma zamanı ayarının dokuzu da boştu:
+ * `.env` eski `NEXT_PUBLIC_*` adlarında kalmıştı. En ağırı Turnstile'dı —
+ * GİZLİ anahtar dolu, SİTE anahtarı boştu; yani doğrulama katmanı kapalıydı
+ * ama yapılandırma "yarım dolu" göründüğü için hiçbir yerde uyarı yoktu.
+ *
+ * Bu testler eksikliğin artık GÖRÜNÜR olduğunu güvenceye alıyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+describe('çalışma zamanı yapılandırması bildirimleri', () => {
+  const turnstileEksik = {
+    ad: 'TURNSTILE_SITE_ANAHTARI',
+    aciklama: 'Cloudflare Turnstile site anahtarı',
+    eksikseNeOlur: 'Formlar BOT KORUMASIZ çalışır.',
+    kritik: true,
+  }
+
+  it('kritik eksik ayar YASAL öncelikle ve kendi bildirimiyle görünür', () => {
+    const bildirimler = bildirimleriUret(temiz({ eksikAyarlar: [turnstileEksik] }), SIMDI)
+    const bildirim = bildirimler.find((b) => b.anahtar.startsWith('ayar-eksik-turnstile'))
+
+    expect(bildirim, 'Turnstile eksikliği kendi bildirimini almalı').toBeDefined()
+    expect(bildirim?.oncelik).toBe('yasal')
+    // ⚠️ Ne yapılacağı yazmalı: "eksik" demek tek başına eyleme dönük değil.
+    expect(bildirim?.aciklama).toContain('TURNSTILE_SITE_ANAHTARI')
+  })
+
+  it('kritik olmayan eksikler tek bildirimde toplanır', () => {
+    const bildirimler = bildirimleriUret(
+      temiz({
+        eksikAyarlar: [
+          { ad: 'UMAMI_URL', aciklama: 'Umami', eksikseNeOlur: 'Ölçüm yapılmaz.', kritik: false },
+          {
+            ad: 'UMAMI_SITE_ID',
+            aciklama: 'Umami',
+            eksikseNeOlur: 'Ölçüm yapılmaz.',
+            kritik: false,
+          },
+        ],
+      }),
+      SIMDI,
+    )
+
+    const toplu = bildirimler.filter((b) => b.anahtar === 'ayar-eksik')
+    expect(toplu, 'iki eksik tek bildirimde toplanmalı').toHaveLength(1)
+    expect(toplu[0]?.baslik).toContain('2')
+  })
+
+  it('site adresindeki port yasal öncelikli bildirim üretir', () => {
+    const bildirimler = bildirimleriUret(temiz({ siteAdresindePortVar: true }), SIMDI)
+    const bildirim = bildirimler.find((b) => b.anahtar === 'site-adresinde-port')
+
+    expect(bildirim).toBeDefined()
+    expect(bildirim?.oncelik).toBe('yasal')
+  })
+
+  /**
+   * ⚠️ Eski adla okunan ayar bir ARIZA DEĞİL: site çalışıyor. Ama borç
+   * olduğu için görünmeli — destek bir gün kaldırılacak ve o gün sürpriz
+   * olmamalı. Bu yüzden "bilgi" önceliğinde.
+   */
+  it('eski adla okunan ayar bilgi önceliğinde görünür', () => {
+    const bildirimler = bildirimleriUret(
+      temiz({ eskiAdliAyarlar: [{ ad: 'WHATSAPP_NUMARA', aciklama: 'WhatsApp' }] }),
+      SIMDI,
+    )
+    const bildirim = bildirimler.find((b) => b.anahtar === 'ayar-eski-ad')
+
+    expect(bildirim).toBeDefined()
+    expect(bildirim?.oncelik).toBe('bilgi')
+  })
+
+  it('yapılandırma eksiksizken hiçbir ayar bildirimi çıkmaz', () => {
+    const bildirimler = bildirimleriUret(temiz(), SIMDI)
+    expect(bildirimler.filter((b) => b.anahtar.startsWith('ayar-'))).toEqual([])
+    expect(bildirimler.find((b) => b.anahtar === 'site-adresinde-port')).toBeUndefined()
   })
 })

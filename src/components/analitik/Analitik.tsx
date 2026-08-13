@@ -1,3 +1,4 @@
+import { ayar } from '@/lib/ayarlar'
 import Script from 'next/script'
 
 import { izinVarMi } from '@/lib/kvkk/onay'
@@ -24,8 +25,8 @@ export async function Analitik() {
    * ve üretim imajı onlar tanımsızken derlendiği için analitik yayında
    * HİÇ yüklenmiyordu. Gerekçenin tamamı `lib/harita/sunucu.ts` içinde.
    */
-  const url = process.env.UMAMI_URL
-  const siteId = process.env.UMAMI_SITE_ID
+  const url = ayar('UMAMI_URL')
+  const siteId = ayar('UMAMI_SITE_ID')
 
   // Umami kurulmadıysa sessizce hiçbir şey yapma — site çalışmaya devam eder.
   if (!url || !siteId) return null

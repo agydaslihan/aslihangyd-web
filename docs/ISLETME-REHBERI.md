@@ -122,6 +122,55 @@ onları derleme anında koda gömer — sunucu tarafında bile. Uygulamanın
 gerçekten okuduğu, ön eksiz `SITE_ADRESI`. İkisini de aynı değerle yazın;
 `.env.production.example` bunu zaten böyle gösteriyor.
 
+### Hangi `.env` değişkeni ne zaman etkili olur
+
+Bu tablo tek bir soruyu yanıtlıyor: **bir değeri değiştirdim, ne yapmam
+gerekiyor?**
+
+| Ne zaman okunur | Değiştirince ne gerekir | Hangileri |
+| --- | --- | --- |
+| **Çalışma zamanı** | `.env` düzenle → `up -d` (kabı yeniden başlat) | `SITE_ADRESI`, `MAPTILER_ANAHTARI`, `TURNSTILE_*`, `WHATSAPP_NUMARA`, `ILETISIM_*`, `UMAMI_*`, `BUNNY_STREAM_*`, `DATABASE_URI`, `PAYLOAD_SECRET`, `BAKIM_ANAHTARI`, `OVERPASS_ADRESI` |
+| **Derleme anı** | İmajı yeniden derle + dağıt | `NEXT_PUBLIC_*` (yalnızca yedek olarak duruyorlar) |
+| **Yalnızca compose** | `up -d` | `UYGULAMA_IMAJI`, `CADDY_EPOSTA`, `POSTGRES_*` |
+
+⚠️ **Kap başladıktan sonra `.env`'i düzenlemek hiçbir şeyi değiştirmez.**
+Docker ortam değişkenlerini kap AYAĞA KALKARKEN okur. Değişiklikten sonra
+`docker compose --env-file .env -f docker/compose.prod.yml up -d` demek
+şart; `restart` yetmez.
+
+#### Tam liste — çalışma zamanı ayarları
+
+Kod bu ayarları `src/lib/ayarlar.ts` üzerinden okuyor. Her biri önce yeni
+adı, bulamazsa eski `NEXT_PUBLIC_` adını deniyor.
+
+| Ayar | Eski ad (hâlâ çalışır) | Eksikse ne olur |
+| --- | --- | --- |
+| `SITE_ADRESI` | `NEXT_PUBLIC_SERVER_URL` | Kanonik adresler, site haritası ve OG etiketleri yanlış adres yayınlar — sessiz SEO hasarı |
+| `MAPTILER_ANAHTARI` | `NEXT_PUBLIC_MAPTILER_API_KEY` | `/harita` boş durumda kalır; içe aktarılan ilgi noktaları görünmez |
+| `TURNSTILE_SITE_ANAHTARI` | `NEXT_PUBLIC_TURNSTILE_SITE_ANAHTARI` | ⚠️ Formlar **bot korumasız** çalışır — gizli anahtar dolu olsa bile |
+| `WHATSAPP_NUMARA` | `NEXT_PUBLIC_WHATSAPP_NUMARA` | WhatsApp düğmeleri hiç görünmez |
+| `ILETISIM_TELEFON` | `NEXT_PUBLIC_ILETISIM_TELEFON` | Üst şerit ve altbilgide telefon yok; ilan sayfasında "Ara" düğmesi çıkmaz |
+| `ILETISIM_EPOSTA` | `NEXT_PUBLIC_ILETISIM_EPOSTA` | Üst şerit ve altbilgide e-posta yok |
+| `UMAMI_URL` | `NEXT_PUBLIC_UMAMI_URL` | Ziyaret ölçümü yapılmaz |
+| `UMAMI_SITE_ID` | `NEXT_PUBLIC_UMAMI_SITE_ID` | Ziyaret ölçümü yapılmaz |
+| `BUNNY_STREAM_LIBRARY_ID` | `NEXT_PUBLIC_BUNNY_STREAM_LIBRARY_ID` | Videolar "oynatıcı yapılandırılmadı" der |
+| `BUNNY_STREAM_CDN_HOSTNAME` | `NEXT_PUBLIC_BUNNY_STREAM_CDN_HOSTNAME` | Videolar "oynatıcı yapılandırılmadı" der |
+
+⚠️ `SITE_ADRESI` değerine **port yazmayın**. Caddy 80/443 yayınlıyor;
+`:8443` eski kurgudan kalma ve kanonik adreslere sızarsa arama motoruna
+ulaşılamayan sayfalar bildirir. Panel bunu bildirim olarak gösteriyor.
+
+#### Yapılandırma doğru mu — tek komut
+
+```bash
+docker exec aslihangyd-uygulama sh -c \
+  'env | grep -E "SITE_ADRESI|MAPTILER|TURNSTILE|UMAMI|BUNNY|WHATSAPP|ILETISIM"'
+```
+
+Boş görünen her satır çalışmayan bir özellik demek. **Panelin bildirim
+şeridi de aynı listeyi gösteriyor** — orada görmek için sunucuya girmeye
+gerek yok.
+
 ### ⚠️ Bu tuzak dokuz değişkeni birden vurmuştu (12 Ağustos 2026)
 
 Yukarıdaki kural yalnızca adres için değil, **her** `NEXT_PUBLIC_*`

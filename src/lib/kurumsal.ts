@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { ayar } from '@/lib/ayarlar'
+
 import { cache } from 'react'
 
 import config from '@payload-config'
@@ -40,13 +42,13 @@ export const kurumsalBilgileriGetir = cache(async (): Promise<KurumsalBilgiler |
  * dolayısıyla çalışma zamanı okuması güvenli.
  */
 export function whatsappNumarasi(kurumsal: KurumsalBilgiler | null): string | null {
-  return kurumsal?.whatsapp || process.env.WHATSAPP_NUMARA || null
+  return kurumsal?.whatsapp || ayar('WHATSAPP_NUMARA') || null
 }
 
 export function iletisimTelefonu(kurumsal: KurumsalBilgiler | null): string | null {
-  return kurumsal?.telefon || process.env.ILETISIM_TELEFON || null
+  return kurumsal?.telefon || ayar('ILETISIM_TELEFON') || null
 }
 
 export function iletisimEpostasi(kurumsal: KurumsalBilgiler | null): string | null {
-  return kurumsal?.eposta || process.env.ILETISIM_EPOSTA || null
+  return kurumsal?.eposta || ayar('ILETISIM_EPOSTA') || null
 }

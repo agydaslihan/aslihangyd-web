@@ -98,6 +98,23 @@ export interface BildirimGirdisi {
    * ve şeridin tamamını görmezden gelmeyi öğretir.
    */
   onayBekleyenIlan: number
+
+  /**
+   * Hiçbir adla tanımlanmamış çalışma zamanı ayarları.
+   *
+   * ⚠️ Bu alan `lib/ayarlar.ts` üzerinden geliyor ve bir arıza listesidir:
+   * boş bir ayar sessizce çalışmayan bir özellik demek. 13 Ağustos 2026'da
+   * canlıda dokuz ayarın dokuzu da boştu ve bunu ancak siteye bakınca
+   * fark ettik — Turnstile site anahtarı boş olduğu için formlar bot
+   * korumasız çalışıyordu.
+   */
+  eksikAyarlar: readonly { ad: string; aciklama: string; eksikseNeOlur: string; kritik: boolean }[]
+
+  /** Eski `NEXT_PUBLIC_` adıyla okunan ayarlar — çalışıyor ama borç. */
+  eskiAdliAyarlar: readonly { ad: string; aciklama: string }[]
+
+  /** Site adresi port içeriyor mu (`:8443` gibi) — kanonik adresleri bozar. */
+  siteAdresindePortVar: boolean
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -238,6 +255,58 @@ export function bildirimleriUret(girdi: BildirimGirdisi, simdi: Date = new Date(
         'her sayfada uyarı görünüyor.',
       adres: '/admin/globals/kurumsal-bilgiler',
       adresEtiketi: 'Kurumsal bilgiler',
+    })
+  }
+
+  /* ── ÇALIŞMA ZAMANI YAPILANDIRMASI ─────────────────────────────────
+     ⚠️ Bu blok 13 Ağustos 2026'daki arızadan sonra eklendi: ayarlar
+     sessizce boş kalıyordu ve hiçbir yerde görünmüyordu. Artık eksik
+     yapılandırma panelin ilk ekranında duruyor. */
+
+  const kritikEksikler = girdi.eksikAyarlar.filter((eksik) => eksik.kritik)
+  const digerEksikler = girdi.eksikAyarlar.filter((eksik) => !eksik.kritik)
+
+  for (const eksik of kritikEksikler) {
+    bildirimler.push({
+      anahtar: `ayar-eksik-${eksik.ad.toLowerCase()}`,
+      oncelik: 'yasal',
+      baslik: `${eksik.aciklama} tanımlı değil`,
+      aciklama: `${eksik.eksikseNeOlur} Sunucudaki .env dosyasına ${eksik.ad} ekleyin.`,
+    })
+  }
+
+  if (digerEksikler.length > 0) {
+    bildirimler.push({
+      anahtar: 'ayar-eksik',
+      oncelik: 'onemli',
+      baslik: `${digerEksikler.length} çalışma zamanı ayarı tanımlı değil`,
+      aciklama:
+        digerEksikler.map((eksik) => `${eksik.ad}: ${eksik.eksikseNeOlur}`).join(' ') +
+        ' Hepsi sunucudaki .env dosyasına yazılır.',
+    })
+  }
+
+  if (girdi.siteAdresindePortVar) {
+    bildirimler.push({
+      anahtar: 'site-adresinde-port',
+      oncelik: 'yasal',
+      baslik: 'Site adresi port içeriyor',
+      aciklama:
+        'SITE_ADRESI değerinde port var (örn. :8443). Kanonik adresler, site haritası ve ' +
+        'OG etiketleri bu değerden üretiliyor; porta takılı bir adres arama motoruna ' +
+        'ULAŞILAMAYAN sayfalar bildirir. Sunucudaki .env dosyasından portu silin.',
+    })
+  }
+
+  if (girdi.eskiAdliAyarlar.length > 0) {
+    bildirimler.push({
+      anahtar: 'ayar-eski-ad',
+      oncelik: 'bilgi',
+      baslik: `${girdi.eskiAdliAyarlar.length} ayar hâlâ eski adıyla okunuyor`,
+      aciklama:
+        girdi.eskiAdliAyarlar.map((a) => a.ad).join(', ') +
+        ' — şu an çalışıyorlar çünkü uygulama eski NEXT_PUBLIC_ adlarına geri düşüyor. ' +
+        'Bu destek geçici; .env dosyasını yeni adlara taşıyın.',
     })
   }
 

@@ -18,6 +18,8 @@
  * anahtarı `NEXT_PUBLIC_` önekiyle istemciye gider — o zaten herkese açık.
  */
 
+import { ayar } from '@/lib/ayarlar'
+
 const DOGRULAMA_ADRESI = 'https://challenges.cloudflare.com/turnstile/v0/siteverify'
 
 /** Cloudflare'in yanıt vermemesi durumunda beklenecek en uzun süre. */
@@ -45,7 +47,7 @@ export interface TurnstileSonucu {
  * Gerekçenin tamamı `lib/harita/sunucu.ts` içinde.
  */
 export function turnstileSiteAnahtari(): string {
-  return process.env.TURNSTILE_SITE_ANAHTARI ?? ''
+  return ayar('TURNSTILE_SITE_ANAHTARI')
 }
 
 function gizliAnahtar(): string {
