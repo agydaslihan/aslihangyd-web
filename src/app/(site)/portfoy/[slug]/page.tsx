@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { KiraGetirisiFormu } from '@/components/hesaplayici/KiraGetirisiFormu'
 import { IlanGalerisi } from '@/components/ilan/IlanGalerisi'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
 import { DroneVideo } from '@/components/medya/DroneVideo'
@@ -9,8 +10,7 @@ import { SanalTur } from '@/components/medya/SanalTur'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat } from '@/components/ui/Feragat'
-import { KonumIkon, WhatsappIkon } from '@/components/ui/Ikon'
-import { KartIzgarasi, HesapKarti } from '@/components/ui/HesapKarti'
+import { KonumIkon, TelefonIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { DogrulanmisIlanRozeti, Rozet } from '@/components/ui/Rozet'
 import { ZenginMetin } from '@/components/ui/ZenginMetin'
 import {
@@ -23,7 +23,7 @@ import {
   yuzdeYaz,
 } from '@/lib/bicimlendirme'
 import { ILAN_DURUM_ETIKETLERI } from '@/lib/eids'
-import { kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
+import { iletisimTelefonu, kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
 import {
   BINA_KULLANIM_DURUMLARI,
   etiketBul,
@@ -33,6 +33,7 @@ import {
   ODA_SAYILARI,
   TAPU_DURUMLARI,
 } from '@/lib/secenekler'
+import { sinif } from '@/lib/sinif'
 import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { ilanGetir } from '@/lib/veri/ilanlar'
@@ -91,6 +92,8 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
     `Merhaba, "${ilan.baslik}" ilanı hakkında bilgi almak istiyorum. (${mutlakAdres(`/portfoy/${ilan.slug}`)})`,
   )
 
+  const telefon = iletisimTelefonu(kurumsal)
+
   const satilik = ilan.tip === 'satilik'
   const gostergeVar = satilik && (ilan.kiraCarpani !== null || ilan.brutGetiri !== null)
 
@@ -133,43 +136,10 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               </p>
             ) : null}
 
-            {/* ── Yatırım göstergeleri ── */}
-            {satilik ? (
-              <section aria-labelledby="gostergeler" className="mt-10">
-                <h2 id="gostergeler" className="mb-4 font-sans text-baslik-3 font-medium">
-                  Yatırım göstergeleri
-                </h2>
-
-                <KartIzgarasi sinifAdi="lg:grid-cols-3">
-                  <HesapKarti
-                    etiket="Kira çarpanı"
-                    deger={carpanYaz(ilan.kiraCarpani)}
-                    altBilgi="Satış fiyatı ÷ yıllık kira"
-                    bosAciklama="Tahmini kira bilgisi girilmediği için hesaplanamadı."
-                    ton="vurgu"
-                  />
-                  <HesapKarti
-                    etiket="Brüt kira getirisi"
-                    deger={yuzdeYaz(ilan.brutGetiri)}
-                    altBilgi="Yıllık, giderler hariç"
-                    bosAciklama="Tahmini kira bilgisi girilmediği için hesaplanamadı."
-                  />
-                  <HesapKarti
-                    etiket="Amortisman süresi"
-                    deger={yilYaz(ilan.amortismanYili)}
-                    altBilgi="Kira geliriyle kendini ödeme"
-                    bosAciklama="Tahmini kira bilgisi girilmediği için hesaplanamadı."
-                  />
-                </KartIzgarasi>
-
-                {gostergeVar ? (
-                  <Feragat
-                    sinifAdi="mt-4"
-                    ek="Göstergeler tahmini kira üzerinden hesaplanmıştır; gerçekleşen kira farklılık gösterebilir."
-                  />
-                ) : null}
-              </section>
-            ) : null}
+            {/* ⚠️ Yatırım göstergeleri SAĞ KARTA taşındı (şartname §8).
+                Sol sütunda ekranın ortasında duruyorlardı ve kaydırınca
+                kayboluyorlardı; yatırımcının en çok baktığı üç rakam
+                yapışkan kartta kalmalı. */}
 
             {/* ── Nitelikler ── */}
             <NitelikTablosu ilan={ilan} />
@@ -233,9 +203,11 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             ) : null}
           </div>
 
-          {/* ── Yan panel ── */}
-          <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="border-kenar bg-yuzey shadow-kart rounded-kart border-[0.5px] p-5 sm:p-6">
+          {/* ── Yan panel — YATIRIM KARTI (şartname §8) ──
+              ⚠️ Gold çerçeve + açık gri zemin. Gold'un üç yerinden biri;
+              dekoratif, kartın kendisi zaten "Yatırım göstergeleri" diyor. */}
+          <aside className="lg:sticky lg:top-28 lg:self-start">
+            <div className="border-gold-cizgi bg-yuzey-2 shadow-kart rounded-kart border p-5 sm:p-6">
               <p className="text-metin-3 text-mikro font-medium">
                 {satilik ? 'Satış fiyatı' : 'Aylık kira'}
               </p>
@@ -255,11 +227,79 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
                 <p className="text-metin-3 mt-1 text-govde-kucuk">Pazarlık payı var</p>
               ) : null}
 
+              {/* ── Yatırım göstergeleri ── */}
+              {satilik ? (
+                <div className="border-kenar mt-5 flex flex-col gap-2.5 border-t-[0.5px] pt-5">
+                  <GostergeSatiri
+                    etiket="Tahmini kira"
+                    deger={paraYaz(ilan.tahminiKira, paraBirimi)}
+                  />
+                  <GostergeSatiri
+                    etiket="Kira çarpanı"
+                    deger={carpanYaz(ilan.kiraCarpani)}
+                    vurgulu
+                  />
+                  <GostergeSatiri etiket="Brüt getiri" deger={yuzdeYaz(ilan.brutGetiri)} />
+                  <GostergeSatiri etiket="Amortisman" deger={yilYaz(ilan.amortismanYili)} />
+
+                  {!gostergeVar ? (
+                    <p className="text-metin-3 text-mikro">
+                      Tahmini kira girilmediği için hesaplanamadı — rakam uydurmuyoruz.
+                    </p>
+                  ) : null}
+
+                  {/* ⚠️ FERAGAT GÖSTERGELERLE BİRLİKTE TAŞINIR (CLAUDE.md kural 5).
+                      Göstergeler sol sütundan bu karta taşınırken feragat bir an
+                      için geride kalmıştı; lint "kullanılmayan import" diye
+                      yakaladı. Getiri rakamının göründüğü her yerde bu metin de
+                      görünmek zorunda — yasal bir gereklilik, üslup tercihi değil. */}
+                  {gostergeVar ? (
+                    <Feragat
+                      sinifAdi="mt-1"
+                      ek="Göstergeler tahmini kira üzerinden hesaplanmıştır; gerçekleşen kira farklılık gösterebilir."
+                    />
+                  ) : null}
+                </div>
+              ) : null}
+
+              {/* ── Gömülü kira getirisi hesaplayıcı ──
+                  ⚠️ Ayrı bir hesap YAZILMADI: araç sayfasındaki formun ta
+                  kendisi, ilanın rakamlarıyla önceden doldurulmuş olarak
+                  gömülüyor. İkinci bir hesap yazmak, aynı formülün iki
+                  yerde yaşaması ve zamanla ayrışması demekti. */}
+              {satilik && typeof ilan.fiyat === 'number' ? (
+                <details className="border-kenar mt-5 border-t-[0.5px] pt-5">
+                  <summary className="text-aksan-metin cursor-pointer text-govde-kucuk font-medium">
+                    Kendi kira tahmininizle hesaplayın
+                  </summary>
+                  <div className="mt-4">
+                    <KiraGetirisiFormu
+                      baslangicFiyat={String(ilan.fiyat)}
+                      baslangicKira={
+                        typeof ilan.tahminiKira === 'number' ? String(ilan.tahminiKira) : ''
+                      }
+                    />
+                  </div>
+                </details>
+              ) : null}
+
               <div className="mt-5 flex flex-col gap-2">
                 {whatsapp ? (
                   <Buton href={whatsapp} dis boyut="buyuk" tamGenislik>
                     <WhatsappIkon width={18} height={18} />
                     WhatsApp&apos;tan sorun
+                  </Buton>
+                ) : null}
+                {telefon ? (
+                  <Buton
+                    href={`tel:${telefon.replace(/\s/g, '')}`}
+                    dis
+                    gorunum="ikincil"
+                    boyut="buyuk"
+                    tamGenislik
+                  >
+                    <TelefonIkon width={18} height={18} />
+                    Ara
                   </Buton>
                 ) : null}
                 <Buton
@@ -268,7 +308,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
                   boyut="buyuk"
                   tamGenislik
                 >
-                  Bilgi isteyin
+                  Randevu isteyin
                 </Buton>
               </div>
 
@@ -305,7 +345,95 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
           />
         </Bolum>
       ) : null}
+
+      {/* ⚠️ Mobil çubuk sayfanın SONUNDA: yapışkan olduğu için DOM sırası
+          görsel konumunu belirlemiyor, ama ekran okuyucu ve sekme sırası
+          için içeriğin ardından gelmesi doğru. Alt boşluk da burada
+          veriliyor ki çubuk son bölümün üstüne binmesin. */}
+      <div aria-hidden="true" className="h-20 lg:hidden" />
+      <MobilEylemCubugu whatsapp={whatsapp} telefon={telefon} />
     </>
+  )
+}
+
+/**
+ * Yatırım kartındaki tek satır.
+ *
+ * ⚠️ Değer yoksa "—" değil, açıklayıcı bir boşluk basılır. Tire, "sıfır" ile
+ * "bilinmiyor" arasındaki farkı siler; bu sitede o fark önemli.
+ */
+function GostergeSatiri({
+  etiket,
+  deger,
+  vurgulu = false,
+}: {
+  etiket: string
+  deger: string | null
+  vurgulu?: boolean
+}) {
+  return (
+    <div className="flex items-baseline justify-between gap-3">
+      <span className="text-metin-2 text-govde-kucuk">{etiket}</span>
+      {deger === null ? (
+        <span className="text-metin-3 text-mikro">girilmedi</span>
+      ) : (
+        <span
+          className={sinif(
+            'rakam font-medium',
+            vurgulu ? 'text-metin text-baslik-3' : 'text-metin text-govde',
+          )}
+        >
+          {deger}
+        </span>
+      )}
+    </div>
+  )
+}
+
+/**
+ * Mobil yapışkan alt çubuk (şartname §8).
+ *
+ * ⚠️ Yalnızca mobilde: masaüstünde yatırım kartı zaten yapışkan ve
+ * butonları görünür durumda; ikinci bir çubuk ekranı boşuna daraltırdı.
+ *
+ * ⚠️ `pb-[env(safe-area-inset-bottom)]` gerekli — iPhone'da alt çubuk
+ * sistem gezinme çubuğunun altında kalıyordu ve dokunulamıyordu.
+ */
+function MobilEylemCubugu({
+  whatsapp,
+  telefon,
+}: {
+  whatsapp: string | null
+  telefon: string | null
+}) {
+  if (whatsapp === null && telefon === null) return null
+
+  return (
+    <div
+      data-yazdirma="gizle"
+      className="border-kenar bg-zemin/95 fixed inset-x-0 bottom-0 z-30 border-t-[0.5px] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden"
+    >
+      <div className="kapsayici flex gap-2">
+        {whatsapp ? (
+          <Buton href={whatsapp} dis boyut="buyuk" tamGenislik>
+            <WhatsappIkon width={18} height={18} />
+            WhatsApp
+          </Buton>
+        ) : null}
+        {telefon ? (
+          <Buton
+            href={`tel:${telefon.replace(/\s/g, '')}`}
+            dis
+            gorunum="ikincil"
+            boyut="buyuk"
+            tamGenislik
+          >
+            <TelefonIkon width={18} height={18} />
+            Ara
+          </Buton>
+        ) : null}
+      </div>
+    </div>
   )
 }
 
