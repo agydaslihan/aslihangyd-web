@@ -203,15 +203,28 @@ mahallesi, Çorlu içinde aranınca elbette bulunamaz.
 
 ### Ne kadar sürer
 
-Önizleme **10–60 saniye** (OpenStreetMap'e soruluyor, yoğunluğa göre
-değişir). Yazma yaklaşık yarım dakika.
+⚠️ **Bu adım dakikalar sürebilir ve bu normaldir.** Sorgu artık tek parça
+değil: önce ucuz bir liste sorgusu, sonra mahalleler üçerli gruplar hâlinde
+indiriliyor. Ekranda bir **ilerleme çubuğu** ve "5/9 grup indirildi" yazısı
+görürsünüz.
+
+Ölçüm (15 Ağustos 2026, canlı): dokuz grubun yedisi ilk denemede ve
+saniyeler içinde geldi; ikisi yedek sunucuya geçtikten sonra geldi. Toplam
+yaklaşık **10 dakika**.
+
+**Sayfayı kapatmayın ve butona tekrar basmayın.** Program yoğunluğu kendisi
+yönetiyor.
+
+Yazma yaklaşık yarım dakika.
 
 ### Hata alırsanız
 
 | Ekranda yazan | Ne yapmalısınız |
 | --- | --- |
 | "Sistemde hiç mahalle kaydı yok. Önce yukarıdaki 1. adımı çalıştırın." | 1. adımı atlamışsınız. Yukarı çıkın, onu yapın. |
-| OpenStreetMap zaman aşımı / bağlantı hatası | OSM sunucusu yoğun. **10 dakika bekleyip tekrar deneyin.** Bu bizim tarafımızdaki bir arıza değildir. |
+| "OpenStreetMap sunucusu yoğun, 15 sn sonra tekrar denenecek (2/4)" | **Hiçbir şey yapmayın.** Program kendisi bekleyip tekrar deniyor ve her denemede başka bir yedek sunucuya geçiyor. Butona tekrar basmayın. |
+| "7/9 grup geldi · 2 grup düştü" | Gelenler kayboldu sanmayın — duruyorlar. **"Kalan 2 grubu tekrar dene"** düğmesine basın; yalnızca eksikler yeniden istenir. |
+| Dört denemeden sonra da gelmiyor | OSM sunucularının hepsi yoğun demektir. 10-15 dakika sonra tekrar deneyin; gelen veri kaybolmaz. |
 | Çok sayıda "eşleşmedi" satırı | Normaldir; komşu ilçelerin mahalleleri eleniyor. Sadece adı sistemimizde olanlara sınır yazılır. |
 
 ### ✅ Sonraki adıma geçmeden doğrulayın
@@ -250,8 +263,15 @@ Sonra **"… noktayı içe aktar"** butonuna basın.
 
 ### Ne kadar sürer
 
-Önizleme **10–60 saniye**. Yazma nokta sayısına bağlı — birkaç yüz nokta
-için **1–3 dakika** bekleyin. Sayfayı kapatmayın.
+⚠️ **Dakikalar sürebilir ve bu normaldir.** Alan artık tek parça
+sorulmuyor: mahalleler üçerli gruplanıp her grup için ayrı, küçük bir sorgu
+gönderiliyor. Ekranda **ilerleme çubuğu** ve "4/9 bölge indirildi" yazısı
+görürsünüz.
+
+Küçük sorgular tek büyük sorgudan çok daha güvenilir dönüyor; ayrıca bir
+bölge düşerse yalnızca o bölge yeniden isteniyor.
+
+**Sayfayı kapatmayın ve butona tekrar basmayın.**
 
 ### Payı büyütmeli miyim?
 
@@ -267,7 +287,10 @@ Payı değiştirdiyseniz **önizlemeyi tekrar çalıştırın**; sayı değişec
 | Ekranda yazan | Ne yapmalısınız |
 | --- | --- |
 | "Merkez noktası tanımlı mahalle bulunamadı." | 2. adım tamamlanmamış. En az bir mahallenin **Konum → Mahalle merkezi** alanı dolu olmalı. |
-| Zaman aşımı / bağlantı hatası | OSM sunucusu yoğun. 10 dakika bekleyin, tekrar deneyin. |
+| "OpenStreetMap sunucusu yoğun, … tekrar denenecek (2/4)" | **Hiçbir şey yapmayın**, program kendisi bekliyor ve yedek sunucuya geçiyor. |
+| "Sunucu bizi geçici olarak kısıtladı (kota sınırı) — bu bir hata değil" | **Kesinlikle butona basmayın.** Bu bir arıza değil; sunucu bize "biraz yavaşla" diyor. Tekrar tekrar denemek kısıtlama süresini **uzatır**. Program 1–3 dakika bekleyip kendisi deneyecek. |
+| "Sınır içe aktarma az önce çalıştı… ~4 dk bekleyip deneyin" | Uyarıdır, engel değil. İki işlem aynı kotayı paylaşıyor. Beklerseniz iş daha çabuk biter; beklemezseniz büyük olasılıkla kota sınırına takılırsınız. |
+| "6/9 bölge geldi · 3 bölge düştü" | **"Kalan 3 bölgeyi tekrar dene"** düğmesine basın. Gelen noktalar duruyor. |
 | "İçe aktarma tamamlanamadı." | Sayfayı yenileyip tekrar deneyin. Yarım kalan aktarma zarar vermez; ikinci çalıştırma kaldığı yerden devam eder. |
 
 ### ⚠️ Kaldırmamanız gereken ibare

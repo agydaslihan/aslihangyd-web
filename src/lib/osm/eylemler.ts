@@ -7,11 +7,16 @@ import { getPayload, type Payload, type TypedUser } from 'payload'
 
 import { yoneticiMi } from '@/lib/erisim'
 
+import { SOGUMA_MS, sonIstektenBuYanaMs } from './istemci'
 import {
   onizlemeHazirla,
+  poiHazirligiBaslat,
+  poiKutusunuGetir,
   satirlariYaz,
   type IceAktarmaDurumu,
   type OnizlemeSatiri,
+  type PoiGrupDurumu,
+  type PoiHazirlikDurumu,
   type YazmaSonucu,
 } from './iceAktarma'
 
@@ -33,12 +38,76 @@ async function yoneticiOturumu(): Promise<{ payload: Payload; user: TypedUser } 
   return { payload, user }
 }
 
-export async function osmOnizlemesiHazirla(marjMetre?: number): Promise<IceAktarmaDurumu> {
+/**
+ * Son Overpass isteğinden bu yana geçen süre.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SINIR VE POI AYNI KOTAYI PAYLAŞIYOR
+ *
+ * İki ekran ayrı görünüyor ama Overpass açısından aynı istemciyiz. Sınır
+ * içe aktarma bir düzine istek gönderdikten hemen sonra POI'ye başlamak,
+ * doğrudan 429'a koşmak demek — nitekim öyle oldu.
+ *
+ * ⚠️ Bu bilgi UYARI ÜRETİR, ENGEL DEĞİL. Acele eden birinin işini durdurmak
+ * bizim işimiz değil; ne olacağını söylemek işimiz.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function overpassSogumasi(): Promise<{ kalanSaniye: number }> {
+  const oturum = await yoneticiOturumu()
+  if (!oturum) return { kalanSaniye: 0 }
+
+  const gecen = sonIstektenBuYanaMs()
+  if (gecen === null || gecen >= SOGUMA_MS) return { kalanSaniye: 0 }
+
+  return { kalanSaniye: Math.ceil((SOGUMA_MS - gecen) / 1_000) }
+}
+
+/**
+ * 1. adım — kutuları hesaplar. AĞ İSTEĞİ YOK.
+ */
+export async function poiHazirliginiBaslat(marjMetre?: number): Promise<PoiHazirlikDurumu> {
+  const oturum = await yoneticiOturumu()
+  if (!oturum) return { durum: 'kutu_gecersiz', mesaj: `${OTURUM_YOK} ${YETKI_YOK}` }
+
+  try {
+    return await poiHazirligiBaslat(oturum.payload, oturum.user, marjMetre)
+  } catch (hata) {
+    return {
+      durum: 'kutu_gecersiz',
+      mesaj: hata instanceof Error ? hata.message : 'Hazırlık başlatılamadı.',
+    }
+  }
+}
+
+/**
+ * 2. adım — tek kutunun POI'leri.
+ *
+ * ⚠️ Sonuç istemciye dönmüyor; sunucudaki hazırlıkta birikiyor. İstemci
+ * yalnızca kaç kayıt geldiğini görüyor.
+ */
+export async function poiKutusunuIndir(
+  kutuSirasi: number,
+  denemeSirasi = 1,
+): Promise<PoiGrupDurumu> {
   const oturum = await yoneticiOturumu()
   if (!oturum) return { durum: 'hata', mesaj: `${OTURUM_YOK} ${YETKI_YOK}` }
 
   try {
-    return await onizlemeHazirla(oturum.payload, oturum.user, marjMetre)
+    return await poiKutusunuGetir(oturum.user, kutuSirasi, denemeSirasi)
+  } catch (hata) {
+    return {
+      durum: 'hata',
+      mesaj: hata instanceof Error ? hata.message : 'Kutu indirilemedi.',
+    }
+  }
+}
+
+export async function osmOnizlemesiHazirla(): Promise<IceAktarmaDurumu> {
+  const oturum = await yoneticiOturumu()
+  if (!oturum) return { durum: 'hata', mesaj: `${OTURUM_YOK} ${YETKI_YOK}` }
+
+  try {
+    return await onizlemeHazirla(oturum.payload, oturum.user)
   } catch (hata) {
     return {
       durum: 'hata',

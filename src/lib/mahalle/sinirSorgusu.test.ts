@@ -8,9 +8,13 @@ import {
   halkaMerkezi,
   halkalariBirlestir,
   noktaHalkadaMi,
+  gruplaraBol,
+  GRUP_BOYUTU,
   merkezAdaylariniCoz,
   sinirCevabiniCoz,
-  sinirSorgusu,
+  sinirGeometriSorgusu,
+  sinirKimlikleriniCoz,
+  sinirKimlikSorgusu,
   type Nokta,
 } from './sinirSorgusu'
 
@@ -19,9 +23,9 @@ function noktalar(...ciftler: [number, number][]): Nokta[] {
   return ciftler.map(([boylam, enlem]) => ({ boylam, enlem }))
 }
 
-describe('sinirSorgusu', () => {
+describe('sinirKimlikSorgusu — 1. faz', () => {
   it('ilçe adını ve mahalle idari seviyelerini sorguya koyar', () => {
-    const sorgu = sinirSorgusu('Çorlu')
+    const sorgu = sinirKimlikSorgusu('Çorlu')
     expect(sorgu).toContain('"name"="Çorlu"')
     expect(sorgu).toContain('"admin_level"="6"')
     // Çorlu mahalleleri fiilen 8'de; 9 ve 10 da taranıyor.
@@ -29,55 +33,22 @@ describe('sinirSorgusu', () => {
   })
 
   /**
-   * ─────────────────────────────────────────────────────────────────────
-   * ⚠️ BU TEST DAHA ÖNCE HATAYI KORUYORDU.
+   * ⚠️ 1. FAZ GEOMETRİ İSTEMEZ — 504'ÜN ASIL SEBEBİ BUYDU.
    *
-   * Eski hâli `expect(sorgu).toContain('out geom tags;')` idi ve yanına
-   * "geometri olmadan poligon kurulamaz" yorumu yazılmıştı. Yorum doğruydu,
-   * beklenen değer yanlıştı: Overpass'te `tags` bir ayrıntı seviyesidir ve
-   * ilişkinin ÜYELERİNİ bastırır. `geom` üye bulamayınca yalnızca `bounds`
-   * döndürür, çözümleyici de haklı olarak "geometrisiz" deyip atlar.
-   *
-   * Yani yeşil bir test, sorgunun 26 mahallenin hepsini sessizce düşürdüğü
-   * gerçeğini üstüne mühür basarak koruyordu. Testin doğrulaması gereken
-   * şey "bu dize burada mı" değil, "sorgu üye geometrisi istiyor mu"ydu.
-   *
-   * Şimdi iki yönlü: doğru kipin varlığı VE yanlış kipin yokluğu.
-   *
-   * ⚠️ Bu korumanın İLK HÂLİ FAZLA GENİŞTİ: `/^out\b.*\btags\b/m` yazmıştım,
-   * yani "hiçbir `out` satırında `tags` geçmesin". İkinci kademe eklenince
-   * kırıldı — çünkü yer düğümleri için `out center tags;` DOĞRUDUR: `center`
-   * üye geometrisine ihtiyaç duymaz, `tags` orada zararsızdır.
-   *
-   * Yasak olan `tags`'in kendisi değil, **`geom` ile birlikte kullanılması**
-   * (ve üye isteyen bir sorguda tek başına verilmesi). Koruma testi gerçek
-   * değişmezi ifade etmezse ya hatayı kaçırır ya da doğru kodu engeller;
-   * burada ikincisi oldu ve daraltıldı.
-   * ─────────────────────────────────────────────────────────────────────
+   * Ağır olan üye koordinatları. Kimlikleri ucuza alıp geometriyi gruplar
+   * hâlinde çekmek, tek büyük sorgunun zaman aşımına uğramasını önlüyor.
    */
-  it('üye geometrisi ister — `geom` ile `tags` bir arada olamaz', () => {
-    const sorgu = sinirSorgusu('Çorlu')
-
-    expect(sorgu).toContain('out body geom;')
-
-    const outSatirlari = sorgu.split('\n').filter((satir) => satir.startsWith('out'))
-    const zehirli = outSatirlari.filter((satir) => /\bgeom\b/.test(satir) && /\btags\b/.test(satir))
-
-    expect(
-      zehirli,
-      '`geom` ile `tags` aynı `out` ifadesinde birleşince `tags` ayrıntı seviyesi ' +
-        'ilişkilerin `members` alanını bastırır; `geom` de kaba `bounds` döndürür. ' +
-        'Sınır poligonu kurulamaz ve içe aktarma sessizce sıfır sonuç verir.',
-    ).toEqual([])
-
-    // Üye isteyen küme için tek başına `out tags;` de yeterli değil.
-    expect(outSatirlari).not.toContain('out tags;')
+  it('geometri istemez — yalnızca kimlik, etiket ve yer merkezleri', () => {
+    const sorgu = sinirKimlikSorgusu('Çorlu')
+    expect(sorgu).toContain('out tags;')
+    expect(sorgu).toContain('out center tags;')
+    expect(sorgu).not.toContain('geom')
   })
 
-  it('yer düğümleri için ayrı bir `out center` ifadesi var', () => {
-    const sorgu = sinirSorgusu('Çorlu')
-    expect(sorgu).toContain('out center tags;')
-    expect(sorgu).toContain('"place"~"^(suburb|neighbourhood|quarter|village|town|hamlet)$"')
+  it('yer düğümlerini aynı fazda ister', () => {
+    expect(sinirKimlikSorgusu('Çorlu')).toContain(
+      '"place"~"^(suburb|neighbourhood|quarter|village|town|hamlet)$"',
+    )
   })
 
   /**
@@ -87,18 +58,137 @@ describe('sinirSorgusu', () => {
    * adaş olan biri, o mahallenin merkezini kilometrelerce öteye taşırdı.
    */
   it('locality yer türü sorguya girmez', () => {
-    expect(sinirSorgusu('Çorlu')).not.toContain('locality')
+    expect(sinirKimlikSorgusu('Çorlu')).not.toContain('locality')
   })
 
   it('adsız sınır parçalarını sorguda eler', () => {
     // Adsız yollar ilişkilerin parçalarıdır; geometrileri üye olarak geliyor.
-    // Şartsız hâlinde cevabın üçte ikisi bu parçalardı.
-    expect(sinirSorgusu('Çorlu')).toContain('["name"];')
+    expect(sinirKimlikSorgusu('Çorlu')).toContain('["name"];')
   })
 
   it('ilçe adındaki tırnak sorguyu kıramaz', () => {
-    const sorgu = sinirSorgusu('Çor"lu')
-    expect(sorgu).toContain('"name"="Çorlu"')
+    expect(sinirKimlikSorgusu('Çor"lu')).toContain('"name"="Çorlu"')
+  })
+})
+
+describe('sinirGeometriSorgusu — 2. faz', () => {
+  const kimlikler = [
+    { tur: 'relation' as const, kimlik: 11833266, osmAdi: 'Muhittin Mahallesi' },
+    { tur: 'relation' as const, kimlik: 11833268, osmAdi: 'Alipaşa Mahallesi' },
+    { tur: 'way' as const, kimlik: 851326754, osmAdi: 'Bir yol' },
+  ]
+
+  it('kimlikleri türüne göre ayırıp sorar', () => {
+    const sorgu = sinirGeometriSorgusu(kimlikler)
+    expect(sorgu).toContain('relation(id:11833266,11833268);')
+    expect(sorgu).toContain('way(id:851326754);')
+  })
+
+  /**
+   * ⚠️ Alan taraması YOK. `map_to_area` ve `area.ilce` bu sorguda
+   * bulunmuyor; yalnızca sayılı kimliklerin geometrisi isteniyor. Sorgunun
+   * ucuz olmasının sebebi bu.
+   */
+  it('alan taraması yapmaz', () => {
+    const sorgu = sinirGeometriSorgusu(kimlikler)
+    expect(sorgu).not.toContain('map_to_area')
+    expect(sorgu).not.toContain('area.ilce')
+  })
+
+  it('tek türde kimlik varsa boş satır üretmez', () => {
+    const yalnizIliski = sinirGeometriSorgusu([kimlikler[0]!])
+    expect(yalnizIliski).toContain('relation(id:11833266);')
+    expect(yalnizIliski).not.toContain('way(id:)')
+  })
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BU KORUMA İKİ KEZ YANLIŞ KURULDU — ÜÇÜNCÜSÜNDE YERİNİ BULDU.
+   *
+   * 1. hâli: `toContain('out geom tags;')` — HATAYI KORUYORDU. `tags` bir
+   *    ayrıntı seviyesidir ve ilişkilerin `members` alanını bastırır; `geom`
+   *    de kaba `bounds` döndürür. Yeşil bir test, 26 mahallenin sessizce
+   *    düşürüldüğü gerçeğine mühür basıyordu.
+   * 2. hâli: `/^out\b.*\btags\b/m` eşleşmesin — DOĞRU KODU ENGELLEDİ. Yer
+   *    düğümleri için `out center tags;` doğrudur; `center` üye geometrisine
+   *    ihtiyaç duymaz.
+   * 3. hâli (bu): koruma, geometriyi İSTEYEN sorgunun testine taşındı.
+   *    Değişmez artık tam yerinde ifade ediliyor — 1. faz zaten `out tags;`
+   *    kullanıyor ve kullanmalı.
+   *
+   * Ders: bir koruma testi yanlış nesneye bağlanırsa ya hatayı korur ya
+   * doğru kodu engeller. İkisini de yaşadı.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('üye geometrisi ister — `geom` ile `tags` bir arada olamaz', () => {
+    const sorgu = sinirGeometriSorgusu(kimlikler)
+
+    expect(sorgu).toContain('out body geom;')
+
+    const outSatirlari = sorgu.split('\n').filter((satir: string) => satir.startsWith('out'))
+    const zehirli = outSatirlari.filter(
+      (satir: string) => /\bgeom\b/.test(satir) && /\btags\b/.test(satir),
+    )
+
+    expect(
+      zehirli,
+      '`geom` ile `tags` aynı `out` ifadesinde birleşince `tags` ayrıntı seviyesi ' +
+        'ilişkilerin `members` alanını bastırır; `geom` de kaba `bounds` döndürür. ' +
+        'Sınır poligonu kurulamaz ve içe aktarma sessizce sıfır sonuç verir.',
+    ).toEqual([])
+  })
+})
+
+describe('gruplaraBol', () => {
+  it('grup boyutuna göre böler, son grup eksik kalabilir', () => {
+    expect(gruplaraBol([1, 2, 3, 4, 5, 6, 7], 3)).toEqual([[1, 2, 3], [4, 5, 6], [7]])
+  })
+
+  it('boş listede boş sonuç', () => {
+    expect(gruplaraBol([], 5)).toEqual([])
+  })
+
+  /**
+   * ⚠️ Grup boyutu KÜÇÜK olmalı. Amaç hızı en üst düzeye çıkarmak değil,
+   * tek bir isteğin zaman aşımına uğrama olasılığını ve düştüğünde
+   * kaybedilen işi küçük tutmak.
+   */
+  it('varsayılan grup boyutu makul küçüklükte', () => {
+    expect(GRUP_BOYUTU).toBeLessThanOrEqual(10)
+    expect(GRUP_BOYUTU).toBeGreaterThan(0)
+  })
+})
+
+describe('sinirKimlikleriniCoz', () => {
+  it('sınır öğelerini toplar, yer öğelerini almaz', () => {
+    const kimlikler = sinirKimlikleriniCoz({
+      elements: [
+        {
+          type: 'relation',
+          id: 1,
+          tags: { name: 'Muhittin Mahallesi', boundary: 'administrative', admin_level: '8' },
+        },
+        { type: 'node', id: 2, tags: { name: 'Yenice', place: 'village' } },
+        { type: 'way', id: 3, tags: { name: 'Zafer', boundary: 'administrative' } },
+      ],
+    })
+
+    expect(kimlikler).toEqual([
+      { tur: 'relation', kimlik: 1, osmAdi: 'Muhittin Mahallesi' },
+      { tur: 'way', kimlik: 3, osmAdi: 'Zafer' },
+    ])
+  })
+
+  it('adsız sınırı almaz', () => {
+    expect(
+      sinirKimlikleriniCoz({
+        elements: [{ type: 'relation', id: 1, tags: { boundary: 'administrative' } }],
+      }),
+    ).toEqual([])
+  })
+
+  it('bozuk cevapta çökmez', () => {
+    expect(sinirKimlikleriniCoz(null)).toEqual([])
   })
 })
 
