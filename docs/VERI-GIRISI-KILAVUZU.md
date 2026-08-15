@@ -181,9 +181,24 @@ Eksik kalan bir sınırı elle çizmek isterseniz: `geojson.io` sitesinde çizip
 (GeoJSON)"* kutusuna yapıştırın. Elle çizdiğiniz sınır bu ekran tarafından
 **bir daha ezilmez.**
 
-Sınırı gelmeyen bir mahalleye merkez noktasını yine de elle girebilirsiniz
-— **Konum** sekmesi → *"Mahalle merkezi"*. 3. adım için sınır değil, merkez
-noktası gerekir.
+### Sınırı olmayan mahalle konumsuz kalmaz
+
+Elle koordinat girmeniz **gerekmiyor.** Aynı sorgu ikinci bir küme daha
+getiriyor: OpenStreetMap'teki adlandırılmış yerleşim noktaları. Sınırı
+bulunamayan bir mahallenin merkezi buradan alınır ve önizlemede ayrı bir
+tabloda gösterilir — *"Sınırı yok — merkezi yerleşim noktasından gelecek"*.
+
+Bu mahallelerde **sınır alanı boş kalır**; noktadan poligon uydurulmaz.
+Merkez yeterlidir: harita odaklanır ve 3. adımdaki POI araması çalışır.
+
+Hiçbir kaynaktan konum bulunamayan mahalle olursa **boş bırakılır** ve
+ekranda *"Hiçbir kaynaktan konum bulunamadı"* başlığı altında adlarıyla
+listelenir. Yaklaşık koordinat üretilmez — uydurulmuş bir merkez, haritayı
+çalışıyor gibi gösterip yanlış yeri işaret ederdi.
+
+⚠️ Bir mahalle o listede çıkıyorsa ilk kontrol edilecek şey adının doğru
+yazıldığı ve **gerçekten Çorlu ilçesine ait olduğudur.** Komşu ilçenin
+mahallesi, Çorlu içinde aranınca elbette bulunamaz.
 
 ### Ne kadar sürer
 

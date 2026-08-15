@@ -1,6 +1,13 @@
 import type { Payload, TypedUser } from 'payload'
 
-import { ILCE_ADI, sinirCevabiniCoz, sinirSorgusu, type SinirAdayi } from './sinirSorgusu'
+import {
+  ILCE_ADI,
+  merkezAdaylariniCoz,
+  sinirCevabiniCoz,
+  sinirSorgusu,
+  type MerkezAdayi,
+  type SinirAdayi,
+} from './sinirSorgusu'
 import { AZAMI_SINIR, type SinirCozumlemesi } from './sinirSorgusu'
 
 /**
@@ -72,9 +79,31 @@ export interface SinirOnizlemesi {
    * girdisidir.
    */
   sinirsizMahalleler: { id: number; ad: string }[]
+  /**
+   * İkinci kademe: sınırı yok ama merkezi yerleşim noktasından gelecek olanlar.
+   *
+   * ⚠️ Bunlar `sinirsizMahalleler` içinde de görünür — orası "poligonu yok"
+   * listesi, burası "yine de merkezi olacak" listesi. İkisi farklı soruların
+   * cevabı ve birbirinin yerine geçmez.
+   */
+  merkezSatirlari: MerkezSatiri[]
+  /**
+   * Hiçbir kaynaktan konum bulunamayan mahalleler.
+   *
+   * ⚠️ Bu liste boş bırakılan veridir, uydurulmayan veridir. Koordinat
+   * tahmin etmektense mahalleyi konumsuz bırakmak tercih ediliyor.
+   */
+  kaynaksizMahalleler: { id: number; ad: string }[]
   ozet: SinirCozumlemesi
   /** Gönderilen sorgu — panelde gösterilir, ne sorduğumuz görünür olsun. */
   sorgu: string
+}
+
+/** Sınırı olmayan ama yerleşim noktasından merkezi çözülen mahalle. */
+export interface MerkezSatiri {
+  aday: MerkezAdayi
+  mahalleId: number
+  mahalleAdi: string
 }
 
 export type SinirDurumu =
@@ -82,8 +111,10 @@ export type SinirDurumu =
   | { durum: 'mahalle_yok' }
   | { durum: 'hazir'; onizleme: SinirOnizlemesi }
 
-/** Overpass'a sorar ve cevabı çözer. */
-async function overpasstanGetir(sorgu: string): Promise<SinirCozumlemesi> {
+/** Overpass'a sorar ve cevabı çözer — iki kademe tek cevaptan. */
+async function overpasstanGetir(
+  sorgu: string,
+): Promise<{ ozet: SinirCozumlemesi; merkezAdaylari: MerkezAdayi[] }> {
   const kontrol = new AbortController()
   const zamanlayici = setTimeout(() => kontrol.abort(), ZAMAN_ASIMI_MS)
 
@@ -119,7 +150,7 @@ async function overpasstanGetir(sorgu: string): Promise<SinirCozumlemesi> {
       throw new Error(`OpenStreetMap sunucusu sorguyu tamamlayamadı: ${not.trim()}`)
     }
 
-    return sinirCevabiniCoz(govde)
+    return { ozet: sinirCevabiniCoz(govde), merkezAdaylari: merkezAdaylariniCoz(govde) }
   } finally {
     clearTimeout(zamanlayici)
   }
@@ -178,8 +209,9 @@ export async function sinirOnizlemesiHazirla(
   const sorgu = sinirSorgusu(ilceAdi)
 
   let ozet: SinirCozumlemesi
+  let merkezAdaylari: MerkezAdayi[]
   try {
-    ozet = await overpasstanGetir(sorgu)
+    ;({ ozet, merkezAdaylari } = await overpasstanGetir(sorgu))
   } catch (hata) {
     return {
       durum: 'hata',
@@ -227,18 +259,47 @@ export async function sinirOnizlemesiHazirla(
     }
   })
 
+  const sinirsiz = mahalleler.filter((mahalle) => !eslesenIdler.has(mahalle.id))
+
+  /**
+   * İkinci kademe — sınırı olmayana yerleşim noktasından merkez.
+   *
+   * ⚠️ Yalnızca merkezi BOŞ olanlara bakılıyor. Elle girilmiş bir merkezin
+   * üzerine yer düğümü yazmak, bilinçli bir seçimi (Aslıhan "meydanın orası"
+   * demiş olabilir) gönüllü katkısıyla ezmek olurdu — sınır tarafındaki
+   * `merkeziYaz` korumasının aynısı.
+   */
+  const merkezHaritasi = new Map(merkezAdaylari.map((aday) => [aday.slug, aday]))
+  const merkezSatirlari: MerkezSatiri[] = []
+
+  for (const mahalle of sinirsiz) {
+    if (mahalle.merkezVar) continue
+    const aday = merkezHaritasi.get(mahalle.slug)
+    if (!aday) continue
+    merkezSatirlari.push({ aday, mahalleId: mahalle.id, mahalleAdi: mahalle.ad })
+  }
+
+  const merkezliIdler = new Set(merkezSatirlari.map((satir) => satir.mahalleId))
+
   return {
     durum: 'hazir',
     onizleme: {
       satirlar,
       sorgu,
       ozet,
+      merkezSatirlari,
       yeniSayisi: satirlar.filter((satir) => satir.islem === 'yeni').length,
       guncellenecekSayisi: satirlar.filter((satir) => satir.islem === 'guncellenecek').length,
       korunacakSayisi: satirlar.filter((satir) => satir.islem === 'korunacak').length,
       eslesmeyenSayisi: satirlar.filter((satir) => satir.islem === 'eslesmedi').length,
-      sinirsizMahalleler: mahalleler
-        .filter((mahalle) => !eslesenIdler.has(mahalle.id))
+      sinirsizMahalleler: sinirsiz.map(({ id, ad }) => ({ id, ad })),
+      /**
+       * ⚠️ Ne sınırı ne yer düğümü olan — ve merkezi de zaten boş olan.
+       * Merkezi dolu olan bir mahalle burada listelenmez: konumu vardır,
+       * yalnızca poligonu yoktur.
+       */
+      kaynaksizMahalleler: sinirsiz
+        .filter((mahalle) => !mahalle.merkezVar && !merkezliIdler.has(mahalle.id))
         .map(({ id, ad }) => ({ id, ad })),
     },
   }
@@ -249,6 +310,10 @@ export interface SinirYazmaSonucu {
   korunan: number
   eslesmeyen: number
   merkeziKorunan: number
+  /** Sınırı olmadığı hâlde yerleşim noktasından merkezi yazılanlar. */
+  merkezYazilan: number
+  /** Hiçbir kaynaktan konum bulunamayanlar — boş bırakıldı, uydurulmadı. */
+  kaynaksiz: { id: number; ad: string }[]
   hatalar: { ad: string; mesaj: string }[]
 }
 
@@ -281,6 +346,8 @@ export async function sinirlariYaz(
     korunan: 0,
     eslesmeyen: 0,
     merkeziKorunan: 0,
+    merkezYazilan: 0,
+    kaynaksiz: durum.onizleme.kaynaksizMahalleler,
     hatalar: [],
   }
 
@@ -320,6 +387,33 @@ export async function sinirlariYaz(
     } catch (hata) {
       sonuc.hatalar.push({
         ad: satir.mahalleAdi ?? satir.aday.osmAdi,
+        mesaj: hata instanceof Error ? hata.message : 'bilinmeyen hata',
+      })
+    }
+  }
+
+  /**
+   * ── İkinci kademe: yalnızca merkez ──
+   *
+   * ⚠️ `sinir` alanına DOKUNULMUYOR. Yer düğümü bir noktadır; ondan poligon
+   * uydurmak (örneğin çevresine bir daire çizmek) haritada gerçek sanılan
+   * sahte bir alan gösterirdi. Merkez var, sınır yok — ekranda da böyle
+   * görünüyor.
+   */
+  for (const satir of durum.onizleme.merkezSatirlari) {
+    try {
+      await payload.update({
+        collection: 'mahalleler',
+        id: satir.mahalleId,
+        data: { merkez: satir.aday.merkez },
+        user,
+        overrideAccess: false,
+        context: { sinirIceAktarma: true },
+      })
+      sonuc.merkezYazilan += 1
+    } catch (hata) {
+      sonuc.hatalar.push({
+        ad: satir.mahalleAdi,
         mesaj: hata instanceof Error ? hata.message : 'bilinmeyen hata',
       })
     }

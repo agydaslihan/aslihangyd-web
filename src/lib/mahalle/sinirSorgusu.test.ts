@@ -8,6 +8,7 @@ import {
   halkaMerkezi,
   halkalariBirlestir,
   noktaHalkadaMi,
+  merkezAdaylariniCoz,
   sinirCevabiniCoz,
   sinirSorgusu,
   type Nokta,
@@ -42,17 +43,51 @@ describe('sinirSorgusu', () => {
    * şey "bu dize burada mı" değil, "sorgu üye geometrisi istiyor mu"ydu.
    *
    * Şimdi iki yönlü: doğru kipin varlığı VE yanlış kipin yokluğu.
+   *
+   * ⚠️ Bu korumanın İLK HÂLİ FAZLA GENİŞTİ: `/^out\b.*\btags\b/m` yazmıştım,
+   * yani "hiçbir `out` satırında `tags` geçmesin". İkinci kademe eklenince
+   * kırıldı — çünkü yer düğümleri için `out center tags;` DOĞRUDUR: `center`
+   * üye geometrisine ihtiyaç duymaz, `tags` orada zararsızdır.
+   *
+   * Yasak olan `tags`'in kendisi değil, **`geom` ile birlikte kullanılması**
+   * (ve üye isteyen bir sorguda tek başına verilmesi). Koruma testi gerçek
+   * değişmezi ifade etmezse ya hatayı kaçırır ya da doğru kodu engeller;
+   * burada ikincisi oldu ve daraltıldı.
    * ─────────────────────────────────────────────────────────────────────
    */
-  it('üye geometrisi ister — `tags` ayrıntı seviyesine geri dönülemez', () => {
+  it('üye geometrisi ister — `geom` ile `tags` bir arada olamaz', () => {
     const sorgu = sinirSorgusu('Çorlu')
 
     expect(sorgu).toContain('out body geom;')
+
+    const outSatirlari = sorgu.split('\n').filter((satir) => satir.startsWith('out'))
+    const zehirli = outSatirlari.filter((satir) => /\bgeom\b/.test(satir) && /\btags\b/.test(satir))
+
     expect(
-      /^out\b.*\btags\b/m.test(sorgu),
-      '`out` ifadesinde `tags` ayrıntı seviyesi ilişkilerin `members` alanını ' +
-        'bastırır; sınır poligonu kurulamaz ve içe aktarma sessizce sıfır sonuç verir.',
-    ).toBe(false)
+      zehirli,
+      '`geom` ile `tags` aynı `out` ifadesinde birleşince `tags` ayrıntı seviyesi ' +
+        'ilişkilerin `members` alanını bastırır; `geom` de kaba `bounds` döndürür. ' +
+        'Sınır poligonu kurulamaz ve içe aktarma sessizce sıfır sonuç verir.',
+    ).toEqual([])
+
+    // Üye isteyen küme için tek başına `out tags;` de yeterli değil.
+    expect(outSatirlari).not.toContain('out tags;')
+  })
+
+  it('yer düğümleri için ayrı bir `out center` ifadesi var', () => {
+    const sorgu = sinirSorgusu('Çorlu')
+    expect(sorgu).toContain('out center tags;')
+    expect(sorgu).toContain('"place"~"^(suburb|neighbourhood|quarter|village|town|hamlet)$"')
+  })
+
+  /**
+   * ⚠️ `locality` merkez kaynağı OLAMAZ.
+   *
+   * Çorlu içinde 142 tane var; bunlar mevkî ve tarla adları. Bir mahalleyle
+   * adaş olan biri, o mahallenin merkezini kilometrelerce öteye taşırdı.
+   */
+  it('locality yer türü sorguya girmez', () => {
+    expect(sinirSorgusu('Çorlu')).not.toContain('locality')
   })
 
   it('adsız sınır parçalarını sorguda eler', () => {
@@ -340,5 +375,142 @@ describe('sinirCevabiniCoz', () => {
     expect(sinirCevabiniCoz(null).adaylar).toHaveLength(0)
     expect(sinirCevabiniCoz({ elements: 'metin' }).adaylar).toHaveLength(0)
     expect(sinirCevabiniCoz({ elements: [null, 3, {}] }).adaylar).toHaveLength(0)
+  })
+})
+
+describe('merkezAdaylariniCoz — ikinci kademe', () => {
+  it('yerleşim düğümünü merkez adayına çevirir', () => {
+    const adaylar = merkezAdaylariniCoz({
+      elements: [
+        {
+          type: 'node',
+          id: 555,
+          lat: 41.15282,
+          lon: 27.81037,
+          tags: { name: 'Muhittin Mahallesi', place: 'suburb' },
+        },
+      ],
+    })
+
+    expect(adaylar).toHaveLength(1)
+    expect(adaylar[0]?.slug).toBe('muhittin')
+    expect(adaylar[0]?.yerTuru).toBe('suburb')
+    // [boylam, enlem] — Payload `point` sırası.
+    expect(adaylar[0]?.merkez[0]).toBeCloseTo(27.81037, 5)
+    expect(adaylar[0]?.merkez[1]).toBeCloseTo(41.15282, 5)
+  })
+
+  it('alan ve ilişkide `out center` merkezini kullanır', () => {
+    const adaylar = merkezAdaylariniCoz({
+      elements: [
+        {
+          type: 'way',
+          id: 9,
+          center: { lat: 41.1, lon: 27.8 },
+          tags: { name: 'Önerler', place: 'village' },
+        },
+      ],
+    })
+    expect(adaylar).toHaveLength(1)
+    expect(adaylar[0]?.osmKimlik).toBe('way/9')
+  })
+
+  /**
+   * ⚠️ `locality` MERKEZ KAYNAĞI OLAMAZ.
+   *
+   * Çorlu içinde 142 tane var ve bunlar mevkî/tarla adları. Bir mahalleyle
+   * adaş olan biri, mahallenin merkezini kilometrelerce öteye taşırdı.
+   * Yanlış merkez, eksik merkezden kötüdür: eksik olan panelde görünür,
+   * yanlış olan sessizce yanlış harita gösterir.
+   */
+  it('locality türünü merkez kaynağı saymaz', () => {
+    const adaylar = merkezAdaylariniCoz({
+      elements: [
+        {
+          type: 'node',
+          id: 1,
+          lat: 41.5,
+          lon: 27.2,
+          tags: { name: 'Muhittin', place: 'locality' },
+        },
+      ],
+    })
+    expect(adaylar).toEqual([])
+  })
+
+  it('koordinatı olmayan öğeyi atar — sıfır sıfır uydurmaz', () => {
+    const adaylar = merkezAdaylariniCoz({
+      elements: [{ type: 'node', id: 2, tags: { name: 'Zafer', place: 'suburb' } }],
+    })
+    expect(adaylar).toEqual([])
+  })
+
+  it('adı olmayan yerleşimi atar', () => {
+    const adaylar = merkezAdaylariniCoz({
+      elements: [{ type: 'node', id: 3, lat: 41.1, lon: 27.8, tags: { place: 'suburb' } }],
+    })
+    expect(adaylar).toEqual([])
+  })
+
+  it('bozuk cevapta çökmez', () => {
+    expect(merkezAdaylariniCoz(null)).toEqual([])
+    expect(merkezAdaylariniCoz({ elements: 'olmaz' })).toEqual([])
+  })
+})
+
+/**
+ * ⚠️ İKİ KADEME AYNI CEVAPTAN OKUNUYOR — BİRBİRİNİ KİRLETMEMELİ.
+ *
+ * Yer öğelerinin üye geometrisi yok (`out center` ile geldiler). Sınır
+ * çözümleyicisinde elenmezlerse hepsi "geometrisiz atlandı" sayacına düşer
+ * ve panelde gerçek bir sorun varmış gibi görünür.
+ */
+describe('iki kademenin ayrışması', () => {
+  const karisikCevap = {
+    elements: [
+      {
+        type: 'relation',
+        id: 100,
+        tags: { name: 'Muhittin Mahallesi', boundary: 'administrative', admin_level: '8' },
+        members: [
+          {
+            type: 'way',
+            role: 'outer',
+            geometry: [
+              { lat: 41.1, lon: 27.8 },
+              { lat: 41.1, lon: 27.9 },
+              { lat: 41.2, lon: 27.9 },
+              { lat: 41.1, lon: 27.8 },
+            ],
+          },
+        ],
+      },
+      {
+        type: 'node',
+        id: 200,
+        lat: 41.15,
+        lon: 27.85,
+        tags: { name: 'Yenice', place: 'village' },
+      },
+      {
+        type: 'way',
+        id: 300,
+        center: { lat: 41.16, lon: 27.86 },
+        tags: { name: 'Seymen', place: 'village' },
+      },
+    ],
+  }
+
+  it('yer öğeleri geometrisiz sayacını şişirmez', () => {
+    const sinir = sinirCevabiniCoz(karisikCevap)
+    expect(sinir.adaylar).toHaveLength(1)
+    expect(sinir.adaylar[0]?.slug).toBe('muhittin')
+    expect(sinir.geometrisizAtlandi).toBe(0)
+    expect(sinir.adsizAtlandi).toBe(0)
+  })
+
+  it('sınır ilişkisi merkez adayı olarak sayılmaz', () => {
+    const merkezler = merkezAdaylariniCoz(karisikCevap)
+    expect(merkezler.map((aday) => aday.slug).sort()).toEqual(['seymen', 'yenice'])
   })
 })
