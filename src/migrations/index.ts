@@ -16,6 +16,7 @@ import * as migration_20260812_203042_poi_eczane_oyun_alani from './20260812_203
 import * as migration_20260813_133647_cephe_yonu from './20260813_133647_cephe_yonu';
 import * as migration_20260814_203859_mahalle_yerlesim_ve_sinir_kaynagi from './20260814_203859_mahalle_yerlesim_ve_sinir_kaynagi';
 import * as migration_20260814_210730_rayic_google_ve_kullanim_sayaci from './20260814_210730_rayic_google_ve_kullanim_sayaci';
+import * as migration_20260815_213935_marka_gorunum from './20260815_213935_marka_gorunum';
 
 export const migrations = [
   {
@@ -106,6 +107,11 @@ export const migrations = [
   {
     up: migration_20260814_210730_rayic_google_ve_kullanim_sayaci.up,
     down: migration_20260814_210730_rayic_google_ve_kullanim_sayaci.down,
-    name: '20260814_210730_rayic_google_ve_kullanim_sayaci'
+    name: '20260814_210730_rayic_google_ve_kullanim_sayaci',
+  },
+  {
+    up: migration_20260815_213935_marka_gorunum.up,
+    down: migration_20260815_213935_marka_gorunum.down,
+    name: '20260815_213935_marka_gorunum'
   },
 ];

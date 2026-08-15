@@ -9,6 +9,8 @@ import { KapatIkon, MenuIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { BASLIK_EYLEMI, type UstMenuOgesi } from '@/lib/gezinme'
 import { sinif } from '@/lib/sinif'
+import { MarkaLogosu } from '@/components/marka/MarkaLogosu'
+import type { MarkaAyarlari } from '@/lib/marka/sunucu'
 import { SITE_ADI, whatsappMesaji } from '@/lib/site'
 
 /**
@@ -30,9 +32,11 @@ import { SITE_ADI, whatsappMesaji } from '@/lib/site'
 export function Baslik({
   menu,
   whatsapp,
+  marka,
 }: {
   menu: readonly UstMenuOgesi[]
   whatsapp: string | null
+  marka: MarkaAyarlari
 }) {
   const [acik, setAcik] = useState(false)
   const [acikMega, setAcikMega] = useState<string | null>(null)
@@ -96,10 +100,16 @@ export function Baslik({
       <div className="kapsayici flex h-18 items-center justify-between gap-6">
         <Link
           href="/"
-          className="font-serif text-baslik-3 tracking-tight whitespace-nowrap"
-          aria-label={`${SITE_ADI} ana sayfa`}
+          className="flex items-center"
+          aria-label={`${marka?.siteAdi ?? SITE_ADI} ana sayfa`}
         >
-          Aslıhan <span className="text-vurgu">GYD</span>
+          {/* ⚠️ Logo yoksa metin yedeği devreye giriyor — site logosuz kırılmaz. */}
+          <MarkaLogosu
+            marka={marka}
+            sinif="h-9 w-auto"
+            metinSinifi="font-serif text-baslik-3 tracking-tight whitespace-nowrap"
+            vurguSinifi="text-vurgu"
+          />
         </Link>
 
         {/* ── Masaüstü gezinme ── */}
@@ -321,7 +331,7 @@ export function IcerigeAtla() {
   return (
     <a
       href="#icerik"
-      className="bg-kakao-yuzey rounded-kart sr-only z-50 px-4 py-2 text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
+      className="bg-kakao-yuzey rounded-kart sr-only z-50 px-4 py-2 text-koyu-bant-metin focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
     >
       İçeriğe atla
     </a>

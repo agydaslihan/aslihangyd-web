@@ -1,0 +1,327 @@
+/*
+ * Marka paneli stilleri.
+ *
+ * ⚠️ Panel içi CSS, sitenin `globals.css`inden bağımsız: burası Payload'ın
+ * kendi tema değişkenlerini kullanıyor. Site jetonlarını kullanmak,
+ * kullanıcı kötü bir palet denerken PANELİN de okunmaz olması demekti —
+ * yani hatayı düzeltmek için gereken arayüzün, hata yüzünden kaybolması.
+ *
+ * ⚠️ MOBİLDE KULLANILABİLİR OLMALI. Tablo yatay kaydırma sarmalı içinde,
+ * dokunma hedefleri en az 44 px, renk seçici parmakla basılabilecek
+ * büyüklükte.
+ */
+
+.marka-renk {
+  margin-bottom: 1.25rem;
+}
+
+.marka-renk__satir {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ⚠️ 44×44: WCAG 2.2 dokunma hedefi. Küçük bir renk kutusu masaüstünde
+   yeterli görünür, telefonda ıskalanır. */
+.marka-renk__secici {
+  inline-size: 3rem;
+  block-size: 2.75rem;
+  padding: 0;
+  border: 1px solid var(--theme-elevation-250);
+  border-radius: 4px;
+  background: none;
+  cursor: pointer;
+}
+
+.marka-renk__hex {
+  inline-size: 10rem;
+  min-block-size: 2.75rem;
+  padding: 0 0.75rem;
+  border: 1px solid var(--theme-elevation-250);
+  border-radius: 4px;
+  background: var(--theme-input-bg);
+  color: var(--theme-elevation-800);
+  font-family: var(--font-mono, monospace);
+  font-size: 0.9rem;
+}
+
+.marka-renk__hex[aria-invalid='true'] {
+  border-color: var(--theme-error-500);
+}
+
+.marka-renk__not {
+  margin: 0.4rem 0 0;
+  color: var(--theme-elevation-600);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.marka-renk__not--dekoratif {
+  color: var(--theme-elevation-800);
+  font-weight: 600;
+}
+
+.marka-renk__uyari {
+  color: var(--theme-error-500);
+  font-size: 0.8rem;
+}
+
+/* ── Palet paneli ─────────────────────────────────────────────────────── */
+
+.marka-panel {
+  margin-top: 1.5rem;
+}
+
+.marka-panel__bolum {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+}
+
+.marka-panel__baslik {
+  margin: 0 0 0.75rem;
+  font-size: 1rem;
+}
+
+.marka-panel__not {
+  margin: 0 0 0.75rem;
+  color: var(--theme-elevation-600);
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.marka-panel__durum {
+  margin: 0 0 1rem;
+  padding: 0.65rem 0.85rem;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+
+.marka-panel__durum--gecti {
+  background: var(--theme-success-100);
+  color: var(--theme-success-750, #14532d);
+}
+
+.marka-panel__durum--kaldi {
+  background: var(--theme-error-100);
+  color: var(--theme-error-750, #7f1d1d);
+}
+
+/* ⚠️ Tablo kendi içinde kayar; sayfa gövdesi yatay kaymaz. */
+.marka-panel__tablo-sarmal {
+  overflow-x: auto;
+}
+
+.marka-panel__tablo {
+  inline-size: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.marka-panel__tablo th,
+.marka-panel__tablo td {
+  padding: 0.6rem 0.5rem;
+  border-bottom: 1px solid var(--theme-elevation-150);
+  text-align: start;
+  vertical-align: top;
+}
+
+.marka-panel__satir--kaldi {
+  background: var(--theme-error-50, rgb(220 38 38 / 6%));
+}
+
+.marka-panel__oran {
+  font-family: var(--font-mono, monospace);
+  white-space: nowrap;
+}
+
+.marka-panel__gerekce {
+  display: block;
+  margin-top: 0.2rem;
+  color: var(--theme-elevation-500);
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.marka-panel__rozet {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.marka-panel__rozet--gecti {
+  background: var(--theme-success-100);
+  color: var(--theme-success-750, #14532d);
+}
+
+.marka-panel__rozet--kaldi {
+  background: var(--theme-error-100);
+  color: var(--theme-error-750, #7f1d1d);
+}
+
+.marka-panel__oneri,
+.marka-panel__dugme {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  min-block-size: 2.75rem;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--theme-elevation-250);
+  border-radius: 4px;
+  background: var(--theme-input-bg);
+  color: var(--theme-elevation-800);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.marka-panel__oneri-kutu {
+  inline-size: 1rem;
+  block-size: 1rem;
+  border: 1px solid var(--theme-elevation-250);
+  border-radius: 3px;
+}
+
+.marka-panel__paletler {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+}
+
+.marka-panel__dugme {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.3rem;
+  padding: 0.85rem;
+  text-align: start;
+}
+
+.marka-panel__dugme--varsayilan {
+  border-style: dashed;
+}
+
+.marka-panel__palet-ad {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.marka-panel__palet-aciklama {
+  color: var(--theme-elevation-600);
+  font-size: 0.78rem;
+  line-height: 1.4;
+}
+
+.marka-panel__seritler {
+  display: flex;
+  inline-size: 100%;
+  margin-top: 0.35rem;
+  overflow: hidden;
+  border-radius: 3px;
+}
+
+.marka-panel__serit {
+  block-size: 0.75rem;
+  flex: 1;
+}
+
+/* ── Canlı önizleme ───────────────────────────────────────────────────── */
+
+.marka-onizleme {
+  display: grid;
+  gap: 0.75rem;
+  padding: 1rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+}
+
+.marka-onizleme__bant,
+.marka-onizleme__kart {
+  padding: 1rem;
+  border-radius: 6px;
+}
+
+.marka-onizleme__baslik {
+  margin: 0 0 0.4rem;
+  font-size: 1.15rem;
+  font-weight: 700;
+  line-height: 1.3;
+}
+
+.marka-onizleme__kart-baslik {
+  margin: 0 0 0.5rem;
+  font-size: 1rem;
+  font-weight: 700;
+}
+
+.marka-onizleme__govde {
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.marka-onizleme__buton,
+.marka-onizleme__rozet {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.5rem 0.9rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.marka-onizleme__rozet {
+  padding: 0.25rem 0.6rem;
+  font-size: 0.72rem;
+}
+
+.marka-onizleme__cizgi {
+  margin: 0.75rem 0;
+  border: 0;
+  border-top-style: solid;
+  border-top-width: 1px;
+}
+
+.marka-onizleme__koyu {
+  padding: 0.9rem 1rem;
+  border-radius: 6px;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+/* ── Marka özeti ──────────────────────────────────────────────────────── */
+
+.marka-ozet {
+  margin-top: 1rem;
+  padding: 1rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+  font-size: 0.85rem;
+  line-height: 1.6;
+}
+
+.marka-ozet__satir {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+  border-bottom: 1px solid var(--theme-elevation-100);
+}
+
+.marka-ozet__satir:last-child {
+  border-bottom: 0;
+}
+
+.marka-ozet__etiket {
+  min-inline-size: 12rem;
+  font-weight: 600;
+}
+
+.marka-ozet__uyari {
+  color: var(--theme-error-500);
+  font-weight: 600;
+}

@@ -4605,3 +4605,170 @@ görünüyor — başladıktan sonra o istekleri zaten biz yapıyoruz.
 
 ⚠️ Uyarı **iki ekranda da** var. İstek yalnızca POI ekranı içindi ama durum
 simetrik: POI önce çalışırsa sınır içe aktarma aynı duvara toslar.
+
+---
+
+## Marka ve Görünüm paneli (15 Ağustos 2026)
+
+Aslıhan logoyu, site adını ve renkleri kod bilmeden değiştirebiliyor.
+Açılan şey sınırlı ve bu bilinçli: **on anlamsal renk yuvası**, logo, site
+adı, slogan, OG görseli. Kapalı kalanlar: serbest CSS/HTML, tipografi,
+boşluk/köşe/gölge jetonları, rampa basamakları.
+
+Tipografi özellikle kapalı — font Türkçe alt kümeye bağlı; değiştirilirse
+alt küme bozulur ve harfler kutu olur.
+
+### ⚠️ Çalışma zamanı — `NEXT_PUBLIC_*` tuzağının aynısı
+
+`globals.css` derleme anında paketlenir. Renkleri oraya yazsaydık Aslıhan
+panelde rengi değiştirir, kaydeder ve **hiçbir şey olmazdı** — üstelik
+sebebini anlamasının yolu olmazdı. 12 Ağustos'ta dokuz değişkenin birden
+ölmesinin sebebi tam olarak buydu.
+
+Palet veritabanından okunup `<head>` içine bir `<style>` bloğu olarak,
+**sunucuda** basılıyor. Sunucuda basılması FOUC'u da çözüyor: ilk boyamada
+doğru renkler yerinde.
+
+**Canlı ölçüm** — aynı çalışan sunucu, derleme yok:
+
+```
+ÖNCE   --color-zemin:#fbfaf7
+       (veritabanında değiştirildi, imaj DERLENMEDİ)
+SONRA  --color-zemin:#eef6f2
+       manifest.webmanifest background_color: #eef6f2
+```
+
+### Kontrast kapısı — dört katman, dördü de farklı işe yarıyor
+
+| Katman | Neyi korur | Canlı ölçüldü mü |
+| --- | --- | --- |
+| Panel bileşeni | Neyin neden geçmediğini anlatır, alternatif önerir | — |
+| Alan `validate` | Kaydetmeyi engeller, hatalı yuvayı işaretler | ✅ |
+| Sunucu kancası | Local API, seed, betikler | ✅ |
+| Çalışma zamanı yedeği | Elle SQL ve bozuk eski kayıt | ✅ |
+
+Canlı doğrulama:
+
+```
+1) payload.updateGlobal ile AA'sız palet
+   → kanca engelledi: "açık temada 3 renk çifti WCAG AA eşiğinin altında"
+2) kanca ATLANARAK doğrudan SQL ile aynı palet yazıldı
+   → site yine de --color-metin:#3d2b2f yayınladı (varsayılana düştü)
+```
+
+⚠️ **"Kaydet butonunu pasifleştir" DENENDİ VE VAZGEÇİLDİ.** Payload'ın
+`setDisabled(true)` çağrısı formun tamamını kilitliyor — renk alanları
+dahil. Yani kapı kapanınca kullanıcı sorunu düzeltemez hâle geliyordu.
+Kapının amacı kötü paleti engellemek, kullanıcıyı hapsetmek değil.
+`validate` ile hem engel var hem yön gösterme: hatalı yuva kırmızı,
+sebep hemen altında.
+
+### ⚠️ İstekte verilen terracotta kapıdan geçmiyor
+
+Şartname vurgu rengi için `#A85A42` yazıyordu. Ölçüm:
+
+| Çift | Oran | Sonuç |
+| --- | --- | --- |
+| `#A85A42` / ana zemin `#FBFAF7` | 4,78 | geçer |
+| `#A85A42` / **krem bölüm zemini** `#F2EBE3` | **4,22** | **kalır** |
+| `#844632` / krem bölüm zemini | 5,64 | geçer |
+
+Sitedeki `#844632` tam da bu yüzden türetilmişti. Varsayılan olarak
+şartnamedeki değeri koysaydık kapı ilk açılışta kırmızı yanardı. Bir test
+bu somut vakayı belgeliyor: **"renk kartelasında güzel duruyor" ile
+"sitede okunuyor" ayrı şeyler.**
+
+### Favicon — 404 çözüldü, ölçüldü
+
+⚠️ Projede hiç ikon dosyası yoktu: ne `src/app/favicon.ico` ne `public/`
+altında bir şey. Lighthouse raporundan **öncesi**:
+
+```
+best-practices: 96  (altı ölçümün hepsinde)
+düşen tek denetim: errors-in-console
+tek konsol hatası: http://localhost:3000/favicon.ico → 404
+```
+
+Beş rota eklendi ve hepsi marka panelindeki kare simgeden **sharp** ile
+üretiliyor: `favicon.ico` · `apple-touch-icon.png` (180) · `icon-192.png` ·
+`icon-512.png` · `manifest.webmanifest`.
+
+⚠️ **Simge yüklenmemiş olsa bile ikon üretiliyor.** "Aslıhan bir görsel
+yükleyene kadar 404 devam etsin" demek sorunu çözmemek olurdu. Simge yoksa
+site adının baş harfinden, marka renkleriyle bir monogram üretiliyor.
+
+⚠️ ICO kabı **elle yazıldı** — sharp ICO yazamıyor. `/favicon.ico` adresine
+PNG servis etmek çoğu tarayıcıda çalışır ama "çalışır" ile "doğru" aynı şey
+değil. ICO, PNG'yi saran 22 baytlık basit bir kap. Doğrulandı:
+
+```
+$ file favicon.ico
+MS Windows icon resource - 1 icon, 32x32 with PNG image data,
+32 x 32, 8-bit/color RGBA, non-interlaced, 32 bits/pixel
+```
+
+Canlı yanıtlar: `/favicon.ico` 200 (636 B) · `/apple-touch-icon.png` 200
+(3,6 kB) · `/icon-192.png` 200 (3,9 kB) · `/icon-512.png` 200 (14,6 kB) ·
+`/manifest.webmanifest` 200.
+
+⚠️ İkonlar **veritabanı erişilemezken bile** döndü (ilk denemede sunucu
+yanlış konağa bağlanıyordu ve ana sayfa 500 veriyordu). Yedek mekanizması
+tasarlandığı gibi çalıştı: favicon sitenin geri kalanına bağlı değil.
+
+### Logo yokken site kırılmıyor
+
+Başlıktaki marka bugüne kadar elle yazılmış "Aslıhan GYD" metniydi. Artık
+`MarkaLogosu` bileşeni: logo varsa görsel, yoksa **metin yedeği**. Dosya
+silinse ya da veritabanı okunamasa da marka görünür.
+
+⚠️ Tema-duyarlı logo seçimi CSS ile, JS ile değil. Tema `data-tema` ile ve
+istemcide seçiliyor; sunucu hangisinin geçerli olduğunu bilmiyor. İki
+logoyu da basıp birini CSS ile gizlemek, ilk boyamada doğrusunun
+görünmesini garanti ediyor — tema titreme önleyicisinin çözdüğü sorunun
+aynısı.
+
+⚠️ Altbilgi bandı iki temada da koyu: orada `daimaKoyuZemin` ile koyu logo
+yeğleniyor, yoksa ana logo, o da yoksa metin.
+
+### Logo boyut bütçesi — kapı değil ayna
+
+50 kB'ı aşan logo **engellenmiyor**, uyarılıyor. Görsel bütçe rozetiyle
+aynı ilke: bazen büyük logo bilinçli karardır ve içerik girişini bloke
+etmek Aslıhan'ı panelde durdururdu.
+
+⚠️ Renk kapısı bundan farklı ve farklı olmalı: kontrast erişilebilirlik,
+dosya boyutu performans. Birincisi pazarlık konusu değil, ikincisi duruma
+göre değişir.
+
+### Yeni bağımlılık: `@payloadcms/ui`
+
+Proje bugüne kadar özel panel bileşenlerini sunucu bileşeni olarak yazdı ve
+bu paketi doğrudan bağımlılık yapmaktan kaçındı (`GorselButceRozeti`
+yorumunda gerekçesi yazılı: "gerekli de değil").
+
+Burada gerekli oldu: "renk seçildiği ANDA kontrast gösterilsin" ve "canlı
+önizleme" istekleri canlı form durumunu okumayı gerektiriyor. Kaydedilmiş
+veriyi okuyan bir sunucu bileşeniyle yapılamaz. Sürüm diğer `@payloadcms/*`
+paketleriyle aynı: `3.87.0`.
+
+### İki koruma testi bu işte konuştu
+
+**1 · Tasarım disiplini testi ham hex yakaladı.** `RenkAlani.tsx` içinde
+`#000000` iki kez geçiyor — `<input type="color">` somut değer bekliyor ve
+yer tutucu biçimi gösteriyor. Muafiyet eklendi ama dosyanın kendi
+kültürüne uyarak **bedeliyle**: yeni bir test o dosyada yalnızca nötr giriş
+değerlerine izin veriyor. Bir marka rengi oraya sabitlenirse palet
+değiştiğinde panel eski markada kalırdı.
+
+**2 · Kendi testim yanlış kapsamdaydı.** `paletCss` enjeksiyon testinde
+`expect(css).not.toContain('--color-zemin:')` yazmıştım ve kırmızı verdi.
+Kod doğruydu: açık tema zehirli değeri süzmüş, **koyu tema kendi geçerli
+zeminini yazmıştı.** İddia açık tema bloğuna daraltıldı. Test, süzgecin
+çalışmadığını değil kendi kapsamının yanlış olduğunu göstermişti.
+
+### Doğrulanmayan tek nokta
+
+⚠️ **Mobil panel görsel olarak denenmedi.** CSS yapısal olarak hazırlandı —
+dokunma hedefleri en az 44 px (WCAG 2.2), kontrast tablosu kendi içinde
+yatay kayıyor, hazır palet kartları `auto-fill` ızgarada. Ama bu ortamda
+tarayıcı yok; gerçek bir telefonda açılıp denenmesi gerekiyor.

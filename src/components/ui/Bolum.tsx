@@ -28,7 +28,7 @@ export function Bolum({
   const zeminler = {
     kagit: '',
     yuzey: 'bg-yuzey-2/60 border-y-[0.5px] border-kenar',
-    kakao: 'bg-kakao-yuzey text-white',
+    kakao: 'bg-kakao-yuzey text-koyu-bant-metin',
     /**
      * ⚠️ PUDRA GÜLÜ ZEMİN — yeni paletin yumuşak bandı.
      *

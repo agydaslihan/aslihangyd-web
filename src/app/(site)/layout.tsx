@@ -17,6 +17,7 @@ import {
   whatsappNumarasi,
 } from '@/lib/kurumsal'
 import { cerezOnayiniOku } from '@/lib/kvkk/sunucu'
+import { markaAyarlari, paletCss } from '@/lib/marka/sunucu'
 import { SITE_ACIKLAMASI, SITE_ADI, SITE_ADRESI } from '@/lib/site'
 
 import './globals.css'
@@ -77,26 +78,64 @@ const yaziBaslik = localFont({
   adjustFontFallback: 'Times New Roman',
 })
 
-export const metadata: Metadata = {
-  metadataBase: new URL(SITE_ADRESI),
-  title: {
-    default: `${SITE_ADI} — Çorlu Gayrimenkul Danışmanlığı`,
-    template: `%s | ${SITE_ADI}`,
-  },
-  description: SITE_ACIKLAMASI,
-  applicationName: SITE_ADI,
-  openGraph: {
-    type: 'website',
-    locale: 'tr_TR',
-    siteName: SITE_ADI,
-    url: SITE_ADRESI,
-  },
-  twitter: { card: 'summary_large_image' },
-  robots: {
-    index: true,
-    follow: true,
-    googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
-  },
+/**
+ * ⚠️ `metadata` SABİT DEĞİL, `generateMetadata` — MARKA PANELİ İÇİN ŞART.
+ *
+ * Site adı, slogan ve paylaşım görseli artık veritabanından geliyor. Sabit
+ * bir `metadata` nesnesi modül yüklenirken bir kez değerlendirilir; panelden
+ * değiştirilen bir ad orada asla görünmezdi.
+ *
+ * ⚠️ İkonlar da buradan bildiriliyor. Rotalar her zaman bir görsel
+ * döndürüyor (simge yüklenmemişse monogram üretiliyor), bu yüzden
+ * `favicon.ico` koşulsuz duruyor — 404 dönen bir favicon Lighthouse'un
+ * Best Practices puanını düşürüyordu.
+ */
+export async function generateMetadata(): Promise<Metadata> {
+  const marka = await markaAyarlari()
+  const ad = marka.siteAdi ?? SITE_ADI
+  const aciklama = marka.slogan ?? SITE_ACIKLAMASI
+
+  return {
+    metadataBase: new URL(SITE_ADRESI),
+    title: {
+      default: `${ad} — Çorlu Gayrimenkul Danışmanlığı`,
+      template: `%s | ${ad}`,
+    },
+    description: aciklama,
+    applicationName: ad,
+    manifest: '/manifest.webmanifest',
+    icons: {
+      icon: [
+        { url: '/favicon.ico', sizes: '32x32' },
+        { url: '/icon-192.png', type: 'image/png', sizes: '192x192' },
+        { url: '/icon-512.png', type: 'image/png', sizes: '512x512' },
+      ],
+      apple: [{ url: '/apple-touch-icon.png', sizes: '180x180' }],
+    },
+    openGraph: {
+      type: 'website',
+      locale: 'tr_TR',
+      siteName: ad,
+      url: SITE_ADRESI,
+      ...(marka.ogGorseli
+        ? {
+            images: [
+              {
+                url: marka.ogGorseli.url,
+                width: marka.ogGorseli.en ?? undefined,
+                height: marka.ogGorseli.boy ?? undefined,
+              },
+            ],
+          }
+        : {}),
+    },
+    twitter: { card: 'summary_large_image' },
+    robots: {
+      index: true,
+      follow: true,
+      googleBot: { index: true, follow: true, 'max-image-preview': 'large' },
+    },
+  }
 }
 
 export const viewport: Viewport = {
@@ -131,10 +170,11 @@ export const viewport: Viewport = {
 }
 
 export default async function SiteLayout({ children }: { children: React.ReactNode }) {
-  const [kurumsal, onay, bolumDurumlari] = await Promise.all([
+  const [kurumsal, onay, bolumDurumlari, marka] = await Promise.all([
     kurumsalBilgileriGetir(),
     cerezOnayiniOku(),
     bolumDurumlariniGetir(),
+    markaAyarlari(),
   ])
 
   /**
@@ -197,6 +237,26 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
               "document.documentElement.setAttribute('data-tema','koyu')}catch(e){}",
           }}
         />
+
+        {/*
+          ⚠️ MARKA RENKLERİ — ÇALIŞMA ZAMANINDA, SUNUCUDA BASILIYOR.
+
+          `globals.css` derleme anında paketlenir. Renkleri oraya yazsaydık
+          Aslıhan panelde rengi değiştirir, kaydeder ve HİÇBİR ŞEY OLMAZDI —
+          `NEXT_PUBLIC_*` tuzağının aynısı. Burada palet veritabanından
+          okunup jetonların üzerine yazılıyor.
+
+          Sunucuda basılması FOUC'u da çözüyor: ilk boyamada doğru renkler
+          yerinde, sonradan sıçrama yok. İstemcide bir efektle yazsaydık
+          ziyaretçi bir kare varsayılan paleti görürdü.
+
+          Değerler `#rrggbb` olarak süzülüyor (`paletCss`); buraya sızacak
+          bir `</style>` enjeksiyon olurdu.
+        */}
+        <style
+          id="marka-paleti"
+          dangerouslySetInnerHTML={{ __html: paletCss(marka.acik, marka.koyu) }}
+        />
       </head>
       <body className="flex min-h-dvh flex-col antialiased">
         <IcerigeAtla />
@@ -205,7 +265,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           eposta={iletisimEpostasi(kurumsal)}
           whatsapp={whatsappNumarasi(kurumsal)}
         />
-        <Baslik menu={menu} whatsapp={whatsappNumarasi(kurumsal)} />
+        <Baslik menu={menu} whatsapp={whatsappNumarasi(kurumsal)} marka={marka} />
 
         <main id="icerik" className="flex-1">
           {children}

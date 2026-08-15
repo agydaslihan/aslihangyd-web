@@ -43,10 +43,11 @@ const GORUNUMLER: Record<Gorunum, string> = {
    * ⚠️ Terracotta DEĞİL: dolu terracotta bant sayfada bölüm ayıracı olarak
    * kullanılıyor; aynı rengi butona da vermek ikisini birbirine karıştırırdı.
    */
-  kakao: 'bg-kakao-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
+  kakao: 'bg-kakao-yuzey text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
   // WhatsApp'ın kurumsal yeşili bilinçli olarak kullanılmıyor: sayfadaki
   // tek parlak renk olurdu ve sakin paleti bozardı. Tanınırlık ikondan gelir.
-  whatsapp: 'bg-kakao-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
+  whatsapp:
+    'bg-kakao-yuzey text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
   /**
    * ⚠️ Metin rengi JETONDAN geliyor, `text-white` DEĞİL.
    *
