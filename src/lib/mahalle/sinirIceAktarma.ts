@@ -1,12 +1,19 @@
 import type { Payload, TypedUser } from 'payload'
 
+import { overpassDene } from '@/lib/osm/istemci'
+import { HazirlikDeposu } from '@/lib/osm/hazirlikDeposu'
+
 import {
+  gruplaraBol,
   ILCE_ADI,
   merkezAdaylariniCoz,
   sinirCevabiniCoz,
-  sinirSorgusu,
+  sinirGeometriSorgusu,
+  sinirKimlikleriniCoz,
+  sinirKimlikSorgusu,
   type MerkezAdayi,
   type SinirAdayi,
+  type SinirKimligi,
 } from './sinirSorgusu'
 import { AZAMI_SINIR, type SinirCozumlemesi } from './sinirSorgusu'
 
@@ -34,17 +41,6 @@ import { AZAMI_SINIR, type SinirCozumlemesi } from './sinirSorgusu'
  * çöpe giderdi.
  * ─────────────────────────────────────────────────────────────────────────
  */
-
-const OVERPASS_ADRESI =
-  process.env.OVERPASS_ADRESI?.trim() || 'https://overpass-api.de/api/interpreter'
-
-/**
- * Ağ zaman aşımı.
- *
- * POI sorgusundan uzun: sınır sorgusu üye yolların bütün koordinatlarını
- * (`out geom`) getiriyor ve `map_to_area` ilçe poligonunu ayrıca çözüyor.
- */
-const ZAMAN_ASIMI_MS = 180_000
 
 export type SinirIslemi =
   /** Mahallede sınır yok — yazılacak. */
@@ -111,49 +107,171 @@ export type SinirDurumu =
   | { durum: 'mahalle_yok' }
   | { durum: 'hazir'; onizleme: SinirOnizlemesi }
 
-/** Overpass'a sorar ve cevabı çözer — iki kademe tek cevaptan. */
-async function overpasstanGetir(
-  sorgu: string,
-): Promise<{ ozet: SinirCozumlemesi; merkezAdaylari: MerkezAdayi[] }> {
-  const kontrol = new AbortController()
-  const zamanlayici = setTimeout(() => kontrol.abort(), ZAMAN_ASIMI_MS)
+/* ══════════════════════════════════════════════════════════════════════════
+   Parçalı hazırlık — 1. faz kimlikler, 2. faz gruplu geometri
+   ══════════════════════════════════════════════════════════════════════════ */
 
-  try {
-    const cevap = await fetch(OVERPASS_ADRESI, {
-      method: 'POST',
-      body: new URLSearchParams({ data: sorgu }),
-      headers: {
-        // ⚠️ Overpass kullanım politikası kendini tanıtmayı istiyor.
-        'User-Agent': 'aslihangyd.com mahalle siniri ice aktarma (iletisim: site sahibi)',
-      },
-      signal: kontrol.signal,
-    })
+/** Bir kullanıcının yarım kalmış içe aktarması. */
+export interface SinirHazirligi {
+  ilceAdi: string
+  gruplar: SinirKimligi[][]
+  /** Sırası tamamlanan grupların indeksi. */
+  tamamlanan: Set<number>
+  /** Şimdiye kadar çözülen sınır adayları — grup indeksine göre. */
+  adaylar: Map<number, SinirAdayi[]>
+  merkezAdaylari: MerkezAdayi[]
+  ozet: SinirCozumlemesi
+  sorgu: string
+}
 
-    if (!cevap.ok) throw new Error(`Overpass ${cevap.status} döndü.`)
+const depo = new HazirlikDeposu<SinirHazirligi>()
 
-    const govde: unknown = await cevap.json()
+export type HazirlikDurumu =
+  | { durum: 'mahalle_yok' }
+  | { durum: 'yeniden_denenebilir'; mesaj: string }
+  | { durum: 'hata'; mesaj: string }
+  | { durum: 'hazir'; grupSayisi: number; sinirSayisi: number; merkezSayisi: number; sorgu: string }
 
-    /**
-     * ⚠️ SESSİZ SIFIR KORUMASI.
-     *
-     * Overpass aşırı yüklendiğinde bazen HTTP 200 + geçerli JSON döndürür;
-     * `elements` boştur ve sebep yalnızca `remark` alanında yazar. Bu
-     * kontrol olmadan sunucu arızası ile "bölgede gerçekten sınır yok"
-     * ekranda AYNI görünür — ikisi bambaşka şeyler ve bambaşka davranış
-     * gerektirir (biri "tekrar dene", diğeri "elle çiz").
-     *
-     * Sunucu meşgulken çoğu zaman HTTP 504 döndüğü için yukarıdaki
-     * `cevap.ok` kontrolü yakalıyor; bu, onun kaçırdığı hâli kapatıyor.
-     */
-    const not = (govde as { remark?: unknown })?.remark
-    if (typeof not === 'string' && not.trim() !== '') {
-      throw new Error(`OpenStreetMap sunucusu sorguyu tamamlayamadı: ${not.trim()}`)
+/**
+ * 1. faz — ilçedeki sınır kimlikleri ve yer düğümleri.
+ *
+ * ⚠️ Bu sorgu geometri İSTEMİYOR (`out tags;`). Ağır olan üye koordinatları
+ * 2. fazda, gruplar hâlinde çekiliyor. 504'ün asıl sebebi tek büyük sorguydu.
+ */
+export async function sinirHazirligiBaslat(
+  payload: Payload,
+  user: TypedUser,
+  denemeSirasi = 1,
+  ilceAdi: string = ILCE_ADI,
+): Promise<HazirlikDurumu> {
+  const mahalleler = await mahalleleriGetir(payload, user)
+  if (mahalleler.length === 0) return { durum: 'mahalle_yok' }
+
+  const sorgu = sinirKimlikSorgusu(ilceAdi)
+  const cevap = await overpassDene(sorgu, { denemeSirasi, zamanAsimiMs: 90_000 })
+
+  if (cevap.durum !== 'tamam') return { durum: cevap.durum, mesaj: cevap.mesaj }
+
+  const kimlikler = sinirKimlikleriniCoz(cevap.veri)
+  if (kimlikler.length > AZAMI_SINIR) {
+    return {
+      durum: 'hata',
+      mesaj:
+        `Sorgu ${kimlikler.length} sınır döndürdü; tek seferde en fazla ${AZAMI_SINIR} ` +
+        'işleniyor. İlçe adı yanlış yazılmış olabilir.',
     }
-
-    return { ozet: sinirCevabiniCoz(govde), merkezAdaylari: merkezAdaylariniCoz(govde) }
-  } finally {
-    clearTimeout(zamanlayici)
   }
+
+  const gruplar = gruplaraBol(kimlikler)
+  const merkezAdaylari = merkezAdaylariniCoz(cevap.veri)
+
+  depo.yaz(kullaniciAnahtari(user), {
+    ilceAdi,
+    gruplar,
+    tamamlanan: new Set(),
+    adaylar: new Map(),
+    merkezAdaylari,
+    ozet: { adaylar: [], adsizAtlandi: 0, geometrisizAtlandi: 0 },
+    sorgu,
+  })
+
+  return {
+    durum: 'hazir',
+    grupSayisi: gruplar.length,
+    sinirSayisi: kimlikler.length,
+    merkezSayisi: merkezAdaylari.length,
+    sorgu,
+  }
+}
+
+export type GrupDurumu =
+  | { durum: 'hazirlik_yok' }
+  | { durum: 'yeniden_denenebilir'; mesaj: string }
+  | { durum: 'hata'; mesaj: string }
+  | { durum: 'tamam'; gelen: number; atlanan: number }
+
+/**
+ * 2. faz — tek grubun geometrisi.
+ *
+ * ⚠️ Sonuç istemciye DÖNMÜYOR, depoda birikiyor. İstemci yalnızca sayıları
+ * görüyor; poligonlar sunucudan hiç çıkmıyor.
+ */
+export async function sinirGrubunuGetir(
+  user: TypedUser,
+  grupSirasi: number,
+  denemeSirasi = 1,
+): Promise<GrupDurumu> {
+  const hazirlik = depo.oku(kullaniciAnahtari(user))
+  if (!hazirlik) return { durum: 'hazirlik_yok' }
+
+  const grup = hazirlik.gruplar[grupSirasi]
+  if (!grup) return { durum: 'hata', mesaj: `${grupSirasi}. grup bulunamadı.` }
+
+  // Zaten gelmişse tekrar sorma — nezaket ve hız.
+  if (hazirlik.tamamlanan.has(grupSirasi)) {
+    return { durum: 'tamam', gelen: hazirlik.adaylar.get(grupSirasi)?.length ?? 0, atlanan: 0 }
+  }
+
+  // `dagitim`: her grup farklı aynadan başlasın; hepsi birinci sunucuya
+  // yığılmasın. Ölçümde 429'un sebebi tam olarak buydu.
+  const cevap = await overpassDene(sinirGeometriSorgusu(grup), {
+    denemeSirasi,
+    dagitim: grupSirasi,
+    zamanAsimiMs: 120_000,
+  })
+  if (cevap.durum !== 'tamam') return { durum: cevap.durum, mesaj: cevap.mesaj }
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BOŞ CEVAP BAŞARI DEĞİLDİR — BÖLGESEL AYNA KAPISI.
+   *
+   * Bu sorgu ADI SANI BELLİ kimlikleri istiyor; onların var olduğunu 1.
+   * fazda gördük. Sıfır öğe dönmesinin tek makul açıklaması, sorulan
+   * sunucunun o bölgeyi hiç tanımaması.
+   *
+   * Gerçekten yaşandı: `overpass.osm.ch` Türkiye kimlikleri için HTTP 200
+   * ve boş `elements` döndürüyor — hata yok, `remark` yok. Bu kapı olmasa
+   * o cevap "grup başarıyla geldi, içinde sınır yokmuş" diye kaydedilir ve
+   * mahalleler sessizce sınırsız kalırdı.
+   *
+   * Geçici sayılıyor: bir sonraki deneme başka aynaya gidiyor ve oradan
+   * gerçek veri geliyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  const gelenOgeSayisi = Array.isArray((cevap.veri as { elements?: unknown })?.elements)
+    ? ((cevap.veri as { elements: unknown[] }).elements.length ?? 0)
+    : 0
+
+  if (gelenOgeSayisi === 0 && grup.length > 0) {
+    return {
+      durum: 'yeniden_denenebilir',
+      mesaj:
+        `${cevap.sunucu} istenen ${grup.length} kaydın hiçbirini döndürmedi. ` +
+        'Bu sunucu bölgesel olabilir (yalnızca belirli bir ülkeyi sunuyor); başka ayna deneniyor.',
+    }
+  }
+
+  const cozum = sinirCevabiniCoz(cevap.veri)
+
+  hazirlik.adaylar.set(grupSirasi, cozum.adaylar)
+  hazirlik.tamamlanan.add(grupSirasi)
+  hazirlik.ozet = {
+    adaylar: [...hazirlik.adaylar.values()].flat(),
+    adsizAtlandi: hazirlik.ozet.adsizAtlandi + cozum.adsizAtlandi,
+    geometrisizAtlandi: hazirlik.ozet.geometrisizAtlandi + cozum.geometrisizAtlandi,
+  }
+
+  return {
+    durum: 'tamam',
+    gelen: cozum.adaylar.length,
+    atlanan: cozum.adsizAtlandi + cozum.geometrisizAtlandi,
+  }
+}
+
+/** Payload kullanıcısının depo anahtarı. */
+function kullaniciAnahtari(user: TypedUser): string | number {
+  const kimlik = (user as { id?: string | number } | null)?.id
+  return kimlik ?? 'oturumsuz'
 }
 
 interface MahalleKaydi {
@@ -201,27 +319,28 @@ function islemiBelirle(mahalle: MahalleKaydi): SinirIslemi {
 export async function sinirOnizlemesiHazirla(
   payload: Payload,
   user: TypedUser,
-  ilceAdi: string = ILCE_ADI,
 ): Promise<SinirDurumu> {
   const mahalleler = await mahalleleriGetir(payload, user)
   if (mahalleler.length === 0) return { durum: 'mahalle_yok' }
 
-  const sorgu = sinirSorgusu(ilceAdi)
-
-  let ozet: SinirCozumlemesi
-  let merkezAdaylari: MerkezAdayi[]
-  try {
-    ;({ ozet, merkezAdaylari } = await overpasstanGetir(sorgu))
-  } catch (hata) {
+  /**
+   * ⚠️ Overpass'a BURADA SORULMUYOR. Veri parçalı hazırlıkta toplandı ve
+   * depoda duruyor. Eski akış önizlemede bir kez, yazmada bir kez daha
+   * sorguluyordu — paylaşımlı bir kaynağa iki kat yük ve 504 için iki kat
+   * fırsat.
+   */
+  const hazirlik = depo.oku(kullaniciAnahtari(user))
+  if (!hazirlik) {
     return {
       durum: 'hata',
       mesaj:
-        hata instanceof Error && hata.name === 'AbortError'
-          ? 'OpenStreetMap sunucusu zamanında yanıt vermedi. Sınır sorgusu ağırdır; ' +
-            'birkaç dakika sonra tekrar deneyin.'
-          : `OpenStreetMap sunucusuna ulaşılamadı: ${hata instanceof Error ? hata.message : 'bilinmeyen hata'}`,
+        'Hazırlık bulunamadı ya da zaman aşımına uğradı. "Sınırları önizle" ile baştan başlayın.',
     }
   }
+
+  const ozet = hazirlik.ozet
+  const merkezAdaylari = hazirlik.merkezAdaylari
+  const sorgu = hazirlik.sorgu
 
   if (ozet.adaylar.length > AZAMI_SINIR) {
     return {
@@ -332,9 +451,8 @@ export interface SinirYazmaSonucu {
 export async function sinirlariYaz(
   payload: Payload,
   user: TypedUser,
-  ilceAdi: string = ILCE_ADI,
 ): Promise<{ basarili: boolean; mesaj?: string; sonuc?: SinirYazmaSonucu }> {
-  const durum = await sinirOnizlemesiHazirla(payload, user, ilceAdi)
+  const durum = await sinirOnizlemesiHazirla(payload, user)
 
   if (durum.durum === 'mahalle_yok') {
     return { basarili: false, mesaj: 'Sistemde hiç mahalle kaydı yok.' }
@@ -418,6 +536,15 @@ export async function sinirlariYaz(
       })
     }
   }
+
+  /**
+   * ⚠️ Hazırlık yazıldıktan sonra düşürülüyor.
+   *
+   * Kalsaydı ikinci kez "Yaz" basmak aynı bayat geometriyi tekrar yazardı
+   * ve panel bunu yeni bir içe aktarma sanardı. Bir sonraki içe aktarma
+   * OSM'e yeniden sorsun.
+   */
+  depo.sil(kullaniciAnahtari(user))
 
   return { basarili: true, sonuc }
 }

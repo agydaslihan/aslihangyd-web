@@ -4402,3 +4402,147 @@ sessizce konumsuz bir kayıt olarak duruyor ve her içe aktarmada
 ⚠️ Kayıt zaten açılmışsa panelden silinmesi gerekiyor: içe aktarma hiçbir
 kaydı silmez, yalnızca "listede olmayan kayıtlar" başlığı altında gösterir.
 Panel metni ve kılavuz ikisini de adıyla anıyor.
+
+---
+
+## Overpass 504'ü — dayanıklı içe aktarma (15 Ağustos 2026)
+
+Aslıhan'ın bildirdiği durum: 504 hem sınır hem POI içe aktarmada
+**tekrarlıyor**. Doğru teşhis kendisinden geldi — bu bir kerelik arıza
+değil, ücretsiz ve paylaşımlı bir kaynağın normal davranışı. Her denemede
+şansa bağlı kalmak kabul edilemez.
+
+### Beş cephe
+
+| # | Ne | Nerede |
+| --- | --- | --- |
+| 1 | Üstel beklemeyle otomatik yeniden deneme (5/15/45 sn, 4 deneme) | `lib/osm/yenidenDeneme.ts` + `components/osm/denemeliCalistir.ts` |
+| 2 | Yedek sunucu — her deneme başka aynaya | `lib/osm/istemci.ts` |
+| 3 | Sorguyu parçalama | `sinirSorgusu.ts` (2 faz) · `iceAktarma.ts` (kutu kutu) |
+| 4 | Kısmi sonuç saklama + "kalanları tekrar dene" | `hazirlikDeposu.ts` + iki sihirbaz |
+| 5 | Aynısı POI'de | `lib/osm/iceAktarma.ts`, `OsmSihirbazi.tsx` |
+
+### ⚠️ Yeniden deneme neden İSTEMCİDE
+
+Sunucu eyleminin içinde olsaydı kullanıcı bir dakika boyunca donmuş bir
+butona bakardı — ne olduğunu bilmeden, iptal edemeden. Sunucu eylemi ara
+durum yayınlayamaz. Şimdi her bekleme saniye saniye geri sayılıyor:
+*"OpenStreetMap sunucusu yoğun, 15 sn sonra tekrar denenecek (2/4)"*.
+
+Bekleme sayıları tek kaynakta (`yenidenDeneme.ts`) — ekranda sayan ile
+uygulayan aynı değeri okumalı.
+
+### ⚠️ Geometri istemciye inmiyor
+
+Parçalı akışta döngüyü istemci sürüyor. En kolay yol her parçanın sonucunu
+istemciye yollayıp yazma anında geri almak olurdu — ve bu, ağ isteğini
+düzenleyen birinin panelde gördüğünden bambaşka bir poligon yazdırmasına
+kapı açardı.
+
+Onun yerine parça sonuçları sunucuda `HazirlikDeposu` içinde birikiyor.
+İstemci yalnızca "kaçıncı parça, kaç kayıt geldi" görüyor.
+
+İkinci faydası nezaket: **önizleme ile yazma arasında Overpass'a ikinci kez
+sorulmuyor.** Eski akış yazarken bütün sorguyu baştan çalıştırıyordu — yani
+paylaşımlı kaynağa iki kat yük ve 504 için iki kat fırsat.
+
+### Sınır sorgusu ikiye bölündü
+
+| Faz | Sorgu | Ağırlık |
+| --- | --- | --- |
+| 1 | `map_to_area` + `out tags;` — kimlikler ve yer düğümleri | 13 KB, **2,1 sn** |
+| 2 | `relation(id:…); out body geom;` — grup grup | grup başına 0,3–9,5 sn |
+
+2. fazda `map_to_area` yok, alan taraması yok. Ağır olan üye koordinatları
+gruplara bölündü; bir grup düşerse yalnızca o grup yeniden isteniyor.
+
+### Grup boyutu tahminle değil ÖLÇÜMLE seçildi
+
+Önce 5 yazmıştım. Canlı ölçüm:
+
+```
+beşerli gruplar → 6 grubun 3'ü ilk denemede 429/504
+tek ilişki      → 0,6–2,6 sn, düzenli başarı
+```
+
+Üç, bu ikisi arasında bilinçli orta yol: 26 mahalle için dokuz istek. Daha
+küçültmek istek sayısını gereksiz artırırdı; Overpass'ın kullanım politikası
+toplam işlem yükünü de sayıyor.
+
+### ⚠️ 429'un sebebi parçalamanın kendisiydi
+
+İlk ölçümde altı grubun üçü **429 (çok fazla istek)** aldı. Sebep şuydu:
+altı istek de arka arkaya **aynı sunucuya** gidiyordu. Parçalamak, tek bir
+sunucuya yağmur yağdırmaya dönüşmüştü.
+
+İki düzeltme:
+- Sunucu seçimi artık `dagitim + denemeSirasi` ile yapılıyor — her parça
+  farklı aynadan başlıyor
+- Nezaket aralığı süreç geneli değil **sunucu başına** (2 sn); farklı
+  aynalara giden istekler birbirini beklemiyor
+
+### ⚠️⚠️ HER AÇIK ÖRNEK KÜRESEL VERİ SUNMUYOR — az kalsın kaçıyordu
+
+Listeye `overpass.osm.ch` de konmuştu. Ölçüm çıktısındaki bayt sayıları
+tuhaftı: o sunucudan gelen dört grup **272 bayt** idi. Kontrol edildi:
+
+```
+overpass-api.de   → 1 öğe, "Muhittin Mahallesi"
+overpass.osm.ch   → 0 öğe, remark yok, hata yok, HTTP 200
+```
+
+O örnek yalnızca İsviçre bölgesini sunuyor ve Türkiye kimlikleri için
+**sessizce boş cevap** veriyor. Fark edilmeseydi dört grup "başarıyla" boş
+gelir, **12 mahalle hiçbir hata mesajı olmadan sınırsız kalırdı.**
+
+Projenin sürekli savaştığı arıza sınıfının ta kendisi: sunucu arızası ile
+"kayıt yok" ekranda aynı görünür.
+
+İki koruma eklendi:
+1. `overpass.osm.ch` listeden çıkarıldı; kalan üç sunucunun küresel veri
+   sunduğu ölçümle doğrulandı. Bir test o adresi geri koymayı zorlaştırıyor.
+2. **Yapısal kapı:** 2. faz adı sanı belli kimlikleri istiyor ve onların var
+   olduğunu 1. fazda gördük. Sıfır öğe dönmesi geçerli bir başarı değil —
+   `yeniden_denenebilir` sayılıyor ve bir sonraki ayna deneniyor. Bu kapı,
+   ileride yapılandırılacak herhangi bir bölgesel aynayı da yakalar.
+
+Bayt sayısına bakmasaydım bu hata testlerden, tip denetiminden ve
+derlemeden geçip yayına giderdi. "Yeşil" ile "doğru" ayrı şeyler.
+
+### Uçtan uca ölçüm — düzeltilmiş yapılandırma
+
+```
+grup 0 (3 ilişki): ✅ overpass-api.de        0,5 sn, 3 öğe (deneme 1)
+grup 1 (3 ilişki): ✅ overpass.kumi.systems  5,5 sn, 3 öğe (deneme 1)
+grup 2 (3 ilişki): ✅ overpass.private.coffee 73,1 sn, 3 öğe (deneme 1)
+grup 3 (3 ilişki): ✅ overpass-api.de        1,6 sn, 3 öğe (deneme 1)
+grup 4 (3 ilişki): ✅ overpass.kumi.systems  6,6 sn, 3 öğe (deneme 1)
+grup 5 (3 ilişki): ✅ overpass.private.coffee 9,5 sn, 3 öğe (deneme 1)
+grup 6 (3 ilişki): ✅ overpass-api.de        0,3 sn, 3 öğe (deneme 1)
+grup 7: ✗ kumi 000 → ✅ private.coffee  6,9 sn (deneme 2)
+grup 8: ✗ private.coffee 000 → ✗ overpass-api.de 504 → ✅ kumi (deneme 3)
+
+9/9 grup · 26/26 ilişki · 12 istek · 584 sn
+```
+
+⚠️ **Dürüst not: 584 sn'nin çoğu iki bağlantı zaman aşımı.** Yedi grup ilk
+denemede ve saniyeler içinde geldi; iki grup dakikalar sürdü. Yani "artık
+hızlı" demek yanlış olur — doğru olan şu: **artık şansa bağlı değil.**
+İlerleme çubuğu ve kısmi sonuç, uzun süren durumu katlanılır kılıyor.
+
+### Nezaket
+
+Overpass'ın açık örnekleri ücretsiz. Dört koruma birlikte:
+
+- `User-Agent` projeyi ve adresi tanıtıyor (kullanım politikasının isteği)
+- Aynı sunucuya iki istek arasında en az 2 sn
+- En fazla 4 deneme, üstel bekleme (5/15/45 sn)
+- **400 ve 403 yeniden DENENMEZ** — ilki bizim hatamız, ikincisi "yeter
+  artık" demektir. İkisinde de ısrar etmek kaynağı kötüye kullanmaktır
+
+### Yapılandırma
+
+Yeni ortam değişkeni **eklenmedi**. `OVERPASS_ADRESI` artık virgülle
+ayrılmış liste kabul ediyor; tek adres yazan mevcut kurulumlar aynen
+çalışmaya devam ediyor. Yeni bir değişken, sunucudaki `.env`i düzenlemeyi
+unutan birini sessizce yedeksiz bırakırdı.

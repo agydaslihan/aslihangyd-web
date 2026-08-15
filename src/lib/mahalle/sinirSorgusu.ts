@@ -173,7 +173,7 @@ export interface SinirCozumlemesi {
  * hâlinde cevap 87 öğeydi ve 59'u adsız parçaydı; panelde "59 sınır adı
  * olmadığı için atlandı" satırı, veri kaybedilmiş izlenimi veriyordu.
  */
-export function sinirSorgusu(ilceAdi: string = ILCE_ADI, zamanAsimiSaniye = 180): string {
+export function sinirKimlikSorgusu(ilceAdi: string = ILCE_ADI, zamanAsimiSaniye = 90): string {
   const ad = ilceAdi.replace(/["\\]/g, '')
   const seviyeler = `^(${MAHALLE_IDARI_SEVIYELERI.join('|')})$`
   const yerler = `^(${YER_TURLERI.join('|')})$`
@@ -186,10 +186,10 @@ export function sinirSorgusu(ilceAdi: string = ILCE_ADI, zamanAsimiSaniye = 180)
     `  relation(area.ilce)["boundary"="administrative"]["admin_level"~"${seviyeler}"]["name"];`,
     `  way(area.ilce)["boundary"="administrative"]["admin_level"~"${seviyeler}"]["name"];`,
     ');',
-    'out body geom;',
-    // ── İkinci kademe: sınırı olmayan mahallenin merkezi ──
-    // Ayrı `out` gerekiyor: burada üye geometrisi değil MERKEZ isteniyor.
-    // `out center` düğümde lat/lon, alan ve ilişkide ağırlık merkezi verir.
+    // Yalnızca kimlik ve etiket — geometri 2. fazda, gruplar hâlinde.
+    'out tags;',
+    // ── Merkez yedeği aynı fazda: yer düğümleri zaten küçük ve `out center`
+    //    üye geometrisi istemediği için bu sorguyu ağırlaştırmıyor. ──
     '(',
     `  node(area.ilce)["place"~"${yerler}"]["name"];`,
     `  way(area.ilce)["place"~"${yerler}"]["name"];`,
@@ -197,6 +197,99 @@ export function sinirSorgusu(ilceAdi: string = ILCE_ADI, zamanAsimiSaniye = 180)
     ');',
     'out center tags;',
   ].join('\n')
+}
+
+/** 1. fazdan çıkan sınır kaydı — geometrisi henüz yok. */
+export interface SinirKimligi {
+  tur: 'relation' | 'way'
+  kimlik: number
+  osmAdi: string
+}
+
+/**
+ * 1. fazın cevabından sınır kimliklerini toplar.
+ *
+ * ⚠️ Yer öğeleri elenir: onların işi bitti, merkezleri aynı cevaptan
+ * `merkezAdaylariniCoz` ile okunuyor.
+ */
+export function sinirKimlikleriniCoz(ham: unknown): SinirKimligi[] {
+  const ogeler = (ham as { elements?: unknown })?.elements
+  if (!Array.isArray(ogeler)) return []
+
+  const kimlikler: SinirKimligi[] = []
+  const gorulen = new Set<string>()
+
+  for (const hamOge of ogeler) {
+    const oge = (hamOge ?? {}) as OverpassOgesi
+    if (oge.type !== 'relation' && oge.type !== 'way') continue
+    if (oge.tags?.['boundary'] !== 'administrative') continue
+
+    const osmAdi = oge.tags?.['name']?.trim() ?? ''
+    if (osmAdi === '') continue
+    if (typeof oge.id !== 'number') continue
+
+    const anahtar = `${oge.type}/${oge.id}`
+    if (gorulen.has(anahtar)) continue
+    gorulen.add(anahtar)
+
+    kimlikler.push({ tur: oge.type, kimlik: oge.id, osmAdi })
+  }
+
+  return kimlikler
+}
+
+/**
+ * 2. faz — verilen kimliklerin geometrisi.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN PARÇALI: 504'ÜN ASIL SEBEBİ TEK BÜYÜK SORGUYDU
+ *
+ * 26 mahallenin bütün üye yollarını tek istekte çekmek, Overpass'ın açık
+ * örneklerinde zaman aşımına en yakın işti. Bu sorguda `map_to_area` yok,
+ * alan taraması yok — yalnızca sayılı kimliklerin geometrisi isteniyor.
+ * Beşerli gruplarda çalıştığında her istek saniyeler sürüyor.
+ *
+ * Yan faydası: bir grup düşerse yalnızca o grup yeniden deneniyor, gelen
+ * 20 mahalle çöpe gitmiyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function sinirGeometriSorgusu(
+  kimlikler: readonly SinirKimligi[],
+  zamanAsimiSaniye = 120,
+): string {
+  const iliskiler = kimlikler.filter((k) => k.tur === 'relation').map((k) => k.kimlik)
+  const yollar = kimlikler.filter((k) => k.tur === 'way').map((k) => k.kimlik)
+
+  const satirlar = [`[out:json][timeout:${zamanAsimiSaniye}];`, '(']
+  if (iliskiler.length > 0) satirlar.push(`  relation(id:${iliskiler.join(',')});`)
+  if (yollar.length > 0) satirlar.push(`  way(id:${yollar.join(',')});`)
+  satirlar.push(');', 'out body geom;')
+
+  return satirlar.join('\n')
+}
+
+/**
+ * Kimlikleri gruplara böler.
+ *
+ * ⚠️ Grup boyutu ÖLÇÜMLE seçildi, tahminle değil.
+ *
+ * 15 Ağustos 2026, canlı Overpass:
+ *   · beşerli gruplar → altı grubun üçü ilk denemede 429/504
+ *   · tek ilişki      → 0,6–2,6 sn, düzenli başarı
+ *
+ * Küçük sorgu daha çabuk dönüyor ve zaman aşımına uğramıyor. Üç, bu ikisi
+ * arasında bilinçli bir orta yol: 26 mahalle için dokuz istek. Daha da
+ * küçültmek istek sayısını gereksiz artırırdı; Overpass'ın kullanım
+ * politikası toplam işlem yükünü de sayıyor.
+ */
+export const GRUP_BOYUTU = 3
+
+export function gruplaraBol<T>(ogeler: readonly T[], boyut: number = GRUP_BOYUTU): T[][] {
+  const gruplar: T[][] = []
+  for (let i = 0; i < ogeler.length; i += boyut) {
+    gruplar.push(ogeler.slice(i, i + boyut))
+  }
+  return gruplar
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

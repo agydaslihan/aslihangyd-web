@@ -2,11 +2,15 @@
 
 import { useState, useTransition } from 'react'
 
+import { denemeliCalistir, type DenemeBilgisi } from '@/components/osm/denemeliCalistir'
+import { yenidenDenemeMetni } from '@/lib/osm/yenidenDeneme'
 import {
   mahalleListesiniOnizle,
   mahalleListesiniYaz,
   mahalleSinirlariniOnizle,
   mahalleSinirlariniYaz,
+  sinirGrubunuIndir,
+  sinirHazirliginiBaslat,
 } from '@/lib/mahalle/eylemler'
 import type { ListeOnizlemesi, ListeYazmaSonucu } from '@/lib/mahalle/listeIceAktarma'
 import type { SinirOnizlemesi, SinirYazmaSonucu } from '@/lib/mahalle/sinirIceAktarma'
@@ -166,7 +170,7 @@ function ListeAdimi({
           <button
             type="button"
             className="aktarim-buton"
-            onClick={yaz}
+            onClick={() => void yaz()}
             disabled={bekliyor || yazilacak === 0}
           >
             {bekliyor ? 'Açılıyor…' : `${yazilacak} kaydı oluştur/güncelle`}
@@ -198,36 +202,198 @@ function ListeAdimi({
    2 · Sınırlar
    ══════════════════════════════════════════════════════════════════════════ */
 
+/** Parçalı indirmenin ilerlemesi. */
+interface Ilerleme {
+  toplam: number
+  tamamlanan: number
+  /** Dört denemede de gelmeyen grupların sırası. */
+  basarisiz: number[]
+}
+
+/**
+ * İlerleme çubuğu ve yeniden deneme göstergesi.
+ *
+ * ⚠️ İkisi ayrı satırda: biri "nerede olduğumuzu", diğeri "neden
+ * beklediğimizi" söylüyor. Tek satıra sıkıştırmak, bekleme sırasında
+ * ilerlemeyi görünmez kılardı.
+ */
+function IlerlemeCubugu({
+  ilerleme,
+  deneme,
+}: {
+  ilerleme: Ilerleme
+  deneme: DenemeBilgisi | null
+}) {
+  const yuzde = ilerleme.toplam === 0 ? 0 : (ilerleme.tamamlanan / ilerleme.toplam) * 100
+
+  return (
+    <div style={{ marginTop: '1rem' }}>
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={ilerleme.toplam}
+        aria-valuenow={ilerleme.tamamlanan}
+        aria-label="Sınır grupları indiriliyor"
+        style={{
+          height: '0.5rem',
+          borderRadius: '999px',
+          background: 'var(--theme-elevation-100)',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: `${yuzde}%`,
+            height: '100%',
+            background: 'var(--theme-success-500)',
+            transition: 'width 200ms ease',
+          }}
+        />
+      </div>
+
+      <p className="aktarim-not" aria-live="polite">
+        {ilerleme.tamamlanan}/{ilerleme.toplam} grup indirildi
+        {ilerleme.basarisiz.length > 0 ? ` · ${ilerleme.basarisiz.length} grup düştü` : ''}
+      </p>
+
+      {deneme ? (
+        <p className="aktarim-not" aria-live="polite">
+          {yenidenDenemeMetni(deneme.deneme, deneme.kalanSaniye)}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 function SinirAdimi() {
   const [onizleme, setOnizleme] = useState<SinirOnizlemesi | null>(null)
   const [sonuc, setSonuc] = useState<SinirYazmaSonucu | null>(null)
   const [hata, setHata] = useState<string | null>(null)
   const [mahalleYok, setMahalleYok] = useState(false)
-  const [bekliyor, basla] = useTransition()
+  const [bekliyor, setBekliyor] = useState(false)
+  const [deneme, setDeneme] = useState<DenemeBilgisi | null>(null)
+  const [ilerleme, setIlerleme] = useState<Ilerleme | null>(null)
 
-  function onizle(): void {
+  /**
+   * Tek grubu indirir; geçici hatada üstel beklemeyle yeniden dener.
+   *
+   * ⚠️ Kalıcı hata ile geçici hata AYRI: 400 (bozuk sorgu) ya da 403
+   * (engellendi) tekrar denenmiyor. Paylaşımlı bir kaynağa cevabını
+   * duymadan yüklenmek nezaketsizlik olurdu.
+   */
+  async function grubuIndir(sira: number): Promise<boolean> {
+    const cevap = await denemeliCalistir({
+      cagir: (denemeSirasi) => sinirGrubunuIndir(sira, denemeSirasi),
+      geciciMi: (c) => c.durum === 'yeniden_denenebilir',
+      mesajAl: (c) => (c.durum === 'yeniden_denenebilir' ? c.mesaj : ''),
+      bildir: setDeneme,
+    })
+    setDeneme(null)
+    return cevap.durum === 'tamam'
+  }
+
+  /** Önizlemeyi sunucudaki birikmiş hazırlıktan kurar. */
+  async function onizlemeyiKur(): Promise<void> {
+    const durum = await mahalleSinirlariniOnizle()
+    if (durum.durum === 'hazir') setOnizleme(durum.onizleme)
+    else if (durum.durum === 'mahalle_yok') setMahalleYok(true)
+    else setHata(durum.mesaj)
+  }
+
+  async function onizle(): Promise<void> {
     setSonuc(null)
     setHata(null)
     setMahalleYok(false)
-    basla(async () => {
-      const durum = await mahalleSinirlariniOnizle()
-      if (durum.durum === 'hazir') setOnizleme(durum.onizleme)
-      else if (durum.durum === 'mahalle_yok') setMahalleYok(true)
-      else setHata(durum.mesaj)
-    })
+    setOnizleme(null)
+    setIlerleme(null)
+    setBekliyor(true)
+
+    try {
+      // ── 1. faz: kimlikler (ucuz sorgu, geometri istemez) ──
+      const hazirlik = await denemeliCalistir({
+        cagir: (denemeSirasi) => sinirHazirliginiBaslat(denemeSirasi),
+        geciciMi: (c) => c.durum === 'yeniden_denenebilir',
+        mesajAl: (c) => (c.durum === 'yeniden_denenebilir' ? c.mesaj : ''),
+        bildir: setDeneme,
+      })
+      setDeneme(null)
+
+      if (hazirlik.durum === 'mahalle_yok') {
+        setMahalleYok(true)
+        return
+      }
+      if (hazirlik.durum !== 'hazir') {
+        setHata(hazirlik.mesaj)
+        return
+      }
+
+      // ── 2. faz: gruplar ──
+      const basarisiz: number[] = []
+      for (let sira = 0; sira < hazirlik.grupSayisi; sira += 1) {
+        setIlerleme({ toplam: hazirlik.grupSayisi, tamamlanan: sira, basarisiz: [...basarisiz] })
+        if (!(await grubuIndir(sira))) basarisiz.push(sira)
+      }
+      setIlerleme({
+        toplam: hazirlik.grupSayisi,
+        tamamlanan: hazirlik.grupSayisi,
+        basarisiz: [...basarisiz],
+      })
+
+      /**
+       * ⚠️ KISMİ SONUÇ KORUNUYOR. Bir grup dört denemede de gelmezse
+       * diğerleri çöpe gitmiyor: önizleme gelenlerle kuruluyor ve
+       * "kalanları tekrar dene" düğmesi yalnızca düşen grupları istiyor.
+       */
+      await onizlemeyiKur()
+    } finally {
+      setDeneme(null)
+      setBekliyor(false)
+    }
   }
 
-  function yaz(): void {
+  /** Yalnızca düşen grupları yeniden ister. */
+  async function kalanlariDene(): Promise<void> {
+    const dusenler = ilerleme?.basarisiz ?? []
+    if (dusenler.length === 0) return
+
     setHata(null)
-    basla(async () => {
+    setBekliyor(true)
+    try {
+      const halaDusen: number[] = []
+      for (const sira of dusenler) {
+        if (!(await grubuIndir(sira))) halaDusen.push(sira)
+      }
+      setIlerleme((onceki) =>
+        onceki
+          ? {
+              ...onceki,
+              tamamlanan: onceki.toplam - halaDusen.length,
+              basarisiz: halaDusen,
+            }
+          : onceki,
+      )
+      await onizlemeyiKur()
+    } finally {
+      setDeneme(null)
+      setBekliyor(false)
+    }
+  }
+
+  async function yaz(): Promise<void> {
+    setHata(null)
+    setBekliyor(true)
+    try {
       const cevap = await mahalleSinirlariniYaz()
       if (cevap.basarili && cevap.sonuc) {
         setSonuc(cevap.sonuc)
         setOnizleme(null)
+        setIlerleme(null)
       } else {
         setHata(cevap.mesaj ?? 'Sınırlar yazılamadı.')
       }
-    })
+    } finally {
+      setBekliyor(false)
+    }
   }
 
   const merkezSayisi = onizleme?.merkezSatirlari.length ?? 0
@@ -257,9 +423,37 @@ function SinirAdimi() {
         çalışır. Elle koordinat girmeniz gerekmez.
       </p>
 
-      <button type="button" className="aktarim-buton" onClick={onizle} disabled={bekliyor}>
+      <button
+        type="button"
+        className="aktarim-buton"
+        onClick={() => void onizle()}
+        disabled={bekliyor}
+      >
         {bekliyor ? 'OpenStreetMap sorgulanıyor…' : 'Sınırları önizle'}
       </button>
+
+      {ilerleme ? <IlerlemeCubugu ilerleme={ilerleme} deneme={deneme} /> : null}
+
+      {/* ⚠️ KISMİ SONUÇ: düşen gruplar gelenleri geçersiz kılmıyor. */}
+      {ilerleme && ilerleme.basarisiz.length > 0 && !bekliyor ? (
+        <div className="aktarim-hata">
+          <strong>
+            {ilerleme.toplam - ilerleme.basarisiz.length}/{ilerleme.toplam} grup geldi.
+          </strong>{' '}
+          {ilerleme.basarisiz.length} grup dört denemede de gelmedi — OpenStreetMap sunucuları şu an
+          yoğun. Gelenler duruyor, kaybolmadı.
+          <p style={{ marginTop: '0.75rem' }}>
+            <button
+              type="button"
+              className="aktarim-buton"
+              onClick={() => void kalanlariDene()}
+              disabled={bekliyor}
+            >
+              Kalan {ilerleme.basarisiz.length} grubu tekrar dene
+            </button>
+          </p>
+        </div>
+      ) : null}
 
       {mahalleYok ? (
         <p className="aktarim-hata">

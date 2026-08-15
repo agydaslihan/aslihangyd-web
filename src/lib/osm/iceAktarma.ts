@@ -1,5 +1,7 @@
 import type { Payload, TypedUser } from 'payload'
 
+import { HazirlikDeposu } from './hazirlikDeposu'
+import { overpassDene } from './istemci'
 import { merkezlerdenKutu, kutuMakulMu, overpassCevabiniCoz, overpassSorgusu } from './sorgu'
 import type { CozumlemeOzeti, Kutu, OsmAdayi } from './sorgu'
 
@@ -47,14 +49,8 @@ import type { CozumlemeOzeti, Kutu, OsmAdayi } from './sorgu'
  * `.trim()` de bilinçli: `.env` dosyasına yanlışlıkla boşluk yazmak
  * (`OVERPASS_ADRESI= `) aynı sonucu verirdi.
  */
-const OVERPASS_ADRESI =
-  process.env.OVERPASS_ADRESI?.trim() || 'https://overpass-api.de/api/interpreter'
-
 /** Tek seferde alınacak azami POI — kaza koruması. */
 export const AZAMI_ADAY = 3_000
-
-/** Ağ zaman aşımı. Overpass yoğunken yavaş olabilir. */
-const ZAMAN_ASIMI_MS = 90_000
 
 export type IceAktarmaDurumu =
   | { durum: 'merkez_yok' }
@@ -103,30 +99,191 @@ export async function kutuyuHesapla(
   return merkezlerdenKutu(noktalar, marjMetre)
 }
 
-/** Overpass'a sorar ve cevabı çözer. */
-async function overpasstanGetir(sorgu: string): Promise<CozumlemeOzeti> {
-  const kontrol = new AbortController()
-  const zamanlayici = setTimeout(() => kontrol.abort(), ZAMAN_ASIMI_MS)
+/**
+ * Mahalle merkezlerini gruplayıp her gruba ayrı kutu hesaplar.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN PARÇALI: TEK BÜYÜK KUTU 504'ÜN EN SIK SEBEBİYDİ
+ *
+ * POI sorgusu ilçenin tamamını kapsayan tek bir kutu için onlarca etiket
+ * filtresi çalıştırıyordu. Küçük kutular hem çok daha hızlı dönüyor hem de
+ * biri düştüğünde yalnızca o bölge yeniden isteniyor.
+ *
+ * ⚠️ Kutular ÜST ÜSTE BİNER — mahalleler komşu ve her birine marj ekleniyor.
+ * Aynı POI birden çok grupta gelebilir; birleştirme OSM kimliğine göre
+ * tekilleştiriyor. Bu bir kayıp değil, kaçınılmaz ve zararsız bir örtüşme.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function kutulariHesapla(
+  payload: Payload,
+  user: TypedUser,
+  marjMetre?: number,
+  grupBoyutu: number = POI_GRUP_BOYUTU,
+): Promise<Kutu[]> {
+  const mahalleler = await payload.find({
+    collection: 'mahalleler',
+    limit: 500,
+    depth: 0,
+    sort: 'ad',
+    user,
+    overrideAccess: false,
+  })
 
-  try {
-    const cevap = await fetch(OVERPASS_ADRESI, {
-      method: 'POST',
-      // Overpass gövdede `data=` bekliyor.
-      body: new URLSearchParams({ data: sorgu }),
-      headers: {
-        // ⚠️ Overpass kullanım politikası kendini tanıtmayı istiyor.
-        'User-Agent': 'aslihangyd.com POI ice aktarma (iletisim: site sahibi)',
-      },
-      signal: kontrol.signal,
-    })
+  const noktalar = mahalleler.docs
+    .map((m) => m.merkez)
+    .filter((m): m is [number, number] => Array.isArray(m) && m.length >= 2)
+    .map(([boylam, enlem]) => ({ boylam, enlem }))
 
-    if (!cevap.ok) {
-      throw new Error(`Overpass ${cevap.status} döndü.`)
+  if (noktalar.length === 0) return []
+
+  const kutular: Kutu[] = []
+  for (let i = 0; i < noktalar.length; i += grupBoyutu) {
+    const kutu = merkezlerdenKutu(noktalar.slice(i, i + grupBoyutu), marjMetre)
+    if (kutu) kutular.push(kutu)
+  }
+  return kutular
+}
+
+/**
+ * Bir kutuda kaç mahalle merkezi toplanacağı.
+ *
+ * ⚠️ Sınır içe aktarmadaki grup boyutuyla aynı gerekçe: amaç hızı en üst
+ * düzeye çıkarmak değil, tek isteğin zaman aşımına uğrama olasılığını ve
+ * düştüğünde kaybedilen işi küçük tutmak.
+ */
+export const POI_GRUP_BOYUTU = 3
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Parçalı hazırlık — kutu kutu
+   ══════════════════════════════════════════════════════════════════════════ */
+
+interface PoiHazirligi {
+  kutular: Kutu[]
+  marjMetre: number | undefined
+  /** Kutu sırasına göre gelen adaylar. */
+  adaylar: Map<number, OsmAdayi[]>
+  tamamlanan: Set<number>
+  ozet: CozumlemeOzeti
+}
+
+const depo = new HazirlikDeposu<PoiHazirligi>()
+
+function kullaniciAnahtari(user: TypedUser): string | number {
+  return (user as { id?: string | number } | null)?.id ?? 'oturumsuz'
+}
+
+export type PoiHazirlikDurumu =
+  | { durum: 'merkez_yok' }
+  | { durum: 'kutu_gecersiz'; mesaj: string }
+  | { durum: 'hazir'; kutuSayisi: number; ornekSorgu: string }
+
+/**
+ * Kutuları hesaplar — AĞ İSTEĞİ YOK.
+ *
+ * ⚠️ Bu adım Overpass'a hiç dokunmuyor; yalnızca mahalle merkezlerinden
+ * kutuları çıkarıp depoya yazıyor. Sorgular kutu kutu, sonraki adımda.
+ */
+export async function poiHazirligiBaslat(
+  payload: Payload,
+  user: TypedUser,
+  marjMetre?: number,
+): Promise<PoiHazirlikDurumu> {
+  const kutular = await kutulariHesapla(payload, user, marjMetre)
+  if (kutular.length === 0) return { durum: 'merkez_yok' }
+
+  const gecersiz = kutular.find((kutu) => !kutuMakulMu(kutu))
+  if (gecersiz) {
+    return {
+      durum: 'kutu_gecersiz',
+      mesaj:
+        'Mahalle merkezlerinden hesaplanan alan olağandışı büyük. Bir mahallenin merkez ' +
+        'noktası yanlış girilmiş olabilir (örn. Çorlu yerine başka bir il). ' +
+        'Mahalleler → Konum sekmesinden merkezleri kontrol edin.',
     }
+  }
 
-    return overpassCevabiniCoz(await cevap.json())
-  } finally {
-    clearTimeout(zamanlayici)
+  depo.yaz(kullaniciAnahtari(user), {
+    kutular,
+    marjMetre,
+    adaylar: new Map(),
+    tamamlanan: new Set(),
+    ozet: { adaylar: [], eslenmeyenler: [], adsizAtlandi: 0, konumsuzAtlandi: 0 },
+  })
+
+  return {
+    durum: 'hazir',
+    kutuSayisi: kutular.length,
+    ornekSorgu: overpassSorgusu(kutular[0] as Kutu),
+  }
+}
+
+export type PoiGrupDurumu =
+  | { durum: 'hazirlik_yok' }
+  | { durum: 'yeniden_denenebilir'; mesaj: string }
+  | { durum: 'hata'; mesaj: string }
+  | { durum: 'tamam'; gelen: number }
+
+/** Tek kutunun POI'lerini indirir; sonuç depoda birikir. */
+export async function poiKutusunuGetir(
+  user: TypedUser,
+  kutuSirasi: number,
+  denemeSirasi = 1,
+): Promise<PoiGrupDurumu> {
+  const hazirlik = depo.oku(kullaniciAnahtari(user))
+  if (!hazirlik) return { durum: 'hazirlik_yok' }
+
+  const kutu = hazirlik.kutular[kutuSirasi]
+  if (!kutu) return { durum: 'hata', mesaj: `${kutuSirasi}. kutu bulunamadı.` }
+
+  if (hazirlik.tamamlanan.has(kutuSirasi)) {
+    return { durum: 'tamam', gelen: hazirlik.adaylar.get(kutuSirasi)?.length ?? 0 }
+  }
+
+  const cevap = await overpassDene(overpassSorgusu(kutu), {
+    denemeSirasi,
+    dagitim: kutuSirasi,
+    zamanAsimiMs: 90_000,
+  })
+  if (cevap.durum !== 'tamam') return { durum: cevap.durum, mesaj: cevap.mesaj }
+
+  const cozum = overpassCevabiniCoz(cevap.veri)
+  hazirlik.adaylar.set(kutuSirasi, cozum.adaylar)
+  hazirlik.tamamlanan.add(kutuSirasi)
+  hazirlik.ozet = birlestir(hazirlik.adaylar, hazirlik.ozet, cozum)
+
+  return { durum: 'tamam', gelen: cozum.adaylar.length }
+}
+
+/**
+ * Kutu sonuçlarını birleştirir.
+ *
+ * ⚠️ TEKİLLEŞTİRME ZORUNLU: kutular üst üste biniyor, aynı POI birden çok
+ * kutuda geliyor. Tekilleştirilmeseydi panel gerçekte olduğundan çok daha
+ * fazla nokta gösterir ve aynı kayda arka arkaya yazılırdı.
+ */
+function birlestir(
+  adaylar: Map<number, OsmAdayi[]>,
+  onceki: CozumlemeOzeti,
+  yeni: CozumlemeOzeti,
+): CozumlemeOzeti {
+  const tekil = new Map<string, OsmAdayi>()
+  for (const liste of adaylar.values()) {
+    for (const aday of liste) tekil.set(aday.osmKimlik, aday)
+  }
+
+  // Eşlenmeyen tür raporu da birikmeli: hangi kutuda çıktığı önemli değil.
+  const turler = new Map<string, number>()
+  for (const kayit of [...onceki.eslenmeyenler, ...yeni.eslenmeyenler]) {
+    turler.set(kayit.etiket, (turler.get(kayit.etiket) ?? 0) + kayit.sayi)
+  }
+
+  return {
+    adaylar: [...tekil.values()],
+    eslenmeyenler: [...turler]
+      .map(([etiket, sayi]) => ({ etiket, sayi }))
+      .sort((a, b) => b.sayi - a.sayi),
+    adsizAtlandi: onceki.adsizAtlandi + yeni.adsizAtlandi,
+    konumsuzAtlandi: onceki.konumsuzAtlandi + yeni.konumsuzAtlandi,
   }
 }
 
@@ -138,36 +295,25 @@ async function overpasstanGetir(sorgu: string): Promise<CozumlemeOzeti> {
 export async function onizlemeHazirla(
   payload: Payload,
   user: TypedUser,
-  marjMetre?: number,
 ): Promise<IceAktarmaDurumu> {
-  const kutu = await kutuyuHesapla(payload, user, marjMetre)
-
-  if (!kutu) return { durum: 'merkez_yok' }
-
-  if (!kutuMakulMu(kutu)) {
-    return {
-      durum: 'kutu_gecersiz',
-      mesaj:
-        'Mahalle merkezlerinden hesaplanan alan olağandışı büyük. Bir mahallenin merkez ' +
-        'noktası yanlış girilmiş olabilir (örn. Çorlu yerine başka bir il). ' +
-        'Mahalleler → Konum sekmesinden merkezleri kontrol edin.',
-    }
-  }
-
-  const sorgu = overpassSorgusu(kutu)
-
-  let ozet: CozumlemeOzeti
-  try {
-    ozet = await overpasstanGetir(sorgu)
-  } catch (hata) {
+  /**
+   * ⚠️ Overpass'a BURADA SORULMUYOR — veri kutu kutu indirildi ve depoda
+   * duruyor. Eski akış önizlemede bir kez, yazmada bir kez daha bütün
+   * ilçeyi sorguluyordu.
+   */
+  const hazirlik = depo.oku(kullaniciAnahtari(user))
+  if (!hazirlik) {
     return {
       durum: 'hata',
-      mesaj:
-        hata instanceof Error && hata.name === 'AbortError'
-          ? 'OpenStreetMap sunucusu zamanında yanıt vermedi. Birkaç dakika sonra tekrar deneyin.'
-          : `OpenStreetMap sunucusuna ulaşılamadı: ${hata instanceof Error ? hata.message : 'bilinmeyen hata'}`,
+      mesaj: 'Hazırlık bulunamadı ya da zaman aşımına uğradı. "Önizle" ile baştan başlayın.',
     }
   }
+
+  const kutu = hazirlik.kutular[0]
+  if (!kutu) return { durum: 'merkez_yok' }
+
+  const ozet = hazirlik.ozet
+  const sorgu = overpassSorgusu(kutu)
 
   if (ozet.adaylar.length > AZAMI_ADAY) {
     return {

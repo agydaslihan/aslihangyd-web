@@ -14,8 +14,12 @@ import {
   type ListeYazmaSonucu,
 } from './listeIceAktarma'
 import {
+  sinirGrubunuGetir,
+  sinirHazirligiBaslat,
   sinirOnizlemesiHazirla,
   sinirlariYaz,
+  type GrupDurumu,
+  type HazirlikDurumu,
   type SinirDurumu,
   type SinirYazmaSonucu,
 } from './sinirIceAktarma'
@@ -80,6 +84,47 @@ export async function mahalleListesiniYaz(): Promise<ListeYazmaCevabi> {
     return {
       basarili: false,
       mesaj: hata instanceof Error ? hata.message : 'Mahalleler açılamadı.',
+    }
+  }
+}
+
+/**
+ * 1. faz — ilçedeki sınır kimliklerini ve yer düğümlerini getirir.
+ *
+ * ⚠️ `denemeSirasi` istemciden gelir ve YALNIZCA hangi yedek sunucunun
+ * kullanılacağını belirler. Bir saldırganın buradan elde edebileceği en
+ * fazla şey, isteğin başka bir açık Overpass örneğine gitmesi.
+ */
+export async function sinirHazirliginiBaslat(denemeSirasi = 1): Promise<HazirlikDurumu> {
+  const oturum = await yoneticiOturumu()
+  if (!oturum) return { durum: 'hata', mesaj: YETKI_YOK }
+
+  try {
+    return await sinirHazirligiBaslat(oturum.payload, oturum.user, denemeSirasi)
+  } catch (hata) {
+    return {
+      durum: 'hata',
+      mesaj: hata instanceof Error ? hata.message : 'Hazırlık başlatılamadı.',
+    }
+  }
+}
+
+/**
+ * 2. faz — tek grubun geometrisi.
+ *
+ * ⚠️ Sonuç geometrisi istemciye DÖNMÜYOR; sunucudaki hazırlıkta birikiyor.
+ * İstemci yalnızca "kaç kayıt geldi" sayısını görüyor.
+ */
+export async function sinirGrubunuIndir(grupSirasi: number, denemeSirasi = 1): Promise<GrupDurumu> {
+  const oturum = await yoneticiOturumu()
+  if (!oturum) return { durum: 'hata', mesaj: YETKI_YOK }
+
+  try {
+    return await sinirGrubunuGetir(oturum.user, grupSirasi, denemeSirasi)
+  } catch (hata) {
+    return {
+      durum: 'hata',
+      mesaj: hata instanceof Error ? hata.message : 'Grup indirilemedi.',
     }
   }
 }

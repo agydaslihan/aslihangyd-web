@@ -1,10 +1,18 @@
 'use client'
 
 import Link from 'next/link'
-import { useState, useTransition } from 'react'
+import { useState } from 'react'
 
 import { bilincliDisaridaGerekcesi } from '@/lib/osm/eslesme'
-import { osmOnizlemesiHazirla, osmSatirlariniYaz } from '@/lib/osm/eylemler'
+import {
+  osmOnizlemesiHazirla,
+  osmSatirlariniYaz,
+  poiHazirliginiBaslat,
+  poiKutusunuIndir,
+} from '@/lib/osm/eylemler'
+import { yenidenDenemeMetni } from '@/lib/osm/yenidenDeneme'
+
+import { denemeliCalistir, type DenemeBilgisi } from './denemeliCalistir'
 import type { IceAktarmaDurumu, Onizleme, YazmaSonucu } from '@/lib/osm/iceAktarma'
 import { VARSAYILAN_MARJ_METRE } from '@/lib/osm/sorgu'
 
@@ -14,31 +22,164 @@ import { VARSAYILAN_MARJ_METRE } from '@/lib/osm/sorgu'
  * CSV içe aktarmadaki ilkenin aynısı: yüzlerce kaydı görmeden yazmak,
  * hatayı ancak veri girdikten sonra fark etmek demek.
  */
+/** Parçalı POI indirmenin ilerlemesi. */
+interface PoiIlerleme {
+  toplam: number
+  tamamlanan: number
+  basarisiz: number[]
+}
+
+/**
+ * İlerleme çubuğu ve yeniden deneme göstergesi.
+ *
+ * Sınır sihirbazındakiyle aynı ilke: "nerede olduğumuz" ile "neden
+ * beklediğimiz" ayrı satırlarda.
+ */
+function PoiIlerlemeCubugu({
+  ilerleme,
+  deneme,
+}: {
+  ilerleme: PoiIlerleme
+  deneme: DenemeBilgisi | null
+}) {
+  const yuzde = ilerleme.toplam === 0 ? 0 : (ilerleme.tamamlanan / ilerleme.toplam) * 100
+
+  return (
+    <div style={{ marginTop: '1rem' }}>
+      <div
+        role="progressbar"
+        aria-valuemin={0}
+        aria-valuemax={ilerleme.toplam}
+        aria-valuenow={ilerleme.tamamlanan}
+        aria-label="Bölgeler indiriliyor"
+        style={{
+          height: '0.5rem',
+          borderRadius: '999px',
+          background: 'var(--theme-elevation-100)',
+          overflow: 'hidden',
+        }}
+      >
+        <div
+          style={{
+            width: `${yuzde}%`,
+            height: '100%',
+            background: 'var(--theme-success-500)',
+            transition: 'width 200ms ease',
+          }}
+        />
+      </div>
+
+      <p className="osm-not" aria-live="polite">
+        {ilerleme.tamamlanan}/{ilerleme.toplam} bölge indirildi
+        {ilerleme.basarisiz.length > 0 ? ` · ${ilerleme.basarisiz.length} bölge düştü` : ''}
+      </p>
+
+      {deneme ? (
+        <p className="osm-not" aria-live="polite">
+          {yenidenDenemeMetni(deneme.deneme, deneme.kalanSaniye)}
+        </p>
+      ) : null}
+    </div>
+  )
+}
+
 export function OsmSihirbazi({ merkezliMahalleSayisi }: { merkezliMahalleSayisi: number }) {
   const [marj, setMarj] = useState(VARSAYILAN_MARJ_METRE)
   const [durum, setDurum] = useState<IceAktarmaDurumu | null>(null)
   const [sonuc, setSonuc] = useState<YazmaSonucu | null>(null)
   const [hata, setHata] = useState<string | null>(null)
-  const [bekliyor, basla] = useTransition()
+  const [bekliyor, setBekliyor] = useState(false)
+  const [deneme, setDeneme] = useState<DenemeBilgisi | null>(null)
+  const [ilerleme, setIlerleme] = useState<PoiIlerleme | null>(null)
 
-  function onizle(): void {
-    setSonuc(null)
-    setHata(null)
-    basla(async () => {
-      setDurum(await osmOnizlemesiHazirla(marj))
+  /** Tek kutuyu indirir; geçici hatada üstel beklemeyle yeniden dener. */
+  async function kutuyuIndir(sira: number): Promise<boolean> {
+    const cevap = await denemeliCalistir({
+      cagir: (denemeSirasi) => poiKutusunuIndir(sira, denemeSirasi),
+      geciciMi: (c) => c.durum === 'yeniden_denenebilir',
+      mesajAl: (c) => (c.durum === 'yeniden_denenebilir' ? c.mesaj : ''),
+      bildir: setDeneme,
     })
+    setDeneme(null)
+    return cevap.durum === 'tamam'
   }
 
-  function yaz(onizleme: Onizleme): void {
-    basla(async () => {
+  async function onizle(): Promise<void> {
+    setSonuc(null)
+    setHata(null)
+    setDurum(null)
+    setIlerleme(null)
+    setBekliyor(true)
+
+    try {
+      // Kutuları hesaplamak ağ isteği gerektirmiyor; tek atışta yapılır.
+      const hazirlik = await poiHazirliginiBaslat(marj)
+      if (hazirlik.durum === 'merkez_yok') {
+        setDurum({ durum: 'merkez_yok' })
+        return
+      }
+      if (hazirlik.durum !== 'hazir') {
+        setDurum({ durum: 'kutu_gecersiz', mesaj: hazirlik.mesaj })
+        return
+      }
+
+      const basarisiz: number[] = []
+      for (let sira = 0; sira < hazirlik.kutuSayisi; sira += 1) {
+        setIlerleme({ toplam: hazirlik.kutuSayisi, tamamlanan: sira, basarisiz: [...basarisiz] })
+        if (!(await kutuyuIndir(sira))) basarisiz.push(sira)
+      }
+      setIlerleme({
+        toplam: hazirlik.kutuSayisi,
+        tamamlanan: hazirlik.kutuSayisi,
+        basarisiz: [...basarisiz],
+      })
+
+      // ⚠️ Kısmi sonuç korunuyor: düşen kutular gelenleri geçersiz kılmıyor.
+      setDurum(await osmOnizlemesiHazirla())
+    } finally {
+      setDeneme(null)
+      setBekliyor(false)
+    }
+  }
+
+  /** Yalnızca düşen kutuları yeniden ister. */
+  async function kalanlariDene(): Promise<void> {
+    const dusenler = ilerleme?.basarisiz ?? []
+    if (dusenler.length === 0) return
+
+    setHata(null)
+    setBekliyor(true)
+    try {
+      const halaDusen: number[] = []
+      for (const sira of dusenler) {
+        if (!(await kutuyuIndir(sira))) halaDusen.push(sira)
+      }
+      setIlerleme((onceki) =>
+        onceki
+          ? { ...onceki, tamamlanan: onceki.toplam - halaDusen.length, basarisiz: halaDusen }
+          : onceki,
+      )
+      setDurum(await osmOnizlemesiHazirla())
+    } finally {
+      setDeneme(null)
+      setBekliyor(false)
+    }
+  }
+
+  async function yaz(onizleme: Onizleme): Promise<void> {
+    setBekliyor(true)
+    try {
       const cevap = await osmSatirlariniYaz(onizleme.satirlar)
       if (cevap.basarili && cevap.sonuc) {
         setSonuc(cevap.sonuc)
         setDurum(null)
+        setIlerleme(null)
       } else {
         setHata(cevap.mesaj ?? 'İçe aktarma tamamlanamadı.')
       }
-    })
+    } finally {
+      setBekliyor(false)
+    }
   }
 
   const onizleme = durum?.durum === 'hazir' ? durum.onizleme : null
@@ -68,9 +209,37 @@ export function OsmSihirbazi({ merkezliMahalleSayisi }: { merkezliMahalleSayisi:
           </em>
         </label>
 
-        <button type="button" className="osm-buton" onClick={onizle} disabled={bekliyor}>
+        <button
+          type="button"
+          className="osm-buton"
+          onClick={() => void onizle()}
+          disabled={bekliyor}
+        >
           {bekliyor ? 'OpenStreetMap sorgulanıyor…' : 'Önizle'}
         </button>
+
+        {ilerleme ? <PoiIlerlemeCubugu ilerleme={ilerleme} deneme={deneme} /> : null}
+
+        {/* ⚠️ KISMİ SONUÇ: düşen kutular gelenleri geçersiz kılmıyor. */}
+        {ilerleme && ilerleme.basarisiz.length > 0 && !bekliyor ? (
+          <div className="osm-hata">
+            <strong>
+              {ilerleme.toplam - ilerleme.basarisiz.length}/{ilerleme.toplam} bölge geldi.
+            </strong>{' '}
+            {ilerleme.basarisiz.length} bölge dört denemede de gelmedi — OpenStreetMap sunucuları şu
+            an yoğun. Gelen noktalar duruyor, kaybolmadı.
+            <p style={{ marginTop: '0.75rem' }}>
+              <button
+                type="button"
+                className="osm-buton"
+                onClick={() => void kalanlariDene()}
+                disabled={bekliyor}
+              >
+                Kalan {ilerleme.basarisiz.length} bölgeyi tekrar dene
+              </button>
+            </p>
+          </div>
+        ) : null}
       </section>
 
       {durum?.durum === 'merkez_yok' ? (
@@ -239,7 +408,7 @@ function OnizlemeBolumu({
         <button
           type="button"
           className="osm-buton"
-          onClick={() => yaz(onizleme)}
+          onClick={() => void yaz(onizleme)}
           disabled={bekliyor || yazilacak === 0}
         >
           {bekliyor ? 'Aktarılıyor…' : `${yazilacak} noktayı içe aktar`}
