@@ -19,13 +19,46 @@ function noktalar(...ciftler: [number, number][]): Nokta[] {
 }
 
 describe('sinirSorgusu', () => {
-  it('ilçe adını ve mahalle idari seviyesini sorguya koyar', () => {
+  it('ilçe adını ve mahalle idari seviyelerini sorguya koyar', () => {
     const sorgu = sinirSorgusu('Çorlu')
     expect(sorgu).toContain('"name"="Çorlu"')
-    expect(sorgu).toContain('"admin_level"="10"')
     expect(sorgu).toContain('"admin_level"="6"')
-    // Geometri olmadan poligon kurulamaz.
-    expect(sorgu).toContain('out geom tags;')
+    // Çorlu mahalleleri fiilen 8'de; 9 ve 10 da taranıyor.
+    expect(sorgu).toContain('"admin_level"~"^(8|9|10)$"')
+  })
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BU TEST DAHA ÖNCE HATAYI KORUYORDU.
+   *
+   * Eski hâli `expect(sorgu).toContain('out geom tags;')` idi ve yanına
+   * "geometri olmadan poligon kurulamaz" yorumu yazılmıştı. Yorum doğruydu,
+   * beklenen değer yanlıştı: Overpass'te `tags` bir ayrıntı seviyesidir ve
+   * ilişkinin ÜYELERİNİ bastırır. `geom` üye bulamayınca yalnızca `bounds`
+   * döndürür, çözümleyici de haklı olarak "geometrisiz" deyip atlar.
+   *
+   * Yani yeşil bir test, sorgunun 26 mahallenin hepsini sessizce düşürdüğü
+   * gerçeğini üstüne mühür basarak koruyordu. Testin doğrulaması gereken
+   * şey "bu dize burada mı" değil, "sorgu üye geometrisi istiyor mu"ydu.
+   *
+   * Şimdi iki yönlü: doğru kipin varlığı VE yanlış kipin yokluğu.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('üye geometrisi ister — `tags` ayrıntı seviyesine geri dönülemez', () => {
+    const sorgu = sinirSorgusu('Çorlu')
+
+    expect(sorgu).toContain('out body geom;')
+    expect(
+      /^out\b.*\btags\b/m.test(sorgu),
+      '`out` ifadesinde `tags` ayrıntı seviyesi ilişkilerin `members` alanını ' +
+        'bastırır; sınır poligonu kurulamaz ve içe aktarma sessizce sıfır sonuç verir.',
+    ).toBe(false)
+  })
+
+  it('adsız sınır parçalarını sorguda eler', () => {
+    // Adsız yollar ilişkilerin parçalarıdır; geometrileri üye olarak geliyor.
+    // Şartsız hâlinde cevabın üçte ikisi bu parçalardı.
+    expect(sinirSorgusu('Çorlu')).toContain('["name"];')
   })
 
   it('ilçe adındaki tırnak sorguyu kıramaz', () => {
@@ -211,6 +244,34 @@ describe('sinirCevabiniCoz', () => {
     // Merkez [boylam, enlem] sırasında — Payload `point` böyle bekler.
     expect(aday?.merkez[0]).toBeCloseTo(27.85, 4)
     expect(aday?.merkez[1]).toBeCloseTo(41.15, 4)
+  })
+
+  /**
+   * ⚠️ GERÇEK ARIZANIN CEVAP BİÇİMİ — 15 Ağustos 2026.
+   *
+   * `out geom tags` ile Overpass tam olarak bunu döndürüyordu: doğru ad,
+   * doğru kimlik, `bounds` var, **`members` yok.** Çözümleyicinin bunu
+   * atlaması DOĞRUDUR — kaba bir dikdörtgeni mahalle sınırı diye yazmak,
+   * haritada sessizce yanlış alan göstermek olurdu.
+   *
+   * Test çözümleyiciyi değil, `bounds`'un asla poligona terfi
+   * ettirilmemesini koruyor. Sorgu tarafındaki karşılığı yukarıdaki
+   * "üye geometrisi ister" testi.
+   */
+  it('yalnızca `bounds` gelen ilişkiyi poligona TERFİ ETTİRMEZ', () => {
+    const sonuc = sinirCevabiniCoz({
+      elements: [
+        {
+          type: 'relation',
+          id: 11833266,
+          bounds: { minlat: 41.146, minlon: 27.807, maxlat: 41.159, maxlon: 27.819 },
+          tags: { name: 'Muhittin Mahallesi', boundary: 'administrative', admin_level: '8' },
+        },
+      ],
+    })
+
+    expect(sonuc.adaylar).toHaveLength(0)
+    expect(sonuc.geometrisizAtlandi).toBe(1)
   })
 
   it('rolü boş üyeleri de dış sınır sayar', () => {

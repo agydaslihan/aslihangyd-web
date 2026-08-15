@@ -34,10 +34,31 @@ import { slugUret } from '@/lib/slug'
  */
 export const ILCE_ADI = 'Çorlu'
 
-/** Türkiye'de mahalle idari seviyesi. */
-export const MAHALLE_IDARI_SEVIYESI = 10
+/**
+ * Mahallenin aranacağı idari seviyeler.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BURASI BİR VARSAYIMDI VE VARSAYIM YANLIŞTI — 15 Ağustos 2026
+ *
+ * Önceki hâli tek bir sayıydı: `MAHALLE_IDARI_SEVIYESI = 10`. Gerekçesi
+ * OSM belgelerinde Türkiye için mahalle seviyesinin 10 gösterilmesiydi.
+ * **Çorlu'nun 26 mahallesi OSM'de `admin_level=8` ile kayıtlı.** Sorgu bu
+ * yüzden sıfır sonuç döndürüyordu ve panel 27 mahallenin hepsini "OSM'de
+ * bulunamadı" diye listeliyordu — yani veri vardı, biz yanlış yere
+ * bakıyorduk.
+ *
+ * Ders: belgelenmiş seviye ile fiilen etiketlenmiş seviye aynı olmak
+ * zorunda değil. OSM gönüllü katkıdır; şema tavsiyedir, veri gerçektir.
+ *
+ * Bu yüzden artık tek sayı değil KÜME sorgulanıyor. Fazladan gelen kayıt
+ * zarar vermiyor: sınır yalnızca adı sistemde olan bir mahalleye yazılıyor,
+ * eşleşmeyen aday panelde listeleniyor. Seviye yarın 10'a düzeltilirse de
+ * içe aktarma çalışmaya devam eder.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const MAHALLE_IDARI_SEVIYELERI = [8, 9, 10] as const
 
-/** İlçe idari seviyesi. */
+/** İlçe idari seviyesi — Çorlu için OSM'de doğrulandı (relation/1771127). */
 export const ILCE_IDARI_SEVIYESI = 6
 
 /** Koordinatların yuvarlanacağı ondalık basamak (~10 cm). */
@@ -90,21 +111,50 @@ export interface SinirCozumlemesi {
  * Overpass QL sorgusu.
  *
  * `map_to_area` ilçe ilişkisini bir alana çeviriyor; ardından o alanın
- * içindeki mahalle sınırları isteniyor. `out geom` üye yolların koordinat
- * dizilerini de getirir — sınır poligonu ancak onlarla kurulabilir.
+ * içindeki mahalle sınırları isteniyor.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ `out body geom` — `out geom tags` DEĞİL. BU FARK SORGUYU ÖLDÜRÜYORDU.
+ *
+ * Overpass'te `out` ifadesinin iki ayrı boyutu var: **ayrıntı seviyesi**
+ * (`ids` · `skel` · `body` · `tags` · `meta`) ve **geometri kipi**
+ * (`geom` · `bb` · `center`). `tags` bir ayrıntı seviyesidir ve "yalnızca
+ * kimlik + etiket" demektir: **ilişkinin üyelerini bastırır.** Üye kalmayınca
+ * `geom` de tutunacak bir şey bulamayıp sadece `bounds` (kaba dikdörtgen)
+ * döndürür.
+ *
+ * Sonuç: cevap dolu geliyordu (87 öğe, doğru adlarla), ama her ilişkide
+ * `members` yoktu. Çözümleyici bunu haklı olarak "geometrisiz" sayıp
+ * atlıyordu. Yani hata mesajı vermeyen, sayıları da doğru görünen bir
+ * sorgu, tek kelimelik bir kip hatası yüzünden 26 mahallenin hepsini
+ * sessizce düşürüyordu.
+ *
+ * `body` varsayılan ayrıntı seviyesidir ve üyeleri getirir; `geom` o
+ * üyelere koordinat dizilerini ekler. Sınır poligonu ancak bunlarla kurulur.
+ *
+ * ⚠️ POI sorgusundaki `out center tags` DOĞRUDUR ve buraya örnek alınmamalı:
+ * orada nokta/alan merkezleri isteniyor, üye geometrisi değil. İki sorgunun
+ * ihtiyacı farklı olduğu için kipleri de farklı.
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠️ Yol (`way`) tarafında `["name"]` şartı var: adsız yollar zaten
+ * ilişkilerin sınır parçalarıdır, geometrileri üye olarak geliyor. Şartsız
+ * hâlinde cevap 87 öğeydi ve 59'u adsız parçaydı; panelde "59 sınır adı
+ * olmadığı için atlandı" satırı, veri kaybedilmiş izlenimi veriyordu.
  */
 export function sinirSorgusu(ilceAdi: string = ILCE_ADI, zamanAsimiSaniye = 180): string {
   const ad = ilceAdi.replace(/["\\]/g, '')
+  const seviyeler = `^(${MAHALLE_IDARI_SEVIYELERI.join('|')})$`
 
   return [
     `[out:json][timeout:${zamanAsimiSaniye}];`,
     `relation["boundary"="administrative"]["admin_level"="${ILCE_IDARI_SEVIYESI}"]["name"="${ad}"];`,
     'map_to_area->.ilce;',
     '(',
-    `  relation(area.ilce)["boundary"="administrative"]["admin_level"="${MAHALLE_IDARI_SEVIYESI}"];`,
-    `  way(area.ilce)["boundary"="administrative"]["admin_level"="${MAHALLE_IDARI_SEVIYESI}"];`,
+    `  relation(area.ilce)["boundary"="administrative"]["admin_level"~"${seviyeler}"]["name"];`,
+    `  way(area.ilce)["boundary"="administrative"]["admin_level"~"${seviyeler}"]["name"];`,
     ');',
-    'out geom tags;',
+    'out body geom;',
   ].join('\n')
 }
 
