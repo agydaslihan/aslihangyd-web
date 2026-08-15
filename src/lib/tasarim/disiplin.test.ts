@@ -241,6 +241,18 @@ describe('ham hex kullanılmıyor', () => {
      */
     'components/duzen/TemaAnahtari.tsx',
     'app/(site)/api/sosyal/gorsel/[bicim]/[id]/route.tsx',
+    /**
+     * ⚠️ Renk ALANI muaf — çünkü işi renk düzenlemek.
+     *
+     * Bu bileşen bir tasarım öğesi değil, marka panelindeki renk
+     * girişidir. `<input type="color">` somut bir hex bekliyor ve yer
+     * tutucu kullanıcıya beklenen biçimi gösteriyor. Jeton yazmak burada
+     * anlamsız: jetonun kendisi zaten bu alandan geliyor.
+     *
+     * Muafiyetin bedeli aşağıdaki "renk alanında marka rengi yok" testiyle
+     * ödeniyor: yalnızca nötr giriş değerleri serbest, palet rengi değil.
+     */
+    'components/marka/RenkAlani.tsx',
   ])
 
   it.each(uyarlanmis.filter((d) => !MUAF.has(d.yol)).map((d) => [d.yol, d] as const))(
@@ -474,6 +486,27 @@ describe('sosyal medya görseli onaylı palete bağlı', () => {
     expect(
       yorumsuz(kaynak).match(ESKI_LACIVERT) ?? [],
       'lacivert palet kaldırıldı; bu hex değerleri geri sızmamalı',
+    ).toEqual([])
+  })
+})
+
+/**
+ * ⚠️ RENK ALANI MUAFİYETİNİN BEDELİ.
+ *
+ * `RenkAlani.tsx` ham hex yazabiliyor çünkü işi renk düzenlemek. Ama
+ * muafiyet "istediğini yaz" demek değil: oradaki hex'ler yalnızca nötr
+ * giriş değerleri olabilir. Bir marka rengi oraya sabitlenirse, palet
+ * değiştiğinde panel eski markayı gösterir ve kimse fark etmez.
+ */
+describe('renk alanı muafiyeti denetimsiz değil', () => {
+  it('renk alanında yalnızca nötr giriş değerleri var, marka rengi yok', () => {
+    const icerik = readFileSync(path.join(KOK, 'components/marka/RenkAlani.tsx'), 'utf8')
+    const bulunan = (icerik.match(/#[0-9a-fA-F]{3,8}\b/g) ?? []).map((h) => h.toLowerCase())
+    const izinli = new Set(['#000000', '#ffffff', '#rrggbb'])
+
+    expect(
+      bulunan.filter((hex) => !izinli.has(hex)),
+      'Renk alanına marka rengi sabitlenmiş — palet değişince panel eski markada kalır.',
     ).toEqual([])
   })
 })

@@ -50,7 +50,7 @@ export function Sayfalama({
                 className={sinif(
                   'rakam rounded-buton text-govde-kucuk inline-flex size-11 items-center justify-center border-[0.5px]',
                   sayfa === mevcutSayfa
-                    ? 'bg-kakao-yuzey border-transparent font-medium text-white'
+                    ? 'bg-kakao-yuzey border-transparent font-medium text-koyu-bant-metin'
                     : 'border-kenar-guclu hover:border-vurgu hover:text-vurgu',
                 )}
               >

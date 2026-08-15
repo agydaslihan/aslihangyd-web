@@ -2,8 +2,10 @@ import Link from 'next/link'
 import type { ReactNode } from 'react'
 
 import { CerezTercihleriBaglantisi } from '@/components/cerez/CerezBanneri'
+import { MarkaLogosu } from '@/components/marka/MarkaLogosu'
 import { DisBaglantiIkon, PostaIkon, TelefonIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
+import { markaAyarlari } from '@/lib/marka/sunucu'
 import {
   iletisimEpostasi,
   iletisimTelefonu,
@@ -40,10 +42,11 @@ import { acikBolumTanimlari } from '@/lib/veri/siteBolumleri'
  * `acikBolumTanimlari()` üzerinden geliyor.
  */
 export async function Altbilgi() {
-  const [kurumsal, baglantilar, acikBolumler] = await Promise.all([
+  const [kurumsal, baglantilar, acikBolumler, marka] = await Promise.all([
     kurumsalBilgileriGetir(),
     altbilgiBaglantilariniGetir(),
     acikBolumTanimlari(),
+    markaAyarlari(),
   ])
 
   /**
@@ -110,13 +113,22 @@ export async function Altbilgi() {
           {/* ── Kurumsal ── */}
           <Sutun baslik="Kurumsal">
             <div className="mb-3 flex flex-col gap-2">
-              <span className="font-serif text-baslik-3 text-notr-50">
-                {/* ⚠️ Aksan GOLD DEĞİL. Lacivert üzerinde gold 6,69:1 ile
-                    okunur olurdu ama "gold asla metin rengi değildir" kuralı
-                    mutlak: istisna açıldığı anda bir sonraki kullanım açık
-                    zeminde olur ve 2,06:1'e düşer. Disiplin testi yakaladı. */}
-                Aslıhan <span className="text-notr-300">GYD</span>
-              </span>
+              {/* ⚠️ Aksan GOLD DEĞİL. Gold üzerinde okunur görünse bile
+                  "gold asla metin rengi değildir" kuralı mutlak: istisna
+                  açıldığı anda bir sonraki kullanım açık zeminde olur ve
+                  2,06:1'e düşer. Disiplin testi yakaladı.
+
+                  ⚠️ Altbilgi bandı iki temada da koyu: `daimaKoyuZemin` ile
+                  koyu logo yeğleniyor, yoksa ana logo, o da yoksa metin.
+                  Logo yüklenmemiş bir sitede altbilgi kimliksiz kalmıyor. */}
+              <MarkaLogosu
+                marka={marka}
+                daimaKoyuZemin
+                yukseklik={34}
+                sinif="w-auto"
+                metinSinifi="font-serif text-baslik-3 text-notr-50"
+                vurguSinifi="text-notr-300"
+              />
               <p className="text-notr-300 text-govde-kucuk">
                 Çorlu ve çevresinde gayrimenkul danışmanlığı. Kararlarınızı hisle değil, rakamla
                 verin.

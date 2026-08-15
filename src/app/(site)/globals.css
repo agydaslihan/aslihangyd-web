@@ -245,6 +245,11 @@
   --color-terracotta-yuzey: var(--color-terracotta-600);
   /** DOLU kakao zemin — üzerine daima beyaz yazılır (üst şerit, altbilgi). */
   --color-kakao-yuzey: var(--color-kakao-900);
+
+  /* ⚠️ Koyu bant metni ARTIK JETON, `text-white` değil.
+     Marka panelinde açılan on yuvadan biri; jetonsuz olsaydı Aslıhan koyu
+     bant metnini değiştirir ve hiçbir şey olmazdı. */
+  --color-koyu-bant-metin: #ffffff;
   /**
    * Grafik ve ilerleme çubuğu dolgusu.
    *
@@ -573,6 +578,7 @@
   /* Koyu temada dolu kakao bant sayfa zeminiyle aynı olamaz; iki basamak
      açılıyor ki bant yüzeyden ayrışsın. Beyaz metinle 7,23:1. */
   --color-kakao-yuzey: var(--color-kakao-700);
+  --color-koyu-bant-metin: var(--color-notr-50);
   --color-gosterge: var(--color-terracotta-300);
 
   /**
@@ -877,4 +883,25 @@
   clip-path: inset(50%);
   white-space: nowrap;
   border-width: 0;
+}
+
+/*
+ * ⚠️ TEMAYA GÖRE LOGO SEÇİMİ CSS İLE, JS İLE DEĞİL.
+ *
+ * Tema `data-tema` özniteliğiyle ve istemcide seçiliyor; sunucu hangisinin
+ * geçerli olduğunu bilmiyor. İki logoyu da basıp CSS ile birini gizlemek,
+ * ilk boyamada doğru olanın görünmesini garanti ediyor. JS ile seçseydik
+ * koyu temada bir kare açık logo görünürdü — tema titreme önleyicisinin
+ * çözdüğü sorunun aynısı.
+ */
+.acik-gizle {
+  display: none;
+}
+
+:root[data-tema='koyu'] .acik-gizle {
+  display: block;
+}
+
+:root[data-tema='koyu'] .dark-gizle {
+  display: none;
 }

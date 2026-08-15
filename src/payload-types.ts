@@ -111,6 +111,7 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
+    'marka-gorunum': MarkaGorunum;
     'site-bolumleri': SiteBolumleri;
     'portfoy-bolumleri': PortfoyBolumleri;
     'danisman-ol': DanismanOl;
@@ -121,6 +122,7 @@ export interface Config {
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
+    'marka-gorunum': MarkaGorunumSelect<false> | MarkaGorunumSelect<true>;
     'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
     'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
     'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
@@ -1653,6 +1655,125 @@ export interface KurumsalBilgiler {
   createdAt?: string | null;
 }
 /**
+ * Logo, site adı ve renkler. Renk değişikliği kaydedildiği anda yayına girer — imajın yeniden derlenmesi gerekmez.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "marka-gorunum".
+ */
+export interface MarkaGorunum {
+  id: number;
+  /**
+   * Başlıkta, altbilgide ve sekme adında görünür. Boşsa "Aslıhan GYD" kullanılır.
+   */
+  siteAdi?: string | null;
+  /**
+   * Logonun yanında ve paylaşım kartlarında görünür.
+   */
+  slogan?: string | null;
+  /**
+   * SVG tercih edilir, PNG de kabul. ⚠️ Her sayfada yükleniyor — 50 kB üstü dosyalar için panelde uyarı çıkar.
+   */
+  logo?: (number | null) | Medya;
+  /**
+   * İsteğe bağlı. Boşsa koyu temada da ana logo kullanılır.
+   */
+  logoKoyu?: (number | null) | Medya;
+  /**
+   * KARE görsel, en az 512×512. Favicon, dokunma simgesi ve manifest ikonları bundan otomatik üretilir — ayrı ayrı yüklemenize gerek yok.
+   */
+  simgeKaynak?: (number | null) | Medya;
+  /**
+   * Sosyal medyada bağlantı paylaşıldığında görünen kart görseli. Önerilen 1200×630. Boşsa otomatik üretilen kart kullanılır.
+   */
+  ogGorseli?: (number | null) | Medya;
+  acikTema: {
+    /**
+     * Sayfanın genel zemini.
+     */
+    zemin: string;
+    /**
+     * Vurgulanan bölümlerin zemini — ana zeminden ayrışmalı.
+     */
+    bolumZemin: string;
+    /**
+     * Gövde metninin rengi. Sitedeki en çok okunan renk.
+     */
+    metin: string;
+    /**
+     * Başlıklar ve bağlantılar. Metin olarak kullanıldığı için AA aranır.
+     */
+    vurgu: string;
+    /**
+     * Ana eylem butonlarının zemini.
+     */
+    butonZemin: string;
+    /**
+     * Buton üzerindeki yazı.
+     */
+    butonMetin: string;
+    /**
+     * Pudra tonu — hero ve yumuşak vurgu blokları. YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.
+     */
+    yumusakZemin: string;
+    /**
+     * İnce ayraç çizgileri. YALNIZCA DEKORATİF: tek başına hiçbir bilgi taşımaz, metin rengi olarak kullanılamaz.
+     */
+    dekoratifCizgi: string;
+    /**
+     * Hero ve çağrı bantlarının koyu zemini.
+     */
+    koyuBantZemin: string;
+    /**
+     * Koyu bant üzerindeki yazı.
+     */
+    koyuBantMetin: string;
+  };
+  koyuTema: {
+    /**
+     * Sayfanın genel zemini.
+     */
+    zemin: string;
+    /**
+     * Vurgulanan bölümlerin zemini — ana zeminden ayrışmalı.
+     */
+    bolumZemin: string;
+    /**
+     * Gövde metninin rengi. Sitedeki en çok okunan renk.
+     */
+    metin: string;
+    /**
+     * Başlıklar ve bağlantılar. Metin olarak kullanıldığı için AA aranır.
+     */
+    vurgu: string;
+    /**
+     * Ana eylem butonlarının zemini.
+     */
+    butonZemin: string;
+    /**
+     * Buton üzerindeki yazı.
+     */
+    butonMetin: string;
+    /**
+     * Pudra tonu — hero ve yumuşak vurgu blokları. YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.
+     */
+    yumusakZemin: string;
+    /**
+     * İnce ayraç çizgileri. YALNIZCA DEKORATİF: tek başına hiçbir bilgi taşımaz, metin rengi olarak kullanılamaz.
+     */
+    dekoratifCizgi: string;
+    /**
+     * Hero ve çağrı bantlarının koyu zemini.
+     */
+    koyuBantZemin: string;
+    /**
+     * Koyu bant üzerindeki yazı.
+     */
+    koyuBantMetin: string;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Bir bölümü kapattığında ana sayfadan, altbilgiden ve arama motorundan aynı anda kalkar; adresine girilirse 404 döner. Verisi silinmez, geri açtığında yerinde olur.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1927,6 +2048,49 @@ export interface KurumsalBilgilerSelect<T extends boolean = true> {
   veriSorumlusu?: T;
   verbisKayitNo?: T;
   kvkkBasvuruEpostasi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "marka-gorunum_select".
+ */
+export interface MarkaGorunumSelect<T extends boolean = true> {
+  siteAdi?: T;
+  slogan?: T;
+  logo?: T;
+  logoKoyu?: T;
+  simgeKaynak?: T;
+  ogGorseli?: T;
+  acikTema?:
+    | T
+    | {
+        zemin?: T;
+        bolumZemin?: T;
+        metin?: T;
+        vurgu?: T;
+        butonZemin?: T;
+        butonMetin?: T;
+        yumusakZemin?: T;
+        dekoratifCizgi?: T;
+        koyuBantZemin?: T;
+        koyuBantMetin?: T;
+      };
+  koyuTema?:
+    | T
+    | {
+        zemin?: T;
+        bolumZemin?: T;
+        metin?: T;
+        vurgu?: T;
+        butonZemin?: T;
+        butonMetin?: T;
+        yumusakZemin?: T;
+        dekoratifCizgi?: T;
+        koyuBantZemin?: T;
+        koyuBantMetin?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

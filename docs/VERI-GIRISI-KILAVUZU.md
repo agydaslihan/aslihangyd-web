@@ -367,6 +367,77 @@ kaybolmuş olmalı. **/hakkimizda** sayfasına da bakın.
 
 ---
 
+## Marka ve Görünüm — logo ve renkler
+
+Bu bölüm veri girişi değil, görünüm ayarı. Sırası önemli değil; ne zaman
+isterseniz yapabilirsiniz.
+
+**Sol menü → Ayarlar → Marka ve Görünüm** (`/admin/globals/marka-gorunum`)
+
+### Marka sekmesi
+
+| Alan | Not |
+| --- | --- |
+| Site adı | Boş bırakırsanız "Aslıhan GYD" kullanılır |
+| Kısa slogan | Paylaşım kartlarında görünür |
+| Ana logo | SVG tercih edilir. ⚠️ Her sayfada yükleniyor — 50 kB üstünde uyarı çıkar (engel değil) |
+| Koyu tema logosu | İsteğe bağlı. Boşsa koyu temada da ana logo kullanılır |
+| Simge kaynağı | **Kare**, en az 512×512. Favicon ve tüm ikonlar bundan otomatik üretilir |
+| Paylaşım görseli | Önerilen 1200×630 |
+
+⚠️ **Logo yüklemek zorunda değilsiniz.** Logo yoksa site adı yazıyla
+gösterilir; site logosuz da düzgün çalışır.
+
+⚠️ **Favicon zaten çalışıyor.** Simge yüklemeseniz bile site adının baş
+harfinden marka renkleriyle bir simge üretiliyor. Kare görsel
+yüklediğinizde kendiliğinden ona döner.
+
+Sayfanın altındaki **Durum** kutusu logonun boyutunu ve simgenin kare olup
+olmadığını söyler. Bu kutu *kaydedilmiş* durumu gösterir — yeni yüklediğiniz
+dosya, kaydete bastıktan sonra görünür.
+
+### Renk sekmeleri
+
+İki sekme var: **Renkler — açık tema** ve **Renkler — koyu tema**. Her
+birinde on renk kutusu. Her kutuda bir renk seçici ve hex girişi.
+
+⚠️ **On yuvadan fazlası yok ve olmayacak.** Her yeni yuva yeni bir kontrast
+çifti demek.
+
+**Kontrast ölçümü** tablosu her renk değişiminde anında güncellenir:
+
+```
+Metin / Ana arka plan          12.69:1  ✓ AAA
+Buton metni / Buton zemini      4.74:1  ✓ AA
+Başlık / Bölüm arka planı       4.22:1  × AA için 4.5 gerekiyor
+```
+
+⚠️ **Bir çift bile AA'yı geçmiyorsa kaydedemezsiniz.** Kaydete bastığınızda
+ilgili renk kutusu kırmızı işaretlenir ve sebebi altında yazar. Bu kapı
+gevşetilemez — erişilebilirlik pazarlık konusu değil.
+
+Kırmızı satırın yanındaki **"Yakın alternatif"** düğmesi, aynı tonu koruyup
+eşiği geçen en yakın rengi önerir. Tıklayınca uygular.
+
+**Canlı önizleme** kartı renk değiştikçe güncellenir. Siteyi bozmadan
+deneyebilirsiniz — kaydetmeden hiçbir şey yayına girmez.
+
+**Hazır paletler**: Bohem/pudra (varsayılan), Klasik lacivert, Sıcak nötr.
+Ayrıca her zaman **"Varsayılana dön"**.
+
+### İki yuva metin rengi olarak kullanılamaz
+
+**Dekoratif çizgi** (gold) ve **Yumuşak vurgu zemini** (pudra) yalnızca
+zemin ve ayraçtır. Panelde bu not yazılı. Gold açık zeminde 2,14:1 verir —
+üstüne yazı gelirse okunmaz.
+
+### Kaydettikten sonra
+
+Renk değişikliği **anında** yayına girer; sunucuda bir şey yapmanız
+gerekmez, imajın yeniden derlenmesi gerekmez. Siteyi yenileyip görebilirsiniz.
+
+---
+
 ## 5. adım · Rayiç bedel CSV içe aktarma
 
 Belediyenin yayınladığı **rayiç bedel** (emlak vergisine esas asgari değer)
