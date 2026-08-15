@@ -24,6 +24,7 @@ import {
   yuzdeYaz,
 } from '@/lib/bicimlendirme'
 import { ILAN_DURUM_ETIKETLERI } from '@/lib/eids'
+import { googlePlacesEtkinMi } from '@/lib/google/ayarlar'
 import { iletisimTelefonu, kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
 import {
   BINA_KULLANIM_DURUMLARI,
@@ -77,11 +78,13 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
   // Taşınmazın kendi noktasına göre çevre; nokta girilmemişse mahalle
   // merkezine düşer. İkisi de yoksa bölüm hiç basılmaz.
-  const [kurumsal, cevre] = await Promise.all([
+  const [kurumsal, cevre, googlePlacesAcik] = await Promise.all([
     kurumsalBilgileriGetir(),
     mahalleCevresiGetir(
       ilan.konum ?? (typeof ilan.mahalle === 'object' ? ilan.mahalle?.merkez : null),
     ),
+    // ⚠️ Karar sunucuda: bölüm anahtarı VE API anahtarı birlikte gerekli.
+    googlePlacesEtkinMi(),
   ])
 
   const mahalle = typeof ilan.mahalle === 'object' ? ilan.mahalle : null
@@ -210,7 +213,11 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             {cevre.length > 0 ? (
               <section className="mt-10">
                 <h2 className="mb-3 font-sans text-baslik-3 font-medium">Çevre ve erişim</h2>
-                <CevreBolumu mesafeler={cevre} neyeGore={cevreNeyeGore} />
+                <CevreBolumu
+                  mesafeler={cevre}
+                  neyeGore={cevreNeyeGore}
+                  googlePlacesAcik={googlePlacesAcik}
+                />
               </section>
             ) : null}
 

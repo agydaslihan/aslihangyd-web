@@ -5,6 +5,7 @@ import { notFound } from 'next/navigation'
 
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
+import { RayicPiyasaOrani } from '@/components/mahalle/RayicPiyasaOrani'
 import { DroneVideo } from '@/components/medya/DroneVideo'
 import { SanalTur } from '@/components/medya/SanalTur'
 import { MahalleSkoru } from '@/components/skor/MahalleSkoru'
@@ -18,11 +19,13 @@ import { IstatistikIzgarasi, IstatistikKarti } from '@/components/ui/IstatistikK
 import { Rozet } from '@/components/ui/Rozet'
 import { ZenginMetin } from '@/components/ui/ZenginMetin'
 import { carpanYaz, degisimYaz, paraYaz, sayiYaz, whatsappBaglantisi } from '@/lib/bicimlendirme'
+import { googlePlacesEtkinMi } from '@/lib/google/ayarlar'
 import { kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
 import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
+import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
 import { konumuCoz } from '@/lib/veri/ilgiNoktalari'
 import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
@@ -61,12 +64,16 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
   if (!mahalle) notFound()
 
-  const [ilanlar, digerMahalleler, kurumsal, cevre] = await Promise.all([
+  const [ilanlar, digerMahalleler, kurumsal, cevre, googlePlacesAcik, rayic] = await Promise.all([
     mahalledekiIlanlariGetir(mahalle.id, 3),
     karsilastirilabilirMahalleler(mahalle.slug, 3),
     kurumsalBilgileriGetir(),
     // Merkez noktası girilmemişse sorgu hiç çalışmaz, boş dizi döner.
     mahalleCevresiGetir(mahalle.merkez),
+    // ⚠️ Karar sunucuda: bölüm anahtarı VE API anahtarı birlikte gerekli.
+    googlePlacesEtkinMi(),
+    // Rayiç bedel girilmemişse `null` döner; bileşen boş durumunu gösterir.
+    mahalleRayiciGetir(mahalle.id),
   ])
 
   /** Güneş haritası için mahalle merkezi. */
@@ -165,6 +172,20 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                 <VeriNotu kaynak={mahalle.veriKaynagi} tarih={tarihiYaz(mahalle.verilerinTarihi)} />
                 <Feragat ek="Rakamlar istenen fiyat gözlemlerine dayanır; gerçekleşen satış fiyatlarından farklı olabilir." />
               </div>
+
+              {/*
+                ⚠️ Rayiç/piyasa oranı temel rakamların ALTINDA duruyor,
+                aralarında değil. İki farklı şeyi ölçen rakamları aynı
+                ızgaraya koymak, ziyaretçiye "m² fiyatı" diye rayiç bedeli
+                okutur — sitedeki en pahalı yanlış anlama bu olurdu.
+              */}
+              <h3 className="text-govde mt-8 mb-3 font-sans font-medium">Rayiç bedel ve piyasa</h3>
+              <RayicPiyasaOrani
+                rayic={rayic}
+                piyasaM2={mahalle.ortalamaM2Satis}
+                gozlemSayisi={mahalle.gozlemSayisi}
+                verilerinTarihi={mahalle.verilerinTarihi}
+              />
             </section>
 
             {/* 4 ── Fiyat trendi */}
@@ -191,6 +212,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
               <CevreBolumu
                 mesafeler={cevre}
                 neyeGore={`${mahalle.ad} Mahallesi merkezinden`}
+                googlePlacesAcik={googlePlacesAcik}
                 sinifAdi="mb-4"
               />
 

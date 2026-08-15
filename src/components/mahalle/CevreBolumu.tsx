@@ -8,6 +8,8 @@ import { mesafeYaz } from '@/lib/bicimlendirme'
 import { sinif } from '@/lib/sinif'
 import { CEVRE_GOSTERIM_SIRASI, type PoiMesafesi } from '@/lib/yakinlik/tipler'
 
+import { GoogleCalismaSaatleri } from './GoogleCalismaSaatleri'
+
 /**
  * "Çevre ve erişim" — en yakın ilgi noktaları, gerçek mesafeleriyle.
  *
@@ -31,10 +33,20 @@ export function CevreBolumu({
   mesafeler,
   /** Başlıkta geçecek yer adı — "Muhittin Mahallesi merkezine" gibi. */
   neyeGore,
+  /**
+   * Google Places katmanı açık mı.
+   *
+   * ⚠️ Prop olarak geliyor, bileşen kendisi sormuyor: karar sunucuda
+   * veriliyor ve iki koşula birden bağlı (bölüm anahtarı + API anahtarı).
+   * Kapalıyken düğme HİÇ basılmıyor — basılıp tıklandığında "kapalı"
+   * diyen bir düğme, çalışmayan bir arayüz vaadidir.
+   */
+  googlePlacesAcik = false,
   sinifAdi,
 }: {
   mesafeler: readonly PoiMesafesi[]
   neyeGore: string
+  googlePlacesAcik?: boolean
   sinifAdi?: string
 }) {
   if (mesafeler.length === 0) {
@@ -76,6 +88,10 @@ export function CevreBolumu({
                 <span className="truncate">{mesafe.enYakinAd}</span>
                 {mesafe.onemli ? <Rozet ton="lacivert">Öne çıkan</Rozet> : null}
               </span>
+
+              {googlePlacesAcik && mesafe.googleBagliMi && mesafe.enYakinId !== null ? (
+                <GoogleCalismaSaatleri poiId={mesafe.enYakinId} poiAdi={mesafe.enYakinAd} />
+              ) : null}
             </div>
 
             <div className="flex shrink-0 flex-col items-end gap-0.5 text-right">

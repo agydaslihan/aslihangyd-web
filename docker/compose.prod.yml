@@ -130,6 +130,20 @@ services:
       # saatlerde yavaşlıyor ve içe aktarma zaman aşımına uğrayabiliyor.
       OVERPASS_ADRESI: ${OVERPASS_ADRESI:-}
 
+      # Google Places — OpenStreetMap'in zayıf kaldığı yeri tamamlayan
+      # opsiyonel katman.
+      #
+      # ⚠️ Boş bırakmak GÜVENLİ ve varsayılan: anahtar yoksa katman sessizce
+      # kapalı kalır ve site OSM verisiyle aynen çalışır. Anahtar tek başına
+      # da yetmez — Site Bölümleri → "Google Places katmanı" da açık olmalı.
+      #
+      # ⚠️ ÜCRETLİ. Her arama ve her çalışma saati gösterimi bir çağrıdır;
+      # aylık sayı panelde (Ayarlar → Google Places Kullanımı) görünür.
+      #
+      # ⚠️ LİSANS: Google içeriği veritabanına YAZILMAZ. Saklanan tek şey yer
+      # kimliği; ad, adres ve çalışma saati gösterildiği anda çekilir.
+      GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
+
       # ⚠️ ANTHROPIC_API_KEY VE ANTHROPIC_ARAMA_MODELI BİLİNÇLİ OLARAK YOK.
       #
       # AI doğal dil arama, avukat metinleri gelene kadar ERTELENDİ: ziyaretçi

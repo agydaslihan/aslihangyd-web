@@ -36,7 +36,18 @@ export interface PoiMesafesi {
    * bu yüzden kaynak kayıt bazında taşınıyor ve atıf yalnızca OSM kaydı
    * gösterildiğinde basılıyor.
    */
-  kaynak: 'elle' | 'osm'
+  kaynak: 'elle' | 'osm' | 'google'
+  /** En yakın kaydın kimliği — Google detay çağrısı bunun üzerinden yapılır. */
+  enYakinId: number | null
+  /**
+   * En yakın kaydın Google yer kimliğinin VAR OLUP OLMADIĞI.
+   *
+   * ⚠️ Kimliğin kendisi istemciye inmiyor. Ziyaretçinin sorabileceği tek
+   * şey "bizim şu noktamızın güncel bilgisi"; hangi Google kaydının
+   * sorulacağını seçebilseydi site, Google Places'in ücretsiz vekil
+   * sunucusuna dönerdi ve faturayı biz öderdik.
+   */
+  googleBagliMi: boolean
 }
 
 /** Skor önerisi üretilirken tek bir mahallenin girdisi. */

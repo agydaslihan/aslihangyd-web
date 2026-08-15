@@ -74,6 +74,7 @@ export interface Config {
     'danisman-basvurulari': DanismanBasvurulari;
     degerlemeler: Degerlemeler;
     gozlemler: Gozlemler;
+    'rayic-degerler': RayicDegerler;
     'vergi-parametreleri': VergiParametreleri;
     sayfalar: Sayfalar;
     medya: Medya;
@@ -93,6 +94,7 @@ export interface Config {
     'danisman-basvurulari': DanismanBasvurulariSelect<false> | DanismanBasvurulariSelect<true>;
     degerlemeler: DegerlemelerSelect<false> | DegerlemelerSelect<true>;
     gozlemler: GozlemlerSelect<false> | GozlemlerSelect<true>;
+    'rayic-degerler': RayicDegerlerSelect<false> | RayicDegerlerSelect<true>;
     'vergi-parametreleri': VergiParametreleriSelect<false> | VergiParametreleriSelect<true>;
     sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
     medya: MedyaSelect<false> | MedyaSelect<true>;
@@ -115,6 +117,7 @@ export interface Config {
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
     'bakim-durumu': BakimDurumu;
+    'google-places-kullanimi': GooglePlacesKullanimi;
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
@@ -124,6 +127,7 @@ export interface Config {
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
     'bakim-durumu': BakimDurumuSelect<false> | BakimDurumuSelect<true>;
+    'google-places-kullanimi': GooglePlacesKullanimiSelect<false> | GooglePlacesKullanimiSelect<true>;
   };
   locale: null;
   widgets: {
@@ -448,6 +452,10 @@ export interface Mahalleler {
    */
   ad: string;
   /**
+   * Kırsal mahalleler (eski köyler) sitede ayrıca işaretlenir. Emin değilseniz boş bırakın — boş alan rozet göstermez.
+   */
+  yerlesimTuru?: ('merkez' | 'kirsal') | null;
+  /**
    * Mahalle listesinde ve kartlarda görünen 1-2 cümle.
    */
   ozet?: string | null;
@@ -526,7 +534,7 @@ export interface Mahalleler {
    */
   merkez?: [number, number] | null;
   /**
-   * geojson.io üzerinde çizip GeoJSON çıktısını buraya yapıştırabilirsin. Boşsa haritada sınır çizgisi gösterilmez, sadece merkez noktası kullanılır.
+   * OpenStreetMap sınır içe aktarma ekranından tek tıkla doldurulabilir. Elle çizmek isterseniz geojson.io üzerinde çizip çıktıyı buraya yapıştırın. Boşsa haritada sınır çizgisi gösterilmez, sadece merkez noktası kullanılır.
    */
   sinir?:
     | {
@@ -537,6 +545,18 @@ export interface Mahalleler {
     | number
     | boolean
     | null;
+  /**
+   * İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı sınırlar sitede "© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği).
+   */
+  sinirKaynagi?: ('elle' | 'osm') | null;
+  /**
+   * Örn. "relation/123456". Yeniden içe aktarmada aynı sınırı bulmak için.
+   */
+  sinirOsmKimlik?: string | null;
+  /**
+   * Sınırı ya da merkez noktasını elle değiştirdiğinizde otomatik işaretlenir ve yeniden içe aktarma onu EZMEZ. İşareti kaldırırsanız sınır tekrar OpenStreetMap'ten güncellenir.
+   */
+  sinirElleDuzenlendi?: boolean | null;
   /**
    * Bunny Stream video kimliği. Boşsa hero bölümü görsele düşer.
    */
@@ -645,9 +665,13 @@ export interface IlgiNoktalari {
   onemli?: boolean | null;
   detay?: string | null;
   /**
-   * İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı kayıtlar sitede "© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği).
+   * İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı kayıtlar sitede "© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği). "Google Places" yalnızca elle girilen kayıtlar için bir köken beyanıdır — Google içeriği hiçbir zaman otomatik olarak kaydedilmez.
    */
-  kaynak: 'elle' | 'osm';
+  kaynak: 'elle' | 'osm' | 'google';
+  /**
+   * Google Places eşleştirme ekranından doldurulur. Yalnızca kimlik saklanır; çalışma saati ve işletme adı gösterileceği anda Google’dan çekilir, kaydedilmez (lisans gereği). Boşsa bu nokta için Google katmanı çalışmaz.
+   */
+  googlePlaceId?: string | null;
   /**
    * Örn. "node/123456". Yeniden içe aktarmada aynı kaydı bulmak için kullanılır.
    */
@@ -819,6 +843,50 @@ export interface Gozlemler {
    */
   ay?: string | null;
   ozet?: string | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
+ * Emlak vergisine esas asgari değerler. ⚠️ Piyasa fiyatı DEĞİLDİR — piyasanın çoğu yerde altındadır. Kaynağı ve yılı sitede her gösterimde birlikte yayınlanır.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rayic-degerler".
+ */
+export interface RayicDegerler {
+  id: number;
+  /**
+   * Listede görünen ad; kaydettiğinizde otomatik üretilir.
+   */
+  ozet?: string | null;
+  mahalle: number | Mahalleler;
+  /**
+   * Rayiç bedelin ait olduğu yıl. Her yıl yeniden değerleme oranıyla artar; yıl yazılmadan rakam anlamsızdır.
+   */
+  yil: number;
+  /**
+   * Belediye tabloları çoğu zaman sokak bazında gelir. Boş bırakılırsa değer mahallenin geneli için kabul edilir. ⚠️ Sokak bazlı ve mahalle geneli kayıtlar birlikte durabilir; site mahalle genelini kullanır.
+   */
+  sokak?: string | null;
+  /**
+   * Konut/bina için metrekare başına vergiye esas asgari değer.
+   */
+  metrekareRayicBedel?: number | null;
+  /**
+   * Arsa metrekaresi başına vergiye esas asgari değer.
+   */
+  arsaRayicBedel?: number | null;
+  /**
+   * Sitede rakamın yanında aynen gösterilir.
+   */
+  kaynak: 'belediye' | 'tkgm' | 'elle';
+  /**
+   * Tabloyu hangi tarihte aldığınız. "Veriler [tarih] itibarıyladır" ibaresi bundan üretilir.
+   */
+  guncellemeTarihi?: string | null;
+  /**
+   * Hangi belediye, hangi tablo, hangi sayfa. ⚠️ Kaynağı "elle" seçtiyseniz nereden aldığınızı buraya yazın — kaynağı yazılmayan rakam denetlenemez.
+   */
+  notlar?: string | null;
   updatedAt: string;
   createdAt: string;
 }
@@ -1006,6 +1074,10 @@ export interface PayloadLockedDocument {
         value: number | Gozlemler;
       } | null)
     | ({
+        relationTo: 'rayic-degerler';
+        value: number | RayicDegerler;
+      } | null)
+    | ({
         relationTo: 'vergi-parametreleri';
         value: number | VergiParametreleri;
       } | null)
@@ -1149,6 +1221,7 @@ export interface MahallelerSelect<T extends boolean = true> {
   veriEksik?: T;
   siraNo?: T;
   ad?: T;
+  yerlesimTuru?: T;
   ozet?: T;
   oneCikanOzellikler?:
     | T
@@ -1178,6 +1251,9 @@ export interface MahallelerSelect<T extends boolean = true> {
   veriKaynagi?: T;
   merkez?: T;
   sinir?: T;
+  sinirKaynagi?: T;
+  sinirOsmKimlik?: T;
+  sinirElleDuzenlendi?: T;
   droneVideoId?: T;
   droneVideoPosteri?: T;
   sanalTurUrl?: T;
@@ -1217,6 +1293,7 @@ export interface IlgiNoktalariSelect<T extends boolean = true> {
   onemli?: T;
   detay?: T;
   kaynak?: T;
+  googlePlaceId?: T;
   osmKimlik?: T;
   elleDuzenlendi?: T;
   updatedAt?: T;
@@ -1322,6 +1399,23 @@ export interface GozlemlerSelect<T extends boolean = true> {
   notlar?: T;
   ay?: T;
   ozet?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "rayic-degerler_select".
+ */
+export interface RayicDegerlerSelect<T extends boolean = true> {
+  ozet?: T;
+  mahalle?: T;
+  yil?: T;
+  sokak?: T;
+  metrekareRayicBedel?: T;
+  arsaRayicBedel?: T;
+  kaynak?: T;
+  guncellemeTarihi?: T;
+  notlar?: T;
   updatedAt?: T;
   createdAt?: T;
 }
@@ -1599,6 +1693,10 @@ export interface SiteBolumleri {
    */
   ai_arama?: boolean | null;
   /**
+   * ⚠️ ÜCRETLİ. OpenStreetMap’in zayıf kaldığı yerde işletme adı ve çalışma saatlerini Google’dan tamamlar. Anahtar (GOOGLE_PLACES_API_KEY) tanımlı değilse açık olsa bile çalışmaz. Aylık çağrı sayısı Ayarlar → Google Places Kullanımı ekranında.
+   */
+  google_places?: boolean | null;
+  /**
    * Mahalle medyanına göre fırsat ve risk sinyalleri.
    */
   bolge_radari?: boolean | null;
@@ -1784,6 +1882,26 @@ export interface BakimDurumu {
   createdAt?: string | null;
 }
 /**
+ * Google Places API çağrılarının aylık sayısı. Yalnızca gerçekten yapılan çağrılar sayılır; sayaç elle düzenlenemez. Katmanı kapatmak için Site Bölümleri → "Google Places" anahtarını kullanın.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "google-places-kullanimi".
+ */
+export interface GooglePlacesKullanimi {
+  id: number;
+  aylar?:
+    | {
+        ay: string;
+        aramaCagrisi?: number | null;
+        detayCagrisi?: number | null;
+        sonCagri?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "kurumsal-bilgiler_select".
  */
@@ -1826,6 +1944,7 @@ export interface SiteBolumleriSelect<T extends boolean = true> {
   mahalle_testi?: T;
   simulator?: T;
   ai_arama?: T;
+  google_places?: T;
   bolge_radari?: T;
   updatedAt?: T;
   createdAt?: T;
@@ -1933,6 +2052,24 @@ export interface BakimDurumuSelect<T extends boolean = true> {
         sonBasariliCalisma?: T;
         sonHata?: T;
         sonIslenen?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "google-places-kullanimi_select".
+ */
+export interface GooglePlacesKullanimiSelect<T extends boolean = true> {
+  aylar?:
+    | T
+    | {
+        ay?: T;
+        aramaCagrisi?: T;
+        detayCagrisi?: T;
+        sonCagri?: T;
         id?: T;
       };
   updatedAt?: T;

@@ -13,7 +13,10 @@ import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
 import { SOSYAL_YOLU } from '@/components/sosyal/yol'
 import { GOZLEM_ICE_AKTARMA_YOLU } from '@/components/gozlem/yol'
+import { GOOGLE_YOLU } from '@/components/google/yol'
+import { MAHALLE_VERISI_YOLU } from '@/components/mahalleVerisi/yol'
 import { OSM_YOLU } from '@/components/osm/yol'
+import { RAYIC_YOLU } from '@/components/rayic/yol'
 import { YAKINLIK_YOLU } from '@/components/yakinlik/yol'
 import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
@@ -21,6 +24,7 @@ import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
 import { Kullanicilar } from '@/collections/Kullanicilar'
 import { Mahalleler } from '@/collections/Mahalleler'
 import { Medya } from '@/collections/Medya'
+import { RayicDegerler } from '@/collections/RayicDegerler'
 import { Sayfalar } from '@/collections/Sayfalar'
 import { Talepler } from '@/collections/Talepler'
 import { VergiParametreleri } from '@/collections/VergiParametreleri'
@@ -28,6 +32,7 @@ import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
 import { BakimDurumu } from '@/globals/BakimDurumu'
 import { DanismanOl } from '@/globals/DanismanOl'
+import { GooglePlacesKullanimi } from '@/globals/GooglePlacesKullanimi'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
 import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
 import { SiteBolumleri } from '@/globals/SiteBolumleri'
@@ -116,6 +121,44 @@ export default buildConfig({
         },
 
         /**
+         * Mahalle verisi kurulumu — liste + OpenStreetMap sınırları.
+         *
+         * ⚠️ Yalnızca YÖNETİCİ: yirmiden fazla kayıt açıyor ve mahalle
+         * sınırlarını topluca değiştiriyor. ⚠️ Bu ekran RAKAM YAZMAZ; ad,
+         * yerleşim türü, sınır ve merkez dışında hiçbir alana dokunmaz.
+         * ⚠️ ODbL atıf yükümlülüğü sınırlar için de geçerli.
+         */
+        mahalleVerisi: {
+          Component: '@/components/mahalleVerisi/MahalleVerisiGorunumu#default',
+          path: MAHALLE_VERISI_YOLU,
+        },
+
+        /**
+         * Google Places eşleştirme.
+         *
+         * ⚠️ Yalnızca YÖNETİCİ: her arama ücretli bir API çağrısı.
+         * ⚠️ Ekran Google İÇERİĞİNİ KAYDETMEZ; yazdığı tek alan
+         * `googlePlaceId`. Lisans, yer kimliği dışındaki içeriğin kalıcı
+         * saklanmasına izin vermiyor.
+         */
+        googlePlaces: {
+          Component: '@/components/google/GoogleGorunumu#default',
+          path: GOOGLE_YOLU,
+        },
+
+        /**
+         * Rayiç bedel CSV içe aktarma.
+         *
+         * ⚠️ Yalnızca YÖNETİCİ: bu veri alım maliyeti hesaplayıcısını ve
+         * mahalle sayfasındaki rayiç/piyasa oranını besliyor; yanlış rakam
+         * ziyaretçiye yanlış vergi hesabı gösterir.
+         */
+        rayicIceAktarma: {
+          Component: '@/components/rayic/RayicGorunumu#default',
+          path: RAYIC_YOLU,
+        },
+
+        /**
          * Yakınlıktan skor önerileri.
          *
          * ⚠️ Bu ekran da hiçbir şey KAYDETMEZ. İlgi noktası
@@ -135,7 +178,10 @@ export default buildConfig({
         '@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi',
         '@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi',
         '@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi',
+        '@/components/mahalleVerisi/MahalleVerisiNavBaglantisi#MahalleVerisiNavBaglantisi',
         '@/components/osm/OsmNavBaglantisi#OsmNavBaglantisi',
+        '@/components/google/GoogleNavBaglantisi#GoogleNavBaglantisi',
+        '@/components/rayic/RayicNavBaglantisi#RayicNavBaglantisi',
         '@/components/yakinlik/YakinlikNavBaglantisi#YakinlikNavBaglantisi',
       ],
     },
@@ -149,6 +195,7 @@ export default buildConfig({
     DanismanBasvurulari,
     Degerlemeler,
     Gozlemler,
+    RayicDegerler,
     VergiParametreleri,
     Sayfalar,
     Medya,
@@ -164,6 +211,7 @@ export default buildConfig({
     DegerlemeAyarlari,
     EndeksAyarlari,
     BakimDurumu,
+    GooglePlacesKullanimi,
   ],
 
   editor: lexicalEditor(),

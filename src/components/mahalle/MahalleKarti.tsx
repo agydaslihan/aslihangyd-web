@@ -42,6 +42,7 @@ export function MahalleKarti({
   const gorsel = typeof mahalle.kapakGorseli === 'object' ? mahalle.kapakGorseli : null
   const m2 = paraYaz(mahalle.ortalamaM2Satis)
   const carpan = carpanYaz(mahalle.kiraCarpani)
+  const kirsal = mahalle.yerlesimTuru === 'kirsal'
 
   return (
     <article className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col overflow-hidden border-[0.5px] transition-shadow">
@@ -75,8 +76,14 @@ export function MahalleKarti({
           </p>
         ) : null}
 
-        {m2 || carpan ? (
+        {m2 || carpan || kirsal ? (
           <div className="mt-auto flex flex-wrap gap-2 pt-2">
+            {/*
+              ⚠️ Yalnızca KIRSAL rozetleniyor, merkez değil.
+              Her karta rozet koymak ayrımı görünmez kılar: yirmi yedi
+              mahallenin hepsinde bir rozet varsa rozet bilgi taşımaz.
+            */}
+            {kirsal ? <Rozet>Kırsal mahalle (eski köy)</Rozet> : null}
             {m2 ? <Rozet>Ort. m²: {m2}</Rozet> : null}
             {carpan ? <Rozet ton="lacivert">Kira çarpanı {carpan}</Rozet> : null}
           </div>

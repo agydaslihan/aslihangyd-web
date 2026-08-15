@@ -66,6 +66,118 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
       Nereye: Payload admin → Ayarlar → Kurumsal Bilgiler
               (yedek olarak `.env` → `ILETISIM_EPOSTA`, `ILETISIM_TELEFON`)
 
+## ⭐ A paketi sonrası — mahalle verisini doldurma (SIRA ÖNEMLİ)
+
+15 Ağustos 2026'da mahalle veri altyapısı bitti. Ekranlar hazır, koleksiyonlar
+hazır, içe aktarıcılar hazır — **içleri boş.** Ben veri girmedim ve
+girmeyeceğim (CLAUDE.md kural 2).
+
+⚠️ **Aşağıdaki sıra zorunlu.** Her adım bir öncekinin çıktısını kullanıyor;
+atlanan adım sonrakini sessizce çalışmaz hâle getirir.
+
+- [ ] **1. Mahalle listesini oluştur** — `/admin/mahalle-verisi` → 1. adım
+
+      "Önizle"ye bas, listeyi gör, sonra "Oluştur". 18 merkez + 9 kırsal
+      mahalle **yalnızca adıyla** açılır; koordinat, sınır ve rakamlar boş
+      kalır ve kayıtlar yayında değil taslak doğar.
+
+      ⚠️ **VELİMEŞE listede yok** — Ergene ilçesinde, Çorlu'da değil. Benim
+      eski hatamdı, düzeltildi. Veritabanında duruyorsa önizleme onu
+      "liste dışı" diye gösterir ama **silmez**; silmek senin kararın.
+
+      ⚠️ Bir mahalle eksik ya da fazla görünüyorsa **bana söyle**, panelden
+      elle eklemeden önce: liste kodda tek kaynaktan geliyor ve testi var.
+
+- [ ] **2. OSM sınırlarını çek** — `/admin/mahalle-verisi` → 2. adım
+
+      1. adım olmadan çalışmaz (eşleştirecek mahalle kaydı bulamaz).
+      Sınırlar ve mahalle merkez koordinatları OpenStreetMap'ten gelir.
+
+      ⚠️ **OSM'de Türkiye mahalle sınırları eksik ve yer yer yanlış.** Rapor
+      sana üç listeyi ayrı ayrı verir: yazılanlar, sınırı gelmeyen
+      mahalleler, bizde karşılığı olmayan OSM adayları. Sınırı gelmeyen bir
+      mahallenin sınırını panelden elle çizebilirsin.
+
+      ⚠️ **Elle düzelttiğin sınır bir daha ezilmez.** İkinci kez içe
+      aktarma o kaydı atlar ve raporda "korunacak" der. Bu koruma bilinçli;
+      ezilmesini istiyorsan panelden "Sınırın kaynağı" bölümündeki elle
+      düzenleme işaretini kaldırman gerekir.
+
+- [ ] **3. OSM ilgi noktalarını çek** — `/admin/osm-poi-ice-aktar`
+
+      ⚠️ **2. adım olmadan çalışmaz.** Arama alanı mahalle merkezlerinden
+      türetiliyor; merkez yoksa arama alanı da yok. Bugüne kadar POI içe
+      aktarmanın boş dönmesinin sebebi buydu.
+
+- [ ] **4. Belediye rayiç bedel tablosunu yükle** — `/admin/rayic-ice-aktar`
+
+      ⭐ Paketin en değerli parçası ve **tamamen sende.**
+
+      Nereden: Çorlu Belediyesi → Emlak Servisi → takdir komisyonu rayiç
+      bedel cetveli (yıllık yayınlanır). PDF geliyorsa Excel'e çevir,
+      Excel'den CSV olarak kaydet, ya da tabloyu doğrudan ekrandaki kutuya
+      yapıştır.
+
+      Gereken en az sütunlar: **mahalle** ve **m² rayiç bedel**. Yıl,
+      sokak, arsa rayici, kaynak ve not isteğe bağlı.
+
+      Ne işe yarıyor:
+      - Tapu harcı matrahı satış bedelinin altına inemiyor →
+        `/araclar/alim-maliyeti` gerçek harcı hesaplıyor
+      - Her yıl güncellendiği için tarihsel seri oluşuyor
+      - ⭐ **Rayiç/piyasa oranı** — "bu mahallede piyasa fiyatı rayiç bedelin
+        ~3,2 katı". Türkiye'de bunu yayınlayan yok. Mahalle sayfasında
+        çıkıyor, ama **hem rayiç hem gözlem verisi** gerekiyor.
+
+      ⚠️ Tanımadığı mahalle adını **tahmin etmiyor, hata veriyor**. Yanlış
+      mahalleye yazılan bir rayiç harç hesabını sessizce bozardı.
+
+      ⚠️ Çok küçük ya da çok büyük değerlerde uyarı çıkarsa **ciddiye al**:
+      Türkçe Excel `1.250,00`u 125.000 okuyabiliyor.
+
+      ⚠️ Aynı tabloyu düzeltip ikinci kez yüklemek kopya üretmez, üzerine
+      yazar (mahalle + sokak + yıl aynıysa).
+
+- [ ] **5. (İsteğe bağlı, ÜCRETLİ) Google Places katmanı**
+
+      OSM'de işletme adı ve çalışma saati zayıf. Resmî Places API bunu
+      tamamlıyor — **scraping değil**, kendi anahtarımızla lisanslı çağrı.
+
+      Açmak için **iki şey birden** gerekiyor:
+      1. `.env` → `GOOGLE_PLACES_API_KEY` (console.cloud.google.com →
+         "Places API (New)" → API anahtarı; anahtara mutlaka IP kısıtı koy)
+      2. Panel → Site Bölümleri → **Google Places** anahtarını aç
+
+      ⚠️ Anahtarı sunucuya koymak katmanı **açmaz**. Ücretli bir servisi
+      kendiliğinden başlatmıyoruz; açma kararı senin.
+
+      ⚠️ **Ne kadar tutar bilmiyorum ve tahmin etmiyorum** — Google'ın
+      fiyatlandırması bölgeye ve aylık hacme göre değişiyor. Google Cloud
+      tarafında **fatura uyarısı kur**. Bizim tarafımızdaki sayaç:
+      Panel → Google Places (aylık arama ve detay çağrısı sayısı).
+
+      ⚠️ Otomatik kapanma yok. Sayaç beklediğinden yüksekse bölüm
+      anahtarını kapat — site OSM verisiyle aynen çalışmaya devam eder.
+
+      Çalışma biçimi: her POI'yi panelden **tek tek** Google'da aratıp
+      eşleştiriyorsun (toplu eşleştirme bilinçli olarak yok — hangi
+      "Migros"un hangisi olduğuna insan karar vermeli). Eşleştirilen
+      noktada ziyaretçi "Çalışma saatleri"ne basınca bilgi o anda
+      Google'dan çekiliyor. **Hiçbir şey kaydedilmiyor** — lisans buna
+      izin vermiyor.
+
+- [ ] **6. `/veri-kaynaklari` sayfasını bir kez oku**
+
+      Sayfa artık canlı: kayıt sayıları ve son güncelleme tarihleri
+      veritabanından geliyor. Yukarıdaki adımları yaptıkça kendiliğinden
+      dolacak. Rayiç bölümüne **hangi belediyeden, hangi yıl** aldığını
+      içe aktarma sırasında "kaynak" ve "yıl" alanlarına yazarsan orada
+      görünür.
+
+      ⚠️ Sayfadaki "Piyasa fiyatları kendi gözlemlerimize dayanır ve
+      istenen fiyattır" uyarısı ve OpenStreetMap atfı **kaldırılamaz** —
+      ilki dürüstlük, ikincisi ODbL lisans yükümlülüğü.
+
 ## Önemli (içerik eksikliği)
 
 - [ ] **İlanlara cephe yönü girin** (Güneş Haritası için)

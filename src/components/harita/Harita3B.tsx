@@ -535,7 +535,27 @@ function katmanlariKur(harita: MapLibreMap): void {
 
   const bosKoleksiyon: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
 
-  dene(() => harita.addSource(KAYNAK_MAHALLE, { type: 'geojson', data: bosKoleksiyon }))
+  /**
+   * ⚠️ MAHALLE SINIRLARINDA ODbL ATIF YÜKÜMLÜLÜĞÜ.
+   *
+   * Sınır poligonları OpenStreetMap'ten içe aktarılıyor (elle çizilenler
+   * hariç) ve ODbL atıf zorunlu kılıyor. Taban haritanın atfı bunu
+   * kapsamaz: o MapTiler'ın verisi, bu bizim türetilmiş katmanımız.
+   *
+   * `attribution` kaynağa yazılıyor, ekrana elle bir yazı konmuyor —
+   * MapLibre'nin atıf denetimi kaynağın atfını kendiliğinden gösterir ve
+   * katman kaldırılırsa atıf da doğru biçimde kaybolur. İki yerde ayrı
+   * yazılsaydı biri kalır diğeri giderdi.
+   */
+  dene(() =>
+    harita.addSource(KAYNAK_MAHALLE, {
+      type: 'geojson',
+      data: bosKoleksiyon,
+      attribution:
+        'Mahalle sınırları: © <a href="https://www.openstreetmap.org/copyright" ' +
+        'target="_blank" rel="noreferrer">OpenStreetMap katkıcıları</a>',
+    }),
+  )
   dene(() => harita.addSource(KAYNAK_SUTUN, { type: 'geojson', data: bosKoleksiyon }))
   dene(() => harita.addSource(KAYNAK_NOKTA, { type: 'geojson', data: bosKoleksiyon }))
 

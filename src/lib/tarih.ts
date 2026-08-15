@@ -50,6 +50,17 @@ export function bugununAnahtari(simdi: Date = new Date()): GunAnahtari {
 }
 
 /**
+ * 'YYYY-AA' biçimli ay anahtarı — Türkiye saatinde.
+ *
+ * Gün anahtarından türetiliyor ki iki ayrı saat dilimi çözümü olmasın:
+ * ayın ilk gününün gece yarısına denk gelen bir çağrı, UTC'de bir önceki
+ * aya düşer ve sayaç yanlış aya yazardı.
+ */
+export function ayAnahtari(simdi: Date = new Date()): string {
+  return bugununAnahtari(simdi).slice(0, 7)
+}
+
+/**
  * İki gün anahtarı arasındaki tam gün farkı (bitis - baslangic).
  * Her iki uç da UTC gece yarısı kabul edilir; bu sayede yaz saati
  * geçişleri sonucu etkilemez.

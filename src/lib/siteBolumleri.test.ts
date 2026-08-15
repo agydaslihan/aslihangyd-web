@@ -20,6 +20,7 @@ describe('bölüm tanımları', () => {
       'mahalle_testi',
       'simulator',
       'ai_arama',
+      'google_places',
       'bolge_radari',
     ])
   })
@@ -30,10 +31,13 @@ describe('bölüm tanımları', () => {
    * ⚠️ Liste bilinçli olarak açıkça yazılıyor; "kapalı olanları atla"
    * demek, yeni bir bölümün yanlışlıkla kapalı doğmasını gizlerdi.
    *
-   * · `danisman_ol` — şartname gereği (henüz danışman alımı yok)
-   * · `ai_arama`   — KVKK: aydınlatma metni avukattan gelmeden açılmaz
+   * · `danisman_ol`   — şartname gereği (henüz danışman alımı yok)
+   * · `ai_arama`      — KVKK: aydınlatma metni avukattan gelmeden açılmaz
+   * · `google_places` — MALİYET: ücretli servis, kendiliğinden açılmamalı.
+   *                     Anahtar tanımlı olsa bile bu anahtar açılmadan
+   *                     hiçbir Google çağrısı yapılmaz.
    */
-  const VARSAYILAN_KAPALILAR: BolumAnahtari[] = ['danisman_ol', 'ai_arama']
+  const VARSAYILAN_KAPALILAR: BolumAnahtari[] = ['danisman_ol', 'ai_arama', 'google_places']
 
   it('yalnızca gerekçesi olan bölümler kapalı başlar', () => {
     const varsayilan = varsayilanDurumlar()
@@ -148,5 +152,29 @@ describe('AI arama bölümü', () => {
 
   it('altbilgi gezinmesinde görünmez', () => {
     expect(bolumTanimi('ai_arama').gezinmede).toBe(false)
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+describe('Google Places bölümü', () => {
+  it('VARSAYILAN KAPALI — maliyet kararı', () => {
+    // ⚠️ Ücretli servis. Anahtar sunucuya konur konmaz kendiliğinden
+    // açılmamalı; açma kararı insanın.
+    expect(bolumTanimi('google_places').varsayilanAcik).toBe(false)
+    expect(varsayilanDurumlar().google_places).toBe(false)
+  })
+
+  it('rotası yok — sayfa değil, mevcut sayfaların üzerinde bir katman', () => {
+    expect(bolumTanimi('google_places').rotalar).toEqual([])
+  })
+
+  it('rotası olmadığı için hiçbir yolu 404 yapmaz', () => {
+    const durumlar = { ...varsayilanDurumlar(), google_places: false }
+    expect(kapaliBolumeAitMi('/mahalleler/muhittin', durumlar)).not.toBe('google_places')
+    expect(kapaliBolumeAitMi('/veri-kaynaklari', durumlar)).not.toBe('google_places')
+  })
+
+  it('altbilgi gezinmesinde görünmez', () => {
+    expect(bolumTanimi('google_places').gezinmede).toBe(false)
   })
 })

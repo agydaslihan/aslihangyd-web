@@ -157,12 +157,40 @@ export const IlgiNoktalari: CollectionConfig = {
           options: [
             { value: 'elle', label: 'Elle girildi' },
             { value: 'osm', label: 'OpenStreetMap' },
+            { value: 'google', label: 'Google Places (elle doğrulandı)' },
           ],
           admin: {
             readOnly: true,
             description:
               'İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı kayıtlar sitede ' +
-              '"© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği).',
+              '"© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği). ' +
+              '"Google Places" yalnızca elle girilen kayıtlar için bir köken beyanıdır — ' +
+              'Google içeriği hiçbir zaman otomatik olarak kaydedilmez.',
+          },
+        },
+        {
+          /**
+           * ─────────────────────────────────────────────────────────────
+           * ⚠️ GOOGLE'DAN SAKLADIĞIMIZ TEK ŞEY BU ALAN.
+           *
+           * Places lisansı, yer kimliği dışındaki içeriğin kalıcı olarak
+           * saklanmasına izin vermiyor. Ad, adres, çalışma saati, telefon
+           * — hiçbiri veritabanına yazılmıyor; gösterileceği anda çekilip
+           * Google atfıyla gösteriliyor ve hiçbir yere kaydedilmiyor.
+           *
+           * Bu alan bir bağlantıdır, bir kopya değil: "bu bizim noktamız,
+           * Google'daki karşılığı şu".
+           * ─────────────────────────────────────────────────────────────
+           */
+          name: 'googlePlaceId',
+          type: 'text',
+          label: 'Google yer kimliği',
+          index: true,
+          admin: {
+            description:
+              'Google Places eşleştirme ekranından doldurulur. Yalnızca kimlik saklanır; ' +
+              'çalışma saati ve işletme adı gösterileceği anda Google’dan çekilir, ' +
+              'kaydedilmez (lisans gereği). Boşsa bu nokta için Google katmanı çalışmaz.',
           },
         },
         {

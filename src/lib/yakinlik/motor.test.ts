@@ -18,6 +18,8 @@ function mesafe(tip: PoiTipi, metre: number, yakindaSayi = 1): PoiMesafesi {
     yakindaSayi,
     onemli: false,
     kaynak: 'elle',
+    enYakinId: null,
+    googleBagliMi: false,
   }
 }
 
