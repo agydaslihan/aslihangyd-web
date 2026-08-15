@@ -340,6 +340,27 @@
    *
    * ⚠️ Renk yine tek başına bilgi taşımıyor; her hatanın yanında metin var.
    */
+  /**
+   * ⚠️ SABİT KOYU BANT ÜZERİNDEKİ UYARI METNİ — tema jetonu DEĞİL.
+   *
+   * Lighthouse ölçümünde çıktı: altbilgideki "yetki belgesi girilmedi"
+   * uyarısı `uyari-metin` kullanıyordu ve koyu kakao bant üzerinde
+   * 2,01:1 veriyordu — ağır ihlal. Eski lacivert bantta da 2,28'di, yani
+   * hata bu paletle gelmedi, bu paletle GÖRÜLDÜ.
+   *
+   * Sebep tanıdık: altbilgi iki temada da koyu. Zemin değişmiyorsa
+   * üzerindeki metin de değişmemeli — açık tema için doğru olan koyu
+   * uyarı tonu, kendi bandında okunmuyor. Gold rozetinde ve üst şeritte
+   * aynı tuzağa düşülmüştü.
+   *
+   * ⚠️ Değer gold rampasından ama `text-gold-*` sınıfı DEĞİL: gold asla
+   * metin rengi değildir kuralı, gold'un metin olarak kullanılamayacağını
+   * değil, AÇIK ZEMİNDE kullanılamayacağını söylüyor (orada 2,14:1).
+   * Koyu kakao üzerinde 7,28:1. Ayrı jeton, kuralın istisnasını
+   * kullanımın kendisine değil bir isme bağlıyor.
+   */
+  --color-uyari-koyu-bant: var(--color-gold-300);
+
   --color-hata: #9a2b3a;
   --color-hata-zemin: #faeceb;
   /**

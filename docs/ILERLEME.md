@@ -4036,3 +4036,65 @@ pnpm build      ✅
 Testler fiziği sınıyor, kodun çalıştığını değil: kuzey cephe kışın güneş
 göremez, güney cephe öğlen her mevsimde görür, doğu sabah batı akşam alır,
 gün doğumunu içeren saatte yükseklik negatif görünmez.
+
+### Lighthouse'un bulduğu üç erişilebilirlik hatası
+
+⚠️ **Üçü de B ve C paketlerinden ÖNCE de vardı** — A paketinin ölçümünde
+(eski palet) birebir aynı hatalar, aynı skor (94). Yani palet değişikliği
+bunları getirmedi, **görülmesini sağladı**. Kontrast benim alanım olduğu
+için burada kapatıldı.
+
+| Hata | Ölçüm | Düzeltme |
+| --- | --- | --- |
+| Altbilgideki "yetki belgesi girilmedi" uyarısı | **2,01:1** | Yeni jeton `--color-uyari-koyu-bant` (7,28:1) |
+| Güven şeridindeki "Hazırlanıyor" | **2,42:1** | `metin-pasif` → `metin-3` (6,12:1) |
+| `<dl>` içinde geçersiz `<p>` | — | İkinci bir `<dd>` |
+
+#### 1. Uyarı metni kendi bandında okunmuyordu
+
+Altbilgi iki temada da koyu. `uyari-metin` açık zemin için tasarlanmış bir
+jeton ve koyu kakao bant üzerinde 2,01:1 veriyordu (eski lacivert bantta
+2,28). Tanıdık tuzak: **zemin değişmiyorsa üzerindeki metin de
+değişmemeli** — gold rozetinde ve üst şeritte aynısına düşülmüştü.
+
+⚠️ Yeni jeton gold rampasından besleniyor ama `text-gold-*` sınıfı değil.
+"Gold asla metin rengi değildir" kuralı aslında "AÇIK ZEMİNDE metin
+olamaz" diyor (orada 2,14:1); koyu kakao üzerinde 7,28:1. Ayrı bir jeton,
+istisnayı kullanımın kendisine değil bir isme bağlıyor.
+
+#### 2. "Hazırlanıyor" pasif jetonla yazılmıştı
+
+`metin-pasif` **devre dışı bileşenler** için ve WCAG 1.4.3'ün muafiyeti de
+yalnızca onları kapsıyor. "Hazırlanıyor" ise gerçek içerik — muafiyet
+orada geçerli değildi.
+
+#### 3. ⚠️ Kontrast testinin kendi sınırı görüldü
+
+Bu çiftlerin ikisi de testte **yoktu**. Jetonlar doğru ölçülüyordu; yanlış
+yerde kullanılıyorlardı.
+
+Ders listenin kendisiyle ilgili: bir jetonun ölçülmüş olması, **her zemin
+üzerinde** ölçülmüş olduğu anlamına gelmiyor. Yeni çift listeye eklendi ve
+gerekçesi testin içine yazıldı.
+
+### Lighthouse — medyan (3 koşum, CI)
+
+B paketi ölçümü, 3 sayfa × 2 cihaz × 3 koşum = 18 rapor:
+
+| Cihaz | Sayfa | Performans | Erişilebilirlik | SEO | LCP | CLS |
+| --- | --- | --- | --- | --- | --- | --- |
+| Masaüstü | Ana sayfa | **100** | 94 | 100 | 0,74 s | 0,000 |
+| Masaüstü | /portfoy | **100** | 97 | 100 | 0,77 s | 0,000 |
+| Masaüstü | /mahalleler | **100** | 96 | 100 | 0,73 s | 0,000 |
+| Mobil | Ana sayfa | 91 | 94 | 100 | 3,32 s | 0,000 |
+| Mobil | /portfoy | 89 | 97 | 100 | 3,73 s | 0,000 |
+| Mobil | /mahalleler | 91 | 96 | 100 | 3,49 s | 0,000 |
+
+⚠️ Erişilebilirlik skorları yukarıdaki üç düzeltmeden ÖNCEki ölçüm. Üç
+hata da kapatıldığında beklenen değer 100 — bir sonraki CI koşumu
+doğrulayacak.
+
+⚠️ Mobil LCP 3,3–3,7 s ve hedef 2,5 s. Bu **yeni değil** ve kararı
+"Gerçek kullanıcı Core Web Vitals ölçümü" bölümünde duruyor: Lighthouse
+mobil ölçümü simülasyon, CDN yok, ve kalan yükün %93,8'i çatı. Karar
+gerçek kullanıcı verisi görülmeden verilmeyecek.

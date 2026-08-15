@@ -70,12 +70,28 @@ function Hucre({ oge }: { oge: GuvenOgesi }) {
          * "0" yazmak ise yanlış bilgi verir. "Hazırlanıyor" ikisini de
          * yapmadan durumu dürüstçe söylüyor.
          */
-        <dd className="text-metin-pasif text-govde-kucuk">Hazırlanıyor</dd>
+        /**
+         * ⚠️ Renk `metin-pasif` DEĞİL — Lighthouse yakaladı.
+         *
+         * O jeton DEVRE DIŞI BİLEŞENLER için ve WCAG 1.4.3'ün muafiyeti
+         * de yalnızca onları kapsıyor. "Hazırlanıyor" ise gerçek içerik:
+         * krem üzerinde 2,42:1 veriyordu ve muafiyet burada geçerli
+         * değildi. `metin-3` aynı zeminde 6,12.
+         */
+        <dd className="text-metin-3 text-govde-kucuk">Hazırlanıyor</dd>
       ) : (
         <dd className="text-rakam rakam text-metin font-medium">{oge.deger}</dd>
       )}
 
-      {oge.aciklama ? <p className="text-metin-3 text-mikro">{oge.aciklama}</p> : null}
+      {/*
+        ⚠️ AÇIKLAMA <p> DEĞİL İKİNCİ BİR <dd>.
+        
+        `<dl>` içindeki bir `<div>` yalnızca `<dt>` ve `<dd>` taşıyabilir;
+        `<p>` geçersizdi ve Lighthouse'un `definition-list` denetimi bunu
+        her sayfada düşürüyordu. Bir terimin birden fazla açıklaması
+        olabilir — ikinci `<dd>` hem geçerli hem anlamca doğru.
+      */}
+      {oge.aciklama ? <dd className="text-metin-3 text-mikro">{oge.aciklama}</dd> : null}
     </div>
   )
 }

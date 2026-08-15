@@ -245,8 +245,16 @@ export async function Altbilgi() {
               {kurumsal?.yetkiBelgesiNo ? (
                 <span className="rakam text-notr-50">{kurumsal.yetkiBelgesiNo}</span>
               ) : (
-                /* ⚠️ Numara uydurulmaz. Eksikliği görünür kılmak, gizlemekten iyi. */
-                <span className="text-uyari-metin">girilmedi — yönetim panelinden eklenmeli</span>
+                /*
+                  ⚠️ Numara uydurulmaz. Eksikliği görünür kılmak, gizlemekten iyi.
+
+                  ⚠️ Renk `uyari-metin` DEĞİL: o jeton açık zemin için ve
+                  bu bant iki temada da koyu — orada 2,01:1 veriyordu.
+                  Gerekçe globals.css'te `--color-uyari-koyu-bant`.
+                */
+                <span className="text-uyari-koyu-bant">
+                  girilmedi — yönetim panelinden eklenmeli
+                </span>
               )}
             </li>
             {kurumsal?.mersisNo ? (

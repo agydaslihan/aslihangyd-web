@@ -249,6 +249,24 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
     asgari: AA_BILESEN,
     nerede: 'altbilgi üst çizgisi ve logo aksanı',
   },
+  /**
+   * ⚠️ LIGHTHOUSE'UN BULDUĞU, BU LİSTENİN KAÇIRDIĞI ÇİFT.
+   *
+   * Altbilgideki "yetki belgesi girilmedi" uyarısı `uyari-metin`
+   * kullanıyordu ve koyu bant üzerinde 2,01:1 veriyordu. Bu test onu
+   * göremedi çünkü çift LİSTEDE YOKTU — jeton doğru ölçülüyordu, yanlış
+   * yerde kullanılıyordu.
+   *
+   * Ders listenin kendisiyle ilgili: bir jetonun ölçülmüş olması, her
+   * zemin üzerinde ölçülmüş olduğu anlamına gelmiyor. Sabit koyu bant
+   * üzerinde geçen her renk buraya yazılmalı.
+   */
+  {
+    on: '--color-uyari-koyu-bant',
+    arka: '--color-kakao-900',
+    asgari: AA_METIN,
+    nerede: 'altbilgi uyarı metni — "yetki belgesi girilmedi"',
+  },
   {
     on: '--color-adacayi-300',
     arka: '--color-kakao-900',
