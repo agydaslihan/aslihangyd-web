@@ -129,7 +129,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
           <div className="min-w-0">
             {/* ── Başlık bloğu ── */}
             <div className="flex flex-wrap items-center gap-2">
-              <Rozet ton="lacivert">{etiketBul(ILAN_TIPLERI, ilan.tip)}</Rozet>
+              <Rozet ton="vurgu">{etiketBul(ILAN_TIPLERI, ilan.tip)}</Rozet>
               <Rozet>{etiketBul(ILAN_KATEGORILERI, ilan.kategori)}</Rozet>
               {ilan.durum === 'rezerve' ? (
                 <Rozet ton="uyari">{ILAN_DURUM_ETIKETLERI.rezerve}</Rozet>

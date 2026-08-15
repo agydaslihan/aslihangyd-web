@@ -180,7 +180,7 @@ export function EslestirmeTesti({
           aria-label="Test ilerlemesi"
         >
           <div
-            className="bg-lacivert-yuzey h-full rounded-full transition-[width] duration-300"
+            className="bg-kakao-yuzey h-full rounded-full transition-[width] duration-300"
             style={{ width: `${Math.max(ilerleme, 4)}%` }}
           />
         </div>
@@ -220,7 +220,7 @@ export function EslestirmeTesti({
               </Buton>
             ) : null}
             <Buton
-              gorunum="lacivert"
+              gorunum="kakao"
               boyut="kucuk"
               onClick={ilerle}
               pasif={!cevaplandi && !adim.atlanabilir}
@@ -577,7 +577,7 @@ function EslesmeKarti({ eslesme, sira }: { eslesme: MahalleEslesmesi; sira: numb
               </div>
               <div className="bg-yuzey-2 h-1 w-full overflow-hidden rounded-full">
                 <div
-                  className="bg-lacivert-yuzey h-full rounded-full"
+                  className="bg-kakao-yuzey h-full rounded-full"
                   style={{ width: `${satir.puan ?? 0}%` }}
                 />
               </div>

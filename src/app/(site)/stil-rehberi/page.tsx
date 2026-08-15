@@ -159,8 +159,14 @@ export default function StilRehberiSayfasi() {
           not="Rampalar temaya göre değişmez; anlamsal jetonlar rampanın farklı basamağına bağlanır. Kontrast oranları src/lib/tasarim/kontrast.test.ts içinde her derlemede ölçülür."
         >
           <Rampa
-            baslik="Lacivert — ana · taban 900 basamağı (header, başlıklar, koyu tema zemini)"
-            onEk="lacivert"
+            baslik="Koyu kakao — metin ve koyu zemin · taban 900 (metin, üst şerit, altbilgi, koyu tema zemini)"
+            onEk="kakao"
+            basamaklar={BASAMAKLAR}
+            jetonlar={acik}
+          />
+          <Rampa
+            baslik="Terracotta — ana vurgu · İKİ çapa: 200 pudra gülü (yalnızca zemin), 600 terracotta (dolu bant; metin için vurgu jetonu)"
+            onEk="terracotta"
             basamaklar={BASAMAKLAR}
             jetonlar={acik}
           />
@@ -177,7 +183,7 @@ export default function StilRehberiSayfasi() {
             jetonlar={acik}
           />
           <Rampa
-            baslik="Nötr — 50 kırık beyaz, 100 açık gri, 900 antrasit"
+            baslik="Sıcak nötr — 50 kırık beyaz (ana zemin), 100 krem (bölüm ayrımı)"
             onEk="notr"
             basamaklar={BASAMAKLAR}
             jetonlar={acik}
@@ -194,6 +200,25 @@ export default function StilRehberiSayfasi() {
                 />
               ),
             )}
+          </Ornek>
+
+          <Ornek etiket="Anlamsal — zemin rolleri (üzerine yazılan metinle)">
+            {(
+              [
+                ['--color-pudra-zemin', '--color-metin'],
+                ['--color-vurgu-zemin', '--color-vurgu'],
+                ['--color-terracotta-yuzey', '--color-yuzey'],
+                ['--color-kakao-yuzey', '--color-yuzey'],
+                ['--color-aksan', '--color-aksan-uzeri'],
+              ] as const
+            ).map(([zemin, on]) => (
+              <Kutucuk
+                key={zemin}
+                jetonAdi={zemin}
+                deger={acik.get(zemin)}
+                kontrast={oran(on, zemin)}
+              />
+            ))}
           </Ornek>
 
           <Ornek etiket="Anlamsal — durum">
@@ -279,7 +304,7 @@ export default function StilRehberiSayfasi() {
         >
           <Ornek etiket="Görünümler">
             <Buton gorunum="aksan">Evimi değerlendir</Buton>
-            <Buton gorunum="lacivert">Talebi gönder</Buton>
+            <Buton gorunum="kakao">Talebi gönder</Buton>
             <Buton>İkincil eylem</Buton>
             <Buton gorunum="hayalet">Hayalet</Buton>
             <Buton gorunum="whatsapp">WhatsApp&apos;tan yaz</Buton>
@@ -330,7 +355,7 @@ export default function StilRehberiSayfasi() {
 
           <Ornek etiket="Genel tonlar">
             <Rozet>Nötr</Rozet>
-            <Rozet ton="lacivert">Lacivert</Rozet>
+            <Rozet ton="vurgu">Lacivert</Rozet>
             <Rozet ton="basari">Fırsat</Rozet>
             <Rozet ton="hata">Risk</Rozet>
             <Rozet ton="uyari">Dikkat</Rozet>

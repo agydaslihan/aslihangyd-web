@@ -170,7 +170,7 @@ function KategoriSatiri({
         checked={secili}
         disabled={kilitli}
         onChange={(olay) => onDegisim?.(olay.target.checked)}
-        className="accent-lacivert mt-0.5 size-4.5 shrink-0 disabled:opacity-60"
+        className="accent-vurgu mt-0.5 size-4.5 shrink-0 disabled:opacity-60"
       />
       <label htmlFor={id} className="cursor-pointer text-govde-kucuk leading-snug">
         <span className="font-medium">{baslik}</span>
@@ -185,7 +185,7 @@ function KategoriSatiri({
  *
  * ⚠️ Renk BELİRTİLMİYOR, `currentColor` devralınıyor.
  *
- * Bu düğme lacivert altbilginin içinde yaşıyor ve oradaki metin rengi
+ * Bu düğme koyu kakao altbilginin içinde yaşıyor ve oradaki metin rengi
  * temaya göre değişmiyor (zemin de değişmiyor). Kendi `text-*` sınıfını
  * taşısaydı altbilgi rengi değiştiğinde sessizce uyumsuz kalırdı — aynı
  * tuzağa gold rozetinde ve harita yedeklerinde düşülmüştü.

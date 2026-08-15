@@ -152,7 +152,7 @@ export function OnayAlani({
         type="checkbox"
         checked={secili}
         onChange={(olay) => onDegisim(olay.target.checked)}
-        className="accent-lacivert mt-0.5 size-4.5 shrink-0"
+        className="accent-vurgu mt-0.5 size-4.5 shrink-0"
       />
       <label htmlFor={id} className="cursor-pointer text-govde-kucuk leading-snug">
         {etiket}

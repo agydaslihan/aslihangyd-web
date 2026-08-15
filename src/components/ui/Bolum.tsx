@@ -22,13 +22,34 @@ export function Bolum({
 }: {
   children: ReactNode
   sinifAdi?: string
-  zemin?: 'kagit' | 'yuzey' | 'lacivert'
+  zemin?: 'kagit' | 'yuzey' | 'kakao' | 'pudra' | 'terracotta'
   id?: string
 }) {
   const zeminler = {
     kagit: '',
     yuzey: 'bg-yuzey-2/60 border-y-[0.5px] border-kenar',
-    lacivert: 'bg-lacivert-yuzey text-white',
+    kakao: 'bg-kakao-yuzey text-white',
+    /**
+     * ⚠️ PUDRA GÜLÜ ZEMİN — yeni paletin yumuşak bandı.
+     *
+     * Metin rengi DEĞİŞMİYOR: pudra üzerinde `--color-metin` 8,95:1
+     * veriyor, yani koyu bant gibi beyaza dönmek gerekmiyor. Pudra bir
+     * "koyu bölüm" değil, aynı sayfanın daha sıcak bir yerdeki nefesi.
+     */
+    pudra: 'bg-pudra-zemin border-y-[0.5px] border-kenar',
+    /**
+     * ⚠️ DOLU TERRACOTTA BANT — üzerine DAİMA TAM BEYAZ.
+     *
+     * Ölçüm: beyaz terracotta-600 üzerinde 4,99:1 ile AA'yı geçiyor, ama
+     * pay çok dar. `text-white/80` (koyu kakao bantlarda kullandığımız
+     * yumuşatma) burada 3,82'ye düşüyor ve AA'nın altında kalıyor;
+     * `/90` bile 4,39. Yani bu bantta ikincil metin OPAKLIKLA
+     * yumuşatılamaz — hiyerarşi punto ve boşlukla kurulur.
+     *
+     * ⚠️ Adaçayı eyebrow da BURADA KULLANILAMAZ: adacayi-100 terracotta
+     * üzerinde 3,86. Bu bantta eyebrow gerekiyorsa kırık beyaz (4,78).
+     */
+    terracotta: 'bg-terracotta-yuzey text-white',
   } as const
 
   return (
@@ -46,8 +67,8 @@ export function Bolum({
  * sayfalarda konum hissi verir.
  *
  * ⚠️ Eyebrow rengi `aksan-metin`, `aksan` DEĞİL. Dolu zemin değeri
- * (adaçayı-600) kırık beyaz üzerinde 4,38:1 ile AA'nın altında kalıyor ve
- * bu bir metin. Ayrımın gerekçesi globals.css içinde yazılı.
+ * (adaçayı-600) krem üzerinde 4,01:1 ile AA'nın altında kalıyor ve bu bir
+ * metin. Ayrımın gerekçesi globals.css içinde yazılı.
  */
 export function BolumBasligi({
   ustBaslik,

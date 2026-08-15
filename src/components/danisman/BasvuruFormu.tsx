@@ -169,7 +169,7 @@ function GonderButonu() {
   return (
     <Buton
       type="submit"
-      gorunum="lacivert"
+      gorunum="kakao"
       boyut="buyuk"
       pasif={pending}
       pasifSebebi={pending ? 'Başvurunuz gönderiliyor, sayfayı kapatmayın.' : undefined}

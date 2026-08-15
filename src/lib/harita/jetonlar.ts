@@ -27,16 +27,16 @@
  * jetonun gerçekten var olduğundan emin olun; test yoksa uyarır.
  */
 const YEDEKLER: Record<string, string> = {
-  '--color-zemin': '#f7f6f2',
+  '--color-zemin': '#fbfaf7',
   '--color-yuzey': '#ffffff',
-  '--color-kenar': '#cdd0d0',
-  '--color-kenar-guclu': '#b1b5b6',
-  '--color-metin': '#20252b',
-  '--color-metin-3': '#64696d',
-  '--color-lacivert-100': '#dbe0e8',
-  '--color-lacivert-200': '#bec7d3',
-  '--color-lacivert-300': '#a3aebe',
-  '--color-lacivert-600': '#556781',
+  '--color-kenar': '#d6cfc8',
+  '--color-kenar-guclu': '#bbb3ae',
+  '--color-metin': '#3d2b2f',
+  '--color-metin-3': '#635356',
+  '--color-kakao-100': '#e3dedd',
+  '--color-kakao-200': '#cdc5c5',
+  '--color-kakao-300': '#b7adae',
+  '--color-kakao-600': '#77686b',
   '--color-aksan': '#4f7c6a',
 }
 
@@ -70,14 +70,14 @@ export function haritaRenkleri(): HaritaRenkleri {
     yuzey: jetonRengi('--color-yuzey'),
     yol: jetonRengi('--color-kenar'),
     sinir: jetonRengi('--color-kenar-guclu'),
-    mahalleDolgu: jetonRengi('--color-lacivert-100'),
-    mahalleDolguKoyu: jetonRengi('--color-lacivert-200'),
+    mahalleDolgu: jetonRengi('--color-kakao-100'),
+    mahalleDolguKoyu: jetonRengi('--color-kakao-200'),
     // ⚠️ Sütunlar TEK RENK. Fiyat yalnızca yükseklikle kodlanır.
-    sutun: jetonRengi('--color-lacivert-600'),
+    sutun: jetonRengi('--color-kakao-600'),
     // Tek istisna: seçili mahalle. Vurgu için, veri için değil.
     sutunSecili: jetonRengi('--color-aksan'),
     etiket: jetonRengi('--color-metin'),
     etiketHalesi: jetonRengi('--color-yuzey'),
-    bina: jetonRengi('--color-lacivert-200'),
+    bina: jetonRengi('--color-kakao-200'),
   }
 }

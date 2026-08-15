@@ -3,18 +3,18 @@ import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { whatsappMesaji } from '@/lib/site'
 
 /**
- * Header'ın üstündeki ince lacivert şerit — telefon, e-posta, WhatsApp.
+ * Header'ın üstündeki ince koyu kakao şerit — telefon, e-posta, WhatsApp.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * ⚠️ LACİVERT ZEMİN İKİ TEMADA DA AYNI — tema jetonu kullanılmıyor.
+ * ⚠️ KOYU KAKAO ZEMİN İKİ TEMADA DA AYNI — tema jetonu kullanılmıyor.
  *
  * Şerit kurumsal kimliğin bir parçası ve koyu temada açılması gerekmiyor;
  * zaten koyu. Ama zemin sabitse üzerindeki metin de sabit olmalı:
  * `--color-metin` koyu temada kırık beyaza dönüyor ve açık temada
- * antrasite — ikincisi lacivert üzerinde okunmazdı. Aynı tuzağa gold
+ * antrasite — ikincisi koyu kakao üzerinde okunmazdı. Aynı tuzağa gold
  * rozetinde düşülmüştü; kontrast testi yakalamıştı.
  *
- * Ölçüm: kırık beyaz (notr-50) lacivert-900 üzerinde 13,85:1.
+ * Ölçüm: kırık beyaz (notr-50) kakao-900 üzerinde 12,69:1.
  * Çiftler `kontrast.test.ts` içinde sabit renk olarak sınanıyor.
  *
  * ⚠️ Şerit MOBİLDE GİZLİ. 12px'lik bir bilgi çubuğu telefonda hem dokunma
@@ -37,7 +37,7 @@ export function UstSerit({
   if (telefon === null && eposta === null && whatsappAdresi === null) return null
 
   return (
-    <div data-yazdirma="gizle" className="bg-lacivert-900 hidden lg:block">
+    <div data-yazdirma="gizle" className="bg-kakao-900 hidden lg:block">
       <div className="kapsayici flex h-9 items-center justify-end gap-6">
         {telefon ? (
           <a

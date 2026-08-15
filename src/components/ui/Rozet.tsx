@@ -3,11 +3,11 @@ import type { ReactNode } from 'react'
 import { DogrulanmisIkon, KilitIkon, SaatIkon } from '@/components/ui/Ikon'
 import { sinif } from '@/lib/sinif'
 
-type RozetTonu = 'notr' | 'lacivert' | 'basari' | 'hata' | 'uyari' | 'yetki'
+type RozetTonu = 'notr' | 'vurgu' | 'basari' | 'hata' | 'uyari' | 'yetki'
 
 const TONLAR: Record<RozetTonu, string> = {
   notr: 'bg-yuzey-2 text-metin-2 border-kenar',
-  lacivert: 'bg-vurgu-zemin text-vurgu border-transparent',
+  vurgu: 'bg-vurgu-zemin text-vurgu border-transparent',
   basari: 'bg-basari-zemin text-basari border-transparent',
   hata: 'bg-hata-zemin text-hata border-transparent',
   uyari: 'bg-uyari-zemin text-uyari-metin border-transparent',

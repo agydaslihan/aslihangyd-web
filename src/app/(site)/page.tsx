@@ -171,7 +171,7 @@ export default async function AnaSayfa() {
  * Hero — sayfanın merkezi (şartname §5.1).
  *
  * ─────────────────────────────────────────────────────────────────────────
- * ⚠️ ŞARTNAME "TAM GENİŞLİK GÖRSEL (ÇORLU HAVADAN) + LACİVERT OVERLAY"
+ * ⚠️ ŞARTNAME "TAM GENİŞLİK GÖRSEL (ÇORLU HAVADAN) + KAKAO OVERLAY %45"
  * İSTİYOR. GÖRSEL KONULMADI.
  *
  * Elimizde Çorlu'nun havadan çekilmiş, kullanım hakkı bize ait bir görseli
@@ -179,10 +179,20 @@ export default async function AnaSayfa() {
  * "stok fotoğraf estetiği"), üstelik hero LCP ögesi — yanlış bir görsel
  * hem hedefi hem tonu bozar.
  *
- * Bu yüzden lacivert zemin doğrudan kullanılıyor: overlay'in üzerine
- * konacağı renk zaten oydu, dolayısıyla tipografi ve kontrast bugünden
- * doğru. Görsel geldiğinde tek yapılacak zemini `background-image` ile
- * değiştirmek; metin katmanı olduğu gibi kalır.
+ * ⚠️ 15 Ağustos 2026 — HERO PUDRA GÜLÜ ZEMİNE TAŞINDI.
+ *
+ * Bohem palet hero'yu "pudra gülü / krem zeminde koyu kakao metin" diye
+ * tanımlıyor. Eskiden zemin koyuydu ve metin beyazdı; şimdi tersi.
+ *
+ * ⚠️ GÖRSEL GELDİĞİNDE METİN KATMANI OLDUĞU GİBİ KALMAZ. Bu, önceki
+ * kurulumdan farkı: kakao overlay'in üzerine AÇIK metin gerekecek. Yani
+ * görsel geldiğinde bu bileşende iki şey değişir — zemin ve metin
+ * jetonları. Bunu bugünden yazmak, o gün "sadece background-image
+ * değiştir" diyen eski yorumun yanıltmasını engelliyor.
+ *
+ * Ölçümler (pudra gülü zemininde): başlık `metin` 8,95:1 · gövde
+ * `metin-2` 6,65:1 · doğrulama satırı `metin-3` 4,88:1 · eyebrow
+ * `aksan-metin` 4,55:1. Dördü de kontrast testinde.
  * docs/SENDEN-BEKLENENLER.md içinde madde olarak yazılı.
  *
  * ⚠️ Arama kartı hero'nun ALTINA taşıyor (-3rem). Şartname bunu istiyor ve
@@ -201,27 +211,27 @@ function Kahraman({
 }) {
   return (
     <section className="relative">
-      <div className="bg-lacivert-900">
+      <div className="bg-pudra-zemin">
         <div className="kapsayici pt-16 pb-24 sm:pt-20 sm:pb-28 lg:pt-28 lg:pb-32">
           <div className="max-w-3xl">
-            {/* ⚠️ Eyebrow ADAÇAYI, gold değil. Gold lacivert üzerinde
-                6,69:1 ile okunur olurdu ama "gold asla metin rengi değildir"
-                kuralı mutlak — bir kez esnetilirse sonraki kullanım açık
-                zeminde olur ve 2,06:1'e düşer. adacayi-300 burada 10,36:1.
-                Çift kontrast testinde ölçülüyor. */}
-            <p className="text-adacayi-300 text-eyebrow font-medium uppercase">Çorlu · Tekirdağ</p>
+            {/* ⚠️ Eyebrow ADAÇAYI, gold değil. Gold pudra üzerinde 1,51:1 —
+                okunmaz; zaten "gold asla metin rengi değildir" kuralı
+                mutlak. `aksan-metin` burada 4,55:1 ile AA'yı geçiyor ve
+                rampanın 600 basamağı geçmiyor (3,20) — ayrı jetonun
+                gerekçesi tam olarak bu zemin. Kontrast testinde. */}
+            <p className="text-aksan-metin text-eyebrow font-medium uppercase">Çorlu · Tekirdağ</p>
 
-            <h1 className="text-notr-50 mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+            <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
               Gayrimenkul kararı hisle değil, rakamla verilir.
             </h1>
 
-            <p className="text-notr-300 mt-6 max-w-2xl text-baslik-3 leading-relaxed">
+            <p className="text-metin-2 mt-6 max-w-2xl text-baslik-3 leading-relaxed">
               Çorlu&apos;da bir taşınmazın ne kadar ettiğini, kaç yılda kendini ödediğini ve hangi
               mahallenin hangi değer sürücüsünden beslendiğini gösteriyoruz. İlan listelemiyoruz —
               karar veriyoruz.
             </p>
 
-            <p className="text-notr-300 mt-6 flex items-center gap-2 text-govde-kucuk">
+            <p className="text-metin-3 mt-6 flex items-center gap-2 text-govde-kucuk">
               <DogrulanmisIkon width={16} height={16} className="shrink-0" />
               Tüm ilanlarımız EİDS doğrulamalıdır ve taşınmaz numarasıyla birlikte yayınlanır.
             </p>
@@ -357,7 +367,7 @@ function GizliPortfoyTeaser({ sayi }: { sayi: number }) {
   const doluMu = sayi > 0
 
   return (
-    <Bolum zemin="lacivert">
+    <Bolum zemin="kakao">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <p className="text-adacayi-300 text-eyebrow font-medium uppercase">Gizli portföy</p>
@@ -531,15 +541,27 @@ function YaklasimBolumu() {
   )
 }
 
+/**
+ * ⚠️ BANT DOLU TERRACOTTA — paletin ana vurgusu, sayfanın asıl eylemi.
+ *
+ * Gizli portföy bandı koyu kakao kaldı: orada anlatılan şey "saklı olan",
+ * ve koyu zemin bunu taşıyor. İkisini de terracotta yapmak, vurguyu
+ * sıradanlaştırırdı.
+ *
+ * ⚠️ Metin TAM BEYAZ, `text-white/80` DEĞİL. Terracotta üzerinde %80
+ * beyaz 3,82:1 veriyor ve AA'nın altında kalıyor; koyu kakao bantta aynı
+ * yumuşatma 9,08 verdiği için sorun çıkmıyordu. Hiyerarşi burada punto ve
+ * boşlukla kuruluyor.
+ */
 function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
   return (
-    <Bolum zemin="lacivert">
+    <Bolum zemin="terracotta">
       <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <h2 className="text-baslik-2 text-white">
             Evinizin bugün ne ettiğini merak ediyor musunuz?
           </h2>
-          <p className="text-govde-kucuk mt-3 text-white/80">
+          <p className="text-govde-kucuk mt-3 text-white">
             Satmayı düşünmeseniz bile bilmek işinize yarar. Mahalle, metrekare ve bina bilgilerinizi
             paylaşın; size gerçek bir değer aralığı ve nasıl hesapladığımızı anlatalım.
           </p>

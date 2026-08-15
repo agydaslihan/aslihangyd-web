@@ -326,6 +326,55 @@ describe('adaçayı ve gold kuralı', () => {
     ).toEqual([])
   })
 
+  /**
+   * ⚠️ DOLU TERRACOTTA BANT SINIFI TEK YERDE TANIMLI.
+   *
+   * Terracotta paletin ana vurgusu ve adaçayı gibi "iki eyleme" kısıtlı
+   * değil — ama dolu bant zemini yine de her yerde yazılabilir bir sınıf
+   * olmamalı. Bir bileşen `bg-terracotta-yuzey` yazdığı anda üzerindeki
+   * metnin tam beyaz olması gerektiğini de bilmek zorunda kalıyor (%80
+   * beyaz orada 3,82:1 veriyor ve AA'yı geçmiyor).
+   *
+   * Kural: bantı `<Bolum zemin="terracotta">` kurar. Sınıfın kendisi
+   * yalnızca `Bolum.tsx` içinde yazılır; kontrast bilgisi de orada.
+   */
+  it('dolu terracotta zemin sınıfı yalnızca Bolum içinde yazılıyor', () => {
+    const IZINLI = new Set(['components/ui/Bolum.tsx', 'app/(site)/stil-rehberi/page.tsx'])
+    const ihlaller = hepsi
+      .filter((dosya) => !IZINLI.has(dosya.yol))
+      .flatMap((dosya) => {
+        const bulunan = yorumsuz(dosya.icerik).match(/\bbg-terracotta-yuzey\b/g) ?? []
+        return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
+      })
+
+    expect(
+      ihlaller,
+      'Dolu terracotta bant `<Bolum zemin="terracotta">` ile kurulur. ' +
+        'Sınıfı doğrudan yazmak, üzerindeki metnin tam beyaz olması ' +
+        'gerektiği bilgisini bantla birlikte taşımaz.',
+    ).toEqual([])
+  })
+
+  /**
+   * ⚠️ PUDRA VE KREM METİN SINIFI OLARAK KULLANILMIYOR.
+   *
+   * `text-gold-*` kuralının aynısı, aynı sebeple: ikisi de zemin rengi.
+   * Kontrast testi jetonun BAĞLANTISINI denetliyor; bu test KULLANIMI.
+   */
+  it('pudra ve krem metin rengi olarak kullanılmıyor', () => {
+    const METIN_ZEMIN = /\btext-(pudra-zemin|terracotta-(100|200)|notr-100)\b/g
+    const ihlaller = hepsi.flatMap((dosya) => {
+      const bulunan = yorumsuz(dosya.icerik).match(METIN_ZEMIN) ?? []
+      return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
+    })
+
+    expect(
+      ihlaller,
+      'Pudra gülü ve krem yalnızca zemindir (kırık beyaz üzerinde 1,41:1 ve ' +
+        '1,13:1). Açık zeminde metin gerekiyorsa --color-vurgu kullanın.',
+    ).toEqual([])
+  })
+
   it('adaçayı buton görünümü sayılabilir kadar az çağrılıyor', () => {
     const cagrilar = hepsi.flatMap((dosya) => {
       if (dosya.yol === 'components/ui/Buton.tsx') return []
@@ -366,8 +415,22 @@ describe('sosyal medya görseli onaylı palete bağlı', () => {
   // KOK zaten `src`e işaret ediyor.
   const ROTA = 'app/(site)/api/sosyal/gorsel/[bicim]/[id]/route.tsx'
 
-  /** Onaylanan rampadan birebir alınan değerler. */
-  const IZINLI = new Set(['#0F1E33', '#F8F7F3', '#A3BFD9', '#1D4270'])
+  /**
+   * Onaylanan rampadan birebir alınan değerler.
+   *
+   * ⚠️ Liste ELLE YAZILMIYOR, globals.css'ten okunuyor. Sabit yazıldığında
+   * palet değişimini iki kez kaçırdı: rota eski laciverti taşımaya devam
+   * etti ve test de aynı eski değeri "izinli" saydığı için sustu. Bir
+   * muhafız testi, koruduğu şeyin kaynağına bağlanmalı.
+   */
+  const IZINLI = new Set(
+    ['--color-kakao-900', '--color-notr-50', '--color-kakao-300', '--color-kakao-700'].map((ad) =>
+      jeton(
+        temalariCoz(readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')).acik,
+        ad,
+      ).toUpperCase(),
+    ),
+  )
 
   it('yalnızca onaylanan rampa değerlerini kullanır', () => {
     const kaynak = readFileSync(path.join(KOK, ROTA), 'utf8')
@@ -393,6 +456,24 @@ describe('sosyal medya görseli onaylı palete bağlı', () => {
     expect(
       yorumsuz(kaynak).match(ESKI_BAKIR) ?? [],
       'bakır palet kaldırıldı; bu hex değerleri geri sızmamalı',
+    ).toEqual([])
+  })
+
+  /**
+   * ⚠️ Lacivert de geri sızmamalı — bakırla aynı gerekçe, üçüncü palet.
+   *
+   * Rampanın on basamağı burada tek tek yazılı çünkü kaynağı artık
+   * globals.css'te YOK; jetondan okunamaz. Sabit liste burada doğru araç:
+   * geçmişteki bir değerin geri gelmesini kovalıyor, bugünkü bir değeri
+   * savunmuyor.
+   */
+  it('lacivert kullanmaz', () => {
+    const kaynak = readFileSync(path.join(KOK, ROTA), 'utf8')
+    const ESKI_LACIVERT =
+      /#(F8FAFE|DBE0E8|BEC7D3|A3AEBE|8896A9|6E7E95|556781|3D516D|263C5A|0F2747|0F1E33|1D4270|0A1524)\b/gi
+    expect(
+      yorumsuz(kaynak).match(ESKI_LACIVERT) ?? [],
+      'lacivert palet kaldırıldı; bu hex değerleri geri sızmamalı',
     ).toEqual([])
   })
 })

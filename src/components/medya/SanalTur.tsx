@@ -55,7 +55,7 @@ export function SanalTur({ adres, baslik }: { adres: string; baslik: string }) {
     <button
       type="button"
       onClick={() => setAcik(true)}
-      className="cerceve bg-lacivert-yuzey text-metin flex aspect-video w-full flex-col items-center justify-center gap-3 px-6 text-center"
+      className="cerceve bg-kakao-yuzey text-metin flex aspect-video w-full flex-col items-center justify-center gap-3 px-6 text-center"
     >
       <svg viewBox="0 0 24 24" width="32" height="32" aria-hidden="true" fill="currentColor">
         <path d="M12 3c-4.97 0-9 2.24-9 5v8c0 2.76 4.03 5 9 5s9-2.24 9-5V8c0-2.76-4.03-5-9-5zm0 2c4.14 0 7 1.72 7 3s-2.86 3-7 3-7-1.72-7-3 2.86-3 7-3z" />

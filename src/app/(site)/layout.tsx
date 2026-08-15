@@ -117,12 +117,16 @@ export const viewport: Viewport = {
    * lacivertle boyandı. Kontrast testi jetonları okuyor, bu meta etiketini
    * görmüyordu.
    *
+   * ⚠️ Bohem palete geçerken ikisi de yeniden yazıldı: kırık beyaz
+   * #FBFAF7 ve koyu kakao #3D2B2F. Testi olmasaydı aynı hata ikinci kez
+   * olurdu — palet değişikliği bu dosyayı hiç açtırmıyor.
+   *
    * Artık `disiplin.test.ts` bu iki değerin `--color-notr-50` ve
-   * `--color-lacivert-900` ile birebir aynı olduğunu denetliyor.
+   * `--color-kakao-900` ile birebir aynı olduğunu denetliyor.
    */
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#f7f6f2' },
-    { media: '(prefers-color-scheme: dark)', color: '#0f2747' },
+    { media: '(prefers-color-scheme: light)', color: '#fbfaf7' },
+    { media: '(prefers-color-scheme: dark)', color: '#3d2b2f' },
   ],
 }
 

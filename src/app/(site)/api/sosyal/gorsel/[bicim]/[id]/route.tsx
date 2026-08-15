@@ -31,17 +31,23 @@ const TL = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
  *
  * `ImageResponse` bir tarayıcı değil; CSS değişkenlerini (`var(--...)`)
  * çözemez, `globals.css` yüklenmez. Değerler onaylanmış palete birebir
- * eşit: lacivert-900, lacivert-50, notr-50, bakır yok.
+ * eşit ve `disiplin.test.ts` bunu denetliyor: muafiyet "istediğini yaz"
+ * demek değil.
  *
- * ⚠️ Bakır kuralı burada da geçerli: bakır yalnızca "Evimi değerlendir" ve
- * "Erişim talep et" eylemlerinde kullanılır. Bir ilan görseli bunların
- * hiçbiri değil.
+ * ⚠️ 15 Ağustos 2026'da bohem palete taşındı. Eski değerler (`#0F1E33`,
+ * `#A3BFD9`) bir önceki palet DEĞİŞTİĞİNDE de geride kalmıştı — yani
+ * paylaşılan görsel aylarca sitenin kullanmadığı bir laciverti taşıdı.
+ * Test artık bunu yakalıyor.
+ *
+ * ⚠️ Dolu adaçayı kuralı burada da geçerli: adaçayı yalnızca "Evimi
+ * değerlendir" ve "Erişim talep et" eylemlerinde kullanılır. Bir ilan
+ * görseli bunların hiçbiri değil.
  */
 const RENK = {
-  zemin: '#0F1E33', // lacivert-900
-  metin: '#F8F7F3', // notr-50
-  metinSolgun: '#A3BFD9', // lacivert-300
-  cizgi: '#1D4270', // lacivert-700
+  zemin: '#3D2B2F', // kakao-900 — koyu kakao
+  metin: '#FBFAF7', // notr-50 — kırık beyaz
+  metinSolgun: '#B7ADAE', // kakao-300
+  cizgi: '#635356', // kakao-700
 } as const
 
 export async function GET(

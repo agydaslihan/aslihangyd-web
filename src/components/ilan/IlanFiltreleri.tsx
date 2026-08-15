@@ -61,7 +61,7 @@ export function IlanFiltreleri({ mahalleler }: { mahalleler: Mahalleler[] }) {
         >
           Filtreler
           {filtreSayisi > 0 ? (
-            <span className="bg-lacivert-yuzey rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-white">
+            <span className="bg-kakao-yuzey rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-white">
               {filtreSayisi}
             </span>
           ) : null}
@@ -131,7 +131,7 @@ export function IlanFiltreleri({ mahalleler }: { mahalleler: Mahalleler[] }) {
         <noscript>
           <button
             type="submit"
-            className="bg-lacivert-yuzey rounded-buton min-h-11 px-5 text-govde-kucuk font-medium text-white"
+            className="bg-kakao-yuzey rounded-buton min-h-11 px-5 text-govde-kucuk font-medium text-white"
           >
             Filtrele
           </button>

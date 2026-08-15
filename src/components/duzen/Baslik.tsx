@@ -321,7 +321,7 @@ export function IcerigeAtla() {
   return (
     <a
       href="#icerik"
-      className="bg-lacivert-yuzey rounded-kart sr-only z-50 px-4 py-2 text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
+      className="bg-kakao-yuzey rounded-kart sr-only z-50 px-4 py-2 text-white focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
     >
       İçeriğe atla
     </a>

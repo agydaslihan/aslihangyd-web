@@ -24,7 +24,7 @@ import { sinif } from '@/lib/sinif'
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-type Gorunum = 'ikincil' | 'hayalet' | 'lacivert' | 'whatsapp' | 'aksan'
+type Gorunum = 'ikincil' | 'hayalet' | 'kakao' | 'whatsapp' | 'aksan'
 type Boyut = 'kucuk' | 'orta' | 'buyuk'
 
 const GORUNUMLER: Record<Gorunum, string> = {
@@ -37,19 +37,28 @@ const GORUNUMLER: Record<Gorunum, string> = {
    *
    * Şartnamede yoktu; şartnamedeki hiyerarşi uygulanınca "Gönder" ile
    * "Vazgeç" görsel olarak eşitleniyordu. Adaçayıyı ikinci bir eyleme
-   * açmak yerine markanın kendi rengi kullanıldı — adaçayı nadir kalıyor,
-   * gönderim butonu yine de tıklanabilir görünüyor.
+   * açmak yerine koyu kakao kullanıldı — adaçayı nadir kalıyor, gönderim
+   * butonu yine de tıklanabilir görünüyor.
+   *
+   * ⚠️ Terracotta DEĞİL: dolu terracotta bant sayfada bölüm ayıracı olarak
+   * kullanılıyor; aynı rengi butona da vermek ikisini birbirine karıştırırdı.
    */
-  lacivert: 'bg-lacivert-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
+  kakao: 'bg-kakao-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
   // WhatsApp'ın kurumsal yeşili bilinçli olarak kullanılmıyor: sayfadaki
   // tek parlak renk olurdu ve sakin paleti bozardı. Tanınırlık ikondan gelir.
-  whatsapp: 'bg-lacivert-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
+  whatsapp: 'bg-kakao-yuzey text-white border-[0.5px] border-transparent hover:opacity-90',
   /**
-   * ⚠️ Metin BEYAZ ve bu ölçülmüş bir zorunluluk: adaçayı-600 üzerinde
-   * beyaz 4,74:1 verir. Aynı yeşili metin rengi olarak kırık beyaz zemine
-   * koymak 4,38:1'e düşer — o yüzden ayrı bir `aksan-metin` jetonu var.
+   * ⚠️ Metin rengi JETONDAN geliyor, `text-white` DEĞİL.
+   *
+   * Açık temada beyaz doğru cevap (adaçayı-600 üzerinde 4,74:1); koyu
+   * temada değil. Orada zemin açılıyor (adaçayı-400) ve metin kakaoya
+   * dönüyor — yoksa buton koyu sayfa zemininden 2,79:1 ile ayrışıyor ve
+   * WCAG 1.4.11'in 3:1 sınırını geçemiyordu. Gerekçenin tamamı
+   * globals.css içinde `--color-aksan-uzeri` başlığında.
    */
-  aksan: 'bg-aksan text-white border-[0.5px] border-transparent hover:bg-aksan-koyu',
+  aksan:
+    'bg-aksan text-[color:var(--color-aksan-uzeri)] border-[0.5px] ' +
+    'border-transparent hover:bg-aksan-koyu',
 }
 
 const BOYUTLAR: Record<Boyut, string> = {
