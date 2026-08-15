@@ -231,6 +231,59 @@ export function gunesGunu(enlem: number, boylam: number, tarih: Date): GunesGunu
 }
 
 /**
+ * Tek bir an için güneşin konumu — yörünge eğrisinin ve zaman çubuğunun
+ * ortak çekirdeği.
+ *
+ * ⚠️ AYRI FONKSİYON OLMASI BİLİNÇLİ. Önce yalnızca 20 dakikalık örnekleme
+ * vardı ve hesap döngünün içine gömülüydü. Zaman çubuğu saat başına
+ * 12 örnek istiyor; aynı matematiği ikinci kez yazmak, iki yerin sessizce
+ * ayrışmasına açık kapı bırakırdı — azimutun öğleden sonra düzeltmesi gibi
+ * ince bir adım tek yerde kalmalı.
+ *
+ * @param dakika Gün başından itibaren YEREL dakika (UTC+3).
+ */
+function konumHesapla(
+  enlem: number,
+  boylam: number,
+  dekl: number,
+  zd: number,
+  dakika: number,
+): YorungeNoktasi {
+  // Gerçek güneş zamanı (dakika), boylam ve zaman denklemi düzeltmeli.
+  const gercekZaman = dakika + zd + 4 * boylam - TURKIYE_UTC_OFSETI * 60
+  const saatAcisiDerece = gercekZaman / 4 - 180
+
+  const zenitCos =
+    Math.sin(radyan(enlem)) * Math.sin(radyan(dekl)) +
+    Math.cos(radyan(enlem)) * Math.cos(radyan(dekl)) * Math.cos(radyan(saatAcisiDerece))
+
+  const zenit = Math.acos(Math.max(-1, Math.min(1, zenitCos)))
+  const yukseklik = 90 - derece(zenit)
+
+  /**
+   * Azimut — kuzeyden saat yönünde.
+   *
+   * ⚠️ `acos` yalnızca 0–180 aralığı veriyor; öğleden sonrayı ayırt
+   * etmek için saat açısının işaretine bakmak şart. Bu adım atlanırsa
+   * batı cephesi doğu sanılır — hesap "çalışır" ama tam ters sonuç verir.
+   */
+  const paydaSin = Math.sin(zenit) * Math.cos(radyan(enlem))
+  let azimut = 180
+  if (Math.abs(paydaSin) > 1e-9) {
+    const oran = (Math.sin(radyan(dekl)) - Math.sin(radyan(enlem)) * Math.cos(zenit)) / paydaSin
+    azimut = derece(Math.acos(Math.max(-1, Math.min(1, oran))))
+    // Saat açısı pozitifse güneş batı yarısında.
+    if (saatAcisiDerece > 0) azimut = 360 - azimut
+  }
+
+  return {
+    dakika,
+    yukseklik: Math.round(yukseklik * 10) / 10,
+    azimut: Math.round(azimut * 10) / 10,
+  }
+}
+
+/**
  * Gün içindeki yükseklik eğrisi — her 20 dakikada bir örnek.
  *
  * ⚠️ Örnek aralığı 20 dakika: 5 dakikalık çözünürlük SVG'de gözle ayırt
@@ -239,41 +292,29 @@ export function gunesGunu(enlem: number, boylam: number, tarih: Date): GunesGunu
  */
 function yorungeUret(enlem: number, boylam: number, dekl: number, zd: number): YorungeNoktasi[] {
   const noktalar: YorungeNoktasi[] = []
-
   for (let dakika = 0; dakika < 1440; dakika += 20) {
-    // Gerçek güneş zamanı (dakika), boylam ve zaman denklemi düzeltmeli.
-    const gercekZaman = dakika + zd + 4 * boylam - TURKIYE_UTC_OFSETI * 60
-    const saatAcisiDerece = gercekZaman / 4 - 180
-
-    const zenitCos =
-      Math.sin(radyan(enlem)) * Math.sin(radyan(dekl)) +
-      Math.cos(radyan(enlem)) * Math.cos(radyan(dekl)) * Math.cos(radyan(saatAcisiDerece))
-
-    const zenit = Math.acos(Math.max(-1, Math.min(1, zenitCos)))
-    const yukseklik = 90 - derece(zenit)
-
-    /**
-     * Azimut — kuzeyden saat yönünde.
-     *
-     * ⚠️ `acos` yalnızca 0–180 aralığı veriyor; öğleden sonrayı ayırt
-     * etmek için saat açısının işaretine bakmak şart. Bu adım atlanırsa
-     * batı cephesi doğu sanılır — hesap "çalışır" ama tam ters sonuç verir.
-     */
-    const paydaSin = Math.sin(zenit) * Math.cos(radyan(enlem))
-    let azimut = 180
-    if (Math.abs(paydaSin) > 1e-9) {
-      const oran = (Math.sin(radyan(dekl)) - Math.sin(radyan(enlem)) * Math.cos(zenit)) / paydaSin
-      azimut = derece(Math.acos(Math.max(-1, Math.min(1, oran))))
-      // Saat açısı pozitifse güneş batı yarısında.
-      if (saatAcisiDerece > 0) azimut = 360 - azimut
-    }
-
-    noktalar.push({
-      dakika,
-      yukseklik: Math.round(yukseklik * 10) / 10,
-      azimut: Math.round(azimut * 10) / 10,
-    })
+    noktalar.push(konumHesapla(enlem, boylam, dekl, zd, dakika))
   }
-
   return noktalar
+}
+
+/**
+ * Bir gün ve konum için, günün İSTENEN DAKİKALARINDA güneş konumu.
+ *
+ * Zaman çubuğu saat başına 12 örnek alıyor; her örnek için `gunesGunu`
+ * çağırmak deklinasyon ve zaman denklemini 288 kez yeniden hesaplardı.
+ * Bu ikisi gün boyunca sabit, bir kez hesaplanıp paylaşılıyor.
+ */
+export function gunKonumlari(
+  enlem: number,
+  boylam: number,
+  tarih: Date,
+  dakikalar: readonly number[],
+): YorungeNoktasi[] {
+  const jd = julianGun(tarih.getUTCFullYear(), tarih.getUTCMonth() + 1, tarih.getUTCDate())
+  const t = julianYuzyil(jd)
+  const dekl = deklinasyon(t)
+  const zd = zamanDenklemi(t)
+
+  return dakikalar.map((dakika) => konumHesapla(enlem, boylam, dekl, zd, dakika))
 }

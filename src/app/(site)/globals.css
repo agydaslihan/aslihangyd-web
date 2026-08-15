@@ -828,6 +828,23 @@
   );
 }
 
+/**
+ * Gece saati dokusu — güneş zaman çubuğunda.
+ *
+ * ⚠️ RENK DEĞİL DESEN. Çubuktaki dört durum (doğrudan / kısmen / gölge /
+ * gece) yalnızca renkle ayrılsaydı WCAG 1.4.1'i ihlal ederdi. "Kısmen"
+ * yarım yükseklikle, "gece" bu taramayla ayrılıyor — ikisi de renk körü
+ * bir gözde ve gri basılmış bir çıktıda da farklı görünüyor.
+ */
+@utility doku-gece {
+  background-color: var(--color-yuzey-2);
+  background-image: repeating-linear-gradient(
+    -45deg,
+    transparent 0 3px,
+    var(--color-kenar-guclu) 3px 4px
+  );
+}
+
 /** Ekran okuyucuya görünür, göze görünmez. */
 @utility yalnizca-okuyucu {
   position: absolute;

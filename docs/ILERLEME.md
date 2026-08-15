@@ -28,6 +28,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 5 | Çorlu Live | ⏭️ atlandı |
 | A paketi | Mahalle veri altyapısı (liste, OSM sınır, Google, rayiç, şeffaflık) | ✅ Altyapı hazır — **veri Aslıhan'dan** |
 | B paketi | Bohem / pudra paleti — lacivert kaldırıldı | ✅ Ölçüldü ve teste bağlandı |
+| C paketi | Güneş zaman çubuğu — saat saat cephe analizi | ✅ Ek kütüphane yok, 10,9 kB gzip |
 
 ---
 
@@ -3883,3 +3884,155 @@ Derlenen CSS ayrıca elle doğrulandı: `--color-zemin` tek kök bildirimi +
 tek `[data-tema='koyu']` geçersiz kılması (Tailwind 4'ün `@theme` tuzağı
 tekrarlanmamış), `lacivert` dizesi sıfır kez geçiyor, `accent-vurgu`
 sınıfı artık gerçekten üretiliyor.
+
+---
+
+## C paketi — Güneş zaman çubuğu (15 Ağustos 2026)
+
+Güneş Haritası'nın gün toplamına saat saat kırılım eklendi.
+
+### Neden gün toplamı yetmiyor
+
+"Güney cephe ~8 saat güneş alıyor" doğru ama eksik bir cümle: o sekiz
+saatin sabah mı akşam mı olduğu, oturma odasının ne zaman ısınacağını
+belirliyor.
+
+⭐ Ölçüm bunu somutlaştırdı: **doğu ve batı cepheler ekinoksta gün
+toplamında 20 dakikadan az fark ediyor** — yaşarken hiç benzemiyorlar.
+Doğu sabah, batı akşam. Çubuğun var olma sebebi tam olarak bu fark.
+
+### ⭐ Ölçümün öğrettiği: güney cephe yazın kazanmıyor
+
+Çorlu'da 21 Haziran günü 21 Aralık gününden **357 dakika (~6 saat)** uzun.
+Buna rağmen güney cephenin doğrudan güneş süresi **485 ve 480 dakika** —
+arada 5 dakika var.
+
+Sebep geometrik: kışın güneş güneydoğudan doğup güneybatıdan batıyor, yani
+gün boyu cephenin önünde. Yazın kuzeydoğudan doğup kuzeybatıdan batıyor ve
+günün ilk ve son saatlerini cephenin ARKASINDA geçiriyor.
+
+⚠️ Bu testi ilk yazışımda "kışın daha uzun olmalı" diye iddia ettim; 5
+dakikayla kırmızıya döndü. Gökyüzü ikisini de haklı çıkarmıyor — doğru
+iddia "fark yok" ve asıl anlatılmaya değer olan da bu. Test o hâliyle
+duruyor.
+
+### Zaman ekseni — mevsimler karşılaştırılabilir olmalı
+
+İlk tasarımda çubuk her mevsimde kendi gün doğumundan gün batımına
+uzanıyordu. Çubuk her zaman tam genişlikte çizildiği için **kışın 9 saat,
+yazın 15 saat aynı uzunlukta görünüyordu** — mevsim seçicisinin göstermesi
+gereken tek şey, tam da görünmez oluyordu.
+
+Eksen artık dört günün BİRLEŞİMİNDEN türetiliyor (Çorlu için 05–20).
+Gündüz bloğu yazın uzuyor, kışın kısalıyor; gece saatleri çubukta açıkça
+duruyor.
+
+⚠️ Pencere koda gömülmüyor, konumdan hesaplanıyor. Testi 60° enlemde
+pencerenin genişlediğini doğruluyor.
+
+### Dört durum, dört biçim
+
+| Durum | Görünüm | Anlamı |
+| --- | --- | --- |
+| Doğrudan | tam yükseklik gold | saatin tamamı güneşli |
+| Kısmen | **yarım yükseklik** gold | güneş o saat içinde cepheye teğet geçiyor |
+| Gölge | boş krem | güneş ufkun üstünde ama bu cepheyi görmüyor |
+| Gece | **çapraz tarama** | güneş ufkun altında |
+
+⚠️ **Renk tek başına bilgi taşımıyor (WCAG 1.4.1).** Gold dolgu krem
+üzerinde 1,89:1 — blokları ayırt etmeye yeten bir oran değil ve zaten
+dekoratif gold kuralı gereği olamaz. Bu yüzden dört durum renkten bağımsız
+olarak da farklı (yükseklik ve desen), ve aynı bilgi üç yerde daha var:
+çubuğun altındaki özet cümlesi, seçilen saatin metin okuması, ve çubuğun
+`aria-label`ındaki saat aralıkları ("doğrudan güneş 08:00–19:00
+saatlerinde").
+
+### ⚠️ Hücreler düğme değil — dokunma hedefi kararı
+
+16 saatlik bir eksende hücreler telefonda ~18 px genişliğe düşüyor ve WCAG
+2.2'nin 24×24 dokunma hedefi sınırının altında kalırdı.
+
+Şartname bu durum için "3'er saatlik gruplar" öneriyordu. Gruplama sınırı
+çözerdi ama **üç farklı durumu tek kutuya sıkıştırırdı** — çubuğun
+anlatmak istediği şeyi silerdi.
+
+Çözüm rolleri ayırmak oldu: çubuk `role="img"` (grafik), gerçek denetim
+altındaki saat okuması ve onun 44 px'lik ok düğmeleri. Fare ve dokunmayla
+hücre seçmek bunun üstüne binen bir kısa yol; klavye ve ekran okuyucu için
+hiçbir şey kaybolmuyor. Saat etiketleri 3'er saatte bir yazılıyor.
+
+⚠️ Yatay kaydırma hiçbir ekran boyutunda oluşmuyor — hücreler `flex: 1`.
+
+### Köşe daireler
+
+Her cephe kendi çubuğunu alıyor; **toplanmıyorlar.** Aynı saatte iki cephe
+birden güneş alabiliyor ve toplam, günün uzunluğunu aşabilirdi.
+
+⭐ Saat okuması ise TEK: azimut ve yükseklik cepheden bağımsız, gökyüzü
+tek. Başlık bir kez yazılıp altına cephe cephe durum listeleniyor —
+"14:00 · Güney cephe: gölgede · Batı cephe: doğrudan güneş alıyor".
+
+### Çözünürlük birleştirildi
+
+Gün toplamı 20 dakikalık örneklemeyi kullanıyordu; saatlik çubuk için bu
+çok kaba (bir saat ya 0, ya 20, ya 40, ya 60 dakika güneş alabilirdi).
+İkisi de **5 dakikaya** çekildi.
+
+⚠️ İki ayrı aralık kullanmak daha kötü olurdu: aynı sayfada "yazın ~9
+saat" ile çubuğun topladığı saat birbirini tutmazdı. Test ikisinin eşit
+olduğunu doğruluyor.
+
+Güneş konumu hesabı da tek çekirdeğe indi (`konumHesapla`): aynı
+matematiği ikinci kez yazmak, azimutun öğleden sonra düzeltmesi gibi ince
+bir adımın iki yerde sessizce ayrışmasına açık kapı bırakırdı.
+
+### Bir sunum kusuru testle bulundu
+
+Saat ipucu önce **saatin ortasındaki** örneği gösteriyordu. Yaz sabahı
+05:00 saatinde güneş 05:36'da doğuyor; ortası (05:30) hâlâ ufkun altında.
+Hücre doğru biçimde "gölgede" işaretliydi ama ipucu **"yükseklik -2°, bu
+cephe: gölgede"** diyordu — çelişkili okunan bir cümle.
+
+Artık saatin **en yüksek** anı gösteriliyor: gündüz saatlerinde ortadan
+bir iki derece farklı, gün doğumu/batımı saatlerinde doğru tarafta.
+
+### Maliyet — ölçüldü
+
+| | |
+| --- | --- |
+| İstemciye eklenen | **10,9 kB gzip** |
+| Ana sayfa JS | **207,4 kB gzip** — değişmedi, bileşen orada yüklenmiyor |
+| Ek kütüphane | **yok** — düz HTML/CSS, grafik kütüphanesi eklenmedi |
+
+Yöntem: bileşen bağlıyken ve bağlı değilken iki üretim derlemesi alınıp
+`.next/static/chunks` toplam gzip boyutu karşılaştırıldı. Ana sayfanın
+yüklediği 12 parçanın hiçbiri güneş kodunu taşımıyor — doğrulandı.
+
+⚠️ Yorumda önce "~3 kB" yazıyordu; tahmindi ve **yanlıştı**. Bu projede
+ölçülmemiş bir rakamı yorumda bırakmak, ekranda uydurma veri göstermekle
+aynı sınıfta. Ölçüldü ve düzeltildi.
+
+⚠️ Maliyet yalnızca ilan ve mahalle DETAY sayfalarına biniyor.
+
+### Boş durumlar
+
+| Eksik olan | Davranış |
+| --- | --- |
+| Cephe yönü | Çubuk hiç basılmıyor; gün doğumu/batımı ve "cephe yönü girilmemiş, tahmin etmiyoruz" notu duruyor |
+| Mahalle merkez koordinatı | Bütün güneş bölümü gizli (çağrı yerlerinde zaten böyleydi) |
+
+⚠️ İkinci bir "cephe girilmemiş" kutusu göstermemek bilinçli: aynı
+eksikliği iki kez söylemek olurdu.
+
+### Kapı
+
+```
+pnpm typecheck  ✅
+pnpm lint       ✅
+pnpm test       ✅  65 dosya / 1446 test (zaman çubuğu için 31 yeni test)
+pnpm build      ✅
+```
+
+Testler fiziği sınıyor, kodun çalıştığını değil: kuzey cephe kışın güneş
+göremez, güney cephe öğlen her mevsimde görür, doğu sabah batı akşam alır,
+gün doğumunu içeren saatte yükseklik negatif görünmez.
