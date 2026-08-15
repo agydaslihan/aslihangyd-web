@@ -321,7 +321,30 @@ function SinirAdimi() {
             </table>
           </div>
 
-          {onizleme.sinirsizMahalleler.length > 0 ? (
+          {/* ─────────────────────────────────────────────────────────────
+              ⚠️ "HİÇ VERİ GELMEDİ" İLE "GELDİ AMA EŞLEŞMEDİ" AYRI ŞEYLER.
+
+              15 Ağustos 2026'da sorgu bir kip hatası yüzünden sıfır aday
+              döndürdü ve panel bunu "OSM'de sınır yok, elle çizin" diye
+              gösterdi. Yanlış yönlendirmeydi: veri OSM'de vardı, biz
+              alamıyorduk. Aslıhan o ekrana bakıp 27 mahalleyi elle çizmeye
+              başlasaydı, günler boşa giderdi.
+
+              Sıfır aday neredeyse her zaman BİZİM tarafımızda bir sorundur;
+              bir ilçenin tek bir mahallesinin bile sınırsız olması normal,
+              hepsinin birden olması değil.
+              ───────────────────────────────────────────────────────────── */}
+          {onizleme.satirlar.length === 0 ? (
+            <div className="aktarim-hata">
+              <strong>OpenStreetMap hiç sınır döndürmedi.</strong> Bu, &quot;bu bölgede sınır
+              yok&quot; demek değildir — sorgunun kendisi sonuç bulamamış demektir. Elle çizmeye
+              başlamadan önce aşağıdaki <em>Gönderilen sorgu</em> bölümünü açıp içeriğini
+              geliştiriciye iletin. Sınırlar OSM&apos;de varken bizim yanlış yerde aramamız daha
+              önce bir kez oldu.
+            </div>
+          ) : null}
+
+          {onizleme.sinirsizMahalleler.length > 0 && onizleme.satirlar.length > 0 ? (
             <>
               <h3>OpenStreetMap&apos;te sınırı bulunamayan mahalleler</h3>
               <p className="aktarim-not">

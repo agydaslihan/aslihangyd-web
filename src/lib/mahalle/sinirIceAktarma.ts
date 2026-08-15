@@ -100,7 +100,26 @@ async function overpasstanGetir(sorgu: string): Promise<SinirCozumlemesi> {
 
     if (!cevap.ok) throw new Error(`Overpass ${cevap.status} döndü.`)
 
-    return sinirCevabiniCoz(await cevap.json())
+    const govde: unknown = await cevap.json()
+
+    /**
+     * ⚠️ SESSİZ SIFIR KORUMASI.
+     *
+     * Overpass aşırı yüklendiğinde bazen HTTP 200 + geçerli JSON döndürür;
+     * `elements` boştur ve sebep yalnızca `remark` alanında yazar. Bu
+     * kontrol olmadan sunucu arızası ile "bölgede gerçekten sınır yok"
+     * ekranda AYNI görünür — ikisi bambaşka şeyler ve bambaşka davranış
+     * gerektirir (biri "tekrar dene", diğeri "elle çiz").
+     *
+     * Sunucu meşgulken çoğu zaman HTTP 504 döndüğü için yukarıdaki
+     * `cevap.ok` kontrolü yakalıyor; bu, onun kaçırdığı hâli kapatıyor.
+     */
+    const not = (govde as { remark?: unknown })?.remark
+    if (typeof not === 'string' && not.trim() !== '') {
+      throw new Error(`OpenStreetMap sunucusu sorguyu tamamlayamadı: ${not.trim()}`)
+    }
+
+    return sinirCevabiniCoz(govde)
   } finally {
     clearTimeout(zamanlayici)
   }

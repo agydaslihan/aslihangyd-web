@@ -4110,3 +4110,159 @@ gerçek kullanıcı verisi görülmeden verilmeyecek.
 "Gerçek kullanıcı Core Web Vitals ölçümü" bölümünde duruyor: Lighthouse
 mobil ölçümü simülasyon, CDN yok, ve kalan yükün %93,8'i çatı. Karar
 gerçek kullanıcı verisi görülmeden verilmeyecek.
+
+---
+
+## OSM mahalle sınırı sorgusu sıfır sonuç döndürüyordu (15 Ağustos 2026)
+
+Aslıhan A paketinin 2. adımını çalıştırdı ve şunu gördü:
+
+```
+0 yeni · 0 tazelenecek · 0 korunacak · 0 eşleşmedi
+27 mahallenin hepsi "OSM'de sınırı bulunamayan" listesinde
+```
+
+Belirtiyi doğru okuyan tespit şuydu: **"0 eşleşmedi" olması önemli.** Veri
+gelip eşleşememesi başka, hiç veri gelmemesi başka. İkincisiydi.
+
+### Teşhis — iki ayrı hata üst üste binmiş
+
+Sorgu Overpass'te elle çalıştırıldı ve gerçekten boş döndüğü doğrulandı.
+Sonra varsayımlar tek tek sınandı.
+
+**1 · `admin_level=10` varsayımı yanlıştı.**
+
+İlçe seviyesi (6) doğruydu — `relation/1771127`, `admin_level=6`, `name=Çorlu`.
+Ama Çorlu alanı içindeki idari sınırlar sorulunca çıkan tablo şuydu:
+
+| admin_level | öğe |
+| --- | --- |
+| 6 | 1 (Çorlu'nun kendisi) |
+| **8** | **87 — bunların 26'sı adlı mahalle ilişkisi** |
+| 10 | **0** |
+
+Yani Çorlu'nun 26 mahallesi OSM'de `admin_level=8` ile kayıtlı. Kodda 10
+yazıyordu, çünkü OSM belgeleri Türkiye için mahalle seviyesini 10 gösterir.
+**Belgelenmiş seviye ile fiilen etiketlenmiş seviye aynı olmak zorunda
+değil.** OSM gönüllü katkıdır: şema tavsiyedir, veri gerçektir.
+
+**2 · `out geom tags;` üye geometrisini bastırıyordu — asıl katil bu.**
+
+Seviye 8'e çevrilince sorgu 87 öğe döndürdü, adlar da doğruydu. Ama
+çözümleyici yine **0 aday** üretti: 59 adsız atlandı, 28 "geometrisiz".
+
+Ham cevaba bakılınca sebep görüldü — ilişkilerde `members` alanı **hiç
+yoktu**:
+
+```
+Muhittin anahtarları: ['type', 'id', 'bounds', 'tags']    ← members YOK
+```
+
+Overpass'te `out` ifadesinin iki ayrı boyutu var:
+
+- **ayrıntı seviyesi** — `ids` · `skel` · `body` · `tags` · `meta`
+- **geometri kipi** — `geom` · `bb` · `center`
+
+`tags` bir ayrıntı seviyesidir ve "yalnızca kimlik + etiket" demektir:
+**ilişkinin üyelerini bastırır.** Üye kalmayınca `geom` de tutunacak bir şey
+bulamayıp kaba dikdörtgeni (`bounds`) döndürür. Çözümleyici bunu haklı
+olarak "geometrisiz" sayıp atlıyordu — kaba bir dikdörtgeni mahalle sınırı
+diye yazmak, haritada sessizce yanlış alan göstermek olurdu.
+
+`out body geom;` ile aynı sorgu:
+
+```
+Muhittin anahtarları: ['type', 'id', 'bounds', 'members', 'tags']
+  üye sayısı: 6 | roller: {'outer': 5, 'label': 1} | geometrisi olan: 5
+```
+
+⚠️ POI sorgusundaki `out center tags` **doğrudur** ve buraya örnek
+alınmamalı: orada nokta/alan merkezleri isteniyor, üye geometrisi değil.
+İki sorgunun ihtiyacı farklı olduğu için kipleri de farklı. POI içe
+aktarmanın çalışıp sınır içe aktarmanın çalışmamasının sebebi buydu.
+
+### ⚠️ Test hatayı koruyordu
+
+`sinirSorgusu.test.ts` içinde şu satır vardı:
+
+```ts
+// Geometri olmadan poligon kurulamaz.
+expect(sorgu).toContain('out geom tags;')
+```
+
+Yorum doğru, beklenen değer yanlış. Yeşil bir test, sorgunun 26 mahallenin
+hepsini sessizce düşürdüğü gerçeğini üstüne mühür basarak koruyordu.
+
+Testin doğrulaması gereken şey "bu dize burada mı" değil, **"sorgu üye
+geometrisi istiyor mu"** idi. Yeni hâli iki yönlü: doğru kipin varlığı VE
+yanlış kipin yokluğu (`/^out\b.*\btags\b/m` eşleşmemeli).
+
+Bu, projedeki ikinci "kendi sabitini savunmayan koruma testi" vakası —
+öncekiler `jetonlar.test.ts` ve `disiplin.test.ts`'teki İZİNLİ kümesiydi.
+
+### Düzeltmeler
+
+| # | Ne | Neden |
+| --- | --- | --- |
+| 1 | `out geom tags;` → `out body geom;` | Üye geometrisi olmadan poligon kurulamaz |
+| 2 | Tek seviye yerine küme: `admin_level~"^(8\|9\|10)$"` | Tek varsayımı başka bir tek varsayımla değiştirmemek için. Seviye yarın 10'a düzeltilirse de çalışır |
+| 3 | Yol tarafına `["name"]` şartı | Adsız yollar zaten ilişkilerin parçası; cevabın üçte ikisi onlardı ve panelde "59 sınır atlandı" satırı veri kaybı izlenimi veriyordu. Cevap 87 → 28 öğe |
+| 4 | `remark` alanı kontrolü | Overpass aşırı yüklendiğinde HTTP 200 + boş `elements` + `remark` döndürebiliyor. Bu kontrol olmadan **sunucu arızası ile "bölgede sınır yok" ekranda AYNI görünür** |
+| 5 | Panelde sıfır-aday uyarısı | "Hiç veri gelmedi" ile "geldi ama eşleşmedi" ayrı gösteriliyor artık |
+
+5. maddenin gerekçesi bu arızanın kendisi: panel sıfır sonucu "OSM'de sınır
+yok, elle çizin" diye gösterdi. Aslıhan o ekrana bakıp 27 mahalleyi elle
+çizmeye başlasaydı günler boşa giderdi. Bir ilçenin tek bir mahallesinin
+sınırsız olması normal; **hepsinin birden olması bizim tarafımızda bir
+sorundur.**
+
+### Uçtan uca doğrulama
+
+Düzeltilmiş kodun ürettiği sorgu canlı Overpass'e gönderildi, cevap gerçek
+çözümleyiciden geçirildi:
+
+```
+adaylar=26  adsizAtlandi=0  geometrisizAtlandi=2
+✅ EŞLEŞEN 26 · ⚠️ EŞLEŞMEYEN 0 · ❌ BULUNAMAYAN 1 (Yeşiltepe)
+enlem aralığı:  41,0711 – 41,1802
+boylam aralığı: 27,6590 – 27,9556
+```
+
+Geometrinin gerçekten doğru olduğu ayrıca kontrol edildi: hesaplanan
+Muhittin merkezi **41,15250 / 27,81267**, Çorlu merkezi olarak bilinen
+41,15525 / 27,81286 ile neredeyse aynı. "Veri geldi" ile "veri doğru" ayrı
+şeyler; ikincisi ölçüldü.
+
+`geometrisizAtlandi=2` beklenen: `Ali Osman Çelebi Bulvarı` ve
+`Salih Omurtak Caddesi` — sınır olarak etiketlenmiş iki cadde. Kapalı halka
+oluşturmadıkları için düşüyorlar ve hiçbir mahalle adıyla eşleşmiyorlar.
+
+### ⚠️ Yeşiltepe muhtemelen Çorlu'da değil — Velimeşe'nin aynısı
+
+OSM'de Çorlu içinde Yeşiltepe yok. Nominatim'de arandığında çıkan tek kayıt:
+
+```
+boundary/administrative — Yeşiltepe Mahallesi, Ergene, Tekirdağ
+```
+
+Velimeşe ile birebir aynı durum: 6360 sayılı kanunla Ergene ilçesi
+kurulurken oraya geçmiş olabilir. **Listeden kaldırılmadı** — bu gerçek
+dünyaya dair bir iddia ve `corluMahalleleri.ts` Aslıhan'ın onayladığı bir
+liste. Karar onun; teyit gelirse tek satırlık değişiklik.
+
+Bu teyit edilirse merkez mahalle sayısı 18, kırsal 8, toplam **26** olur ve
+OSM kapsaması **%100**'e çıkar.
+
+### Elle giriş yolu neden genişletilmedi
+
+İstek şuydu: "OSM'de Çorlu mahalle sınırları gerçekten yoksa elle giriş
+yolunu kolaylaştır — mahalle merkezini haritadan tıklayarak seç."
+
+Şart gerçekleşmedi: sınırlar OSM'de **var** ve 26'sı otomatik geliyor.
+Elle merkez girmesi gereken tek kayıt Yeşiltepe ve o da muhtemelen listeden
+çıkacak. Tek bir kayıt için harita seçici yazmak, çözülmüş bir soruna araç
+üretmek olurdu. Gerekirse ayrı iş olarak durur.
+
+POI tarafı zaten sınıra bağlı değil: `merkezlerdenKutu` yalnızca `merkez`
+alanını okuyor, `sinir` alanına hiç bakmıyor. Merkez + yarıçap yeterli
+şartı **kod seviyesinde zaten sağlanıyordu**, doğrulandı.
