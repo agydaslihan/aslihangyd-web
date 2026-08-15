@@ -6,6 +6,11 @@ biriktirir. Ben eksik veri yüzünden durmuyorum: alanı boş bırakıp
 
 Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
+> 📘 **Panelde nereye tıklayacağını arıyorsan:** bu dosya *neyin* gerektiğini
+> söyler, **[docs/VERI-GIRISI-KILAVUZU.md](VERI-GIRISI-KILAVUZU.md)** ise
+> *nasıl yapılacağını* adım adım anlatır — menü adı, buton adı, hata tablosu
+> ve her adımın sonunda yapılacak doğrulamayla.
+
 ---
 
 ## Acil (yayın engelleyici)
