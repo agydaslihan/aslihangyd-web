@@ -4079,20 +4079,32 @@ gerekçesi testin içine yazıldı.
 
 ### Lighthouse — medyan (3 koşum, CI)
 
-B paketi ölçümü, 3 sayfa × 2 cihaz × 3 koşum = 18 rapor:
+3 sayfa × 2 cihaz × 3 koşum = 18 rapor. Aşağıdaki tablo üç erişilebilirlik
+düzeltmesinden SONRAKİ ölçüm (C paketi dalı, CI koşumu 31880471250).
 
 | Cihaz | Sayfa | Performans | Erişilebilirlik | SEO | LCP | CLS |
 | --- | --- | --- | --- | --- | --- | --- |
-| Masaüstü | Ana sayfa | **100** | 94 | 100 | 0,74 s | 0,000 |
-| Masaüstü | /portfoy | **100** | 97 | 100 | 0,77 s | 0,000 |
-| Masaüstü | /mahalleler | **100** | 96 | 100 | 0,73 s | 0,000 |
-| Mobil | Ana sayfa | 91 | 94 | 100 | 3,32 s | 0,000 |
-| Mobil | /portfoy | 89 | 97 | 100 | 3,73 s | 0,000 |
-| Mobil | /mahalleler | 91 | 96 | 100 | 3,49 s | 0,000 |
+| Masaüstü | Ana sayfa | **100** | **100** | **100** | 0,74 s | 0,000 |
+| Masaüstü | /portfoy | **100** | **100** | **100** | 0,81 s | 0,000 |
+| Masaüstü | /mahalleler | **100** | **100** | **100** | 0,72 s | 0,000 |
+| Mobil | Ana sayfa | 92 | **100** | **100** | 3,28 s | 0,000 |
+| Mobil | /portfoy | 87 | **100** | **100** | 3,94 s | 0,000 |
+| Mobil | /mahalleler | 91 | **100** | **100** | 3,49 s | 0,000 |
 
-⚠️ Erişilebilirlik skorları yukarıdaki üç düzeltmeden ÖNCEki ölçüm. Üç
-hata da kapatıldığında beklenen değer 100 — bir sonraki CI koşumu
-doğrulayacak.
+⭐ **Erişilebilirlik altı ölçümün hepsinde 100** ve raporda kalan hata yok.
+Düzeltmelerden önce 94–97'ydi. Hedef ≥95 idi; aşıldı.
+
+Karşılaştırma için düzeltmelerden ÖNCE (B paketi dalı): masaüstü ana sayfa
+94, /portfoy 97, /mahalleler 96.
+
+⚠️ Mobil performans 87–92 aralığında ve koşumdan koşuma ~2 puan geziniyor;
+zaman çubuğu bu üç sayfanın hiçbirinde yüklenmiyor (yalnızca detay
+sayfalarında), yani aradaki fark gürültü.
+
+⚠️ Mobil LCP 3,3–3,9 s ve hedef 2,5 s. Bu **yeni değil** ve kararı
+"Gerçek kullanıcı Core Web Vitals ölçümü" bölümünde duruyor: Lighthouse
+mobil ölçümü simülasyon, CDN yok, ve kalan yükün %93,8'i çatı. Karar
+gerçek kullanıcı verisi görülmeden verilmeyecek.
 
 ⚠️ Mobil LCP 3,3–3,7 s ve hedef 2,5 s. Bu **yeni değil** ve kararı
 "Gerçek kullanıcı Core Web Vitals ölçümü" bölümünde duruyor: Lighthouse
