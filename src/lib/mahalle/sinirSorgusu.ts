@@ -61,6 +61,37 @@ export const MAHALLE_IDARI_SEVIYELERI = [8, 9, 10] as const
 /** İlçe idari seviyesi — Çorlu için OSM'de doğrulandı (relation/1771127). */
 export const ILCE_IDARI_SEVIYESI = 6
 
+/**
+ * Merkez yedeği olarak kabul edilen OSM yerleşim türleri.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ İKİNCİ KADEME: SINIRI OLMAYAN MAHALLENİN MERKEZİ
+ *
+ * Sınır poligonu OSM'de her mahalle için yok. Sınırsız kalan bir mahalleye
+ * merkez elle girilmesini beklemek, "tek koordinat bile girilmeyecek"
+ * şartını çiğnerdi. Bu yüzden aynı sorguda ikinci bir küme daha isteniyor:
+ * ilçe içindeki **adlandırılmış yerleşim düğümleri**.
+ *
+ * Yer düğümü bir noktadır, alan değildir — poligon üretmez, yalnızca
+ * merkez verir. Bu bilinçli bir takas: alan bilgisi olmadan da harita
+ * odaklanabiliyor ve POI araması çalışıyor (POI kutusu yalnızca merkez
+ * okur, sınıra hiç bakmaz).
+ *
+ * ⚠️ `locality` KASTEN DIŞARIDA. Çorlu içinde 142 tane var ve bunlar
+ * mevkî/tarla adları — bir mahalleyle adaş olan biri, mahallenin merkezini
+ * kilometrelerce öteye taşırdı. Yanlış merkez, eksik merkezden kötüdür:
+ * eksik olan görünür, yanlış olan sessizce yanlış harita gösterir.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const YER_TURLERI = [
+  'suburb',
+  'neighbourhood',
+  'quarter',
+  'village',
+  'town',
+  'hamlet',
+] as const
+
 /** Koordinatların yuvarlanacağı ondalık basamak (~10 cm). */
 const KOORDINAT_HASSASIYETI = 6
 
@@ -145,6 +176,7 @@ export interface SinirCozumlemesi {
 export function sinirSorgusu(ilceAdi: string = ILCE_ADI, zamanAsimiSaniye = 180): string {
   const ad = ilceAdi.replace(/["\\]/g, '')
   const seviyeler = `^(${MAHALLE_IDARI_SEVIYELERI.join('|')})$`
+  const yerler = `^(${YER_TURLERI.join('|')})$`
 
   return [
     `[out:json][timeout:${zamanAsimiSaniye}];`,
@@ -155,6 +187,15 @@ export function sinirSorgusu(ilceAdi: string = ILCE_ADI, zamanAsimiSaniye = 180)
     `  way(area.ilce)["boundary"="administrative"]["admin_level"~"${seviyeler}"]["name"];`,
     ');',
     'out body geom;',
+    // ── İkinci kademe: sınırı olmayan mahallenin merkezi ──
+    // Ayrı `out` gerekiyor: burada üye geometrisi değil MERKEZ isteniyor.
+    // `out center` düğümde lat/lon, alan ve ilişkide ağırlık merkezi verir.
+    '(',
+    `  node(area.ilce)["place"~"${yerler}"]["name"];`,
+    `  way(area.ilce)["place"~"${yerler}"]["name"];`,
+    `  relation(area.ilce)["place"~"${yerler}"]["name"];`,
+    ');',
+    'out center tags;',
   ].join('\n')
 }
 
@@ -472,6 +513,16 @@ export function sinirCevabiniCoz(ham: unknown): SinirCozumlemesi {
     // `map_to_area` alan öğeleri de döndürebilir; onların geometrisi yok.
     if (oge.type !== 'way' && oge.type !== 'relation') continue
 
+    /**
+     * ⚠️ Yer öğeleri buraya ait değil — ikinci kademede çözülüyorlar.
+     *
+     * Aynı cevapta iki küme var: sınır poligonları ve yerleşim noktaları.
+     * Yer öğelerinin üye geometrisi yok (`out center` ile geldiler); burada
+     * elenmezlerse hepsi "geometrisiz atlandı" sayacına düşer ve panelde
+     * gerçek bir sorun varmış gibi görünür.
+     */
+    if (oge.tags?.['place'] !== undefined && oge.tags?.['boundary'] !== 'administrative') continue
+
     const osmAdi = oge.tags?.['name']?.trim() ?? ''
     if (osmAdi === '') {
       adsizAtlandi += 1
@@ -510,4 +561,78 @@ export function sinirCevabiniCoz(ham: unknown): SinirCozumlemesi {
   }
 
   return { adaylar, adsizAtlandi, geometrisizAtlandi }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════
+   İkinci kademe — yerleşim noktasından merkez
+   ══════════════════════════════════════════════════════════════════════════ */
+
+/** Sınırı olmayan mahalle için yalnızca merkez taşıyan aday. */
+export interface MerkezAdayi {
+  osmKimlik: string
+  osmAdi: string
+  sadeAd: string
+  slug: string
+  /** OSM `place` değeri — panelde gösterilir, kaynağın niteliği görünsün. */
+  yerTuru: string
+  /** `[boylam, enlem]` — Payload `point` sırası. */
+  merkez: [number, number]
+}
+
+const YER_TURU_KUMESI: ReadonlySet<string> = new Set(YER_TURLERI)
+
+/**
+ * Aynı Overpass cevabındaki yerleşim noktalarını merkez adaylarına çevirir.
+ *
+ * ⚠️ Sınır adaylarıyla AYNI cevaptan okunuyor ama ayrı bir fonksiyon:
+ * ikisinin girdi biçimi de çıktısı da farklı. Tek fonksiyona sıkıştırmak,
+ * "poligon üretti mi yoksa yalnızca nokta mı" ayrımını çağıranın
+ * bilmesini imkânsız kılardı — ve bu ayrım kullanıcıya gösterilmeli.
+ */
+export function merkezAdaylariniCoz(ham: unknown): MerkezAdayi[] {
+  const ogeler = (ham as { elements?: unknown })?.elements
+  if (!Array.isArray(ogeler)) return []
+
+  const adaylar: MerkezAdayi[] = []
+  const gorulen = new Set<string>()
+
+  for (const hamOge of ogeler) {
+    const oge = (hamOge ?? {}) as OverpassOgesi & {
+      lat?: unknown
+      lon?: unknown
+      center?: { lat?: unknown; lon?: unknown }
+    }
+
+    const yerTuru = oge.tags?.['place']
+    if (yerTuru === undefined || !YER_TURU_KUMESI.has(yerTuru)) continue
+
+    const osmAdi = oge.tags?.['name']?.trim() ?? ''
+    if (osmAdi === '') continue
+
+    const kimlik = typeof oge.id === 'number' ? oge.id : null
+    if (kimlik === null || typeof oge.type !== 'string') continue
+
+    // Düğümde doğrudan lat/lon; alan ve ilişkide `out center` merkezi.
+    const enlem = typeof oge.lat === 'number' ? oge.lat : oge.center?.lat
+    const boylam = typeof oge.lon === 'number' ? oge.lon : oge.center?.lon
+    if (typeof enlem !== 'number' || typeof boylam !== 'number') continue
+    if (!Number.isFinite(enlem) || !Number.isFinite(boylam)) continue
+
+    const osmKimlik = `${oge.type}/${kimlik}`
+    if (gorulen.has(osmKimlik)) continue
+    gorulen.add(osmKimlik)
+
+    const sadeAd = adiSadelestir(osmAdi)
+
+    adaylar.push({
+      osmKimlik,
+      osmAdi,
+      sadeAd,
+      slug: slugUret(sadeAd),
+      yerTuru,
+      merkez: [yuvarla(boylam), yuvarla(enlem)],
+    })
+  }
+
+  return adaylar
 }

@@ -4266,3 +4266,139 @@ Elle merkez girmesi gereken tek kayıt Yeşiltepe ve o da muhtemelen listeden
 POI tarafı zaten sınıra bağlı değil: `merkezlerdenKutu` yalnızca `merkez`
 alanını okuyor, `sinir` alanına hiç bakmıyor. Merkez + yarıçap yeterli
 şartı **kod seviyesinde zaten sağlanıyordu**, doğrulandı.
+
+---
+
+## Otomatik merkez yedeği — sınırı olmayan mahalle konumsuz kalmasın (15 Ağustos 2026)
+
+Sınır sorgusu düzeltildikten sonra kalan şart şuydu: **Aslıhan tek koordinat
+bile girmeyecek.** Sınır düzeltmesi 26 mahalleyi getiriyordu ama OSM'de sınır
+kapsaması garanti değil; sınırsız kalan bir mahalleye merkez elle girilmesini
+beklemek bu şartı çiğnerdi.
+
+### İki kademeli çözüm, tek sorgu, tek tık
+
+Aynı Overpass sorgusuna ikinci bir `out` ifadesi eklendi:
+
+```
+(  … boundary=administrative, admin_level ~ ^(8|9|10)$, name … );
+out body geom;                        ← 1. kademe: poligon + alan merkezi
+(  … place ~ ^(suburb|neighbourhood|quarter|village|town|hamlet)$, name … );
+out center tags;                      ← 2. kademe: yalnızca merkez
+```
+
+| Kademe | Kaynak | Verdiği |
+| --- | --- | --- |
+| 1 | `boundary=administrative` ilişkisi | Sınır poligonu **+** alan ağırlıklı merkez |
+| 2 | `place=*` yerleşim düğümü | Yalnızca merkez — poligon yok |
+| — | hiçbiri | **Boş bırakılır**, koordinat uydurulmaz |
+
+⚠️ **2. kademede `sinir` alanına DOKUNULMUYOR.** Yer düğümü bir noktadır;
+etrafına daire çizip poligon uydurmak, haritada gerçek sanılan sahte bir
+alan gösterirdi. Merkez var, sınır yok — ekranda da tam böyle görünüyor.
+
+⚠️ **`locality` kasten dışarıda.** Çorlu içinde 142 tane var ve bunlar
+mevkî/tarla adları. Bir mahalleyle adaş olan biri, mahallenin merkezini
+kilometrelerce öteye taşırdı. **Yanlış merkez, eksik merkezden kötüdür:**
+eksik olan panelde görünür, yanlış olan sessizce yanlış harita gösterir.
+
+⚠️ Elle girilmiş merkez ezilmiyor — 2. kademe yalnızca `merkez` alanı BOŞ
+olan mahallelere bakıyor. 1. kademedeki `merkeziYaz` korumasının aynısı.
+
+### Ölçülen kapsama — canlı Overpass, gerçek çözümleyici
+
+```
+sınır adayı=26  adsız=0  geometrisiz=2   merkez adayı=34
+
+1. kademe (sınır poligonu + merkez): 26
+2. kademe (yalnızca merkez):          0
+hiçbiri:                              1  (Yeşiltepe)
+TOPLAM OTOMATİK KONUM:               26/27
+```
+
+⚠️ **Dürüst not: 2. kademe bugün Çorlu için sıfır ek mahalle çözüyor.**
+26'sının zaten sınırı olduğu için devreye girmiyor. Bu bir kazanç değil,
+emniyet ağı: OSM'de bir mahallenin sınırı silinir ya da hiç çizilmemiş bir
+mahalle listeye eklenirse, merkez yine otomatik gelecek. Bunu "26'yı 27'ye
+çıkardı" diye sunmak yanlış olurdu.
+
+### ⚠️ Koruma testi bu sefer DOĞRU KODU engelledi
+
+Sınır düzeltmesinde yazdığım koruma şuydu:
+
+```ts
+expect(/^out\b.*\btags\b/m.test(sorgu)).toBe(false)
+```
+
+"Hiçbir `out` satırında `tags` geçmesin" diyordu. İkinci kademe eklenince
+kırıldı — çünkü yer düğümleri için **`out center tags;` DOĞRUDUR**: `center`
+üye geometrisine ihtiyaç duymaz, `tags` orada zararsızdır.
+
+Yasak olan `tags`'in kendisi değil, **`geom` ile birlikte kullanılması**.
+Test gerçek değişmezi ifade etmediği için önce hatayı korumuştu (eski hâli),
+sonra doğru kodu engelledi (fazla geniş hâli). Şimdi tam olarak değişmezi
+ölçüyor: aynı `out` satırında `geom` ve `tags` birlikte bulunamaz.
+
+Bir koruma testinin iki yönlü yanlış olabileceğinin kaydı olarak duruyor.
+
+### Nominatim neden 3. kademe olarak EKLENMEDİ
+
+İstekte yedek yol olarak sorulmuştu. Eklenmedi, gerekçesi şu:
+**Nominatim OSM verisini indeksler.** Bir mahalle OSM'de ne sınır ne yer
+düğümü olarak varsa, Nominatim'de de yoktur — üçüncü kademe aynı kuyudan
+ikinci kez su çekmek olurdu. Ayrıca Nominatim'in kullanım politikası saniyede
+1 istek ve toplu kullanımı men ediyor; 27 mahallelik bir döngü sınırda kalırdı.
+
+Doğrulandı: Yeşiltepe Nominatim'de Çorlu içinde aranınca **sonuç yok**.
+
+### ⚠️ Yeşiltepe bir veri boşluğu DEĞİL, liste hatası
+
+Üç bağımsız kaynak aynı şeyi söylüyor:
+
+| Kaynak | Sonuç |
+| --- | --- |
+| OSM sınır sorgusu (Çorlu alanı) | yok |
+| OSM yer düğümü sorgusu (Çorlu alanı) | yok |
+| Nominatim ad araması | `Yeşiltepe Mahallesi, Ergene, Tekirdağ` |
+| Posta kodu rehberleri | Ergene / 59930 |
+
+**Velimeşe ile birebir aynı durum.** Hiçbir lisanslı üçüncü taraf kaynak bu
+mahalleyi Çorlu'ya taşıyamaz, çünkü Çorlu'da değil.
+
+`corluMahalleleri.ts` listesinden **kaldırılmadı** — bu gerçek dünyaya dair
+bir iddia ve liste Aslıhan'ın onayladığı bir liste. Teyit gelirse tek satır:
+merkez 18 + kırsal 8 = **26**, otomatik kapsama **%100**.
+
+### Üçüncü taraf kaynak araştırması
+
+İstekte "hiçbiri olmazsa lisanslı kaynak öner" deniyordu. Bugün öneri
+gerektiren bir mahalle **yok**: tek boşluk yanlış ilçeye ait bir kayıt.
+Gerçek bir boşluk çıkarsa sıralama şu olurdu — ⚠️ lisans şartları
+DOĞRULANMADI, araştırılması gereken bir liste olarak duruyor:
+
+| Kaynak | Not |
+| --- | --- |
+| OpenStreetMap | Bugün kullandığımız. ODbL, atıf zorunlu, türetilmiş veri yayınlanabilir |
+| TKGM Parsel Sorgu | Resmî kadastro; API var. Yeniden yayın lisansı **belirsiz**, kurumla teyit gerekir |
+| NVİ Adres Kayıt Sistemi | Mahalle kodlarının resmî kaynağı; geometri kamuya açık indirilebilir değil |
+| HGM / Atlas | Resmî harita; lisans kısıtlayıcı |
+| data.gov.tr | İçerik ve lisans veri kümesine göre değişiyor |
+
+⚠️ Bu tablodaki hiçbir lisans iddiası doğrulanmadı ve doğrulanmadan
+kullanılmamalı. OSM dışına çıkmak gerekirse önce hukuki teyit alınmalı —
+CLAUDE.md kural 6'nın (scraping yasağı) mantığı burada da geçerli.
+
+### Yeşiltepe listeden çıkarıldı (15 Ağustos 2026)
+
+Aslıhan teyit etti; `corluMahalleleri.ts`'ten kaldırıldı. Yeni sayılar:
+**18 merkez + 8 kırsal = 26 mahalle**, otomatik konum kapsaması **%100**.
+
+Koruma testi Velimeşe ile birleştirildi: ikisi de 6360 sayılı kanunla Ergene
+kurulurken oraya geçmiş, ikisi de listeye bir kez yanlışlıkla girmişti.
+Yanlış ilçenin mahallesi listede kalırsa görünür bir hata vermiyor —
+sessizce konumsuz bir kayıt olarak duruyor ve her içe aktarmada
+"bulunamadı" listesini kirletiyor. Test artık ikisini birlikte savunuyor.
+
+⚠️ Kayıt zaten açılmışsa panelden silinmesi gerekiyor: içe aktarma hiçbir
+kaydı silmez, yalnızca "listede olmayan kayıtlar" başlığı altında gösterir.
+Panel metni ve kılavuz ikisini de adıyla anıyor.

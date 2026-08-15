@@ -150,8 +150,8 @@ function ListeAdimi({
               <h3>Listede olmayan mahalle kayıtları</h3>
               <p className="aktarim-not">
                 Bunlar sistemde var ama Çorlu listemizde yok. İçe aktarma hiçbir kaydı{' '}
-                <strong>silmez</strong> — karar sizin. Yanlış ilçeye ait bir kayıt (örn. Velimeşe)
-                buradaysa panelden silebilirsiniz.
+                <strong>silmez</strong> — karar sizin. Yanlış ilçeye ait bir kayıt (Velimeşe ve
+                Yeşiltepe Ergene ilçesine bağlıdır) buradaysa panelden silebilirsiniz.
               </p>
               <ul className="aktarim-liste">
                 {onizleme.listeDisiKayitlar.map((kayit) => (
@@ -230,7 +230,9 @@ function SinirAdimi() {
     })
   }
 
-  const yazilacak = (onizleme?.yeniSayisi ?? 0) + (onizleme?.guncellenecekSayisi ?? 0)
+  const merkezSayisi = onizleme?.merkezSatirlari.length ?? 0
+  const yazilacak =
+    (onizleme?.yeniSayisi ?? 0) + (onizleme?.guncellenecekSayisi ?? 0) + merkezSayisi
 
   return (
     <section className="aktarim-adim">
@@ -246,6 +248,13 @@ function SinirAdimi() {
       <p className="aktarim-not">
         Sınır yalnızca <strong>adı sistemde olan</strong> bir mahalleye yazılır. Komşu ilçeden gelen
         kayıtlar bu yüzden kendiliğinden elenir; elenenler aşağıda listelenir.
+      </p>
+
+      <p className="aktarim-not">
+        <strong>Sınırı olmayan mahalle konumsuz kalmaz.</strong> Aynı sorgu ikinci bir küme daha
+        getiriyor: OpenStreetMap&apos;teki adlandırılmış yerleşim noktaları. Sınırı bulunamayan bir
+        mahallenin merkezi buradan alınır — poligon olmadan da harita odaklanır ve POI içe aktarma
+        çalışır. Elle koordinat girmeniz gerekmez.
       </p>
 
       <button type="button" className="aktarim-buton" onClick={onizle} disabled={bekliyor}>
@@ -271,6 +280,11 @@ function SinirAdimi() {
               {onizleme.korunacakSayisi} korunacak (elle çizilmiş/düzeltilmiş)
             </span>
             <span className="aktarim-rozet">{onizleme.eslesmeyenSayisi} eşleşmedi</span>
+            {merkezSayisi > 0 ? (
+              <span className="aktarim-rozet aktarim-rozet--yeni">
+                {merkezSayisi} yalnızca merkez (sınırı yok)
+              </span>
+            ) : null}
           </div>
 
           <div className="aktarim-tablo-sarmal">
@@ -344,20 +358,90 @@ function SinirAdimi() {
             </div>
           ) : null}
 
-          {onizleme.sinirsizMahalleler.length > 0 && onizleme.satirlar.length > 0 ? (
+          {onizleme.merkezSatirlari.length > 0 ? (
             <>
-              <h3>OpenStreetMap&apos;te sınırı bulunamayan mahalleler</h3>
+              <h3>Sınırı yok — merkezi yerleşim noktasından gelecek</h3>
+              <p className="aktarim-not">
+                Bu mahallelerin OpenStreetMap&apos;te sınır poligonu yok ama adlandırılmış bir
+                yerleşim noktası var. Merkez oradan alınıyor; <strong>sınır alanı boş kalır</strong>{' '}
+                — noktadan poligon uydurulmuyor, çünkü haritada gerçek sanılan sahte bir alan
+                gösterirdi.
+              </p>
+              <div className="aktarim-tablo-sarmal">
+                <table className="aktarim-tablo">
+                  <thead>
+                    <tr>
+                      <th scope="col">Mahalle</th>
+                      <th scope="col">OSM adı</th>
+                      <th scope="col">Yer türü</th>
+                      <th scope="col">Merkez</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {onizleme.merkezSatirlari.map((satir) => (
+                      <tr key={satir.mahalleId} className="aktarim-satir--yeni">
+                        <td>{satir.mahalleAdi}</td>
+                        <td>{satir.aday.osmAdi}</td>
+                        <td>
+                          <code>{satir.aday.yerTuru}</code>
+                        </td>
+                        <td>
+                          {satir.aday.merkez[1]?.toFixed(5)}, {satir.aday.merkez[0]?.toFixed(5)}
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </>
+          ) : null}
+
+          {/* ─────────────────────────────────────────────────────────────
+              ⚠️ BOŞ BIRAKILAN VERİ — UYDURULMAYAN VERİ.
+
+              Ne sınırı ne yerleşim noktası bulunan mahalle konumsuz kalıyor.
+              Yaklaşık bir koordinat üretmek (ilçe merkezine koymak, komşu
+              mahalleden türetmek) haritayı çalışır gösterir ve yanlışlığı
+              aylarca fark edilmezdi. Eksik olan görünür; yanlış olan görünmez.
+              ───────────────────────────────────────────────────────────── */}
+          {onizleme.kaynaksizMahalleler.length > 0 ? (
+            <>
+              <h3>Hiçbir kaynaktan konum bulunamadı — boş bırakılıyor</h3>
+              <p className="aktarim-not">
+                Bu mahalleler için OpenStreetMap&apos;te ne sınır poligonu ne de adlandırılmış bir
+                yerleşim noktası var. <strong>Yaklaşık koordinat üretilmiyor:</strong> uydurulmuş
+                bir merkez, haritayı çalışıyor gibi gösterip yanlış yeri işaret ederdi.
+              </p>
+              <p className="aktarim-not">
+                Bir mahalle burada çıkıyorsa ilk kontrol edilecek şey adının doğru yazıldığı ve{' '}
+                <strong>gerçekten {ILCE_ADI} ilçesine ait olduğudur</strong> — komşu ilçenin
+                mahallesi bu ilçe içinde aranınca elbette bulunamaz.
+              </p>
+              <ul className="aktarim-liste">
+                {onizleme.kaynaksizMahalleler.map((mahalle) => (
+                  <li key={mahalle.id}>{mahalle.ad}</li>
+                ))}
+              </ul>
+            </>
+          ) : null}
+
+          {onizleme.sinirsizMahalleler.length > 0 && onizleme.satirlar.length > 0 ? (
+            <details className="aktarim-sorgu">
+              <summary>
+                Sınır poligonu olmayan {onizleme.sinirsizMahalleler.length} mahallenin tamamı
+              </summary>
               <p className="aktarim-not">
                 OSM gönüllü katkıyla büyür; Türkiye&apos;de mahalle sınırı kapsaması düzensizdir.
-                Bunların sınırını elle çizmek isterseniz geojson.io kullanıp Konum sekmesine
-                yapıştırabilirsiniz — elle çizilen sınır bu ekran tarafından bir daha ezilmez.
+                Yukarıdakilerin merkezi yine de otomatik geliyor. Sınırı elle çizmek isterseniz
+                geojson.io kullanıp Konum sekmesine yapıştırabilirsiniz — elle çizilen sınır bu
+                ekran tarafından bir daha ezilmez.
               </p>
               <ul className="aktarim-liste">
                 {onizleme.sinirsizMahalleler.map((mahalle) => (
                   <li key={mahalle.id}>{mahalle.ad}</li>
                 ))}
               </ul>
-            </>
+            </details>
           ) : null}
 
           {onizleme.ozet.adsizAtlandi > 0 || onizleme.ozet.geometrisizAtlandi > 0 ? (
@@ -378,7 +462,11 @@ function SinirAdimi() {
             onClick={yaz}
             disabled={bekliyor || yazilacak === 0}
           >
-            {bekliyor ? 'Yazılıyor…' : `${yazilacak} sınırı yaz`}
+            {bekliyor
+              ? 'Yazılıyor…'
+              : merkezSayisi > 0
+                ? `${yazilacak} kaydı yaz (${merkezSayisi}'i yalnızca merkez)`
+                : `${yazilacak} sınırı yaz`}
           </button>
 
           <details className="aktarim-sorgu">
@@ -389,14 +477,29 @@ function SinirAdimi() {
       ) : null}
 
       {sonuc ? (
-        <p className="aktarim-basari">
-          {sonuc.yazilan} mahallenin sınırı yazıldı, {sonuc.korunan} elle düzeltilmiş sınır korundu,{' '}
-          {sonuc.eslesmeyen} OSM kaydı eşleşmedi
-          {sonuc.merkeziKorunan > 0
-            ? `, ${sonuc.merkeziKorunan} mahallede elle girilmiş merkez noktası korundu`
-            : ''}
-          .
-        </p>
+        <>
+          <p className="aktarim-basari">
+            {sonuc.yazilan} mahallenin sınırı yazıldı, {sonuc.korunan} elle düzeltilmiş sınır
+            korundu, {sonuc.eslesmeyen} OSM kaydı eşleşmedi
+            {sonuc.merkeziKorunan > 0
+              ? `, ${sonuc.merkeziKorunan} mahallede elle girilmiş merkez noktası korundu`
+              : ''}
+            {sonuc.merkezYazilan > 0
+              ? `, ${sonuc.merkezYazilan} mahalleye sınırı olmadığı hâlde yerleşim noktasından merkez yazıldı`
+              : ''}
+            .
+          </p>
+
+          {/* ⚠️ Bulunamayanlar başarı mesajının içine gömülmüyor: boş kalan
+              veri, yazılan veri kadar görünür olmalı. */}
+          {sonuc.kaynaksiz.length > 0 ? (
+            <p className="aktarim-not">
+              <strong>Konumu bulunamayan {sonuc.kaynaksiz.length} mahalle boş bırakıldı:</strong>{' '}
+              {sonuc.kaynaksiz.map((mahalle) => mahalle.ad).join(', ')}. Bunlar için ne sınır ne
+              yerleşim noktası vardı; koordinat uydurulmadı.
+            </p>
+          ) : null}
+        </>
       ) : null}
 
       {sonuc && sonuc.hatalar.length > 0 ? (
