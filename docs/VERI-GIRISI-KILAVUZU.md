@@ -158,10 +158,22 @@ sayısı**.
 
 Altında **"… sınırı yaz"** butonu. Basın.
 
-### ⚠️ "OpenStreetMap'te sınırı bulunamayan mahalleler" listesi normaldir
+### Kaç sınır gelmeli — 26
 
-OpenStreetMap gönüllü katkıyla büyür ve Türkiye'de mahalle sınırı kapsaması
-düzensizdir. **27 mahallenin hepsinin sınırının gelmesini beklemeyin.**
+15 Ağustos 2026'da OpenStreetMap'e canlı sorularak sayıldı: Çorlu'nun
+mahallelerinden **26'sının sınırı OSM'de var** ve içe aktarma hepsini
+getiriyor. Gelmeyen tek kayıt **Yeşiltepe**.
+
+⚠️ Yeşiltepe muhtemelen listede yanlışlıkla duruyor: OpenStreetMap'te
+**Ergene ilçesinin** mahallesi olarak görünüyor — Velimeşe ile aynı durum.
+Aslıhan'ın teyit etmesi gerekiyor; teyit edilirse listeden çıkar ve kapsama
+%100 olur.
+
+**Önizlemede bunlardan çok daha az sınır görüyorsanız durun.** Özellikle
+sıfır görüyorsanız bu "OSM'de sınır yok" demek değildir — bizim tarafımızda
+bir sorun demektir. O ekranda ayrıca uyarı da çıkar. Elle çizmeye
+başlamadan önce sorunu bildirin.
+
 Gelmeyenler ekranda tek tek listelenir.
 
 Eksik kalan bir sınırı elle çizmek isterseniz: `geojson.io` sitesinde çizip
