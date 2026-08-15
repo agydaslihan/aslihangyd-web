@@ -77,7 +77,7 @@ Yedek almak panelden yapılamaz, sunucuya bağlanmayı gerektirir →
 
 ## 1. adım · Mahalle listesini içe aktar
 
-Çorlu'nun 18 merkez ve 9 kırsal mahallesini (toplam 27) tek tıkla açar.
+Çorlu'nun 18 merkez ve 8 kırsal mahallesini (toplam 26) tek tıkla açar.
 Yalnızca **ad** ve **yerleşim türü** yazılır — koordinat, sınır ve tüm
 rakamlar boş kalır, onları siz gireceksiniz.
 
@@ -92,16 +92,16 @@ rakamlar boş kalır, onları siz gireceksiniz.
 
 Buton **"Bakılıyor…"** olur, ardından üç renkli rozet çıkar:
 
-- `27 yeni mahalle` — açılacak kayıtlar
+- `26 yeni mahalle` — açılacak kayıtlar
 - `0 kayda yerleşim türü eklenecek` — mevcut ama türü boş olanlar
 - `0 kayıt zaten tam` — dokunulmayacaklar
 
 Altında dört sütunlu bir tablo: **İşlem · Mahalle · Yerleşim türü ·
 Adres (slug)**. Yeşil satırlar yeni açılacaklar.
 
-Tablonun altında **"27 kaydı oluştur/güncelle"** butonu belirir. Basın.
+Tablonun altında **"26 kaydı oluştur/güncelle"** butonu belirir. Basın.
 
-Bittiğinde yeşil bir satır: *"27 mahalle açıldı, 0 kayda yerleşim türü
+Bittiğinde yeşil bir satır: *"26 mahalle açıldı, 0 kayda yerleşim türü
 eklendi, 0 kayıt zaten tamdı."*
 
 ### Ne kadar sürer
@@ -114,9 +114,15 @@ gerektirmez, sadece kendi veritabanımıza yazar.
 Bu, sistemde olup bizim Çorlu listemizde olmayan kayıtları gösterir.
 İçe aktarma bunları **silmez** — karar sizindir.
 
-Burada **Velimeşe** görürseniz silin: Velimeşe Çorlu'nun değil **Ergene
-ilçesinin** mahallesidir, eski bir hatadan kalmıştır. Silmek için:
-sol menü → **Mahalleler** → Velimeşe → sağ üstteki sil.
+Burada **Velimeşe** veya **Yeşiltepe** görürseniz silin: ikisi de Çorlu'nun
+değil **Ergene ilçesinin** mahallesidir. 6360 sayılı kanunla Ergene kurulurken
+oraya geçmişler; ikisi de listemize yanlışlıkla girmişti.
+
+Silmek için: sol menü → **Mahalleler** → ilgili mahalle → sağ üstteki sil.
+
+⚠️ Bunları silmezseniz zarar vermezler ama her sınır içe aktarmasında
+"konum bulunamadı" listesinde çıkarlar — çünkü Çorlu içinde aranıp
+bulunamazlar.
 
 ### Hata alırsanız
 
@@ -128,7 +134,7 @@ sol menü → **Mahalleler** → Velimeşe → sağ üstteki sil.
 
 ### ✅ Sonraki adıma geçmeden doğrulayın
 
-Sol menü → **Mahalleler**. Listede **27 kayıt** görmelisiniz. Birkaçını
+Sol menü → **Mahalleler**. Listede **26 kayıt** görmelisiniz. Birkaçını
 açıp **Mahalle adı** ve **Yerleşim türü** alanlarının dolu, rakamların boş
 olduğunu görün. Bu normaldir.
 
@@ -160,16 +166,11 @@ Altında **"… sınırı yaz"** butonu. Basın.
 
 ### Kaç sınır gelmeli — 26
 
-15 Ağustos 2026'da OpenStreetMap'e canlı sorularak sayıldı: Çorlu'nun
-mahallelerinden **26'sının sınırı OSM'de var** ve içe aktarma hepsini
-getiriyor. Gelmeyen tek kayıt **Yeşiltepe**.
+15 Ağustos 2026'da OpenStreetMap'e canlı sorularak sayıldı: listedeki **26
+mahallenin 26'sının da sınırı OSM'de var** ve içe aktarma hepsini getiriyor.
+Yani beklenen kapsama **%100**.
 
-⚠️ Yeşiltepe muhtemelen listede yanlışlıkla duruyor: OpenStreetMap'te
-**Ergene ilçesinin** mahallesi olarak görünüyor — Velimeşe ile aynı durum.
-Aslıhan'ın teyit etmesi gerekiyor; teyit edilirse listeden çıkar ve kapsama
-%100 olur.
-
-**Önizlemede bunlardan çok daha az sınır görüyorsanız durun.** Özellikle
+**Önizlemede bundan az sınır görüyorsanız durun.** Özellikle
 sıfır görüyorsanız bu "OSM'de sınır yok" demek değildir — bizim tarafımızda
 bir sorun demektir. O ekranda ayrıca uyarı da çıkar. Elle çizmeye
 başlamadan önce sorunu bildirin.
@@ -583,7 +584,7 @@ ister, kimi hareket. Test, ziyaretçinin tercihine göre eşleştirme yapar.
 3. Üstteki sekmelerden **"Eşleştirme profili"** sekmesine geçin
 4. Aynı adı taşıyan başlık altındaki dört kutuyu doldurun
 5. **Kaydet**
-6. **27 mahalle için tekrarlayın**
+6. **26 mahalle için tekrarlayın**
 
 ### ⚠️ Yarım doldurulan profil sonuç ÜRETMEZ
 
@@ -617,17 +618,17 @@ cevabınız hazır olsun.
 
 ### Pratik öneri
 
-27 mahalleyi tek oturumda puanlamayın. **Önce en iyi bildiğiniz 6 mahalleyi
+26 mahalleyi tek oturumda puanlamayın. **Önce en iyi bildiğiniz 6 mahalleyi
 yapın** (Muhittin, Alipaşa, Şeyhsinan, Hıdırağa, Önerler ve bir tane daha),
 sonuçları test edin, sonra devam edin.
 
-Puan vermeden önce hepsini kağıda dökmek işi kolaylaştırır: dört sütun, 27
+Puan vermeden önce hepsini kağıda dökmek işi kolaylaştırır: dört sütun, 26
 satır. Birbirine göre puanlamak, tek tek puanlamaktan çok daha tutarlı
 sonuç verir.
 
 ### Ne kadar sürer
 
-Mahalle başına **2–3 dakika**. 27 mahalle için toplam **1–1,5 saat**.
+Mahalle başına **2–3 dakika**. 26 mahalle için toplam **1–1,5 saat**.
 
 ### ✅ Doğrulayın
 
@@ -641,7 +642,7 @@ Test portföyden bağımsızdır — ilan sayısı sonucu etkilemez.
 
 Bu yedi adım bitince siteye şu eklenmiş olur:
 
-- 27 mahallenin adı, türü, sınırı ve merkez noktası
+- 26 mahallenin adı, türü, sınırı ve merkez noktası
 - Haritada ve mahalle sayfalarında POI katmanı
 - Altbilgide ve /hakkimizda'da yasal kurumsal bilgiler
 - Rayiç bedeller ve alım maliyeti hesabında doğru harç matrahı

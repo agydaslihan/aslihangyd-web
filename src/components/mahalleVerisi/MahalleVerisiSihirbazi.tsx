@@ -150,8 +150,8 @@ function ListeAdimi({
               <h3>Listede olmayan mahalle kayıtları</h3>
               <p className="aktarim-not">
                 Bunlar sistemde var ama Çorlu listemizde yok. İçe aktarma hiçbir kaydı{' '}
-                <strong>silmez</strong> — karar sizin. Yanlış ilçeye ait bir kayıt (örn. Velimeşe)
-                buradaysa panelden silebilirsiniz.
+                <strong>silmez</strong> — karar sizin. Yanlış ilçeye ait bir kayıt (Velimeşe ve
+                Yeşiltepe Ergene ilçesine bağlıdır) buradaysa panelden silebilirsiniz.
               </p>
               <ul className="aktarim-liste">
                 {onizleme.listeDisiKayitlar.map((kayit) => (

@@ -66,7 +66,17 @@ const MERKEZ_MAHALLELERI: readonly string[] = [
  * dönüştü. İdari olarak mahalle olmaları, gayrimenkul açısından merkez
  * mahallelerle aynı oldukları anlamına gelmiyor: arsa ağırlıklı, farklı
  * imar durumu, farklı alıcı profili. Bu yüzden ayrı işaretleniyorlar —
- * ziyaretçi bir "mahalle" listesinde 27 satır görüp hepsini aynı sanmasın.
+ * ziyaretçi bir "mahalle" listesinde hepsini aynı sanmasın.
+ *
+ * ⚠️ YEŞİLTEPE BURADAN ÇIKARILDI — 15 Ağustos 2026. Velimeşe'nin aynısı:
+ * Ergene ilçesine bağlı. Dört bağımsız kaynak aynı şeyi söylüyor — OSM
+ * sınır sorgusu (Çorlu alanında yok), OSM yer düğümü sorgusu (yok),
+ * Nominatim (`Yeşiltepe Mahallesi, Ergene, Tekirdağ`) ve posta kodu
+ * rehberleri (Ergene / 59930).
+ *
+ * Belirti şuydu: sınır içe aktarma 26 mahalleyi bulup bir tanesini hiçbir
+ * kaynakta bulamıyordu. Eksik veri sanılan şey yanlış kayıttı — 6360 sayılı
+ * kanunla Ergene kurulurken oraya geçen iki yerleşimden ikincisi.
  */
 const KIRSAL_MAHALLELER: readonly string[] = [
   'Deregündüzlü',
@@ -77,7 +87,6 @@ const KIRSAL_MAHALLELER: readonly string[] = [
   'Şahpaz',
   'Türkgücü',
   'Yenice',
-  'Yeşiltepe',
 ]
 
 export const CORLU_MAHALLELERI: readonly CorluMahallesi[] = [

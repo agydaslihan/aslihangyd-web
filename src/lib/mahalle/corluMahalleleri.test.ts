@@ -8,10 +8,29 @@ import {
 } from './corluMahalleleri'
 
 describe('Çorlu mahalle listesi', () => {
-  it('Velimeşe listede YOK — Ergene ilçesine bağlı', () => {
+  /**
+   * ⚠️ ERGENE'YE GEÇEN YERLEŞİMLER LİSTEYE GERİ SIZMASIN.
+   *
+   * İkisi de aynı sebeple burada değil: 6360 sayılı kanunla Ergene ilçesi
+   * kurulurken oraya geçtiler. İkisi de listeye bir kez yanlışlıkla girdi
+   * ve ikisi de ancak veri işi yapılırken fark edildi — Velimeşe elle,
+   * Yeşiltepe sınır içe aktarmasının onu hiçbir kaynakta bulamamasıyla.
+   *
+   * Yanlış ilçenin mahallesi listede kalırsa görünür bir hata vermez:
+   * sessizce konumsuz bir kayıt olarak durur ve her içe aktarmada
+   * "bulunamadı" listesini kirletir.
+   */
+  it('Ergene mahalleleri listede YOK — Velimeşe ve Yeşiltepe', () => {
     const adlar = CORLU_MAHALLELERI.map((mahalle) => mahalle.ad)
-    expect(adlar).not.toContain('Velimeşe')
-    expect(adlar.map(mahalleSlugu)).not.toContain('velimese')
+    const sluglar = adlar.map(mahalleSlugu)
+
+    for (const [ad, slug] of [
+      ['Velimeşe', 'velimese'],
+      ['Yeşiltepe', 'yesiltepe'],
+    ] as const) {
+      expect(adlar, `${ad} Ergene ilçesine bağlı, Çorlu listesinde olamaz`).not.toContain(ad)
+      expect(sluglar).not.toContain(slug)
+    }
   })
 
   it('aynı mahalle iki kez geçmez', () => {

@@ -4387,3 +4387,18 @@ DOĞRULANMADI, araştırılması gereken bir liste olarak duruyor:
 ⚠️ Bu tablodaki hiçbir lisans iddiası doğrulanmadı ve doğrulanmadan
 kullanılmamalı. OSM dışına çıkmak gerekirse önce hukuki teyit alınmalı —
 CLAUDE.md kural 6'nın (scraping yasağı) mantığı burada da geçerli.
+
+### Yeşiltepe listeden çıkarıldı (15 Ağustos 2026)
+
+Aslıhan teyit etti; `corluMahalleleri.ts`'ten kaldırıldı. Yeni sayılar:
+**18 merkez + 8 kırsal = 26 mahalle**, otomatik konum kapsaması **%100**.
+
+Koruma testi Velimeşe ile birleştirildi: ikisi de 6360 sayılı kanunla Ergene
+kurulurken oraya geçmiş, ikisi de listeye bir kez yanlışlıkla girmişti.
+Yanlış ilçenin mahallesi listede kalırsa görünür bir hata vermiyor —
+sessizce konumsuz bir kayıt olarak duruyor ve her içe aktarmada
+"bulunamadı" listesini kirletiyor. Test artık ikisini birlikte savunuyor.
+
+⚠️ Kayıt zaten açılmışsa panelden silinmesi gerekiyor: içe aktarma hiçbir
+kaydı silmez, yalnızca "listede olmayan kayıtlar" başlığı altında gösterir.
+Panel metni ve kılavuz ikisini de adıyla anıyor.
