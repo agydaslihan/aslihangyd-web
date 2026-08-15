@@ -180,16 +180,37 @@ atlanan adım sonrakini sessizce çalışmaz hâle getirir.
 
 ## Önemli (içerik eksikliği)
 
-- [ ] **İlanlara cephe yönü girin** (Güneş Haritası için)
+- [ ] **İlanlara cephe yönü girin** (Güneş Haritası ve zaman çubuğu için)
       Nereye: Payload admin → İlanlar → [ilan] → Cephe yönü (çoklu seçim)
       Olmazsa: Güneş haritası gün doğumu/batımı/gündüz süresini yine
-      gösterir (bunlar konuma bağlı) ama **cephe analizi boş durum
-      gösterir**. Cephe yönü koordinattan çıkarılamaz ve TAHMİN EDİLMEZ —
-      alım kararı doğrudan bu bilgiye dayanıyor.
-      ⚠️ Köşe daireler için birden fazla yön seçin.
+      gösterir (bunlar konuma bağlı) ama **cephe analizi ve saat saat
+      çubuk hiç görünmez**. Cephe yönü koordinattan çıkarılamaz ve TAHMİN
+      EDİLMEZ — alım kararı doğrudan bu bilgiye dayanıyor.
+      ⚠️ Köşe daireler için birden fazla yön seçin; her cephe kendi
+      çubuğunu alıyor.
+
+      ⭐ **15 Ağustos 2026'da bu alan çok daha değerli hâle geldi.** Artık
+      yalnızca "yazın ~8 saat" demiyoruz; hangi SAATLERDE güneş aldığını
+      saat saat gösteriyoruz. Ölçümün öğrettiği iki şeyi bilmen işine
+      yarar:
+
+      · **Doğu ve batı cepheler gün toplamında neredeyse eşit** (ekinoksta
+        20 dakikadan az fark) ama biri sabah, diğeri akşam alıyor. Müşteriye
+        "ikisi de aynı" demek yanlış olur.
+      · **Güney cephe yazın kazanmıyor.** Çorlu'da yaz günü kış gününden
+        ~6 saat uzun, ama güney cephenin aldığı doğrudan güneş 8 saat
+        civarında sabit. Kışın güneş gün boyu cephenin önünde, yazın günün
+        başını ve sonunu arkasında geçiriyor.
+
+      ⚠️ İlan koordinatı da gerekiyor — koordinat yoksa güneş bölümünün
+      tamamı gizli kalır.
 
 - [ ] **Mahallelere merkez koordinatı girin**
       Nereye: Payload admin → Mahalleler → [mahalle] → Merkez
+      ⭐ **Artık elle girmene gerek yok:** `/admin/mahalle-verisi` → 2. adım
+      merkez koordinatlarını OpenStreetMap sınırlarından hesaplıyor
+      (yukarıdaki "A paketi sonrası" listesinde 2. madde). Elle girdiğin
+      bir merkez içe aktarma tarafından EZİLMEZ.
       Olmazsa: Güneş haritası o mahallede ve konumu olmayan ilanlarında
       hiç görünmez; harita sütunları da çizilmez.
 

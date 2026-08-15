@@ -1,3 +1,4 @@
+import { GunesZamanCubugu } from '@/components/gunes/GunesZamanCubugu'
 import { Feragat } from '@/components/ui/Feragat'
 import { cepheOzetleri, saatYaz, type CepheYonu } from '@/lib/gunes/cephe'
 import { GUNES_KISIT_METNI, gunesGunu } from '@/lib/gunes/hesap'
@@ -6,11 +7,14 @@ import { GUNES_KISIT_METNI, gunesGunu } from '@/lib/gunes/hesap'
  * Güneş Haritası — ilan ve mahalle sayfalarında.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * ⚠️ SUNUCUDA HESAPLANIYOR, DIŞ API YOK.
+ * ⚠️ DIŞ API YOK. Güneşin konumu koordinat ve tarihten hesaplanıyor.
  *
- * Hesap saf ve hafif (72 nokta × birkaç trigonometrik işlem); istemciye
- * kod göndermenin karşılığı yok. Grafik düz SVG — ek kütüphane
- * eklenmiyor, ana sayfa JS bütçesi etkilenmiyor.
+ * Bu bileşenin kendisi SUNUCUDA çalışıyor: gün doğumu, batımı, gündüz
+ * süresi ve yörünge eğrisi etkileşim gerektirmiyor. Yalnızca saat saat
+ * çubuk (`GunesZamanCubugu`) istemci bileşeni — mevsim seçimi ve saat
+ * okuması etkileşimli.
+ *
+ * Grafiklerin ikisi de düz HTML/SVG; ek kütüphane eklenmiyor.
  *
  * ⚠️ CEPHE YÖNÜ YOKSA GÜNEŞ VERİSİ YİNE GÖSTERİLİR.
  *
@@ -99,6 +103,16 @@ export function GunesHaritasi({
           Süreler 21 Haziran (en uzun gün) ve 21 Aralık (en kısa gün) içindir.
         </p>
       </div>
+
+      {/*
+        ⭐ Saat saat çubuk — gün toplamının söylemediğini söylüyor.
+
+        ⚠️ Cephe yoksa hiç basılmıyor: bileşen boş cephe listesinde `null`
+        dönüyor ve yukarıdaki boş durum metni tek başına kalıyor. İkinci bir
+        "cephe girilmemiş" kutusu göstermek, aynı eksikliği iki kez
+        söylemek olurdu.
+      */}
+      <GunesZamanCubugu enlem={enlem} boylam={boylam} cepheler={cepheler} />
 
       {/* ⚠️ KISIT METNİ ZORUNLU — güneş verisinin göründüğü her yerde. */}
       <Feragat sinifAdi="mt-4" ek={GUNES_KISIT_METNI} />

@@ -1,4 +1,4 @@
-import { gunesGunu, type YorungeNoktasi } from './hesap'
+import { gunKonumlari, type YorungeNoktasi } from './hesap'
 
 /**
  * Cephe yönüne göre doğrudan güneş alma süresi.
@@ -50,7 +50,7 @@ export function cepheEtiketi(yon: string): string {
  * ⚠️ Sınıra tam oturan an (tam 90°) güneş duvara TEĞET geçiyor demek ve
  * doğrudan ışık sayılmıyor; karşılaştırma bu yüzden katı (`<`).
  */
-const CEPHE_YARIM_ACISI = 90
+export const CEPHE_YARIM_ACISI = 90
 
 /**
  * Güneşin ufuktan en az bu kadar yüksek olması gerekiyor (derece).
@@ -60,17 +60,55 @@ const CEPHE_YARIM_ACISI = 90
  * 0° kullanmak, kimsenin hissetmediği dakikaları "güneşli" saymak olurdu
  * ve rakamı iyimser yönde şişirirdi.
  */
-const ASGARI_YUKSEKLIK = 5
+export const ASGARI_YUKSEKLIK = 5
 
-function aciFarki(a: number, b: number): number {
+export function aciFarki(a: number, b: number): number {
   const fark = Math.abs(a - b) % 360
   return fark > 180 ? 360 - fark : fark
 }
 
-function dogrudanMi(nokta: YorungeNoktasi, cepheAzimutu: number): boolean {
+/**
+ * Bu anda bu cephe doğrudan güneş alıyor mu?
+ *
+ * ⚠️ TEK KAYNAK. Hem gün toplamı (`cepheGunu`) hem saatlik zaman çubuğu
+ * bu kuralı kullanıyor. İki yerde ayrı yazılsaydı biri ±90°, diğeri ≤90°
+ * olur ve iki ekran aynı daire için farklı cevap verirdi.
+ */
+export function dogrudanMi(nokta: YorungeNoktasi, cepheAzimutu: number): boolean {
   if (nokta.yukseklik < ASGARI_YUKSEKLIK) return false
   return aciFarki(nokta.azimut, cepheAzimutu) < CEPHE_YARIM_ACISI
 }
+
+/** Cephe yönünün azimutu. Bilinmeyen yön sessizce sıfırlanmaz, hata verir. */
+export function cepheAzimutu(yon: CepheYonu): number {
+  const azimut = AZIMUTLAR.get(yon)
+  if (azimut === undefined) throw new Error(`Bilinmeyen cephe yönü: ${yon}`)
+  return azimut
+}
+
+/**
+ * Cephe hesabının örnekleme aralığı (dakika).
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ TEK ARALIK, İKİ EKRAN.
+ *
+ * Gün toplamı önce yörünge eğrisinin 20 dakikalık örneklemesini
+ * kullanıyordu. Saatlik zaman çubuğu ise bir saatin kaç dakikasının
+ * güneşli olduğunu bilmek zorunda ve 20 dakika orada çok kaba: bir saat
+ * ya 0, ya 20, ya 40, ya 60 dakika güneş alabilirdi.
+ *
+ * İki ayrı aralık kullanmak daha kötü olurdu — aynı sayfada "yazın ~9
+ * saat" ile çubuğun topladığı saat birbirini tutmazdı. İkisi de 5
+ * dakikada bir örnekliyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const ORNEK_ARALIGI = 5
+
+/** Gün boyunca örneklenecek dakikalar — 288 nokta. */
+const ORNEK_DAKIKALARI: readonly number[] = Array.from(
+  { length: (24 * 60) / ORNEK_ARALIGI },
+  (_, i) => i * ORNEK_ARALIGI,
+)
 
 export interface CepheGunu {
   /** Doğrudan güneş alınan süre (dakika). */
@@ -80,18 +118,15 @@ export interface CepheGunu {
 /**
  * Tek bir cephe ve tek bir gün için doğrudan güneş süresi.
  *
- * ⚠️ Örnekleme 20 dakikalık; sonuç o çözünürlüğe yuvarlanıyor. Bunu
- * "yaklaşık" diye sunmak şart ve arayüzde `~` işaretiyle yazılıyor.
+ * ⚠️ Sonuç 5 dakikalık çözünürlüğe yuvarlanıyor. Bunu "yaklaşık" diye
+ * sunmak şart ve arayüzde `~` işaretiyle yazılıyor.
  */
 export function cepheGunu(enlem: number, boylam: number, tarih: Date, yon: CepheYonu): CepheGunu {
-  const azimut = AZIMUTLAR.get(yon)
-  if (azimut === undefined) throw new Error(`Bilinmeyen cephe yönü: ${yon}`)
+  const azimut = cepheAzimutu(yon)
+  const noktalar = gunKonumlari(enlem, boylam, tarih, ORNEK_DAKIKALARI)
+  const sayi = noktalar.filter((nokta) => dogrudanMi(nokta, azimut)).length
 
-  const gun = gunesGunu(enlem, boylam, tarih)
-  const adimDakika = 20
-  const sayi = gun.yorunge.filter((nokta) => dogrudanMi(nokta, azimut)).length
-
-  return { dakika: sayi * adimDakika }
+  return { dakika: sayi * ORNEK_ARALIGI }
 }
 
 export interface CepheOzeti {

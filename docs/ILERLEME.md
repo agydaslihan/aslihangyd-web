@@ -28,6 +28,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 5 | Çorlu Live | ⏭️ atlandı |
 | A paketi | Mahalle veri altyapısı (liste, OSM sınır, Google, rayiç, şeffaflık) | ✅ Altyapı hazır — **veri Aslıhan'dan** |
 | B paketi | Bohem / pudra paleti — lacivert kaldırıldı | ✅ Ölçüldü ve teste bağlandı |
+| C paketi | Güneş zaman çubuğu — saat saat cephe analizi | ✅ Ek kütüphane yok, 10,9 kB gzip |
 
 ---
 
@@ -3883,3 +3884,229 @@ Derlenen CSS ayrıca elle doğrulandı: `--color-zemin` tek kök bildirimi +
 tek `[data-tema='koyu']` geçersiz kılması (Tailwind 4'ün `@theme` tuzağı
 tekrarlanmamış), `lacivert` dizesi sıfır kez geçiyor, `accent-vurgu`
 sınıfı artık gerçekten üretiliyor.
+
+---
+
+## C paketi — Güneş zaman çubuğu (15 Ağustos 2026)
+
+Güneş Haritası'nın gün toplamına saat saat kırılım eklendi.
+
+### Neden gün toplamı yetmiyor
+
+"Güney cephe ~8 saat güneş alıyor" doğru ama eksik bir cümle: o sekiz
+saatin sabah mı akşam mı olduğu, oturma odasının ne zaman ısınacağını
+belirliyor.
+
+⭐ Ölçüm bunu somutlaştırdı: **doğu ve batı cepheler ekinoksta gün
+toplamında 20 dakikadan az fark ediyor** — yaşarken hiç benzemiyorlar.
+Doğu sabah, batı akşam. Çubuğun var olma sebebi tam olarak bu fark.
+
+### ⭐ Ölçümün öğrettiği: güney cephe yazın kazanmıyor
+
+Çorlu'da 21 Haziran günü 21 Aralık gününden **357 dakika (~6 saat)** uzun.
+Buna rağmen güney cephenin doğrudan güneş süresi **485 ve 480 dakika** —
+arada 5 dakika var.
+
+Sebep geometrik: kışın güneş güneydoğudan doğup güneybatıdan batıyor, yani
+gün boyu cephenin önünde. Yazın kuzeydoğudan doğup kuzeybatıdan batıyor ve
+günün ilk ve son saatlerini cephenin ARKASINDA geçiriyor.
+
+⚠️ Bu testi ilk yazışımda "kışın daha uzun olmalı" diye iddia ettim; 5
+dakikayla kırmızıya döndü. Gökyüzü ikisini de haklı çıkarmıyor — doğru
+iddia "fark yok" ve asıl anlatılmaya değer olan da bu. Test o hâliyle
+duruyor.
+
+### Zaman ekseni — mevsimler karşılaştırılabilir olmalı
+
+İlk tasarımda çubuk her mevsimde kendi gün doğumundan gün batımına
+uzanıyordu. Çubuk her zaman tam genişlikte çizildiği için **kışın 9 saat,
+yazın 15 saat aynı uzunlukta görünüyordu** — mevsim seçicisinin göstermesi
+gereken tek şey, tam da görünmez oluyordu.
+
+Eksen artık dört günün BİRLEŞİMİNDEN türetiliyor (Çorlu için 05–20).
+Gündüz bloğu yazın uzuyor, kışın kısalıyor; gece saatleri çubukta açıkça
+duruyor.
+
+⚠️ Pencere koda gömülmüyor, konumdan hesaplanıyor. Testi 60° enlemde
+pencerenin genişlediğini doğruluyor.
+
+### Dört durum, dört biçim
+
+| Durum | Görünüm | Anlamı |
+| --- | --- | --- |
+| Doğrudan | tam yükseklik gold | saatin tamamı güneşli |
+| Kısmen | **yarım yükseklik** gold | güneş o saat içinde cepheye teğet geçiyor |
+| Gölge | boş krem | güneş ufkun üstünde ama bu cepheyi görmüyor |
+| Gece | **çapraz tarama** | güneş ufkun altında |
+
+⚠️ **Renk tek başına bilgi taşımıyor (WCAG 1.4.1).** Gold dolgu krem
+üzerinde 1,89:1 — blokları ayırt etmeye yeten bir oran değil ve zaten
+dekoratif gold kuralı gereği olamaz. Bu yüzden dört durum renkten bağımsız
+olarak da farklı (yükseklik ve desen), ve aynı bilgi üç yerde daha var:
+çubuğun altındaki özet cümlesi, seçilen saatin metin okuması, ve çubuğun
+`aria-label`ındaki saat aralıkları ("doğrudan güneş 08:00–19:00
+saatlerinde").
+
+### ⚠️ Hücreler düğme değil — dokunma hedefi kararı
+
+16 saatlik bir eksende hücreler telefonda ~18 px genişliğe düşüyor ve WCAG
+2.2'nin 24×24 dokunma hedefi sınırının altında kalırdı.
+
+Şartname bu durum için "3'er saatlik gruplar" öneriyordu. Gruplama sınırı
+çözerdi ama **üç farklı durumu tek kutuya sıkıştırırdı** — çubuğun
+anlatmak istediği şeyi silerdi.
+
+Çözüm rolleri ayırmak oldu: çubuk `role="img"` (grafik), gerçek denetim
+altındaki saat okuması ve onun 44 px'lik ok düğmeleri. Fare ve dokunmayla
+hücre seçmek bunun üstüne binen bir kısa yol; klavye ve ekran okuyucu için
+hiçbir şey kaybolmuyor. Saat etiketleri 3'er saatte bir yazılıyor.
+
+⚠️ Yatay kaydırma hiçbir ekran boyutunda oluşmuyor — hücreler `flex: 1`.
+
+### Köşe daireler
+
+Her cephe kendi çubuğunu alıyor; **toplanmıyorlar.** Aynı saatte iki cephe
+birden güneş alabiliyor ve toplam, günün uzunluğunu aşabilirdi.
+
+⭐ Saat okuması ise TEK: azimut ve yükseklik cepheden bağımsız, gökyüzü
+tek. Başlık bir kez yazılıp altına cephe cephe durum listeleniyor —
+"14:00 · Güney cephe: gölgede · Batı cephe: doğrudan güneş alıyor".
+
+### Çözünürlük birleştirildi
+
+Gün toplamı 20 dakikalık örneklemeyi kullanıyordu; saatlik çubuk için bu
+çok kaba (bir saat ya 0, ya 20, ya 40, ya 60 dakika güneş alabilirdi).
+İkisi de **5 dakikaya** çekildi.
+
+⚠️ İki ayrı aralık kullanmak daha kötü olurdu: aynı sayfada "yazın ~9
+saat" ile çubuğun topladığı saat birbirini tutmazdı. Test ikisinin eşit
+olduğunu doğruluyor.
+
+Güneş konumu hesabı da tek çekirdeğe indi (`konumHesapla`): aynı
+matematiği ikinci kez yazmak, azimutun öğleden sonra düzeltmesi gibi ince
+bir adımın iki yerde sessizce ayrışmasına açık kapı bırakırdı.
+
+### Bir sunum kusuru testle bulundu
+
+Saat ipucu önce **saatin ortasındaki** örneği gösteriyordu. Yaz sabahı
+05:00 saatinde güneş 05:36'da doğuyor; ortası (05:30) hâlâ ufkun altında.
+Hücre doğru biçimde "gölgede" işaretliydi ama ipucu **"yükseklik -2°, bu
+cephe: gölgede"** diyordu — çelişkili okunan bir cümle.
+
+Artık saatin **en yüksek** anı gösteriliyor: gündüz saatlerinde ortadan
+bir iki derece farklı, gün doğumu/batımı saatlerinde doğru tarafta.
+
+### Maliyet — ölçüldü
+
+| | |
+| --- | --- |
+| İstemciye eklenen | **10,9 kB gzip** |
+| Ana sayfa JS | **207,4 kB gzip** — değişmedi, bileşen orada yüklenmiyor |
+| Ek kütüphane | **yok** — düz HTML/CSS, grafik kütüphanesi eklenmedi |
+
+Yöntem: bileşen bağlıyken ve bağlı değilken iki üretim derlemesi alınıp
+`.next/static/chunks` toplam gzip boyutu karşılaştırıldı. Ana sayfanın
+yüklediği 12 parçanın hiçbiri güneş kodunu taşımıyor — doğrulandı.
+
+⚠️ Yorumda önce "~3 kB" yazıyordu; tahmindi ve **yanlıştı**. Bu projede
+ölçülmemiş bir rakamı yorumda bırakmak, ekranda uydurma veri göstermekle
+aynı sınıfta. Ölçüldü ve düzeltildi.
+
+⚠️ Maliyet yalnızca ilan ve mahalle DETAY sayfalarına biniyor.
+
+### Boş durumlar
+
+| Eksik olan | Davranış |
+| --- | --- |
+| Cephe yönü | Çubuk hiç basılmıyor; gün doğumu/batımı ve "cephe yönü girilmemiş, tahmin etmiyoruz" notu duruyor |
+| Mahalle merkez koordinatı | Bütün güneş bölümü gizli (çağrı yerlerinde zaten böyleydi) |
+
+⚠️ İkinci bir "cephe girilmemiş" kutusu göstermemek bilinçli: aynı
+eksikliği iki kez söylemek olurdu.
+
+### Kapı
+
+```
+pnpm typecheck  ✅
+pnpm lint       ✅
+pnpm test       ✅  65 dosya / 1446 test (zaman çubuğu için 31 yeni test)
+pnpm build      ✅
+```
+
+Testler fiziği sınıyor, kodun çalıştığını değil: kuzey cephe kışın güneş
+göremez, güney cephe öğlen her mevsimde görür, doğu sabah batı akşam alır,
+gün doğumunu içeren saatte yükseklik negatif görünmez.
+
+### Lighthouse'un bulduğu üç erişilebilirlik hatası
+
+⚠️ **Üçü de B ve C paketlerinden ÖNCE de vardı** — A paketinin ölçümünde
+(eski palet) birebir aynı hatalar, aynı skor (94). Yani palet değişikliği
+bunları getirmedi, **görülmesini sağladı**. Kontrast benim alanım olduğu
+için burada kapatıldı.
+
+| Hata | Ölçüm | Düzeltme |
+| --- | --- | --- |
+| Altbilgideki "yetki belgesi girilmedi" uyarısı | **2,01:1** | Yeni jeton `--color-uyari-koyu-bant` (7,28:1) |
+| Güven şeridindeki "Hazırlanıyor" | **2,42:1** | `metin-pasif` → `metin-3` (6,12:1) |
+| `<dl>` içinde geçersiz `<p>` | — | İkinci bir `<dd>` |
+
+#### 1. Uyarı metni kendi bandında okunmuyordu
+
+Altbilgi iki temada da koyu. `uyari-metin` açık zemin için tasarlanmış bir
+jeton ve koyu kakao bant üzerinde 2,01:1 veriyordu (eski lacivert bantta
+2,28). Tanıdık tuzak: **zemin değişmiyorsa üzerindeki metin de
+değişmemeli** — gold rozetinde ve üst şeritte aynısına düşülmüştü.
+
+⚠️ Yeni jeton gold rampasından besleniyor ama `text-gold-*` sınıfı değil.
+"Gold asla metin rengi değildir" kuralı aslında "AÇIK ZEMİNDE metin
+olamaz" diyor (orada 2,14:1); koyu kakao üzerinde 7,28:1. Ayrı bir jeton,
+istisnayı kullanımın kendisine değil bir isme bağlıyor.
+
+#### 2. "Hazırlanıyor" pasif jetonla yazılmıştı
+
+`metin-pasif` **devre dışı bileşenler** için ve WCAG 1.4.3'ün muafiyeti de
+yalnızca onları kapsıyor. "Hazırlanıyor" ise gerçek içerik — muafiyet
+orada geçerli değildi.
+
+#### 3. ⚠️ Kontrast testinin kendi sınırı görüldü
+
+Bu çiftlerin ikisi de testte **yoktu**. Jetonlar doğru ölçülüyordu; yanlış
+yerde kullanılıyorlardı.
+
+Ders listenin kendisiyle ilgili: bir jetonun ölçülmüş olması, **her zemin
+üzerinde** ölçülmüş olduğu anlamına gelmiyor. Yeni çift listeye eklendi ve
+gerekçesi testin içine yazıldı.
+
+### Lighthouse — medyan (3 koşum, CI)
+
+3 sayfa × 2 cihaz × 3 koşum = 18 rapor. Aşağıdaki tablo üç erişilebilirlik
+düzeltmesinden SONRAKİ ölçüm (C paketi dalı, CI koşumu 31880471250).
+
+| Cihaz | Sayfa | Performans | Erişilebilirlik | SEO | LCP | CLS |
+| --- | --- | --- | --- | --- | --- | --- |
+| Masaüstü | Ana sayfa | **100** | **100** | **100** | 0,74 s | 0,000 |
+| Masaüstü | /portfoy | **100** | **100** | **100** | 0,81 s | 0,000 |
+| Masaüstü | /mahalleler | **100** | **100** | **100** | 0,72 s | 0,000 |
+| Mobil | Ana sayfa | 92 | **100** | **100** | 3,28 s | 0,000 |
+| Mobil | /portfoy | 87 | **100** | **100** | 3,94 s | 0,000 |
+| Mobil | /mahalleler | 91 | **100** | **100** | 3,49 s | 0,000 |
+
+⭐ **Erişilebilirlik altı ölçümün hepsinde 100** ve raporda kalan hata yok.
+Düzeltmelerden önce 94–97'ydi. Hedef ≥95 idi; aşıldı.
+
+Karşılaştırma için düzeltmelerden ÖNCE (B paketi dalı): masaüstü ana sayfa
+94, /portfoy 97, /mahalleler 96.
+
+⚠️ Mobil performans 87–92 aralığında ve koşumdan koşuma ~2 puan geziniyor;
+zaman çubuğu bu üç sayfanın hiçbirinde yüklenmiyor (yalnızca detay
+sayfalarında), yani aradaki fark gürültü.
+
+⚠️ Mobil LCP 3,3–3,9 s ve hedef 2,5 s. Bu **yeni değil** ve kararı
+"Gerçek kullanıcı Core Web Vitals ölçümü" bölümünde duruyor: Lighthouse
+mobil ölçümü simülasyon, CDN yok, ve kalan yükün %93,8'i çatı. Karar
+gerçek kullanıcı verisi görülmeden verilmeyecek.
+
+⚠️ Mobil LCP 3,3–3,7 s ve hedef 2,5 s. Bu **yeni değil** ve kararı
+"Gerçek kullanıcı Core Web Vitals ölçümü" bölümünde duruyor: Lighthouse
+mobil ölçümü simülasyon, CDN yok, ve kalan yükün %93,8'i çatı. Karar
+gerçek kullanıcı verisi görülmeden verilmeyecek.
