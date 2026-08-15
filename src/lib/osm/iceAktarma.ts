@@ -220,6 +220,11 @@ export async function poiHazirligiBaslat(
 export type PoiGrupDurumu =
   | { durum: 'hazirlik_yok' }
   | { durum: 'yeniden_denenebilir'; mesaj: string }
+  /**
+   * ⚠️ Kota sınırı — geçici hatadan AYRI. Yeniden denemek durumu
+   * kötüleştirir; çağıran taraf daha uzun bekliyor.
+   */
+  | { durum: 'kota'; mesaj: string; sunucuBeklemesiMs: number | null }
   | { durum: 'hata'; mesaj: string }
   | { durum: 'tamam'; gelen: number }
 
@@ -244,6 +249,9 @@ export async function poiKutusunuGetir(
     dagitim: kutuSirasi,
     zamanAsimiMs: 90_000,
   })
+  if (cevap.durum === 'kota') {
+    return { durum: 'kota', mesaj: cevap.mesaj, sunucuBeklemesiMs: cevap.sunucuBeklemesiMs }
+  }
   if (cevap.durum !== 'tamam') return { durum: cevap.durum, mesaj: cevap.mesaj }
 
   const cozum = overpassCevabiniCoz(cevap.veri)

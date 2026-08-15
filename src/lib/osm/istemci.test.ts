@@ -1,6 +1,11 @@
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import { overpassSunuculari, VARSAYILAN_SUNUCULAR } from './istemci'
+import {
+  AZAMI_KOTA_BEKLEMESI_MS,
+  overpassSunuculari,
+  retryAfterMs,
+  VARSAYILAN_SUNUCULAR,
+} from './istemci'
 
 const ONCEKI = process.env.OVERPASS_ADRESI
 
@@ -87,5 +92,39 @@ describe('bölgesel ayna koruması', () => {
         `${alanAdi} bölgesel: Türkiye sorgularına sessizce boş cevap veriyor`,
       ).not.toContain(alanAdi)
     }
+  })
+})
+
+describe('retryAfterMs', () => {
+  it('saniye biçimini okur', () => {
+    expect(retryAfterMs('120')).toBe(120_000)
+    expect(retryAfterMs('  30 ')).toBe(30_000)
+    expect(retryAfterMs('0')).toBe(0)
+  })
+
+  it('HTTP tarihi biçimini okur', () => {
+    const ileri = new Date(Date.now() + 60_000).toUTCString()
+    const sonuc = retryAfterMs(ileri)
+    expect(sonuc).not.toBeNull()
+    expect(sonuc as number).toBeGreaterThan(50_000)
+    expect(sonuc as number).toBeLessThanOrEqual(60_000)
+  })
+
+  it('geçmiş tarih sıfır verir — eksi bekleme olmaz', () => {
+    expect(retryAfterMs(new Date(Date.now() - 60_000).toUTCString())).toBe(0)
+  })
+
+  it('başlık yoksa ya da anlamsızsa null', () => {
+    expect(retryAfterMs(null)).toBeNull()
+    expect(retryAfterMs('')).toBeNull()
+    expect(retryAfterMs('yakında')).toBeNull()
+  })
+
+  /**
+   * ⚠️ ÜST SINIR ŞART: bozuk ya da düşmanca bir başlık yüzünden panel
+   * yarım saat donmasın. Sunucuya uyuyoruz ama sınırsız değil.
+   */
+  it('saçma uzun değerler üst sınıra kırpılıyor', () => {
+    expect(retryAfterMs('999999')).toBe(AZAMI_KOTA_BEKLEMESI_MS)
   })
 })

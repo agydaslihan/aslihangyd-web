@@ -1,6 +1,6 @@
 'use client'
 
-import { AZAMI_DENEME, beklemeSuresi } from '@/lib/osm/yenidenDeneme'
+import { AZAMI_DENEME, beklemeSuresi, kotaMetni, yenidenDenemeMetni } from '@/lib/osm/yenidenDeneme'
 
 /**
  * Geçici hatalarda üstel beklemeyle yeniden deneyen çağrı sarmalayıcısı.
@@ -25,6 +25,21 @@ export interface DenemeBilgisi {
   deneme: number
   kalanSaniye: number
   mesaj: string
+  /** Kota sınırı mı — ekranda farklı anlatılıyor. */
+  kota: boolean
+}
+
+/**
+ * Bir sonucun yeniden denenip denenmeyeceği ve nasıl.
+ *
+ * ⚠️ `kota` ayrı bir bayrak, `tekrar`ın bir türü değil: bekleme merdiveni
+ * ve ekran metni ikisinde de farklı.
+ */
+export interface DenemeKarari {
+  tekrar: boolean
+  kota?: boolean
+  /** Sunucunun `Retry-After` ile istediği bekleme; varsa merdivene yeğlenir. */
+  sunucuBeklemesiMs?: number | null
 }
 
 export type DenemeBildirimi = (bilgi: DenemeBilgisi | null) => void
@@ -35,17 +50,14 @@ function bekle(ms: number): Promise<void> {
 
 export async function denemeliCalistir<T>({
   cagir,
-  geciciMi,
-  mesajAl,
+  karar,
   bildir,
   iptal,
 }: {
   /** Asıl çağrı; `denemeSirasi` 1'den başlar ve yedek sunucuyu belirler. */
   cagir: (denemeSirasi: number) => Promise<T>
-  /** Sonuç geçici bir hata mı — tekrar denenmeli mi? */
-  geciciMi: (sonuc: T) => boolean
-  /** Geçici hatanın kullanıcıya gösterilecek metni. */
-  mesajAl: (sonuc: T) => string
+  /** Sonuç yeniden denenmeli mi, kota mı, sunucu ne kadar bekle dedi? */
+  karar: (sonuc: T) => DenemeKarari
   bildir: DenemeBildirimi
   /** true dönerse bekleme kesilir ve son sonuç döner. */
   iptal?: () => boolean
@@ -53,16 +65,35 @@ export async function denemeliCalistir<T>({
   let sonuc = await cagir(1)
 
   for (let deneme = 2; deneme <= AZAMI_DENEME; deneme += 1) {
-    if (!geciciMi(sonuc)) return sonuc
+    const su = karar(sonuc)
+    if (!su.tekrar) return sonuc
     if (iptal?.()) return sonuc
 
-    const mesaj = mesajAl(sonuc)
-    let kalan = Math.round(beklemeSuresi(deneme) / 1000)
+    const kota = su.kota === true
+
+    /**
+     * ⚠️ Sunucunun `Retry-After` isteği merdivenin ÖNÜNDE.
+     *
+     * Sunucu ne kadar beklememizi istediğini açıkça söylediyse tahmin
+     * yürütmenin anlamı yok — ve söylediğinden erken dönmek kısıtlamayı
+     * uzatmanın en hızlı yolu. Yine de merdivenden kısa olamaz: 429'da
+     * hızlanmak yanlış yön.
+     */
+    const merdivenMs = beklemeSuresi(deneme, kota)
+    const sunucuMs = su.sunucuBeklemesiMs ?? null
+    const beklemeMs = sunucuMs === null ? merdivenMs : Math.max(sunucuMs, merdivenMs)
+
+    let kalan = Math.round(beklemeMs / 1000)
 
     // Saniye saniye geri sayım: bekleme süresi ekranda akıyor, donmuş
     // görünmüyor.
     while (kalan > 0) {
-      bildir({ deneme, kalanSaniye: kalan, mesaj })
+      bildir({
+        deneme,
+        kalanSaniye: kalan,
+        kota,
+        mesaj: kota ? kotaMetni(deneme, kalan) : yenidenDenemeMetni(deneme, kalan),
+      })
       await bekle(1_000)
       if (iptal?.()) {
         bildir(null)

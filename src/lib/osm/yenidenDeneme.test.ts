@@ -1,6 +1,14 @@
 import { describe, expect, it } from 'vitest'
 
-import { AZAMI_DENEME, BEKLEME_MS, beklemeSuresi, yenidenDenemeMetni } from './yenidenDeneme'
+import {
+  AZAMI_DENEME,
+  BEKLEME_MS,
+  beklemeSuresi,
+  KOTA_BEKLEME_MS,
+  kotaMetni,
+  sureMetni,
+  yenidenDenemeMetni,
+} from './yenidenDeneme'
 
 describe('yeniden deneme politikası', () => {
   it('ilk deneme beklemesiz', () => {
@@ -41,5 +49,45 @@ describe('yeniden deneme politikası', () => {
     const metin = yenidenDenemeMetni(2, 15)
     expect(metin).toContain('15 sn')
     expect(metin).toContain(`2/${AZAMI_DENEME}`)
+  })
+})
+
+describe('kota (429) bekleme merdiveni', () => {
+  it('kota beklemesi normalden belirgin biçimde uzun', () => {
+    for (let deneme = 2; deneme <= AZAMI_DENEME; deneme += 1) {
+      expect(beklemeSuresi(deneme, true)).toBeGreaterThan(beklemeSuresi(deneme, false))
+    }
+  })
+
+  it('ilk kota beklemesi en az bir dakika', () => {
+    expect(beklemeSuresi(2, true)).toBeGreaterThanOrEqual(60_000)
+  })
+
+  /**
+   * ⚠️ 429'DA AGRESİF OLMAK YANLIŞ YÖN.
+   *
+   * Doğru tepki daha çok denemek değil, daha çok beklemek. Bu test deneme
+   * sayısının kota yüzünden artırılmadığını kilitliyor: merdiven uzadı,
+   * merdivenin basamak sayısı değil.
+   */
+  it('kota deneme SAYISINI artırmıyor — yalnızca beklemeyi', () => {
+    expect(KOTA_BEKLEME_MS.length).toBe(BEKLEME_MS.length)
+    expect(AZAMI_DENEME).toBeLessThanOrEqual(4)
+  })
+
+  /**
+   * ⚠️ Kota metni bunun bir ARIZA OLMADIĞINI söylemeli. "Hata" diye okuyan
+   * biri butona tekrar tekrar basar ve tam olarak yapılmaması gerekeni yapar.
+   */
+  it('kota metni hata olmadığını ve ısrarın zararını söylüyor', () => {
+    const metin = kotaMetni(2, 60)
+    expect(metin).toContain('hata değil')
+    expect(metin).toContain('uzatır')
+    expect(metin).not.toBe(yenidenDenemeMetni(2, 60))
+  })
+
+  it('uzun süreler dakikayla yazılıyor', () => {
+    expect(sureMetni(45)).toBe('45 sn')
+    expect(sureMetni(180)).toBe('3 dk')
   })
 })

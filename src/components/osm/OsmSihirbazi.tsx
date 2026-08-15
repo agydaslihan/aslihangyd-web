@@ -1,16 +1,17 @@
 'use client'
 
 import Link from 'next/link'
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 
 import { bilincliDisaridaGerekcesi } from '@/lib/osm/eslesme'
 import {
   osmOnizlemesiHazirla,
   osmSatirlariniYaz,
+  overpassSogumasi,
   poiHazirliginiBaslat,
   poiKutusunuIndir,
 } from '@/lib/osm/eylemler'
-import { yenidenDenemeMetni } from '@/lib/osm/yenidenDeneme'
+import { sureMetni } from '@/lib/osm/yenidenDeneme'
 
 import { denemeliCalistir, type DenemeBilgisi } from './denemeliCalistir'
 import type { IceAktarmaDurumu, Onizleme, YazmaSonucu } from '@/lib/osm/iceAktarma'
@@ -75,8 +76,8 @@ function PoiIlerlemeCubugu({
       </p>
 
       {deneme ? (
-        <p className="osm-not" aria-live="polite">
-          {yenidenDenemeMetni(deneme.deneme, deneme.kalanSaniye)}
+        <p className={deneme.kota ? 'osm-hata' : 'osm-not'} aria-live="polite">
+          {deneme.mesaj}
         </p>
       ) : null}
     </div>
@@ -91,13 +92,36 @@ export function OsmSihirbazi({ merkezliMahalleSayisi }: { merkezliMahalleSayisi:
   const [bekliyor, setBekliyor] = useState(false)
   const [deneme, setDeneme] = useState<DenemeBilgisi | null>(null)
   const [ilerleme, setIlerleme] = useState<PoiIlerleme | null>(null)
+  const [soguma, setSoguma] = useState(0)
+
+  /**
+   * ⚠️ SINIR İÇE AKTARMA AZ ÖNCE ÇALIŞTIYSA UYAR.
+   *
+   * İki ekran ayrı ama Overpass açısından aynı istemciyiz. Sınır içe
+   * aktarmanın hemen ardından POI'ye başlamak doğrudan 429'a koşmak demek.
+   *
+   * Sayfa açılırken bir kez soruluyor; içe aktarma başladıktan sonra
+   * göstermenin anlamı yok — o istekleri zaten biz yapıyoruz.
+   */
+  useEffect(() => {
+    let iptal = false
+    void overpassSogumasi().then(({ kalanSaniye }) => {
+      if (!iptal) setSoguma(kalanSaniye)
+    })
+    return () => {
+      iptal = true
+    }
+  }, [])
 
   /** Tek kutuyu indirir; geçici hatada üstel beklemeyle yeniden dener. */
   async function kutuyuIndir(sira: number): Promise<boolean> {
     const cevap = await denemeliCalistir({
       cagir: (denemeSirasi) => poiKutusunuIndir(sira, denemeSirasi),
-      geciciMi: (c) => c.durum === 'yeniden_denenebilir',
-      mesajAl: (c) => (c.durum === 'yeniden_denenebilir' ? c.mesaj : ''),
+      karar: (c) => ({
+        tekrar: c.durum === 'yeniden_denenebilir' || c.durum === 'kota',
+        kota: c.durum === 'kota',
+        sunucuBeklemesiMs: c.durum === 'kota' ? c.sunucuBeklemesiMs : null,
+      }),
       bildir: setDeneme,
     })
     setDeneme(null)
@@ -217,6 +241,16 @@ export function OsmSihirbazi({ merkezliMahalleSayisi }: { merkezliMahalleSayisi:
         >
           {bekliyor ? 'OpenStreetMap sorgulanıyor…' : 'Önizle'}
         </button>
+
+        {/* ⚠️ Uyarı, engel değil: buton açık kalıyor. */}
+        {soguma > 0 && !ilerleme && !bekliyor ? (
+          <p className="osm-not" style={{ marginTop: '0.75rem' }}>
+            <strong>Sınır içe aktarma az önce çalıştı.</strong> İki işlem aynı OpenStreetMap
+            kotasını paylaşıyor; hemen başlarsanız sunucu bizi kısıtlayabilir (429).{' '}
+            <strong>~{sureMetni(soguma)}</strong> bekleyip denemeniz daha hızlı sonuçlanır. Yine de
+            şimdi başlayabilirsiniz.
+          </p>
+        ) : null}
 
         {ilerleme ? <PoiIlerlemeCubugu ilerleme={ilerleme} deneme={deneme} /> : null}
 

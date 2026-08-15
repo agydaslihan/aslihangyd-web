@@ -95,19 +95,92 @@ export const NAZIK_ARALIK_MS = 2_000
 /**
  * Yeniden denemeye DEĞER HTTP kodları.
  *
- * 429 hız sınırı, 5xx sunucu tarafı. Hepsi geçici olabilir.
+ * 5xx sunucu tarafı, 408 zaman aşımı. Hepsi geçici olabilir.
+ * ⚠️ 429 BURADA DEĞİL — ayrı `kota` durumu olarak ele alınıyor (aşağıda).
  * ⚠️ 400 (bozuk sorgu) ve 403 (engellendi) bilinçli olarak dışarıda.
  */
-const GECICI_KODLAR = new Set([408, 429, 500, 502, 503, 504])
+const GECICI_KODLAR = new Set([408, 500, 502, 503, 504])
+
+/** Sunucunun bize kota sınırı uyguladığını bildiren kod. */
+const KOTA_KODU = 429
 
 export type OverpassSonucu =
   | { durum: 'tamam'; veri: unknown; sunucu: string }
   /** Geçici sorun — beklenip tekrar denenebilir. */
   | { durum: 'yeniden_denenebilir'; mesaj: string; sunucu: string }
+  /**
+   * ⚠️ KOTA SINIRI — DİĞER HATALARDAN AYRI TUTULUYOR.
+   *
+   * 429 "sunucu bozuk" demek değil, "bizi geçici olarak kısıtladım" demek.
+   * Diğer hatalarda hızlı tekrar denemek makul; burada zararlı — ısrar
+   * kısıtlama süresini uzatır. Bu yüzden ayrı bir durum: çağıran taraf
+   * daha uzun bekliyor ve kullanıcıya bunun bir arıza değil kota olduğunu
+   * söylüyor.
+   *
+   * `sunucuBeklemesiMs`: `Retry-After` başlığı varsa oradan. Sunucu ne
+   * kadar beklememizi istediğini söylediyse tahmin yürütmenin anlamı yok.
+   */
+  | { durum: 'kota'; mesaj: string; sunucu: string; sunucuBeklemesiMs: number | null }
   /** Kalıcı sorun — tekrar denemek işe yaramaz ve kaynağı yorar. */
   | { durum: 'hata'; mesaj: string; sunucu: string }
 
+/**
+ * `Retry-After` başlığını milisaniyeye çevirir.
+ *
+ * İki biçim geçerli: saniye sayısı ("120") ya da HTTP tarihi
+ * ("Wed, 21 Oct 2026 07:28:00 GMT"). İkisi de destekleniyor çünkü hangisini
+ * göndereceği sunucuya kalmış.
+ *
+ * ⚠️ Saçma değerlere karşı üst sınır var: bozuk bir başlık yüzünden panel
+ * yarım saat donmasın.
+ */
+export function retryAfterMs(ham: string | null): number | null {
+  if (ham === null) return null
+  const kirpilmis = ham.trim()
+  if (kirpilmis === '') return null
+
+  const saniye = Number(kirpilmis)
+  if (Number.isFinite(saniye) && saniye >= 0)
+    return Math.min(saniye * 1_000, AZAMI_KOTA_BEKLEMESI_MS)
+
+  const tarih = Date.parse(kirpilmis)
+  if (Number.isNaN(tarih)) return null
+
+  const fark = tarih - Date.now()
+  if (fark <= 0) return 0
+  return Math.min(fark, AZAMI_KOTA_BEKLEMESI_MS)
+}
+
+/** `Retry-After` ne derse desin bundan uzun beklenmez. */
+export const AZAMI_KOTA_BEKLEMESI_MS = 5 * 60_000
+
 const sonIstek = new Map<string, number>()
+
+/**
+ * Herhangi bir sunucuya yapılan SON isteğin anı.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SINIR VE POI AYNI KOTAYI PAYLAŞIYOR
+ *
+ * İki içe aktarma ekranı ayrı görünüyor ama Overpass açısından aynı
+ * istemciyiz. Sınır içe aktarma 12 istek gönderdikten hemen sonra POI'ye
+ * başlamak, doğrudan 429'a koşmak demek.
+ *
+ * Bu damga panelde "az önce çalıştı, biraz bekleyin" uyarısını besliyor.
+ * ⚠️ Buton ENGELLENMİYOR: acele eden birinin işini durdurmak bizim işimiz
+ * değil, ne olacağını söylemek işimiz.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+let sonIstekAni = 0
+
+/** Soğuma penceresi — bu süre içinde ikinci bir toplu içe aktarma riskli. */
+export const SOGUMA_MS = 5 * 60_000
+
+/** Son Overpass isteğinden bu yana geçen süre; hiç istek yoksa `null`. */
+export function sonIstektenBuYanaMs(): number | null {
+  if (sonIstekAni === 0) return null
+  return Date.now() - sonIstekAni
+}
 
 /** Aynı sunucuya son istekten bu yana yeterince beklenmediyse farkı uyur. */
 async function nazikBekle(sunucu: string): Promise<void> {
@@ -115,7 +188,9 @@ async function nazikBekle(sunucu: string): Promise<void> {
   if (gecen < NAZIK_ARALIK_MS) {
     await new Promise((coz) => setTimeout(coz, NAZIK_ARALIK_MS - gecen))
   }
-  sonIstek.set(sunucu, Date.now())
+  const simdi = Date.now()
+  sonIstek.set(sunucu, simdi)
+  sonIstekAni = simdi
 }
 
 /** Kullanım politikasının istediği tanıtıcı başlık. */
@@ -163,6 +238,16 @@ export async function overpassDene(
       headers: { 'User-Agent': tanitici() },
       signal: kontrol.signal,
     })
+
+    if (cevap.status === KOTA_KODU) {
+      const sunucuBeklemesiMs = retryAfterMs(cevap.headers.get('retry-after'))
+      return {
+        durum: 'kota',
+        mesaj: `${sunucu} kota sınırı uyguluyor (429).`,
+        sunucu,
+        sunucuBeklemesiMs,
+      }
+    }
 
     if (!cevap.ok) {
       const mesaj = `${sunucu} ${cevap.status} döndü.`

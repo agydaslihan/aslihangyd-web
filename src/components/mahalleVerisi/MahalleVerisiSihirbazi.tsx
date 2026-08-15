@@ -1,9 +1,10 @@
 'use client'
 
-import { useState, useTransition } from 'react'
+import { useEffect, useState, useTransition } from 'react'
 
 import { denemeliCalistir, type DenemeBilgisi } from '@/components/osm/denemeliCalistir'
-import { yenidenDenemeMetni } from '@/lib/osm/yenidenDeneme'
+import { overpassSogumasi } from '@/lib/osm/eylemler'
+import { sureMetni } from '@/lib/osm/yenidenDeneme'
 import {
   mahalleListesiniOnizle,
   mahalleListesiniYaz,
@@ -257,8 +258,8 @@ function IlerlemeCubugu({
       </p>
 
       {deneme ? (
-        <p className="aktarim-not" aria-live="polite">
-          {yenidenDenemeMetni(deneme.deneme, deneme.kalanSaniye)}
+        <p className={deneme.kota ? 'aktarim-hata' : 'aktarim-not'} aria-live="polite">
+          {deneme.mesaj}
         </p>
       ) : null}
     </div>
@@ -273,6 +274,24 @@ function SinirAdimi() {
   const [bekliyor, setBekliyor] = useState(false)
   const [deneme, setDeneme] = useState<DenemeBilgisi | null>(null)
   const [ilerleme, setIlerleme] = useState<Ilerleme | null>(null)
+  const [soguma, setSoguma] = useState(0)
+
+  /**
+   * ⚠️ POI içe aktarma az önce çalıştıysa uyar.
+   *
+   * Simetrik durum: iki ekran ayrı ama Overpass açısından aynı istemciyiz.
+   * Hangisi önce çalışırsa çalışsın, hemen ardından diğerine başlamak 429
+   * riskini doğuruyor.
+   */
+  useEffect(() => {
+    let iptal = false
+    void overpassSogumasi().then(({ kalanSaniye }) => {
+      if (!iptal) setSoguma(kalanSaniye)
+    })
+    return () => {
+      iptal = true
+    }
+  }, [])
 
   /**
    * Tek grubu indirir; geçici hatada üstel beklemeyle yeniden dener.
@@ -284,8 +303,11 @@ function SinirAdimi() {
   async function grubuIndir(sira: number): Promise<boolean> {
     const cevap = await denemeliCalistir({
       cagir: (denemeSirasi) => sinirGrubunuIndir(sira, denemeSirasi),
-      geciciMi: (c) => c.durum === 'yeniden_denenebilir',
-      mesajAl: (c) => (c.durum === 'yeniden_denenebilir' ? c.mesaj : ''),
+      karar: (c) => ({
+        tekrar: c.durum === 'yeniden_denenebilir' || c.durum === 'kota',
+        kota: c.durum === 'kota',
+        sunucuBeklemesiMs: c.durum === 'kota' ? c.sunucuBeklemesiMs : null,
+      }),
       bildir: setDeneme,
     })
     setDeneme(null)
@@ -312,8 +334,11 @@ function SinirAdimi() {
       // ── 1. faz: kimlikler (ucuz sorgu, geometri istemez) ──
       const hazirlik = await denemeliCalistir({
         cagir: (denemeSirasi) => sinirHazirliginiBaslat(denemeSirasi),
-        geciciMi: (c) => c.durum === 'yeniden_denenebilir',
-        mesajAl: (c) => (c.durum === 'yeniden_denenebilir' ? c.mesaj : ''),
+        karar: (c) => ({
+          tekrar: c.durum === 'yeniden_denenebilir' || c.durum === 'kota',
+          kota: c.durum === 'kota',
+          sunucuBeklemesiMs: c.durum === 'kota' ? c.sunucuBeklemesiMs : null,
+        }),
         bildir: setDeneme,
       })
       setDeneme(null)
@@ -431,6 +456,16 @@ function SinirAdimi() {
       >
         {bekliyor ? 'OpenStreetMap sorgulanıyor…' : 'Sınırları önizle'}
       </button>
+
+      {/* ⚠️ Uyarı, engel değil: buton açık kalıyor. */}
+      {soguma > 0 && !ilerleme && !bekliyor ? (
+        <p className="aktarim-not" style={{ marginTop: '0.75rem' }}>
+          <strong>Az önce başka bir OpenStreetMap içe aktarması çalıştı.</strong> İki işlem aynı
+          kotayı paylaşıyor; hemen başlarsanız sunucu bizi kısıtlayabilir (429).{' '}
+          <strong>~{sureMetni(soguma)}</strong> bekleyip denemeniz daha hızlı sonuçlanır. Yine de
+          şimdi başlayabilirsiniz.
+        </p>
+      ) : null}
 
       {ilerleme ? <IlerlemeCubugu ilerleme={ilerleme} deneme={deneme} /> : null}
 

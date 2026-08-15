@@ -36,15 +36,53 @@ export const AZAMI_DENEME = 4
 export const BEKLEME_MS: readonly number[] = [5_000, 15_000, 45_000]
 
 /**
+ * Kota (429) durumunda bekleme — normalden çok daha uzun.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ 429 DİĞER HATALARDAN FARKLI: ISRAR DURUMU KÖTÜLEŞTİRİR.
+ *
+ * 504 "sunucu şu an yetişemedi" demek; birkaç saniye sonra tekrar denemek
+ * makul. 429 "seni geçici olarak kısıtladım" demek — üstüne gitmek
+ * kısıtlama penceresini uzatır.
+ *
+ * ⚠️ DENEME SAYISI ARTIRILMADI, yalnızca bekleme uzatıldı. 429'da agresif
+ * olmak yanlış yön: doğru tepki daha çok denemek değil, daha çok beklemek.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const KOTA_BEKLEME_MS: readonly number[] = [60_000, 180_000, 180_000]
+
+/**
  * @param deneme 1'den başlayan deneme sırası
+ * @param kota Kota sınırı (429) mı — bekleme merdivenini belirler
  * @returns Bu denemeden ÖNCE beklenecek süre (ilk deneme için 0)
  */
-export function beklemeSuresi(deneme: number): number {
+export function beklemeSuresi(deneme: number, kota = false): number {
   if (deneme <= 1) return 0
-  return BEKLEME_MS[Math.min(deneme - 2, BEKLEME_MS.length - 1)] ?? 0
+  const merdiven = kota ? KOTA_BEKLEME_MS : BEKLEME_MS
+  return merdiven[Math.min(deneme - 2, merdiven.length - 1)] ?? 0
+}
+
+/** Süreyi "45 sn" / "3 dk" biçiminde yazar — dakikalarca "180 sn" okunmuyor. */
+export function sureMetni(saniye: number): string {
+  if (saniye < 90) return `${saniye} sn`
+  return `${Math.round(saniye / 60)} dk`
 }
 
 /** Ekranda gösterilecek "tekrar deneniyor" metni. */
 export function yenidenDenemeMetni(deneme: number, saniye: number): string {
-  return `OpenStreetMap sunucusu yoğun, ${saniye} sn sonra tekrar denenecek (${deneme}/${AZAMI_DENEME})`
+  return `OpenStreetMap sunucusu yoğun, ${sureMetni(saniye)} sonra tekrar denenecek (${deneme}/${AZAMI_DENEME})`
+}
+
+/**
+ * Kota sınırı metni — bunun bir arıza DEĞİL kota olduğunu söyler.
+ *
+ * ⚠️ Bu ayrım kullanıcıya açıkça söyleniyor. "Hata" diye okuyan biri
+ * butona tekrar tekrar basar ve tam olarak yapılmaması gerekeni yapar.
+ */
+export function kotaMetni(deneme: number, saniye: number): string {
+  return (
+    `Sunucu bizi geçici olarak kısıtladı (kota sınırı) — bu bir hata değil. ` +
+    `${sureMetni(saniye)} sonra tekrar denenecek (${deneme}/${AZAMI_DENEME}). ` +
+    `Tekrar tekrar denemek süreyi uzatır.`
+  )
 }

@@ -129,6 +129,11 @@ const depo = new HazirlikDeposu<SinirHazirligi>()
 export type HazirlikDurumu =
   | { durum: 'mahalle_yok' }
   | { durum: 'yeniden_denenebilir'; mesaj: string }
+  /**
+   * ⚠️ Kota sınırı — geçici hatadan AYRI. Yeniden denemek durumu
+   * kötüleştirir; çağıran taraf daha uzun bekliyor.
+   */
+  | { durum: 'kota'; mesaj: string; sunucuBeklemesiMs: number | null }
   | { durum: 'hata'; mesaj: string }
   | { durum: 'hazir'; grupSayisi: number; sinirSayisi: number; merkezSayisi: number; sorgu: string }
 
@@ -150,6 +155,9 @@ export async function sinirHazirligiBaslat(
   const sorgu = sinirKimlikSorgusu(ilceAdi)
   const cevap = await overpassDene(sorgu, { denemeSirasi, zamanAsimiMs: 90_000 })
 
+  if (cevap.durum === 'kota') {
+    return { durum: 'kota', mesaj: cevap.mesaj, sunucuBeklemesiMs: cevap.sunucuBeklemesiMs }
+  }
   if (cevap.durum !== 'tamam') return { durum: cevap.durum, mesaj: cevap.mesaj }
 
   const kimlikler = sinirKimlikleriniCoz(cevap.veri)
@@ -187,6 +195,11 @@ export async function sinirHazirligiBaslat(
 export type GrupDurumu =
   | { durum: 'hazirlik_yok' }
   | { durum: 'yeniden_denenebilir'; mesaj: string }
+  /**
+   * ⚠️ Kota sınırı — geçici hatadan AYRI. Yeniden denemek durumu
+   * kötüleştirir; çağıran taraf daha uzun bekliyor.
+   */
+  | { durum: 'kota'; mesaj: string; sunucuBeklemesiMs: number | null }
   | { durum: 'hata'; mesaj: string }
   | { durum: 'tamam'; gelen: number; atlanan: number }
 
@@ -219,6 +232,9 @@ export async function sinirGrubunuGetir(
     dagitim: grupSirasi,
     zamanAsimiMs: 120_000,
   })
+  if (cevap.durum === 'kota') {
+    return { durum: 'kota', mesaj: cevap.mesaj, sunucuBeklemesiMs: cevap.sunucuBeklemesiMs }
+  }
   if (cevap.durum !== 'tamam') return { durum: cevap.durum, mesaj: cevap.mesaj }
 
   /**

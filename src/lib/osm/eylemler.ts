@@ -7,6 +7,7 @@ import { getPayload, type Payload, type TypedUser } from 'payload'
 
 import { yoneticiMi } from '@/lib/erisim'
 
+import { SOGUMA_MS, sonIstektenBuYanaMs } from './istemci'
 import {
   onizlemeHazirla,
   poiHazirligiBaslat,
@@ -35,6 +36,30 @@ async function yoneticiOturumu(): Promise<{ payload: Payload; user: TypedUser } 
   const { user } = await payload.auth({ headers: await headers() })
   if (!user || !yoneticiMi(user)) return null
   return { payload, user }
+}
+
+/**
+ * Son Overpass isteğinden bu yana geçen süre.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SINIR VE POI AYNI KOTAYI PAYLAŞIYOR
+ *
+ * İki ekran ayrı görünüyor ama Overpass açısından aynı istemciyiz. Sınır
+ * içe aktarma bir düzine istek gönderdikten hemen sonra POI'ye başlamak,
+ * doğrudan 429'a koşmak demek — nitekim öyle oldu.
+ *
+ * ⚠️ Bu bilgi UYARI ÜRETİR, ENGEL DEĞİL. Acele eden birinin işini durdurmak
+ * bizim işimiz değil; ne olacağını söylemek işimiz.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function overpassSogumasi(): Promise<{ kalanSaniye: number }> {
+  const oturum = await yoneticiOturumu()
+  if (!oturum) return { kalanSaniye: 0 }
+
+  const gecen = sonIstektenBuYanaMs()
+  if (gecen === null || gecen >= SOGUMA_MS) return { kalanSaniye: 0 }
+
+  return { kalanSaniye: Math.ceil((SOGUMA_MS - gecen) / 1_000) }
 }
 
 /**

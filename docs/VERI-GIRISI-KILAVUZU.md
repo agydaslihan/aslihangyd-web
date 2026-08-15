@@ -288,6 +288,8 @@ Payı değiştirdiyseniz **önizlemeyi tekrar çalıştırın**; sayı değişec
 | --- | --- |
 | "Merkez noktası tanımlı mahalle bulunamadı." | 2. adım tamamlanmamış. En az bir mahallenin **Konum → Mahalle merkezi** alanı dolu olmalı. |
 | "OpenStreetMap sunucusu yoğun, … tekrar denenecek (2/4)" | **Hiçbir şey yapmayın**, program kendisi bekliyor ve yedek sunucuya geçiyor. |
+| "Sunucu bizi geçici olarak kısıtladı (kota sınırı) — bu bir hata değil" | **Kesinlikle butona basmayın.** Bu bir arıza değil; sunucu bize "biraz yavaşla" diyor. Tekrar tekrar denemek kısıtlama süresini **uzatır**. Program 1–3 dakika bekleyip kendisi deneyecek. |
+| "Sınır içe aktarma az önce çalıştı… ~4 dk bekleyip deneyin" | Uyarıdır, engel değil. İki işlem aynı kotayı paylaşıyor. Beklerseniz iş daha çabuk biter; beklemezseniz büyük olasılıkla kota sınırına takılırsınız. |
 | "6/9 bölge geldi · 3 bölge düştü" | **"Kalan 3 bölgeyi tekrar dene"** düğmesine basın. Gelen noktalar duruyor. |
 | "İçe aktarma tamamlanamadı." | Sayfayı yenileyip tekrar deneyin. Yarım kalan aktarma zarar vermez; ikinci çalıştırma kaldığı yerden devam eder. |
 

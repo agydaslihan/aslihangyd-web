@@ -4546,3 +4546,62 @@ Yeni ortam değişkeni **eklenmedi**. `OVERPASS_ADRESI` artık virgülle
 ayrılmış liste kabul ediyor; tek adres yazan mevcut kurulumlar aynen
 çalışmaya devam ediyor. Yeni bir değişken, sunucudaki `.env`i düzenlemeyi
 unutan birini sessizce yedeksiz bırakırdı.
+
+### 429'a özel davranış ve işlemler arası soğuma (15 Ağustos 2026)
+
+Bir önceki iş 504'ü çözdü ama yeni bir belirti çıktı: **sınır içe aktarmanın
+hemen ardından POI denenince 429.** Sebep açık — sınır işlemi 12 istek
+göndermişti ve iki ekran Overpass açısından aynı istemci.
+
+#### 429 diğer hatalardan ayrıldı
+
+Önceki hâlde 429 da `yeniden_denenebilir` sayılıyordu, yani 5 sn sonra
+tekrar deneniyordu. Bu yanlış yön: **504 "yetişemedim", 429 "seni
+kısıtladım" demek.** İkincisinde ısrar kısıtlama penceresini uzatır.
+
+| | 504 / 5xx | 429 |
+| --- | --- | --- |
+| Anlamı | Sunucu şu an yetişemedi | Bizi geçici olarak kısıtladı |
+| Bekleme | 5 · 15 · 45 sn | **60 · 180 · 180 sn** |
+| `Retry-After` | — | varsa ona uyulur |
+| Deneme sayısı | 4 | **4 — değişmedi** |
+| Ekran metni | "sunucu yoğun" | "kota sınırı, bu bir hata değil" |
+
+⚠️ **Deneme sayısı ARTIRILMADI.** 429'da doğru tepki daha çok denemek değil,
+daha çok beklemek. Bir test bunu kilitliyor: merdiven uzadı, basamak sayısı
+değil.
+
+⚠️ `Retry-After` merdivenin önünde ama merdivenden kısa olamaz
+(`Math.max`). Sunucu ne kadar beklememizi istediğini söylediyse tahmin
+yürütmenin anlamı yok; ama söylediğinden hızlanmak da 429'da yanlış yön.
+Başlığın iki biçimi de okunuyor (saniye ve HTTP tarihi) ve saçma değerlere
+karşı 5 dakikalık üst sınır var — bozuk bir başlık paneli yarım saat
+dondurmasın.
+
+⚠️ Ekran metni bunun bir **arıza olmadığını** açıkça söylüyor. "Hata" diye
+okuyan biri butona tekrar tekrar basar ve tam olarak yapılmaması gerekeni
+yapar. Kota mesajı ayrıca `aktarim-hata` / `osm-hata` sınıfıyla, normal
+yeniden denemeden görsel olarak da ayrı gösteriliyor.
+
+⚠️ **Doğrulanamayan nokta, dürüstçe:** `Retry-After` ayrıştırması birim
+testleriyle sınandı ama **gerçek bir Overpass 429 cevabında bu başlığın
+gönderildiği gözlemlenmedi** — kasten 429 tetiklemek kaynağı kötüye
+kullanmak olurdu. Başlık yoksa merdiven zaten devreye giriyor; yani başlık
+hiç gelmese de davranış doğru.
+
+#### İşlemler arası soğuma uyarısı
+
+`istemci.ts` artık herhangi bir sunucuya yapılan **son isteğin anını** da
+tutuyor. Beş dakikadan yeniyse iki sihirbaz da açılışta uyarı gösteriyor:
+
+> **Sınır içe aktarma az önce çalıştı.** İki işlem aynı OpenStreetMap
+> kotasını paylaşıyor; hemen başlarsanız sunucu bizi kısıtlayabilir (429).
+> ~4 dk bekleyip denemeniz daha hızlı sonuçlanır. Yine de şimdi
+> başlayabilirsiniz.
+
+⚠️ **Buton ENGELLENMİYOR.** Acele eden birinin işini durdurmak bizim işimiz
+değil; ne olacağını söylemek işimiz. Uyarı yalnızca işlem başlamadan önce
+görünüyor — başladıktan sonra o istekleri zaten biz yapıyoruz.
+
+⚠️ Uyarı **iki ekranda da** var. İstek yalnızca POI ekranı içindi ama durum
+simetrik: POI önce çalışırsa sınır içe aktarma aynı duvara toslar.
