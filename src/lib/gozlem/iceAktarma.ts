@@ -1,5 +1,12 @@
 import { sayiyaCevir, tariheCevir } from '@/lib/csv/ayristir'
 import {
+  eslenmemisSutunlarGenel,
+  hucre,
+  mahalleyiCozGenel,
+  sadelestir,
+  sutunlariEslestirGenel,
+} from '@/lib/csv/sutun'
+import {
   GOZLEM_KAYNAKLARI,
   GOZLEM_TIPLERI,
   GUVEN_SEVIYELERI,
@@ -125,62 +132,17 @@ export type AlanAnahtari = (typeof ALAN_TANIMLARI)[number]['anahtar']
 export type SutunEslemesi = Partial<Record<AlanAnahtari, number | null>>
 
 /**
- * Türkçe duyarlı sadeleştirme — başlık ve değer eşleştirmesi için.
+ * ⚠️ Sütun eşleştirmesinin kendisi `@/lib/csv/sutun` içinde ve rayiç bedel
+ * içe aktarmasıyla ORTAK. İki ayrı kopya olsaydı biri "Brüt m2 (net değil)"
+ * başlığını tanırken diğeri tanımazdı ve fark hiçbir yerde görünmezdi.
  *
- * ⚠️ Sıra önemli: önce Türkçe küçültme, sonra `ı → i`, sonra aksan
- * temizliği. `'I'.toLowerCase()` İngilizce kurala göre `i` verir ve
- * "IŞIK" gibi başlıklarda yanlış eşleşme üretir.
+ * Buradaki ince sarmalayıcılar duruyor çünkü bu modülün alan tanımları
+ * (`ALAN_TANIMLARI`) sabittir; çağıranın her seferinde geçirmesi gereksiz.
  */
-export function sadelestir(metin: string): string {
-  return metin
-    .replace(/²/g, '2')
-    .toLocaleLowerCase('tr')
-    .replace(/ı/g, 'i')
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .replace(/[^a-z0-9+]/g, '')
-}
+export { sadelestir } from '@/lib/csv/sutun'
 
-/**
- * Başlıklardan sütun eşlemesi tahmini.
- *
- * Tahmin, kullanıcıya **öneri** olarak sunulur; onaylamadan içe aktarma
- * başlamaz. Bir sütun birden fazla alana uyarsa ilk alan kazanır ve diğeri
- * boş kalır — sessizce ikisine birden bağlamak, aynı veriyi iki yere
- * yazmak olurdu.
- */
 export function sutunlariEslestir(basliklar: readonly string[]): SutunEslemesi {
-  const sadeBasliklar = basliklar.map(sadelestir)
-  const eslesme: SutunEslemesi = {}
-  const kullanilan = new Set<number>()
-
-  for (const tanim of ALAN_TANIMLARI) {
-    const adaylar = [sadelestir(tanim.etiket), ...tanim.esanlamlilar.map(sadelestir)]
-
-    // Önce tam eşleşme; "kat" başlığı "katalog"a bağlanmasın diye.
-    let bulunan = sadeBasliklar.findIndex(
-      (baslik, sira) => !kullanilan.has(sira) && baslik !== '' && adaylar.includes(baslik),
-    )
-
-    // Tam eşleşme yoksa içerme: "Brüt m2 (net değil)" → m2
-    if (bulunan === -1) {
-      bulunan = sadeBasliklar.findIndex(
-        (baslik, sira) =>
-          !kullanilan.has(sira) &&
-          baslik !== '' &&
-          adaylar.some((aday) => aday.length >= 3 && baslik.includes(aday)),
-      )
-    }
-
-    if (bulunan !== -1) {
-      eslesme[tanim.anahtar] = bulunan
-      kullanilan.add(bulunan)
-    } else {
-      eslesme[tanim.anahtar] = null
-    }
-  }
-
-  return eslesme
+  return sutunlariEslestirGenel(basliklar, ALAN_TANIMLARI)
 }
 
 /** Eşlemede kullanılmayan sütunların sırası — kullanıcıya bildirilir. */
@@ -188,10 +150,7 @@ export function eslenmemisSutunlar(
   basliklar: readonly string[],
   eslesme: SutunEslemesi,
 ): { sira: number; baslik: string }[] {
-  const kullanilan = new Set(Object.values(eslesme).filter((s): s is number => s !== null))
-  return basliklar
-    .map((baslik, sira) => ({ sira, baslik }))
-    .filter(({ sira, baslik }) => !kullanilan.has(sira) && baslik.trim() !== '')
+  return eslenmemisSutunlarGenel(basliklar, eslesme)
 }
 
 /* ==========================================================================
@@ -277,14 +236,7 @@ export function mahalleyiCoz(
   ham: string,
   mahalleler: readonly { id: number; ad: string; slug: string }[],
 ): { id: number; ad: string; slug: string } | null {
-  const sade = sadelestir(ham).replace(/mahallesi$|mahalle$|mah$/, '')
-  if (sade === '') return null
-
-  return (
-    mahalleler.find((m) => sadelestir(m.ad).replace(/mahallesi$|mahalle$|mah$/, '') === sade) ??
-    mahalleler.find((m) => sadelestir(m.slug) === sade) ??
-    null
-  )
+  return mahalleyiCozGenel(ham, mahalleler)
 }
 
 /* ==========================================================================
@@ -335,11 +287,6 @@ export interface CozumlemeSonucu {
   hazirSayisi: number
   uyariliSayisi: number
   hataliSayisi: number
-}
-
-function hucre(satir: readonly string[], sira: number | null | undefined): string {
-  if (sira === null || sira === undefined) return ''
-  return (satir[sira] ?? '').trim()
 }
 
 /**

@@ -32,6 +32,7 @@ export type BolumAnahtari =
   | 'simulator'
   | 'bolge_radari'
   | 'ai_arama'
+  | 'google_places'
 
 export interface BolumTanimi {
   anahtar: BolumAnahtari
@@ -152,6 +153,32 @@ export const BOLUMLER: readonly BolumTanimi[] = [
       'Aydınlatma metni avukattan gelmeden AÇMAYIN.',
     rotalar: [],
     adres: '/portfoy',
+    gezinmede: false,
+    varsayilanAcik: false,
+  },
+  {
+    /**
+     * ⚠️ VARSAYILAN KAPALI — maliyet ve lisans kararı.
+     *
+     * Google Places ücretli bir servis: açık kalan bir katman ay sonunda
+     * fatura üretir. Kendiliğinden açılmaması bilinçli.
+     *
+     * ⚠️ İkinci koşul: `GOOGLE_PLACES_API_KEY` tanımlı olmalı. İkisi
+     * birden sağlanmadıkça hiçbir Google çağrısı yapılmaz; site
+     * OpenStreetMap verisiyle aynen çalışır.
+     *
+     * ⚠️ Lisans: Google içeriği veritabanımıza YAZILMAZ. Sakladığımız tek
+     * şey yer kimliği; ad, adres ve çalışma saati gösterileceği anda
+     * çekilir. Ayrıntı: `src/lib/google/istemci.ts`.
+     */
+    anahtar: 'google_places',
+    ad: 'Google Places katmanı',
+    aciklama:
+      '⚠️ ÜCRETLİ. OpenStreetMap’in zayıf kaldığı yerde işletme adı ve çalışma saatlerini ' +
+      'Google’dan tamamlar. Anahtar (GOOGLE_PLACES_API_KEY) tanımlı değilse açık olsa bile ' +
+      'çalışmaz. Aylık çağrı sayısı Ayarlar → Google Places Kullanımı ekranında.',
+    rotalar: [],
+    adres: '/veri-kaynaklari',
     gezinmede: false,
     varsayilanAcik: false,
   },

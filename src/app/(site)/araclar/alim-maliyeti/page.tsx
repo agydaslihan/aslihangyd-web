@@ -1,8 +1,10 @@
 import type { Metadata } from 'next'
 
-import { AlimMaliyetiFormu } from '@/components/hesaplayici/AlimMaliyetiFormu'
+import { AlimMaliyetiFormu, type RayicSecenegi } from '@/components/hesaplayici/AlimMaliyetiFormu'
 import { HesaplayiciKabugu } from '@/components/hesaplayici/Kabuk'
+import { rayicKaynagiEtiketi } from '@/lib/rayic/tipler'
 import { mutlakAdres } from '@/lib/site'
+import { rayicliMahalleleriGetir } from '@/lib/veri/rayic'
 import { vergiParametreleriniGetir } from '@/lib/veri/vergiParametreleri'
 
 export const metadata: Metadata = {
@@ -14,7 +16,25 @@ export const metadata: Metadata = {
 }
 
 export default async function AlimMaliyetiSayfasi() {
-  const parametreler = await vergiParametreleriniGetir()
+  const [parametreler, rayicler] = await Promise.all([
+    vergiParametreleriniGetir(),
+    rayicliMahalleleriGetir(),
+  ])
+
+  /**
+   * ⚠️ Yalnızca m² rayiç bedeli GİRİLMİŞ mahalleler listeye giriyor.
+   * Rayiç bedeli olmayan bir mahalleyi seçilebilir yapmak, seçildiğinde
+   * hiçbir şey değiştirmeyen bir alan olurdu.
+   */
+  const rayicSecenekleri: RayicSecenegi[] = rayicler
+    .filter((kayit) => kayit.rayic.metrekareRayicBedel !== null)
+    .map((kayit) => ({
+      mahalleId: kayit.mahalleId,
+      ad: kayit.ad,
+      yil: kayit.rayic.yil,
+      metrekareRayicBedel: kayit.rayic.metrekareRayicBedel as number,
+      kaynakEtiketi: rayicKaynagiEtiketi(kayit.rayic.kaynak) ?? 'belirtilmedi',
+    }))
 
   return (
     <HesaplayiciKabugu
@@ -39,13 +59,20 @@ export default async function AlimMaliyetiSayfasi() {
             metrekareye göre değişir.
           </p>
           <p>
+            <strong>Tapu harcı rayiç bedelin altına düşemez.</strong> Mahalle ve brüt m² girerseniz
+            taşınmazın rayiç bedeli hesaplanır ve harç, satış bedeliyle rayiç bedelin{' '}
+            <em>büyüğü</em> üzerinden gösterilir. Rayiç bedel, belediyenin emlak vergisine esas
+            aldığı <em>asgari</em> değerdir — piyasa fiyatı değildir ve çoğu yerde onun altındadır.
+            Rakamın kaynağı ve yılı ekranda birlikte gösterilir.
+          </p>
+          <p>
             <strong>Bu hesapta olmayanlar:</strong> taşınma, tadilat, abonelik açtırma, mobilya.
             Bunlar da bütçenizin gerçek parçasıdır.
           </p>
         </>
       }
     >
-      <AlimMaliyetiFormu parametreler={parametreler} />
+      <AlimMaliyetiFormu parametreler={parametreler} rayicSecenekleri={rayicSecenekleri} />
     </HesaplayiciKabugu>
   )
 }

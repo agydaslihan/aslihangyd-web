@@ -12,11 +12,16 @@
 /**
  * Çorlu merkezi — haritanın varsayılan odağı.
  *
- * ⚠️ Bu koordinat Çorlu ilçe merkezinin yaklaşık konumudur ve yalnızca
- * haritanın nereye bakacağını belirler. Hiçbir mesafe hesabında veya
- * ziyaretçiye gösterilen veride kullanılmaz.
+ * ⚠️ Yalnızca haritanın nereye bakacağını belirler. Hiçbir mesafe
+ * hesabında, alan sorgusunda veya ziyaretçiye gösterilen veride
+ * kullanılmaz — mahalle sınırları OpenStreetMap'ten idari sınır adıyla
+ * çekilir, POI arama alanı da mahalle merkezlerinden türetilir.
+ *
+ * Değer 14 Ağustos 2026'da Aslıhan'ın verdiği ilçe merkezi koordinatıyla
+ * güncellendi (41,155250 K — 27,812860 D); öncesinde yuvarlanmış bir
+ * yaklaşıklıktı.
  */
-export const CORLU_MERKEZ: [number, number] = [27.8, 41.16]
+export const CORLU_MERKEZ: [number, number] = [27.81286, 41.15525]
 export const VARSAYILAN_YAKINLIK = 12
 
 /** POI tiplerinin harita üzerindeki renkleri — tasarım paletiyle uyumlu. */

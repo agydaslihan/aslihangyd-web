@@ -98,6 +98,14 @@ const PANEL_ARKASI: Record<string, string> = {
   'lib/gozlem/eylemler.ts': 'Gözlem girişi ve CSV içe aktarma — yalnızca panel kullanıcısı.',
   'lib/gozlem/iceAktarmaCekirdegi.ts':
     'Yukarıdakinin çekirdeği; kendi kapısı yok, çağıranınki geçerli.',
+  'lib/mahalle/eylemler.ts':
+    'Mahalle listesi ve OSM sınır içe aktarma — yalnızca YÖNETİCİ ' +
+    '(toplu kayıt açıyor, sınırları topluca değiştiriyor).',
+  'lib/google/eylemler.ts':
+    'Google Places eşleştirme — yalnızca YÖNETİCİ (her arama ücretli bir çağrı). ' +
+    'Ziyaretçiye açık detay çağrısı ayrı dosyada: lib/google/detayEylemi.ts.',
+  'lib/rayic/eylemler.ts':
+    'Rayiç bedel CSV içe aktarma — yalnızca YÖNETİCİ (alım maliyeti hesabını besliyor).',
   'app/(payload)/layout.tsx': 'Payload panelinin kendi düzeni; form eylemi değil.',
 }
 
@@ -110,6 +118,16 @@ const PANEL_ARKASI: Record<string, string> = {
  */
 const OKUMA_EYLEMLERI: Record<string, string> = {
   'lib/arama/eylemler.ts': 'AI arama — kayıt yapmıyor, yalnızca filtre üretiyor. Hız sınırı var.',
+  /**
+   * ⚠️ Google detay çağrısı da hiçbir şey KAYDETMİYOR — lisans gereği
+   * kaydedemez de. Ama her çağrı Google'a para ödemek demek ve
+   * parametresi ziyaretçiden geliyor. İki koruma birden var: hız sınırı,
+   * ve parametrenin bir Google yer kimliği değil BİZİM POI kimliğimiz
+   * olması (yer kimliği veritabanından okunuyor).
+   */
+  'lib/google/detayEylemi.ts':
+    'Google yer detayı — kayıt yapmıyor, istek anında gösteriyor. Hız sınırı var; ' +
+    'sorulabilecek yerler sistemde eşleştirilmiş noktalarla sınırlı.',
 }
 
 describe('form koruma katmanları', () => {

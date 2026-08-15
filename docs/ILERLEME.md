@@ -26,6 +26,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 3 | Drone / 360° medya | ⏭️ atlandı — altyapı hazır |
 | 4 | Yatırım skoru, AI arama, raporlar | ✅ Skor, raporlar ve AI arama tamam |
 | 5 | Çorlu Live | ⏭️ atlandı |
+| A paketi | Mahalle veri altyapısı (liste, OSM sınır, Google, rayiç, şeffaflık) | ✅ Altyapı hazır — **veri Aslıhan'dan** |
 
 ---
 
@@ -3459,3 +3460,249 @@ bırakmak yanlış olurdu; geri alındı ve asıl sebep bulunana kadar arandı.
    kararlaştırılmalı.
 6. **Faz 3 (drone/360)** — medya ve CDN hesabı gelince; alanlar ve boş
    durumlar bugünden hazır.
+
+---
+
+## A paketi — Mahalle veri altyapısı (15 Ağustos 2026)
+
+> ⚠️ **Bu paket veri GİRMEZ, veri girmeyi kolaylaştırır.**
+> Tek bir mahalle nüfusu, tek bir m² fiyatı, tek bir koordinat
+> uydurulmadı. Yazılan her şey ya bir komut (Aslıhan tıklayacak), ya bir
+> içe aktarıcı (meşru kaynaktan çekecek), ya da bir boş durum
+> (veri gelene kadar dürüstçe "veri yok" diyecek).
+
+### Neden gerekliydi
+
+Site kodu bitmişti ama mahalle tarafı boştu: sınır yok, merkez koordinatı
+yok, resmî bir fiyat tabanı yok. POI içe aktarıcısı arama kutusunu mahalle
+merkezlerinden türettiği için **o da çalışamıyordu** — veri olmadığı için
+veri çekilemiyordu.
+
+### A1 — Çorlu mahalle listesi (tek tıkla içe aktarma)
+
+`/admin/mahalle-verisi` → 1. adım.
+
+**⚠️ VELİMEŞE LİSTEDEN ÇIKTI.** Ergene ilçesinde, Çorlu'da değil. Eski bir
+hataydı; `corluMahalleleri.test.ts`in ilk testi hem adı hem slug'ı arayarak
+geri gelmesini engelliyor.
+
+18 merkez mahalle + 9 kırsal mahalle (eski köy). Kayıtlar **yalnızca ad ve
+merkez/kırsal işaretiyle** açılır; koordinat, sınır ve rakam **boş kalır**
+ve `yayinda: false` doğar.
+
+⚠️ **Tohum verisi olarak yazılmadı, komut olarak yazıldı.** Tohum betiği
+geliştirme ortamında çalışır, üretimde çalışmaz; Aslıhan'ın panelden
+tıklayabildiği bir düğme her ortamda çalışır ve ne yaptığını önce
+gösterir (önizleme → yaz).
+
+Listede olmayıp veritabanında bulunan kayıtlar (ör. eski Velimeşe)
+**silinmez, yalnızca raporlanır.** Bir içe aktarıcının insan verisini
+sessizce silmesi geri alınamaz bir iş olurdu.
+
+### A2 — OSM'den mahalle sınırları
+
+`/admin/mahalle-verisi` → 2. adım. Overpass API, `admin_level=10`
+(Türkiye'de mahalle seviyesi).
+
+#### ⭐ Tavuk-yumurta problemi ve çözümü
+
+POI içe aktarıcısı arama kutusunu **mahalle merkezlerinden** türetiyor.
+Ama merkezleri dolduran şey tam da bu adım. Çorlu koordinatını koda gömmek
+CLAUDE.md'ye aykırıydı.
+
+Çözüm: kutu değil **isim** sorgulandı.
+
+```
+relation["boundary"="administrative"]["admin_level"="6"]["name"="Çorlu"];
+map_to_area->.ilce;
+( relation(area.ilce)["admin_level"="10"]; way(area.ilce)[...]; );
+```
+
+Sıralama artık tutarlı: A1 adları açar → A2 sınır ve merkezi doldurur →
+POI içe aktarıcısı çalışmaya başlar.
+
+#### ⚠️ Elle düzeltilen sınır bir daha EZİLMEZ
+
+OSM'de Türkiye mahalle sınırları eksik ve yer yer yanlış. İçe aktarılan
+sınır `sinirKaynagi: 'osm'` işaretli; elle düzeltilen kayıt
+`sinirElleDuzenlendi` iziyle korunur. İki bağımsız kapı var:
+
+```ts
+if (mahalle.sinirElleDuzenlendi) return 'korunacak'
+if (mahalle.sinirVar && mahalle.sinirKaynagi !== 'osm') return 'korunacak'
+```
+
+⚠️ **İz kancası POI'dekinin kopyası DEĞİL** ve olmamalıydı. Mahalle kaydı
+içerik için sürekli düzenleniyor ("Neden bu mahalle?" metni, fotoğraf,
+skor). `osmElleDuzenlemeIzi`nin aynısı kullanılsaydı ilk içerik
+düzenlemesinde sınır donardı ve bir daha hiç güncellenemezdi. Bu yüzden iz
+yalnızca `sinir` ya da `merkez` **gerçekten değiştiğinde** basılıyor.
+
+#### Komşu ilçe sızıntısı
+
+Overpass alanı sınırında duran ilişkileri de döndürebiliyor. Ek geometri
+filtresi yerine daha basit ve daha dürüst bir kural kondu: sınır ancak
+**bizde o adla bir mahalle varsa** yazılır. Eşleşmeyen adaylar ve sınırı
+gelmeyen mahalleler raporda ayrı ayrı listelenir.
+
+Merkez, **alan ağırlıklı** centroid'den hesaplanıyor — köşe ortalaması
+değil. Köşe ortalaması, sınırın yoğun çizildiği tarafa kayar.
+
+⚠️ Elle girilmiş merkez korunur (`merkeziYaz` yalnızca merkez boşsa ya da
+kaynak zaten `osm` ise açılır).
+
+### A3 — Google Places (isteğe bağlı katman)
+
+⚠️ **Scraping değil.** Resmî Places API (New), kendi anahtarımızla,
+lisanslı uç noktadan. `/admin/google-places`.
+
+**Varsayılan KAPALI ve iki koşul birden gerekiyor:** `GOOGLE_PLACES_API_KEY`
+tanımlı **ve** Site Bölümleri → `google_places` açık. Anahtarı sunucuya
+koymak katmanı açmaz; ücretli bir servisi kendiliğinden başlatmak yanlış
+olurdu. Anahtar yoksa özellik sessizce kapalı, site OSM verisiyle aynen
+çalışıyor.
+
+#### ⭐ Şartnameden bilinçli sapma — RAPOR EDİLDİ
+
+Şartname "POI varlığını ve kategorisini sakla, detayı istek anında çek"
+diyordu. Uygulanan şey daha dar: **katman hiç POI kaydı üretmiyor.**
+
+Sebep şartnamenin kendi kısıtı: Places verisi önbelleklenemez. Google'ın
+döndürdüğü adı ve kategoriyi bir POI kaydına yazmak, o veriyi
+önbelleklemenin ta kendisi olurdu. Bu yüzden katman **zenginleştirme**
+olarak kuruldu: mevcut (OSM ya da elle girilmiş) bir noktaya yalnızca
+`googlePlaceId` bağlanıyor; ad, adres ve çalışma saati **hiçbir yere
+yazılmıyor**, ziyaretçi sorduğu anda çekilip gösteriliyor ve gösterildiği
+yerde Google atfı duruyor.
+
+`kaynak: 'google'` seçeneği koleksiyonda duruyor ama onu **yalnızca insan**
+seçebiliyor (Google Haritalar'da bulup elle giren biri için). Otomatik ekran
+o değeri hiç yazmıyor.
+
+#### Maliyet kapıları
+
+| Kapı | Ne yapıyor |
+| --- | --- |
+| Site Bölümleri anahtarı | Katmanı insan açar, anahtar tek başına açmaz |
+| Ziyaretçi tıklaması | Sayfa açılışında çağrı YOK; "Çalışma saatleri"ne basılınca |
+| Dakikada 20 istek | Ziyaretçiye açık detay eylemine hız sınırı |
+| Parametre bizim POI kimliğimiz | Yer kimliği veritabanından okunuyor — uç, Places'in ücretsiz vekili olamıyor |
+| Aylık sayaç | `GooglePlacesKullanimi` global'i, panelde görünür, salt okunur |
+
+⚠️ Otomatik kapanma **yok**. Katmanı kapatmak insan kararı olarak bırakıldı:
+kendiliğinden kapanan bir özellik, neden kapandığı anlaşılmadan aylarca
+kapalı kalırdı.
+
+⚠️ Ziyaretçiye açık detay çağrısı **ayrı dosyada** (`lib/google/detayEylemi.ts`).
+`eylemler.ts` içindeki her şey yönetici kapısının arkasında; bu değil. Aynı
+dosyada dursalardı güvenlik denetimi (ve `formKorumasi.test.ts`) tek bir
+sınıf görürdü — oysa iki ayrı saldırı yüzeyi var.
+
+### A4 — ⭐ Rayiç bedel
+
+Paketin en değerli parçası. Belediye takdir komisyonu rayiç bedelleri
+**resmî ve kamuya açık**; bir ilan platformunun yasadışı alternatifi değil,
+ondan daha sağlam bir taban.
+
+Yeni koleksiyon `RayicDegerler`: mahalle, sokak (isteğe bağlı), yıl,
+m² rayiç bedel, arsa rayiç bedel, kaynak (belediye / TKGM / elle), notlar.
+
+⚠️ **Veri girilmedi.** Koleksiyon boş; CSV içe aktarıcı hazır.
+
+#### Üç yerde işe yarıyor
+
+1. **Tapu harcı gerçekleşti** — harç matrahı satış bedelinin altına
+   inemiyor:
+   ```ts
+   const { matrah, rayicMiBelirledi } = harcMatrahi(fiyat, girdi.rayicBedel)
+   ```
+   `/araclar/alim-maliyeti` mahalle + brüt m² girilince rayici kendisi
+   buluyor ve harcı rayiç belirlediyse bunu **ekranda söylüyor**.
+2. **Yıllık güncellendiği için tarihsel seri** — aynı (mahalle, sokak, yıl)
+   üçlüsüne ikinci kez içe aktarma **upsert**; düzeltilmiş belediye tablosu
+   ikinci kez yüklenince kopya üretmiyor.
+3. **⭐ Rayiç/piyasa oranı** — "Bu mahallede piyasa fiyatı rayiç bedelin
+   ~3,2 katı." Türkiye'de bunu yayınlayan yok. Mahalle sayfasında,
+   istatistik ızgarasının **altında** ayrı bir başlık altında (ızgaraya
+   sokmak, onu diğer rakamlarla aynı cinsten göstermek olurdu — değil).
+
+⚠️ **Kaynak ve yıl HER GÖSTERİMDE görünüyor.** Rayiç ≠ piyasa değeri ve bu
+iki cümlelik açıklama bileşenden kaldırılamaz.
+
+#### CSV içe aktarıcı
+
+Belediye tabloları PDF/Excel geliyor. `/admin/rayic-ice-aktar`: dosya ya da
+yapıştırma, düzenlenebilir sütun eşlemesi, satır satır onay kutusu.
+
+⚠️ Bilinmeyen mahalle adı **hata**, tahmin değil. Yanlış mahalleye yazılan
+bir rayiç, harç hesabını sessizce bozardı.
+
+⚠️ 100 ₺ altı / 500.000 ₺ üstü m² değeri **uyarı** üretiyor (hata değil).
+Sebep: Türkçe Excel'in ondalık ayıracı, `1.250,00`u 125.000 yapabiliyor ve
+bu sessizce geçerdi.
+
+Gözlem içe aktarıcısının sütun eşleştiricisi kopyalanmadı;
+`lib/csv/sutun.ts`e çıkarıldı ve gözlem tarafı da ona bağlandı — iki
+içe aktarıcı tek Türkçe-Excel eşleştiricisi paylaşıyor.
+
+### A5 — Veri kaynakları şeffaflığı
+
+`/veri-kaynaklari` artık **canlı**: kayıt sayıları ve `updatedAt`
+damgaları veritabanından okunuyor, elle yazılmış tarih yok.
+
+Veri türü tablosu: kaynak · güncelleme sıklığı · kayıt sayısı · son
+güncelleme. OSM bölümü sınırları da kapsayacak şekilde genişledi, rayiç
+bölümü eklendi (hangi belediye, hangi yıl), Google bölümü yalnızca katman
+açıksa çıkıyor.
+
+⚠️ Sayfanın en üstünde çerçeveli uyarı: **"Piyasa fiyatları kendi
+gözlemlerimize dayanır ve istenen fiyattır."**
+
+⚠️ Sorgu patlarsa sayfa sıfırlara düşüp yine basılıyor. ODbL atfı yasal
+yükümlülük; bir veritabanı hatası onu ekrandan kaldıramamalı.
+
+### Göçler
+
+İkisi de oluşturuldu ve uygulandı:
+
+| Göç | İçerik |
+| --- | --- |
+| `20260814_203859_mahalle_yerlesim_ve_sinir_kaynagi` | `yerlesim_turu`, `sinir_kaynagi`, `sinir_osm_kimlik`, `sinir_elle_duzenlendi` |
+| `20260814_210730_rayic_google_ve_kullanim_sayaci` | `rayic_degerler`, `google_places_kullanimi`, `ilgi_noktalari.google_place_id`, `site_bolumleri.google_places`, enum'a `'google'` |
+
+⚠️ İkincisinin `down`u enum'u daraltıyor ve `kaynak='google'` olan bir POI
+varsa **hata verir**. Bilinçli: sessizce `'elle'`ye çevirmek verinin
+nereden geldiği bilgisini kaybederdi.
+
+### Kapı
+
+```
+pnpm typecheck  ✅
+pnpm lint       ✅
+pnpm test       ✅  64 dosya / 1395 test
+pnpm build      ✅
+```
+
+Yol boyunca üç muhafız test düştü ve **üçü de kodu düzelterek** geçirildi,
+muafiyet eklenerek değil:
+
+- `ortam.test.ts` — `GOOGLE_PLACES_API_KEY` iki örnek dosyaya da gerekçesiyle
+  belgelendi.
+- `siteBolumleri.test.ts` — `google_places` sıralı listeye ve varsayılan
+  kapalılar listesine gerekçesiyle yazıldı ("MALİYET: ücretli servis").
+- `formKorumasi.test.ts` — üç yeni sunucu eylemi sınıflandırıldı. Bu sırada
+  `googleDetayiGetir`in **ziyaretçiye açık ve para harcayan** bir eylem
+  olduğu fark edildi; ayrı dosyaya çıkarılıp hız sınırı eklendi. Test
+  defter tutmak için düştü, gerçek bir açık buldurdu.
+
+### ⚠️ Sırada Aslıhan'ın işi var, kodun değil
+
+Bu paket boş bir altyapı teslim ediyor. Doldurma sırası **zorunlu**:
+
+1. `/admin/mahalle-verisi` → 1. adım (mahalle listesi)
+2. `/admin/mahalle-verisi` → 2. adım (OSM sınırları) — 1 olmadan çalışmaz
+3. OSM POI içe aktarma — 2 olmadan arama kutusu yok
+4. `/admin/rayic-ice-aktar` — belediye rayiç tablosu
+5. (isteğe bağlı) Google Places anahtarı + bölüm anahtarı
+
+Ayrıntı: docs/SENDEN-BEKLENENLER.md → "A paketi sonrası".

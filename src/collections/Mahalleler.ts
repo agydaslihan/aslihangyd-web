@@ -2,8 +2,10 @@ import type { CollectionConfig } from 'payload'
 
 import { yalnizcaPanel, yalnizcaYoneticiSiler, yayimlananlariHerkesOkur } from '@/lib/erisim'
 
+import { YERLESIM_TURU_SECENEKLERI } from '@/lib/mahalle/corluMahalleleri'
 import { yatirimSkoruHesapla } from '@/lib/skorlama/yatirimSkoru'
 
+import { sinirElleDuzenlemeIzi } from './hooks/sinirElleDuzenlemeIzi'
 import { seoAlanlari, slugAlani, veriEksikAlani } from './ortakAlanlar'
 
 /**
@@ -30,12 +32,14 @@ export const Mahalleler: CollectionConfig = {
 
   admin: {
     useAsTitle: 'ad',
-    defaultColumns: ['ad', 'yayinda', 'veriEksik', 'updatedAt'],
+    defaultColumns: ['ad', 'yerlesimTuru', 'yayinda', 'veriEksik', 'updatedAt'],
     description: 'Mahalle mini-portalları. Her mahalle sayfası ayrı bir SEO varlığıdır.',
   },
 
   hooks: {
     beforeChange: [
+      // Sınırı elle düzelten insanın emeği bir daha içe aktarmayla ezilmesin.
+      sinirElleDuzenlemeIzi,
       ({ data, originalDoc }) => {
         const kayit = { ...(originalDoc ?? {}), ...data } as Record<string, unknown>
         const skor = (kayit.yatirimSkoru ?? {}) as Record<string, unknown>
@@ -100,6 +104,27 @@ export const Mahalleler: CollectionConfig = {
               label: 'Mahalle adı',
               required: true,
               admin: { description: '"Mahallesi" eki olmadan. Örn: Muhittin' },
+            },
+            {
+              /**
+               * ⚠️ Merkez ile kırsal ayrımı bir kalite yargısı DEĞİL.
+               *
+               * 6360 sayılı kanunla köyler mahalleye dönüştü; idari olarak
+               * eşitler. Gayrimenkul açısından değiller: kırsal mahalle
+               * arsa ağırlıklı, farklı imar durumunda ve farklı alıcıya
+               * hitap ediyor. Ayrımı göstermezsek ziyaretçi 27 satırlık bir
+               * listede hepsini aynı sanır.
+               */
+              name: 'yerlesimTuru',
+              type: 'select',
+              label: 'Yerleşim türü',
+              index: true,
+              options: [...YERLESIM_TURU_SECENEKLERI],
+              admin: {
+                description:
+                  'Kırsal mahalleler (eski köyler) sitede ayrıca işaretlenir. ' +
+                  'Emin değilseniz boş bırakın — boş alan rozet göstermez.',
+              },
             },
             {
               name: 'ozet',
@@ -263,9 +288,73 @@ export const Mahalleler: CollectionConfig = {
               label: 'Mahalle sınırı (GeoJSON)',
               admin: {
                 description:
-                  'geojson.io üzerinde çizip GeoJSON çıktısını buraya yapıştırabilirsin. ' +
+                  'OpenStreetMap sınır içe aktarma ekranından tek tıkla doldurulabilir. ' +
+                  'Elle çizmek isterseniz geojson.io üzerinde çizip çıktıyı buraya yapıştırın. ' +
                   'Boşsa haritada sınır çizgisi gösterilmez, sadece merkez noktası kullanılır.',
               },
+            },
+
+            // ── Sınırın kaynak izi ──────────────────────────────────────
+            {
+              type: 'collapsible',
+              label: 'Sınırın kaynağı',
+              admin: { initCollapsed: true },
+              fields: [
+                {
+                  name: 'sinirKaynagi',
+                  type: 'select',
+                  label: 'Sınır verisinin kaynağı',
+                  defaultValue: 'elle',
+                  index: true,
+                  options: [
+                    { value: 'elle', label: 'Elle girildi' },
+                    { value: 'osm', label: 'OpenStreetMap' },
+                  ],
+                  admin: {
+                    readOnly: true,
+                    description:
+                      'İçe aktarma bunu kendisi yazar. OpenStreetMap kaynaklı sınırlar sitede ' +
+                      '"© OpenStreetMap katkıcıları" atfıyla gösterilir (ODbL lisansı gereği).',
+                  },
+                },
+                {
+                  name: 'sinirOsmKimlik',
+                  type: 'text',
+                  label: 'Sınırın OSM kimliği',
+                  index: true,
+                  admin: {
+                    readOnly: true,
+                    description:
+                      'Örn. "relation/123456". Yeniden içe aktarmada aynı sınırı bulmak için.',
+                  },
+                },
+                {
+                  /**
+                   * ⚠️ POI'deki `elleDuzenlendi` ile AYNI amaç, FARKLI tetik.
+                   *
+                   * POI kaydında panelden yapılan her düzenleme izi basar;
+                   * o kayıtların tek işi OSM'den gelen bilgiyi tutmak.
+                   * Mahalle kaydı öyle değil — içeriği, rakamları ve SEO'su
+                   * sürekli düzenleniyor. Her düzenlemede iz basılsaydı ilk
+                   * metin girişinden sonra sınırlar donar ve OSM'deki
+                   * düzeltmeler bir daha hiç gelmezdi.
+                   *
+                   * Bu yüzden iz yalnızca `sinir` ya da `merkez` GERÇEKTEN
+                   * değiştiğinde basılıyor (bkz. `sinirElleDuzenlemeIzi`).
+                   */
+                  name: 'sinirElleDuzenlendi',
+                  type: 'checkbox',
+                  label: 'Sınır elle düzeltildi — içe aktarma bu mahalleyi atlar',
+                  defaultValue: false,
+                  index: true,
+                  admin: {
+                    description:
+                      'Sınırı ya da merkez noktasını elle değiştirdiğinizde otomatik ' +
+                      'işaretlenir ve yeniden içe aktarma onu EZMEZ. İşareti kaldırırsanız ' +
+                      "sınır tekrar OpenStreetMap'ten güncellenir.",
+                  },
+                },
+              ],
             },
           ],
         },

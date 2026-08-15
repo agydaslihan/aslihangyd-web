@@ -200,6 +200,41 @@ describe('alimMaliyetiHesapla', () => {
     expect(komisyon?.tutar).toBe(120_000)
   })
 
+  /**
+   * ⚠️ Tapu harcı rayiç bedelin altına düşemez.
+   *
+   * Yalnızca satış bedelini kullansaydık, düşük beyanla alım düşünen
+   * birine gerçekte ödeyeceğinden az bir rakam gösterirdik.
+   */
+  it('rayiç bedel satış bedelinden yüksekse harcı O belirler', () => {
+    const sonuc = alimMaliyetiHesapla({ fiyat: 1_000_000, rayicBedel: 1_500_000 }, parametreler())
+    if (sonuc.durum !== 'hesaplandi') throw new Error('hesaplanmalıydı')
+
+    const harc = sonuc.veri.kalemler.find((k) => k.anahtar === 'tapu_harci')
+    expect(harc?.tutar).toBe(30_000) // 1.500.000 × %2
+    expect(sonuc.veri.harciRayicBelirledi).toBe(true)
+    expect(sonuc.veri.harcMatrahi).toBe(1_500_000)
+    // Sebep kullanıcıya yazıyla da söylenir.
+    expect(harc?.aciklama).toContain('rayiç')
+  })
+
+  it('satış bedeli rayiçten yüksekse hesap değişmez', () => {
+    const sonuc = alimMaliyetiHesapla({ fiyat: 5_000_000, rayicBedel: 1_500_000 }, parametreler())
+    if (sonuc.durum !== 'hesaplandi') throw new Error('hesaplanmalıydı')
+
+    const harc = sonuc.veri.kalemler.find((k) => k.anahtar === 'tapu_harci')
+    expect(harc?.tutar).toBe(100_000)
+    expect(sonuc.veri.harciRayicBelirledi).toBe(false)
+  })
+
+  it('rayiç bedel bilinmiyorsa hesap satış bedeli üzerinden yapılır', () => {
+    const sonuc = alimMaliyetiHesapla({ fiyat: 5_000_000, rayicBedel: null }, parametreler())
+    if (sonuc.durum !== 'hesaplandi') throw new Error('hesaplanmalıydı')
+
+    expect(sonuc.veri.harcMatrahi).toBe(5_000_000)
+    expect(sonuc.veri.harciRayicBelirledi).toBe(false)
+  })
+
   it('her kalem nasıl hesaplandığını açıklar', () => {
     const sonuc = alimMaliyetiHesapla({ fiyat: 5_000_000 }, parametreler())
     if (sonuc.durum !== 'hesaplandi') throw new Error('hesaplanmalıydı')

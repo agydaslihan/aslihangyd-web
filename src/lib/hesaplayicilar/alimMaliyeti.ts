@@ -1,3 +1,4 @@
+import { harcMatrahi } from '@/lib/rayic/tipler'
 import type { VergiParametreKumesi } from '@/lib/vergi/parametreler'
 
 import {
@@ -40,6 +41,13 @@ export interface AlimMaliyetiGirdisi {
   krediKullanilacak?: boolean
   /** Komisyon hesaba dahil edilsin mi. */
   komisyonDahil?: boolean
+  /**
+   * Taşınmazın toplam rayiç bedeli (m² rayiç × m²).
+   *
+   * ⚠️ Bilinmiyorsa boş bırakılır ve hesap satış bedeli üzerinden yapılır —
+   * uydurulmaz. Doluysa tapu harcı, ikisinin BÜYÜĞÜ üzerinden hesaplanır.
+   */
+  rayicBedel?: number | null
 }
 
 export interface MaliyetKalemi {
@@ -57,6 +65,17 @@ export interface AlimMaliyetiSonucu {
   gercekToplamMaliyet: number
   /** Ek maliyetlerin fiyata oranı, yüzde. */
   ekMaliyetOrani: number
+  /** Tapu harcının hesaplandığı matrah — satış bedeli ya da rayiç bedel. */
+  harcMatrahi: number
+  /**
+   * Harcı rayiç bedel mi belirledi?
+   *
+   * ⚠️ `true` ise arayüz bunu AÇIKÇA söyler. Kullanıcı satış bedelini
+   * yazdığı hâlde harcın daha yüksek çıktığını görüp "hesap yanlış"
+   * demesin: sebebi rayiç bedelin satış bedelinin üzerinde olması ve bu
+   * yasal bir taban.
+   */
+  harciRayicBelirledi: boolean
 }
 
 export function alimMaliyetiHesapla(
@@ -80,12 +99,27 @@ export function alimMaliyetiHesapla(
   const fiyat = girdi.fiyat
   const kalemler: MaliyetKalemi[] = []
 
+  /**
+   * ⚠️ TAPU HARCI RAYİÇ BEDELİN ALTINA DÜŞEMEZ.
+   *
+   * Beyan edilen değer emlak vergisi değerinden (rayiç bedel) düşük
+   * olamaz; düşük beyan edilirse harç yine rayiç üzerinden hesaplanır ve
+   * aradaki fark cezasıyla istenir. Yalnızca satış bedelini kullansaydık,
+   * düşük beyanla alım düşünen birine gerçekte ödeyeceğinden az bir rakam
+   * gösterirdik.
+   */
+  const { matrah, rayicMiBelirledi } = harcMatrahi(fiyat, girdi.rayicBedel)
+
   const tapuHarciOrani = parametreler.sayilar.tapu_harci_orani_alici as number
   kalemler.push({
     anahtar: 'tapu_harci',
     etiket: 'Tapu harcı (alıcı payı)',
-    tutar: kurusaYuvarla(fiyat * tapuHarciOrani),
-    aciklama: `Satış bedelinin %${(tapuHarciOrani * 100).toLocaleString('tr-TR')}'i`,
+    tutar: kurusaYuvarla(matrah * tapuHarciOrani),
+    aciklama: rayicMiBelirledi
+      ? `Rayiç bedelin (${matrah.toLocaleString('tr-TR')} ₺) ` +
+        `%${(tapuHarciOrani * 100).toLocaleString('tr-TR')}'i — ` +
+        'harç, rayiç bedelin altına düşemez'
+      : `Satış bedelinin %${(tapuHarciOrani * 100).toLocaleString('tr-TR')}'i`,
   })
 
   kalemler.push({
@@ -145,5 +179,7 @@ export function alimMaliyetiHesapla(
     ekMaliyetToplami,
     gercekToplamMaliyet: kurusaYuvarla(fiyat + ekMaliyetToplami),
     ekMaliyetOrani: kurusaYuvarla((ekMaliyetToplami / fiyat) * 100),
+    harcMatrahi: matrah,
+    harciRayicBelirledi: rayicMiBelirledi,
   })
 }
