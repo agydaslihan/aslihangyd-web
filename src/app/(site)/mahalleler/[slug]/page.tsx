@@ -455,7 +455,7 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
               <ul className="mt-4 flex flex-wrap gap-2">
                 {mahalle.oneCikanOzellikler.map((ozellik) => (
                   <li key={ozellik.id ?? ozellik.metin}>
-                    <Rozet ton={poster?.url ? 'notr' : 'lacivert'}>{ozellik.metin}</Rozet>
+                    <Rozet ton={poster?.url ? 'notr' : 'vurgu'}>{ozellik.metin}</Rozet>
                   </li>
                 ))}
               </ul>

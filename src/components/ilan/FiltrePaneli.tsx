@@ -235,7 +235,7 @@ export function FiltrePaneli({
       <noscript>
         <button
           type="submit"
-          className="bg-lacivert-yuzey rounded-buton min-h-11 w-full px-5 text-govde-kucuk font-medium text-white"
+          className="bg-kakao-yuzey rounded-buton min-h-11 w-full px-5 text-govde-kucuk font-medium text-white"
         >
           Filtrele
         </button>
@@ -254,7 +254,7 @@ export function FiltrePaneli({
         >
           Filtreler
           {aktifler.length > 0 ? (
-            <span className="bg-lacivert-yuzey rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-white">
+            <span className="bg-kakao-yuzey rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-white">
               {aktifler.length}
             </span>
           ) : null}
@@ -297,7 +297,7 @@ export function FiltrePaneli({
               <div className="flex-1 overflow-y-auto px-4 py-4">{govde}</div>
 
               <div className="border-kenar border-t-[0.5px] p-4">
-                {/* ⚠️ DOLU ADAÇAYI DEĞİL, lacivert.
+                {/* ⚠️ DOLU ADAÇAYI DEĞİL, koyu kakao.
                     "Uygula" bu sheet'in birincil eylemi ama site düzeyinde
                     bir CTA değil. Dolu adaçayı yalnızca iki eylemde
                     kullanılıyor; buraya da koymak kuralın nadirliğini
@@ -305,7 +305,7 @@ export function FiltrePaneli({
                 <button
                   type="button"
                   onClick={() => setMobilAcik(false)}
-                  className="bg-lacivert-yuzey rounded-buton min-h-13 w-full font-medium text-white"
+                  className="bg-kakao-yuzey rounded-buton min-h-13 w-full font-medium text-white"
                 >
                   Uygula (<span className="rakam">{sonucSayisi}</span>)
                 </button>

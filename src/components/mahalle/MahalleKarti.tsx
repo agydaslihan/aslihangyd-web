@@ -85,7 +85,7 @@ export function MahalleKarti({
             */}
             {kirsal ? <Rozet>Kırsal mahalle (eski köy)</Rozet> : null}
             {m2 ? <Rozet>Ort. m²: {m2}</Rozet> : null}
-            {carpan ? <Rozet ton="lacivert">Kira çarpanı {carpan}</Rozet> : null}
+            {carpan ? <Rozet ton="vurgu">Kira çarpanı {carpan}</Rozet> : null}
           </div>
         ) : null}
       </div>

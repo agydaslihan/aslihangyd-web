@@ -97,8 +97,16 @@ describe('harita yedek renkleri', () => {
   })
 
   it('sunucu tarafında yedeğe düşer, çökmez', () => {
-    // Node ortamında `window` yok; yedek dönmeli.
-    expect(jetonRengi('--color-zemin')).toBe('#f7f6f2')
+    /**
+     * Node ortamında `window` yok; yedek dönmeli.
+     *
+     * ⚠️ Beklenen değer ELLE YAZILMIYOR, paletten okunuyor. İlk yazımda
+     * `'#f7f6f2'` sabiti vardı ve palet değişince bu test, ölçmesi gereken
+     * şeyi değil kendi sabitini savundu: yedek tablosu doğru güncellendiği
+     * hâlde kırmızıya döndü. Bir muhafız testinin kendi verisini
+     * dondurması, koruduğu şeyi korumaz.
+     */
+    expect(jetonRengi('--color-zemin')).toBe(jeton(temalar.acik, '--color-zemin'))
     expect(haritaRenkleri().sutunSecili).toBe(jeton(temalar.acik, '--color-aksan'))
   })
 

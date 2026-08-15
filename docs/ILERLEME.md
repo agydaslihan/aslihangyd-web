@@ -27,6 +27,7 @@ Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik 
 | 4 | Yatırım skoru, AI arama, raporlar | ✅ Skor, raporlar ve AI arama tamam |
 | 5 | Çorlu Live | ⏭️ atlandı |
 | A paketi | Mahalle veri altyapısı (liste, OSM sınır, Google, rayiç, şeffaflık) | ✅ Altyapı hazır — **veri Aslıhan'dan** |
+| B paketi | Bohem / pudra paleti — lacivert kaldırıldı | ✅ Ölçüldü ve teste bağlandı |
 
 ---
 
@@ -3706,3 +3707,179 @@ Bu paket boş bir altyapı teslim ediyor. Doldurma sırası **zorunlu**:
 5. (isteğe bağlı) Google Places anahtarı + bölüm anahtarı
 
 Ayrıntı: docs/SENDEN-BEKLENENLER.md → "A paketi sonrası".
+
+---
+
+## B paketi — Bohem / pudra paleti (15 Ağustos 2026)
+
+> ⚠️ **Bu üçüncü palet ve Aslıhan "son olsun" dedi.** Lacivert gitti.
+> Kararın kendisi Aslıhan'ın; buradaki iş onu ÖLÇMEK ve sisteme bağlamak.
+
+### Onaylanan yedi renk
+
+| Renk | Değer | Rol |
+| --- | --- | --- |
+| Kırık beyaz | `#FBFAF7` | **ANA ARKA PLAN** — değişmez |
+| Krem | `#F2EBE3` | Bölüm ayrımı, kart zemini |
+| Pudra gülü | `#E8CFC8` | Yumuşak bant, hero, aksan kartı — **yalnızca zemin** |
+| Terracotta | `#A85A42` | Ana vurgu, dolu bant, başlık aksanı |
+| Adaçayı | `#4F7C6A` | CTA — önceki paletten **korundu** |
+| Soft gold | `#C9A96E` | Dekoratif — önceki paletten **korundu** |
+| Koyu kakao | `#3D2B2F` | **METİN**, başlıklar — laciverti değiştirdi |
+
+### ⭐ Ölçüm Aslıhan'ı haklı çıkardı
+
+Şartname şöyle diyordu: *"Terracotta metin olarak sınırda olabilir;
+geçmezse koyulaştırılmış bir varyantını ayrı bir jeton olarak üret."*
+
+Ölçüldü:
+
+| Terracotta #A85A42, metin olarak | Oran | AA |
+| --- | --- | --- |
+| Kırık beyaz üzerinde | 4,78:1 | ✅ kıl payı |
+| **Krem üzerinde** | **4,22:1** | ❌ |
+| **Pudra gülü üzerinde** | **3,37:1** | ❌ |
+
+Yani rampanın 600 basamağı, **paletin kendi kullanım kuralının istediği
+zeminlerde** okunmuyor: bantlar ve başlıklar krem ve pudra üzerinde
+duruyor. Koyulaştırılmış varyant üretildi:
+
+`--color-vurgu: #844632` → kırık beyaz **6,92** · krem **6,12** · pudra **4,88**
+
+⚠️ Değer OKLab'de tonu koruyarak arandı (%16 siyaha doğru); gözle
+seçilmedi. Pudra üzerinde 4,50 veren daha açık bir aday da geçiyordu ama
+eşiğe sıfır payla oturuyordu — bir basamak daha koyulaştırıldı.
+
+### Rampa mimarisi
+
+Beş rampa: `kakao` · `terracotta` · `adacayi` · `gold` · `notr`.
+
+#### ⭐ Terracotta rampası İKİ ÇAPALI
+
+Pudra gülü, terracotta'nın açık ucundan türetilseydi `#E4C3B9` çıkıyordu —
+yakın ama Aslıhan'ın verdiği renk değil. Rampa iki onaylı değere birden
+çapalandı (200 = pudra, 600 = terracotta) ve arası interpole edildi. İki
+renk de birebir korunuyor, ikisi de tek aileye bağlı.
+
+#### Nötr rampası yeniden ısıtıldı
+
+Eski nötrler maviye çalıyordu ve kremin yanında kirli duruyordu. Yeni
+rampa kırık beyaz → krem → sıcak koyu nötr ekseninde.
+
+⚠️ `notr` iki temada iki ayrı iş yapıyor: açık temada YÜZEY, koyu temada
+METİN. Kakao rampasıyla görünürdeki örtüşme bu yüzden gerçek değil.
+
+### Kontrast testinin bulduğu üç şey
+
+Testi geçirmek için değer değiştirmedim; test değeri değiştirtti.
+
+#### 1. `metin-3` bir basamak koyulaştı
+
+kakao-600 kırık beyazda 5,05 veriyor ama **krem üzerinde 4,46** — ve
+"n = 23" gibi yardımcı metinler tam olarak krem tint bölümlerde duruyor.
+600 → 700.
+
+#### 2. ⭐ Dolu CTA butonu koyu temada görünmez olmuştu
+
+adaçayı-600, kakao-900 zeminden yalnızca **2,79:1** ayrışıyor. WCAG
+1.4.11 bileşen sınırı için 3:1 istiyor — yani buton sayfadan ayırt
+edilemiyordu. Eski lacivert zeminde oran 3,15'ti ve kıl payı geçiyordu;
+kakao daha açık olduğu için o pay kapandı.
+
+Çözüm bir jeton eklemek oldu: `--color-aksan-uzeri`. Koyu temada buton
+**açılıyor** (adaçayı-400) ve metin kakaoya dönüyor — 4,94:1 hem metin
+oranı hem ayrışma. Hover da açılıyor; koyulaşan bir zemin koyu metni
+yutardı.
+
+⚠️ Buton `text-white` yazmayı bıraktı. Test de `BEYAZ` sabitini bıraktı:
+artık jetonu jetona karşı ölçüyor.
+
+#### 3. Dolu terracotta bantta opaklık kullanılamıyor
+
+Koyu kakao bantlarda ikincil metin `text-white/80` ile yumuşatılıyordu ve
+orada 9,08 veriyor. Terracotta üzerinde aynı yumuşatma **3,82** — AA'nın
+altı. `/90` bile 4,39.
+
+Sonuç: terracotta bantta metin **tam beyaz**, hiyerarşi punto ve boşlukla
+kuruluyor. Kural `Bolum.tsx` içinde yazılı ve `disiplin.test.ts` sınıfın
+başka yerde yazılmasını engelliyor.
+
+### Yol boyunca bulunan üç mevcut hata
+
+Palet işi değildi, palet işi bulmasını sağladı.
+
+| Hata | Sonucu |
+| --- | --- |
+| `SkorRadari` `var(--color-lacivert)` okuyordu — böyle bir jeton **hiç yoktu** | Radar çokgeni tarayıcı varsayılanıyla çiziliyordu |
+| Aynı dosya `var(--color-cizgi)` okuyordu — o da yok | Radar ızgara çizgileri aynı durumda |
+| Onay kutuları `accent-lacivert` yazıyordu — Tailwind bu sınıfı **hiç üretmiyordu** | Onay kutuları tarayıcı varsayılanı mavi |
+
+Üçü de gerçek jetonlara bağlandı (`gosterge`, `kenar`, `vurgu`).
+
+### Muhafız testlerinin kendisi de düzeltildi
+
+İki test, koruduğu şeyi değil kendi sabitini savunuyordu:
+
+- `jetonlar.test.ts` beklenen değeri `'#f7f6f2'` diye yazıyordu. Yedek
+  tablosu doğru güncellendiği hâlde test kırmızıya döndü. Artık beklenen
+  değer paletten okunuyor.
+- `disiplin.test.ts`'in sosyal görsel izin listesi de sabitti — ve sosyal
+  medya görseli **iki palet öncesinin laciverti**ni taşıyordu (`#0F1E33`),
+  test de o eski değeri "izinli" saydığı için susmuştu. Liste artık
+  globals.css'ten okunuyor.
+
+⚠️ Bir muhafız testi, koruduğu şeyin kaynağına bağlanmalı. Sabit yazılmış
+bir beklenti, ikinci palet değişiminde sessizce yanlış tarafı savunur.
+
+### Kullanım kuralları nereye uygulandı
+
+| Yer | Önce | Sonra |
+| --- | --- | --- |
+| Ana sayfa hero | koyu lacivert + beyaz metin | **pudra gülü + koyu kakao metin** |
+| Ana sayfa çağrı bandı | koyu lacivert | **dolu terracotta** |
+| Ticari çağrı bandı | koyu lacivert | **dolu terracotta** |
+| Gizli portföy bandı | koyu lacivert | **koyu kakao** (anlatılan şey "saklı olan") |
+| Üst şerit, altbilgi | lacivert | **koyu kakao** |
+| Bağlantı ve başlık aksanı | lacivert | **terracotta (koyulaştırılmış)** |
+| Grafik/çubuk dolgusu | lacivert-700 | **terracotta-600** |
+| Bilgi kutusu | lacivert-600 | **nötr kakao** |
+
+⚠️ Bilgi kutusu bilinçli olarak marka renginden çıkarıldı. Terracotta ile
+boyansaydı "bilgi" ile "vurgu" görsel olarak eşitlenirdi; bilgi kutusu
+dikkat çekmemeli.
+
+⚠️ **Hata rengi de kaydırıldı.** Eski `#A33A32`nin OKLCh tonu 27,7°,
+terracotta'nınki 37,9° — on derece, aynı sayfada ikisini ayırt etmeye
+yetmiyordu. Marka lacivertken sorun yoktu, terracotta olunca doğdu. Yeni
+değer `#9A2B3A`, tonu 17,4°.
+
+### Adlandırma
+
+`lacivert-*` jetonları silinmedi, **yeniden adlandırıldı**: 37 dosyada
+`kakao-*`. "Lacivert" adlı bir jetonun kakao değeri taşıması, dosyayı
+okuyan herkesi yanıltırdı. `kontrast.test.ts` artık bakır gibi laciverti
+de kovalıyor: geriye tek jeton kalsa bir sonraki bileşende "elimde vardı"
+diye kullanılır ve iki palet yan yana yaşamaya başlardı.
+
+Bileşen değişkenleri de anlamına göre yeniden adlandırıldı:
+`Rozet ton="lacivert"` → `ton="vurgu"` (renk değil rol),
+`Buton gorunum="lacivert"` → `gorunum="kakao"`,
+`Bolum zemin` iki yeni değer aldı: `pudra` ve `terracotta`.
+
+### Kapı
+
+```
+pnpm typecheck  ✅
+pnpm lint       ✅
+pnpm test       ✅  64 dosya / 1413 test
+pnpm build      ✅
+```
+
+Kontrast testi **iki temada da** koşuyor ve 60'a yakın renk çifti ölçüyor;
+listeye altı yeni çift eklendi (pudra zemininin üzeri, dolu terracotta
+bant, krem üzerinde vurgu, hero eyebrow).
+
+Derlenen CSS ayrıca elle doğrulandı: `--color-zemin` tek kök bildirimi +
+tek `[data-tema='koyu']` geçersiz kılması (Tailwind 4'ün `@theme` tuzağı
+tekrarlanmamış), `lacivert` dizesi sıfır kez geçiyor, `accent-vurgu`
+sınıfı artık gerçekten üretiliyor.

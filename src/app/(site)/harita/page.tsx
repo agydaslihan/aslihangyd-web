@@ -135,7 +135,7 @@ export default async function HaritaSayfasi() {
     {
       anahtar: KATMAN_OKUL_SAGLIK,
       etiket: 'Okul / sağlık',
-      renk: 'var(--color-lacivert-500)',
+      renk: 'var(--color-kakao-500)',
       adet: say(KATMAN_OKUL_SAGLIK),
     },
     {

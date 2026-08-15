@@ -99,9 +99,9 @@ export async function Altbilgi() {
   const whatsapp = whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())
 
   return (
-    <footer className="bg-lacivert-900 mt-auto">
+    <footer className="bg-kakao-900 mt-auto">
       {/* ⚠️ Gold ince çizgi — DEKORATİF. Altbilgiyi sayfadan ayırıyor,
-          bilgi taşımıyor. Kontrastı (lacivert üzerinde 6,69:1) zaten
+          bilgi taşımıyor. Kontrastı (koyu kakao üzerinde 5,92:1) zaten
           eşiğin üstünde ama rolü yine de dekoratif. */}
       <div aria-hidden="true" className="bg-gold-cizgi h-px w-full" />
 
@@ -238,7 +238,7 @@ export async function Altbilgi() {
         </div>
 
         {/* ── Yasal künye — koşulsuz ── */}
-        <div className="border-lacivert-700 mt-12 flex flex-col gap-3 border-t-[0.5px] pt-6">
+        <div className="border-kakao-700 mt-12 flex flex-col gap-3 border-t-[0.5px] pt-6">
           <ul className="text-notr-400 text-mikro flex flex-wrap gap-x-4 gap-y-1">
             <li>
               Taşınmaz Ticareti Yetki Belgesi No:{' '}

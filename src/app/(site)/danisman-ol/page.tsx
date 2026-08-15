@@ -36,7 +36,7 @@ export default async function DanismanOlSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       {/* ── Davet bloğu ── */}
-      <section className="bg-lacivert-yuzey rounded-buyuk px-6 py-10 text-white sm:px-10 sm:py-12">
+      <section className="bg-kakao-yuzey rounded-buyuk px-6 py-10 text-white sm:px-10 sm:py-12">
         <div className="flex max-w-2xl flex-col gap-4">
           <h1 className="text-baslik-1">{icerik.baslik}</h1>
           <p className="text-govde opacity-90">{icerik.aciklama}</p>

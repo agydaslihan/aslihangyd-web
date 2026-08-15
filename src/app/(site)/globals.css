@@ -13,10 +13,20 @@
    tersi. Sakin, veri odaklı, gözü yormayan. Ziyaretçi 3 saniyede aradığı
    rakamı bulabilmeli.
 
+   ⚠️ 15 Ağustos 2026 — BOHEM / PUDRA PALETİ. Lacivert GİTTİ.
+
+   Yön sıcak ve bohem: kırık beyaz zemin, krem bölüm ayrımı, pudra gülü
+   yumuşak bantlar, terracotta ana vurgu, koyu kakao metin. Adaçayı (eylem)
+   ve soft gold (dekoratif) önceki paletten korundu — ikisi de yeni sıcak
+   eksene zaten oturuyordu.
+
+   ⚠️ ARKA PLAN BEYAZ / KIRIK BEYAZ KALIR. Değişmez. Sıcaklık zeminden
+   değil, üzerine binen krem ve pudra katmanlarından gelir.
+
    Renk sistemi iki katmanlıdır ve bu ayrım bilinçlidir:
 
-   1. RAMPALAR (lacivert-*, adacayi-*, gold-*, notr-*) — mutlak değerler, temaya
-      göre DEĞİŞMEZ. "lacivert-600" her yerde aynı renktir.
+   1. RAMPALAR (kakao-*, terracotta-*, adacayi-*, gold-*, notr-*) — mutlak
+      değerler, temaya göre DEĞİŞMEZ. "kakao-600" her yerde aynı renktir.
    2. ANLAMSAL JETONLAR (zemin, yuzey, metin, vurgu…) — role işaret eder ve
       temaya göre rampanın farklı basamağına bağlanır.
 
@@ -27,35 +37,76 @@
 
 @theme {
   /* ══════════════════════════════════════════════════════════════════════
-     RAMPA — Lacivert (ana renk) · taban #0F2747 = 900
+     RAMPA — Koyu kakao (metin ve koyu zemin) · taban #3D2B2F = 900
 
-     Header, menü, başlıklar, dolu koyu bantlar ve karanlık temanın zemini.
-     Güven ve kurumsallık, dikkat çalmadan.
+     METİN, başlıklar, dolu koyu bantlar (üst şerit, altbilgi) ve karanlık
+     temanın zemini. Laciverti değiştirdi.
+
+     ⚠️ METİN RENGİ DAİMA BU AİLEDEN. Pudra ve gold asla metin değildir;
+     terracotta metin olarak yalnızca koyulaştırılmış `--color-vurgu`
+     varyantıyla kullanılır (aşağıda ölçüsü var).
 
      ⚠️ Rampalar OKLab'de üretildi: taban renk kendi basamağında SABİT,
      üstü neredeyse beyaza, altı çok koyuya doğru algısal olarak eşit
      aralıklarla interpole edildi. sRGB'de karıştırmak açık uçlarda
      renksizleşme, koyu uçlarda tıkanma üretiyordu.
      ══════════════════════════════════════════════════════════════════════ */
-  --color-lacivert-50: #f8fafe;
-  --color-lacivert-100: #dbe0e8;
-  --color-lacivert-200: #bec7d3;
-  --color-lacivert-300: #a3aebe;
-  --color-lacivert-400: #8896a9;
-  --color-lacivert-500: #6e7e95;
-  --color-lacivert-600: #556781;
-  --color-lacivert-700: #3d516d;
-  --color-lacivert-800: #263c5a;
-  --color-lacivert-900: #0f2747;
+  --color-kakao-50: #faf7f6;
+  --color-kakao-100: #e3dedd;
+  --color-kakao-200: #cdc5c5;
+  --color-kakao-300: #b7adae;
+  --color-kakao-400: #a19697;
+  --color-kakao-500: #8c7f81;
+  --color-kakao-600: #77686b;
+  --color-kakao-700: #635356;
+  --color-kakao-800: #503f42;
+  --color-kakao-900: #3d2b2f;
+
+  /* ══════════════════════════════════════════════════════════════════════
+     RAMPA — Terracotta (ana vurgu) · İKİ ÇAPA
+
+       200 = #E8CFC8  pudra gülü — yumuşak bant zemini, aksan kartları
+       600 = #A85A42  terracotta — ana vurgu, dolu bant, başlık aksanı
+
+     ⚠️ Rampa TEK DEĞİL İKİ onaylı değere çapalandı. Pudra gülü,
+     terracotta'nın açık ucundan türetilseydi #E4C3B9 çıkıyordu — yakın ama
+     Aslıhan'ın verdiği renk değil. İki çapa arasını interpole etmek, iki
+     rengi de birebir korurken ikisini tek aileye bağlıyor.
+
+     ⚠️ PUDRA GÜLÜ YALNIZCA ZEMİNDİR. Metin olarak ölçüsü kırık beyaz
+     üzerinde 1,41:1 — okunmaz. Üzerine daima `--color-metin` yazılır (8,95).
+
+     ⚠️ TERRACOTTA METİN OLARAK SINIRDA VE BU ÖLÇÜLDÜ:
+       · kırık beyaz üzerinde  4,78:1 ✅ (AA'yı kıl payı geçiyor)
+       · krem üzerinde         4,22:1 ❌
+       · pudra gülü üzerinde   3,37:1 ❌
+     Paletin kendi kullanım kuralı başlıkları krem ve pudra zeminlere
+     koyuyor — yani 600 basamağı metin olarak KULLANILAMAZ. Metin için
+     koyulaştırılmış ayrı jeton var: `--color-vurgu`.
+     ══════════════════════════════════════════════════════════════════════ */
+  --color-terracotta-50: #fcf3f0;
+  --color-terracotta-100: #f2e1dc;
+  --color-terracotta-200: #e8cfc8;
+  --color-terracotta-300: #d9b1a6;
+  --color-terracotta-400: #ca9484;
+  --color-terracotta-500: #b97763;
+  --color-terracotta-600: #a85a42;
+  --color-terracotta-700: #814431;
+  --color-terracotta-800: #5c2f20;
+  --color-terracotta-900: #3a1c11;
 
   /* ══════════════════════════════════════════════════════════════════════
      RAMPA — Adaçayı (eylem rengi) · taban #4F7C6A = 600
 
-     CTA, başarı ve yatırım vurgusu. Bakırın yerini aldı.
+     CTA, başarı ve yatırım vurgusu. Bohem palete geçerken KORUNDU:
+     sıcak eksene zaten oturuyordu ve eylem rengi olarak markadan
+     (terracotta) ayrı durması gerekiyor — aksi hâlde "vurgu" ile
+     "tıkla" aynı renge düşerdi.
 
      ⚠️ KONTRAST — ölçüldü, pazarlığa kapalı
      · Dolu zemin (600) + BEYAZ metin → 4,74:1 ✅ AA geçer
-     · Kırık beyaz üzerinde METİN olarak → 4,38:1 ❌ AA GEÇMEZ
+     · Kırık beyaz üzerinde METİN olarak → 4,54:1 (kıl payı) ama KREM
+       üzerinde 4,01, PUDRA üzerinde 3,20 ❌ AA GEÇMEZ
      Bu yüzden metin için ayrı bir jeton var: `--color-aksan-metin`.
      Rampanın 600 basamağını metin rengi olarak kullanmayın.
      ══════════════════════════════════════════════════════════════════════ */
@@ -73,16 +124,16 @@
   /* ══════════════════════════════════════════════════════════════════════
      RAMPA — Soft gold (premium detay) · taban #C9A96E = 400
 
-     ⚠️ GOLD ASLA METİN RENGİ DEĞİLDİR. Kırık beyaz üzerinde 2,06:1 —
+     ⚠️ GOLD ASLA METİN RENGİ DEĞİLDİR. Kırık beyaz üzerinde 2,14:1 —
      ağır ihlal. Rolü dekoratif: bölüm ayraçları, yatırım kartı çerçevesi,
      kira çarpanı satırının üst çizgisi. Üç yer; fazlası ucuzlatır.
 
-     ⚠️ Açık zeminde gold-400 bir çizgi olarak 2,06:1 verir ve bu 1.4.11'in
+     ⚠️ Açık zeminde gold-400 bir çizgi olarak 2,14:1 verir ve bu 1.4.11'in
      3:1 eşiğinin ALTINDADIR. Kabul edilebilir olmasının tek sebebi
      TAMAMEN DEKORATİF olması: hiçbir gold çizgi tek başına bilgi taşımaz,
      her zaman yanında metin vardır. Anlam taşıyan bir öğe (ikon, durum
      göstergesi) gold olacaksa `--color-gold-guclu` kullanılır — o basamak
-     ölçülüp 5,17:1 ile eşiği geçiyor.
+     ölçülüp 5,35:1 ile eşiği geçiyor.
      ══════════════════════════════════════════════════════════════════════ */
   --color-gold-50: #fcfaf5;
   --color-gold-100: #f0e5d3;
@@ -96,25 +147,30 @@
   --color-gold-900: #1d0a00;
 
   /* ══════════════════════════════════════════════════════════════════════
-     RAMPA — Nötr · 50 ve 100 doğrudan paletten, 900 antrasit
+     RAMPA — Sıcak nötr · 50 ve 100 doğrudan paletten
 
      ⚠️ İlk iki basamak TÜRETİLMEDİ, paletin kendisi:
-       50  = kırık beyaz #F7F6F2 — ana arka plan
-       100 = açık gri   #E9ECEB — kartlar, bölüm ayrımları
-     İkisi farklı sıcaklıkta (biri sarıya, diğeri yeşile çalar) ve bu
-     paletin kendi tercihi; türetseydik ikisi de aynı eksene düşerdi.
-     200–800 bu ikisiyle antrasit arasında OKLab'de interpole edildi.
+       50  = kırık beyaz #FBFAF7 — ANA ARKA PLAN, değişmez
+       100 = krem        #F2EBE3 — bölüm ayrımı, kart zemini
+     200–900 bu ikisiyle sıcak bir koyu nötr arasında OKLab'de interpole
+     edildi. Rampa bilinçli olarak SICAK: eski palet nötr grileri maviye
+     çalıyordu ve kremin yanında kirli görünüyordu.
+
+     ⚠️ Bu rampa iki temada iki ayrı iş yapıyor: açık temada YÜZEY
+     (zemin, krem, kenarlıklar), koyu temada METİN (50/100/200). Kakao
+     rampasıyla görünürdeki örtüşme bu yüzden gerçek değil — biri koyu
+     ucunda, diğeri açık ucunda kullanılıyor.
      ══════════════════════════════════════════════════════════════════════ */
-  --color-notr-50: #f7f6f2;
-  --color-notr-100: #e9eceb;
-  --color-notr-200: #cdd0d0;
-  --color-notr-300: #b1b5b6;
-  --color-notr-400: #979b9d;
-  --color-notr-500: #7d8184;
-  --color-notr-600: #64696d;
-  --color-notr-700: #4c5156;
-  --color-notr-800: #353a40;
-  --color-notr-900: #20252b;
+  --color-notr-50: #fbfaf7;
+  --color-notr-100: #f2ebe3;
+  --color-notr-200: #d6cfc8;
+  --color-notr-300: #bbb3ae;
+  --color-notr-400: #a19995;
+  --color-notr-500: #877f7d;
+  --color-notr-600: #6e6665;
+  --color-notr-700: #564e4e;
+  --color-notr-800: #403738;
+  --color-notr-900: #2a2224;
 
   /* ══════════════════════════════════════════════════════════════════════
      ANLAMSAL — Yüzeyler ve metin
@@ -134,54 +190,101 @@
    */
   --color-kenar-giris: var(--color-notr-500);
 
-  --color-metin: var(--color-notr-900);
-  --color-metin-2: var(--color-notr-700);
-  --color-metin-3: var(--color-notr-600);
   /**
-   * ⚠️ notr-400 beyaz üzerinde 2,9:1 verir — okunabilir metin için AA'yı
-   * geçmez. Bu yüzden ayrı bir jeton: yalnızca DEVRE DIŞI öğelerde kullanılır
-   * (WCAG 1.4.3 pasif bileşenleri kontrast şartından muaf tutar). Anlam
-   * taşıyan yardımcı metin için `metin-3` kullanılır.
+   * ⚠️ METİN KAKAO AİLESİNDEN, NÖTRDEN DEĞİL.
+   *
+   * Eski palette metin `notr-900` antrasitti. Yeni palette metin rengi
+   * paletin kendi kararı: koyu kakao. Nötr rampanın koyu ucu artık
+   * yalnızca modal örtüsü gibi işlerde kullanılıyor.
+   *
+   * ⚠️ `metin-3` bir basamak KOYULAŞTIRILDI (600 → 700). Sebep ölçüm:
+   * kakao-600 kırık beyazda 5,05 veriyor ama KREM üzerinde 4,46'ya
+   * düşüyor — ve "n = 23" gibi yardımcı metinler tam olarak krem tint
+   * bölümlerde duruyor. Kontrast testi yakaladı.
    */
-  --color-metin-pasif: var(--color-notr-400);
+  --color-metin: var(--color-kakao-900);
+  --color-metin-2: var(--color-kakao-800);
+  --color-metin-3: var(--color-kakao-700);
+  /**
+   * ⚠️ kakao-400 kırık beyaz üzerinde 2,67:1 verir — okunabilir metin için
+   * AA'yı geçmez. Bu yüzden ayrı bir jeton: yalnızca DEVRE DIŞI öğelerde
+   * kullanılır (WCAG 1.4.3 pasif bileşenleri kontrast şartından muaf
+   * tutar). Anlam taşıyan yardımcı metin için `metin-3` kullanılır.
+   */
+  --color-metin-pasif: var(--color-kakao-400);
 
   /* ══════════════════════════════════════════════════════════════════════
      ANLAMSAL — Marka rolleri
 
-     Üç ayrı rol, üç ayrı jeton. Tek bir "lacivert" jetonu hem metin hem
-     dolu zemin için kullanılamaz: koyu temada birinin doğru olduğu değer
-     diğerinde kontrastı düşürür.
+     Beş ayrı rol, beş ayrı jeton. Tek bir "terracotta" jetonu hem metin hem
+     dolu zemin için kullanılamaz: metin olarak AA'yı geçmeyen bir değer
+     dolu zemin olarak geçer, tersi de doğru.
      ══════════════════════════════════════════════════════════════════════ */
-  /** Lacivert METİN — açık zemin üzerinde. */
-  --color-vurgu: var(--color-lacivert-900);
-  /** Lacivert TİNT ZEMİN — üzerine `vurgu` yazılır. */
-  --color-vurgu-zemin: var(--color-lacivert-50);
-  /** DOLU lacivert zemin — üzerine daima beyaz yazılır (header, alt CTA bandı). */
-  --color-lacivert-yuzey: var(--color-lacivert-900);
+  /**
+   * Terracotta METİN — açık zemin üzerinde. Bağlantı, başlık aksanı.
+   *
+   * ⚠️ RAMPANIN 600 BASAMAĞI DEĞİL, KOYULAŞTIRILMIŞ VARYANTI. Ölçüm:
+   *   terracotta-600 → kırık beyaz 4,78 ✅ · krem 4,22 ❌ · pudra 3,37 ❌
+   *   bu değer      → kırık beyaz 6,92 ✅ · krem 6,12 ✅ · pudra 4,88 ✅
+   * Paletin kullanım kuralı başlıkları krem ve pudra zeminlere koyuyor;
+   * 600 basamağı orada okunmuyordu. Ayrı jeton bir tercih değil, ölçümün
+   * sonucu.
+   */
+  --color-vurgu: #844632;
+  /** Terracotta TİNT ZEMİN — üzerine `vurgu` yazılır. */
+  --color-vurgu-zemin: var(--color-terracotta-50);
+  /**
+   * PUDRA GÜLÜ zemin — yumuşak bant, hero zemini, aksan kartı.
+   *
+   * ⚠️ YALNIZCA ZEMİN. Üzerine `--color-metin` (kakao) yazılır: 8,95:1.
+   * `--color-vurgu` de geçer (4,88:1) ama `metin-3` sınırda (4,88) —
+   * ikisi de ölçülü, ikisi de kontrast testinde.
+   */
+  --color-pudra-zemin: var(--color-terracotta-200);
+  /** DOLU terracotta zemin — üzerine daima beyaz yazılır (4,99:1). */
+  --color-terracotta-yuzey: var(--color-terracotta-600);
+  /** DOLU kakao zemin — üzerine daima beyaz yazılır (üst şerit, altbilgi). */
+  --color-kakao-yuzey: var(--color-kakao-900);
   /**
    * Grafik ve ilerleme çubuğu dolgusu.
    *
-   * `lacivert-yuzey`ten ayrı bir jeton, çünkü ikisinin zemini farklı:
-   * dolu buton SAYFA zemininin üzerinde durur, çubuk dolgusu ise TİNT
+   * `terracotta-yuzey`ten ayrı bir jeton, çünkü ikisinin zemini farklı:
+   * dolu bant SAYFA zemininin üzerinde durur, çubuk dolgusu ise TİNT
    * kanalın (yuzey-2) üzerinde. Koyu temada ikisi aynı değere bağlıyken
    * çubuk kanalından 1,83:1 ile ayrışıyordu — yani görünmüyordu.
    * Kontrast testi yakaladı.
    */
-  --color-gosterge: var(--color-lacivert-700);
+  --color-gosterge: var(--color-terracotta-600);
 
   /* ── Adaçayı: eylem rengi ─────────────────────────────────────────────
      ⚠️ Üç ayrı rol, üç ayrı jeton. Bunları birbirinin yerine kullanmak
      kontrast testini kırar; hangisinin nerede geçerli olduğu ölçüldü. */
-  /** DOLU eylem zemini — üzerine DAİMA beyaz yazılır. 4,74:1. */
+  /** DOLU eylem zemini — üzerine `aksan-uzeri` yazılır. Açık temada 4,74:1. */
   --color-aksan: var(--color-adacayi-600);
   /** Dolu eylemin hover hâli. */
   --color-aksan-koyu: var(--color-adacayi-700);
   /**
+   * Dolu eylemin ÜZERİNDEKİ metin.
+   *
+   * ⚠️ Yeni jeton ve gerekçesi ölçüm. Açık temada beyaz doğru cevap; koyu
+   * temada değil. Koyu temanın zemini kakao-900 ve adaçayı-600 ondan
+   * yalnızca 2,79:1 ayrışıyor — yani buton sayfadan ayırt edilemiyordu
+   * (WCAG 1.4.11 için 3:1 gerekiyor). Eski lacivert zeminde bu oran
+   * 3,15'ti ve kıl payı geçiyordu; kakao daha açık olduğu için kapı kapandı.
+   *
+   * Çözüm: koyu temada buton AÇILIYOR (adaçayı-400) ve üzerine kakao
+   * yazılıyor — 4,94:1 hem metin hem ayrışma için yeterli. Butonun iki
+   * temada farklı görünmesi bir tutarsızlık değil, aynı ilişkinin iki
+   * zeminde korunması.
+   */
+  --color-aksan-uzeri: #ffffff;
+  /**
    * Adaçayı METİN.
    *
-   * ⚠️ Rampanın 600 basamağı METİN OLARAK KULLANILAMAZ: kırık beyaz
-   * üzerinde 4,38:1 ile AA'nın altında kalıyor. Bu koyulaştırılmış varyant
-   * kırık beyazda 6,22:1, açık gride 5,66:1 veriyor.
+   * ⚠️ Rampanın 600 basamağı METİN OLARAK KULLANILAMAZ. Yeni ölçüm:
+   * kırık beyazda 4,54 ile AA'yı kıl payı geçiyor ama KREM üzerinde 4,01,
+   * pudra üzerinde 3,20 — ikisi de bu paletin gerçek zeminleri. Bu
+   * koyulaştırılmış varyant üçünde de geçiyor: 6,45 · 5,69 · 4,54.
    */
   --color-aksan-metin: #3e6354;
   /** Adaçayı TİNT ZEMİN — üzerine `aksan-metin` yazılır. */
@@ -193,7 +296,7 @@
   --color-gold-cizgi: var(--color-gold-400);
   /** Anlam taşıyan gold öğe (ikon, gösterge). Açık zeminde 5,17:1. */
   --color-gold-guclu: var(--color-gold-600);
-  /** Gold DOLU zemin — üzerine antrasit yazılır. 6,89:1. */
+  /** Gold DOLU zemin — üzerine kakao yazılır. 5,92:1. */
   --color-gold-zemin: var(--color-gold-400);
   /**
    * "Yetki N gün sonra bitiyor" rozeti.
@@ -226,10 +329,28 @@
   --color-uyari: #a87a1e;
   --color-uyari-metin: #7a5714;
   --color-uyari-zemin: #faf3e4;
-  --color-hata: #a33a32;
-  --color-hata-zemin: #fbedec;
-  --color-bilgi: var(--color-lacivert-600);
-  --color-bilgi-zemin: var(--color-lacivert-50);
+  /**
+   * ⚠️ HATA RENGİ TERRACOTTA'DAN UZAKLAŞTIRILDI.
+   *
+   * Eski değer #A33A32 idi; OKLCh'de tonu 27,7° ve terracotta'nınki 37,9°.
+   * On derece fark, aynı sayfada "vurgu" ile "hata"yı ayırt etmeye
+   * yetmiyordu — marka rengi lacivertken sorun yoktu, terracotta olunca
+   * doğdu. Yeni değer 17,4°'de: gözle bakıldığında kırmızı, terracotta ise
+   * kiremit. Ölçüm de iyileşti (beyaz üzerinde 6,54 → 7,55).
+   *
+   * ⚠️ Renk yine tek başına bilgi taşımıyor; her hatanın yanında metin var.
+   */
+  --color-hata: #9a2b3a;
+  --color-hata-zemin: #faeceb;
+  /**
+   * ⚠️ Bilgi rengi artık NÖTR KAKAO, marka rengi değil.
+   *
+   * Eskiden lacivert-600'dü: marka rengi bilgi kutusunu da boyuyordu.
+   * Terracotta ile aynısını yapmak, "bilgi" ile "vurgu"yu görsel olarak
+   * eşitlerdi. Bilgi kutusu dikkat çekmemeli; sakin haber verir.
+   */
+  --color-bilgi: var(--color-kakao-700);
+  --color-bilgi-zemin: var(--color-kakao-50);
 
   /* ══════════════════════════════════════════════════════════════════════
      TİPOGRAFİ
@@ -392,47 +513,67 @@
    `var(--color-*)` okuyor, değeri çalışma zamanında bir seçiciyle
    değiştirmek yeterli. */
 :root[data-tema='koyu'] {
-  /* Eksen: lacivert zemin + kırık beyaz metin (FRONTEND-YENIDEN-TASARIM §1). */
-  --color-zemin: var(--color-lacivert-900);
-  --color-yuzey: var(--color-lacivert-800);
-  --color-yuzey-2: var(--color-lacivert-700);
-  --color-kenar: var(--color-lacivert-700);
-  --color-kenar-guclu: var(--color-lacivert-600);
-  --color-kenar-giris: var(--color-notr-400);
+  /* Eksen: koyu kakao zemin + krem metin — yeni paletten türetildi. */
+  --color-zemin: var(--color-kakao-900);
+  --color-yuzey: var(--color-kakao-800);
+  --color-yuzey-2: var(--color-kakao-700);
+  --color-kenar: var(--color-kakao-700);
+  --color-kenar-guclu: var(--color-kakao-600);
+  --color-kenar-giris: var(--color-kakao-400);
 
   --color-metin: var(--color-notr-50);
   /**
    * ⚠️ İkincil ve yardımcı metin açık temadakinden ÇOK daha açık.
    *
    * Karanlık temada okunabilir aralık dar: nötr rampasının orta
-   * basamakları lacivert yüzeylerin üzerinde hızla AA'nın altına düşüyor.
-   * İlk denemede `metin-3` notr-400'dü ve `yuzey-2` üzerinde 3,91:1
-   * veriyordu — gözlem sayısı ("n = 23") çoğu zaman tam olarak orada
-   * duruyor. Kontrast testi yakaladı; iki basamak açıldı.
+   * basamakları kakao yüzeylerin üzerinde hızla AA'nın altına düşüyor.
+   * `metin-3` notr-200'de duruyor ve `yuzey-2` üzerinde 4,69:1 veriyor —
+   * gözlem sayısı ("n = 23") çoğu zaman tam olarak orada duruyor.
    */
   --color-metin-2: var(--color-notr-100);
   --color-metin-3: var(--color-notr-200);
-  --color-metin-pasif: var(--color-notr-500);
+  --color-metin-pasif: var(--color-kakao-500);
 
-  --color-vurgu: var(--color-lacivert-200);
-  --color-vurgu-zemin: var(--color-lacivert-800);
-  /* Koyu temada dolu lacivert zemin sayfa zeminiyle aynı olamaz; bir
-     basamak açılıyor ki bant yüzeyden ayrışsın. */
-  --color-lacivert-yuzey: var(--color-lacivert-700);
-  --color-gosterge: var(--color-lacivert-300);
+  /**
+   * ⚠️ Koyu temada vurgu PUDRA BASAMAĞINA çıkıyor (200), 300'e değil.
+   *
+   * Ölçüm: terracotta-300 tint yüzeyde (kakao-700) 3,71:1 — AA'nın altı.
+   * Açık temada pudra yalnızca zemin, koyu temada metin oluyor; aynı renk,
+   * ters rol. Bu tesadüf değil, koyu temanın zemininin açık temanın
+   * metniyle yer değiştirmesinin doğal sonucu.
+   */
+  --color-vurgu: var(--color-terracotta-200);
+  --color-vurgu-zemin: var(--color-kakao-800);
+  /** Yumuşak bant koyu temada derin terracotta; üzerine `metin` (7,17:1). */
+  --color-pudra-zemin: var(--color-terracotta-700);
+  /* Dolu terracotta bant iki temada da AYNI: üzerindeki beyazla oranı
+     (4,99:1) sayfa zeminine bağlı değil. */
+  --color-terracotta-yuzey: var(--color-terracotta-600);
+  /* Koyu temada dolu kakao bant sayfa zeminiyle aynı olamaz; iki basamak
+     açılıyor ki bant yüzeyden ayrışsın. Beyaz metinle 7,23:1. */
+  --color-kakao-yuzey: var(--color-kakao-700);
+  --color-gosterge: var(--color-terracotta-300);
 
-  /* Dolu eylem zemini iki temada da AYNI: üzerindeki beyaz metinle
-     oranı (4,74:1) sayfa zeminine bağlı değil. Değiştirmek gereksiz
-     yere ikinci bir yeşil üretirdi. */
-  --color-aksan: var(--color-adacayi-600);
-  /* ⚠️ Hover koyu temada da KOYULAŞIR, açılmaz: buton metni her iki
-     temada beyaz ve açılan bir zemin o metni yutuyor (3,55:1). */
-  --color-aksan-koyu: var(--color-adacayi-700);
-  /* ⚠️ 300 basamağı tint yüzeyde (lacivert-700) 3,91:1'e düşüyordu. */
-  --color-aksan-metin: var(--color-adacayi-200);
+  /**
+   * ⚠️ DOLU EYLEM BUTONU KOYU TEMADA AÇILIYOR, KOYULAŞMIYOR.
+   *
+   * Ölçüm: adaçayı-600 kakao-900 zeminden yalnızca 2,79:1 ayrışıyor ve
+   * WCAG 1.4.11 bileşen sınırı için 3:1 istiyor — yani buton sayfadan
+   * ayırt edilemiyordu. Eski lacivert zeminde oran 3,15'ti ve kıl payı
+   * geçiyordu; kakao daha açık olduğu için o pay kapandı.
+   *
+   * Çözüm zemini açmak ve metni koyulaştırmak: adaçayı-400 üzerinde
+   * kakao-900 hem 4,94:1 metin oranı hem 4,94:1 ayrışma veriyor.
+   * Hover da AÇILIYOR (300) — koyulaşan bir zemin koyu metni yutardı.
+   */
+  --color-aksan: var(--color-adacayi-400);
+  --color-aksan-koyu: var(--color-adacayi-300);
+  --color-aksan-uzeri: var(--color-kakao-900);
+  /* ⚠️ 200 basamağı tint yüzeyde (kakao-700) 4,44:1'e düşüyordu. */
+  --color-aksan-metin: var(--color-adacayi-100);
   --color-aksan-zemin: var(--color-adacayi-800);
 
-  /* Gold koyu zeminde zaten 6,69:1 — anlam taşısa bile eşiği geçiyor,
+  /* Gold koyu kakao zeminde 5,92:1 — anlam taşısa bile eşiği geçiyor,
      bu yüzden iki jeton da aynı basamağa bağlanabiliyor. */
   --color-gold-cizgi: var(--color-gold-400);
   --color-gold-guclu: var(--color-gold-300);
@@ -446,12 +587,13 @@
   --color-uyari: #e0b45c;
   --color-uyari-metin: #e0b45c;
   --color-uyari-zemin: #3a2e12;
-  /* ⚠️ Bir basamak açıldı: yeni lacivert yüzeyin üzerinde eski değer
-     4,48:1 veriyordu — form hata metni için AA'nın kıl payı altı. */
-  --color-hata: #eb9a92;
-  --color-hata-zemin: #3d1d1a;
-  --color-bilgi: var(--color-lacivert-300);
-  --color-bilgi-zemin: var(--color-lacivert-800);
+  /* ⚠️ Açık temadaki hata rengiyle birlikte tonu kaydırıldı: koyu temada da
+     terracotta ile karışmamalı. Kakao yüzeyde 4,56:1. */
+  --color-hata: #ec9aa4;
+  --color-hata-zemin: #3d1a20;
+  /* Bilgi koyu temada da nötr: sıcak nötrün açık ucu. */
+  --color-bilgi: var(--color-notr-300);
+  --color-bilgi-zemin: var(--color-kakao-800);
 
   --shadow-kart: 0 1px 2px rgb(0 0 0 / 0.3), 0 4px 16px rgb(0 0 0 / 0.25);
   --shadow-kalkik: 0 2px 4px rgb(0 0 0 / 0.35), 0 12px 32px rgb(0 0 0 / 0.35);

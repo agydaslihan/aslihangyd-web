@@ -130,7 +130,7 @@ function AnlasilanFiltre({ sonuc }: { sonuc: Extract<AramaSonucu, { durum: 'cozu
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-metin-3 text-mikro">Şöyle anladık:</span>
           {rozetler.map((rozet) => (
-            <Rozet key={rozet} ton="lacivert">
+            <Rozet key={rozet} ton="vurgu">
               {rozet}
             </Rozet>
           ))}

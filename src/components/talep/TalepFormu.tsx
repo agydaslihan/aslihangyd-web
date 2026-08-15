@@ -183,7 +183,7 @@ function GonderButonu() {
   return (
     <Buton
       type="submit"
-      gorunum="lacivert"
+      gorunum="kakao"
       boyut="buyuk"
       pasif={pending}
       pasifSebebi={pending ? 'Talebiniz gönderiliyor, sayfayı kapatmayın.' : undefined}
@@ -344,7 +344,7 @@ function OnayKutusu({ ad, etiket, hata }: { ad: string; etiket: React.ReactNode;
           type="checkbox"
           aria-describedby={hata ? hataId : undefined}
           aria-invalid={hata ? true : undefined}
-          className="accent-lacivert mt-0.5 size-4.5 shrink-0"
+          className="accent-vurgu mt-0.5 size-4.5 shrink-0"
         />
         <label
           htmlFor={id}

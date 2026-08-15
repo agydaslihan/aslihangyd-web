@@ -86,7 +86,7 @@ export function CevreBolumu({
               </span>
               <span className="text-govde-kucuk flex items-center gap-2 truncate">
                 <span className="truncate">{mesafe.enYakinAd}</span>
-                {mesafe.onemli ? <Rozet ton="lacivert">Öne çıkan</Rozet> : null}
+                {mesafe.onemli ? <Rozet ton="vurgu">Öne çıkan</Rozet> : null}
               </span>
 
               {googlePlacesAcik && mesafe.googleBagliMi && mesafe.enYakinId !== null ? (

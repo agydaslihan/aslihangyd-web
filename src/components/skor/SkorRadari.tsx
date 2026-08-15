@@ -90,7 +90,7 @@ export function SkorRadari({
             })
             .join(' ')}
           fill="none"
-          stroke="var(--color-cizgi)"
+          stroke="var(--color-kenar)"
           strokeWidth={1}
         />
       ))}
@@ -105,7 +105,7 @@ export function SkorRadari({
             y1={MERKEZ}
             x2={uc.x}
             y2={uc.y}
-            stroke="var(--color-cizgi)"
+            stroke="var(--color-kenar)"
             strokeWidth={1}
           />
         )
@@ -114,9 +114,9 @@ export function SkorRadari({
       {/* Veri çokgeni — tek seri, tek renk */}
       <polygon
         points={veriYolu}
-        fill="var(--color-lacivert)"
+        fill="var(--color-gosterge)"
         fillOpacity={0.14}
-        stroke="var(--color-lacivert)"
+        stroke="var(--color-gosterge)"
         strokeWidth={2}
         strokeLinejoin="round"
       />
@@ -128,7 +128,7 @@ export function SkorRadari({
           cx={n.x}
           cy={n.y}
           r={4}
-          fill="var(--color-lacivert)"
+          fill="var(--color-gosterge)"
           stroke="var(--color-yuzey)"
           strokeWidth={2}
         />
@@ -167,7 +167,7 @@ export function SkorKirilimi({ bilesenler }: { bilesenler: BilesenSonucu[] }) {
           <div className="bg-yuzey-2 h-1.5 overflow-hidden rounded-full">
             {bilesen.hamPuan === null ? null : (
               <div
-                className="bg-lacivert-yuzey h-full rounded-full"
+                className="bg-kakao-yuzey h-full rounded-full"
                 style={{ width: `${bilesen.hamPuan}%` }}
               />
             )}

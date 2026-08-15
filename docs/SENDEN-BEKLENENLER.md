@@ -240,10 +240,40 @@ atlanan adım sonrakini sessizce çalışmaz hâle getirir.
       Nasıl: geojson.io üzerinde çizip GeoJSON kopyalayabilirsin.
       Olmazsa: Harita katmanı ve PostGIS yakınlık sorguları çalışmaz.
 
-- [ ] **Kurumsal görsel kimlik: logo (SVG), marka rengi tercihi varsa**
-      Nereye: bana ilet, `src/app/(site)/globals.css` içine işlerim.
-      Şu an: Kendi seçtiğim sakin lacivert/kum paletiyle ilerliyorum.
-      Beğenmezsen söyle, değiştiririm.
+- [ ] **Kurumsal logo (SVG)**
+      Nereye: bana ilet, `src/app/(site)/globals.css` ve başlık bileşenine
+      işlerim.
+      ⚠️ **Palet artık kapandı** — 15 Ağustos 2026'da bohem/pudra paletini
+      onayladın ve "son olsun" dedin. Logo gelirken paletin dışında bir renk
+      taşıyorsa bana söyle; siteyi logoya uydurmak yerine ikisini birlikte
+      konuşalım (dördüncü palet değişikliği tasarım sistemini değil, ona
+      olan güveni yıpratır).
+
+- [x] ✅ **Palet kararı — bohem / pudra (15 Ağustos 2026)**
+
+      Lacivert gitti. Yedi renk onaylandı: kırık beyaz `#FBFAF7` (ana
+      zemin), krem `#F2EBE3`, pudra gülü `#E8CFC8`, terracotta `#A85A42`,
+      adaçayı `#4F7C6A`, soft gold `#C9A96E`, koyu kakao `#3D2B2F` (metin).
+
+      ⭐ **Terracotta konusunda haklıydın.** "Metin olarak sınırda olabilir"
+      demiştin; ölçüm doğruladı. Kırık beyaz üzerinde 4,78 ile kıl payı
+      geçiyor ama KREM üzerinde 4,22, PUDRA üzerinde 3,37 — ikisi de senin
+      kendi kullanım kuralının başlık koyduğu zeminler. Koyulaştırılmış
+      ayrı bir jeton üretildi (`#844632`): 6,92 · 6,12 · 4,88.
+
+      İki şeyi bilmen iyi olur:
+
+      1. **Hero artık pudra gülü zeminde, koyu kakao metinli.** Çorlu'nun
+         havadan görseli geldiğinde bu bileşende İKİ ŞEY birden değişecek:
+         zemin görsel + %45 kakao overlay olacak VE metin açık renge
+         dönecek. Eskiden "sadece zemini değiştir" yetiyordu, artık
+         yetmiyor — kodda yazılı.
+      2. **Hata rengi kaydırıldı.** Eski kırmızı terracotta'ya çok
+         yakındı (OKLCh'de 10° fark) ve aynı sayfada "vurgu" ile "hata"
+         birbirine karışıyordu. Marka lacivertken sorun değildi.
+
+      Paleti gözünle görmek istersen: geliştirme ortamında `/stil-rehberi`
+      bütün rampaları ve ölçülen kontrast oranlarını gösteriyor.
 
 - [ ] **Hakkımızda metni ve fotoğraf**
       Nereye: Payload admin → Sayfalar → Hakkımızda
