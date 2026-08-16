@@ -4,6 +4,7 @@ import {
   adiSadelestir,
   geometriKur,
   geometriMerkezi,
+  yuzeydeNokta,
   halkaAlani,
   halkaMerkezi,
   halkalariBirlestir,
@@ -602,5 +603,58 @@ describe('iki kademenin ayrışması', () => {
   it('sınır ilişkisi merkez adayı olarak sayılmaz', () => {
     const merkezler = merkezAdaylariniCoz(karisikCevap)
     expect(merkezler.map((aday) => aday.slug).sort()).toEqual(['seymen', 'yenice'])
+  })
+})
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ ALAN MERKEZİ POLİGONUN İÇİNDE OLMAK ZORUNDA DEĞİL.
+ *
+ * 16 Ağustos 2026'da PostGIS ile ölçüldü: Çorlu'nun 26 mahallesinden
+ * birinin (Zafer) alan merkezi kendi sınırının DIŞINA düşüyordu. İçbükey
+ * şekillerde bu olağan bir geometri özelliği, hata değil.
+ *
+ * Sonuçları gerçekti: mahalle haritası komşu mahalleye odaklanır, POI
+ * arama kutusu yanlış yerde kurulur, "en yakın mahalle" eşleştirmesi
+ * yanlış mahalleyi seçer. Hiçbiri hata vermez, hepsi sessizce yanlıştır.
+ *
+ * Düzeltme sonrası ölçüm: 26/26 merkez kendi poligonunun içinde.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+describe('yuzeydeNokta', () => {
+  /** U şekli: alan merkezi boşluğa, yani şeklin dışına düşer. */
+  const uHalkasi = noktalar([0, 0], [3, 0], [3, 3], [2, 3], [2, 1], [1, 1], [1, 3], [0, 3], [0, 0])
+
+  it('içbükey şekilde merkez dışarıdaysa içeri çeker', () => {
+    const merkez = halkaMerkezi(uHalkasi)
+    expect(merkez).not.toBeNull()
+    // Önce dışarıda olduğunu KANITLA — yoksa test bir şey sınamıyor olurdu.
+    expect(noktaHalkadaMi(merkez as Nokta, uHalkasi)).toBe(false)
+
+    const icerde = yuzeydeNokta(uHalkasi, merkez as Nokta)
+    expect(noktaHalkadaMi(icerde, uHalkasi)).toBe(true)
+  })
+
+  /**
+   * ⚠️ Merkez zaten içerideyse DOKUNULMUYOR. Alan merkezi, "içeride
+   * herhangi bir nokta"dan daha anlamlıdır — mahallenin ağırlık noktasıdır.
+   */
+  it('merkez zaten içerideyse olduğu gibi bırakır', () => {
+    const kare = noktalar([0, 0], [2, 0], [2, 2], [0, 2], [0, 0])
+    const merkez = halkaMerkezi(kare) as Nokta
+    expect(yuzeydeNokta(kare, merkez)).toEqual(merkez)
+  })
+
+  it('dejenere halkada merkezi bozmaz', () => {
+    const cizgi = noktalar([0, 0], [1, 0], [2, 0], [0, 0])
+    const tercih = { boylam: 1, enlem: 0 }
+    expect(yuzeydeNokta(cizgi, tercih)).toEqual(tercih)
+  })
+
+  it('geometriMerkezi içbükey şekilde içeride bir nokta döndürüyor', () => {
+    const merkez = geometriMerkezi([uHalkasi])
+    expect(merkez).not.toBeNull()
+    const [boylam, enlem] = merkez as [number, number]
+    expect(noktaHalkadaMi({ boylam, enlem }, uHalkasi)).toBe(true)
   })
 })

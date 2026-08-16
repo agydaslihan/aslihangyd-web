@@ -10,7 +10,9 @@ import {
   overpassSogumasi,
   poiHazirliginiBaslat,
   poiKutusunuIndir,
+  poiMahalleEslestir,
 } from '@/lib/osm/eylemler'
+import type { GeriyeDonukSonuc } from '@/lib/osm/geriyeDonukEslesme'
 import { sureMetni } from '@/lib/osm/yenidenDeneme'
 
 import { denemeliCalistir, type DenemeBilgisi } from './denemeliCalistir'
@@ -93,6 +95,27 @@ export function OsmSihirbazi({ merkezliMahalleSayisi }: { merkezliMahalleSayisi:
   const [deneme, setDeneme] = useState<DenemeBilgisi | null>(null)
   const [ilerleme, setIlerleme] = useState<PoiIlerleme | null>(null)
   const [soguma, setSoguma] = useState(0)
+  const [eslestirme, setEslestirme] = useState<GeriyeDonukSonuc | null>(null)
+  const [eslestirmeCalisiyor, setEslestirmeCalisiyor] = useState(false)
+
+  /**
+   * Geriye dönük mahalle eşleştirme.
+   *
+   * ⚠️ Overpass'a HİÇ dokunmuyor — veri zaten elimizde, eksik olan yalnızca
+   * ilişki. Bu yüzden soğuma uyarısı ve yeniden deneme merdiveni burada
+   * geçerli değil; kota tüketen bir iş değil.
+   */
+  async function mahalleleriEslestirCalistir(): Promise<void> {
+    setEslestirmeCalisiyor(true)
+    setEslestirme(null)
+    try {
+      const cevap = await poiMahalleEslestir()
+      if (cevap.basarili && cevap.sonuc) setEslestirme(cevap.sonuc)
+      else setHata(cevap.mesaj ?? 'Eşleştirme tamamlanamadı.')
+    } finally {
+      setEslestirmeCalisiyor(false)
+    }
+  }
 
   /**
    * ⚠️ SINIR İÇE AKTARMA AZ ÖNCE ÇALIŞTIYSA UYAR.
@@ -295,6 +318,23 @@ export function OsmSihirbazi({ merkezliMahalleSayisi }: { merkezliMahalleSayisi:
             {sonuc.eklenen} yeni nokta eklendi, {sonuc.guncellenen} nokta güncellendi,{' '}
             {sonuc.korunan} elle düzeltilmiş kayıt korundu.
           </p>
+
+          {/* ⚠️ "Kesin" ile "yaklaşık" ayrı sayılıyor. İkisi aynı kutuya
+              konsaydı mahalle sayfası komşu mahallenin okulunu kendi okulu
+              gibi gösterir ve bunu kimse fark edemezdi. */}
+          <p className="osm-basari">
+            <strong>{sonuc.eslesme.kesin} nokta mahalleye eşleşti</strong>
+            {sonuc.eslesme.yaklasik > 0 ? (
+              <>
+                , <strong>{sonuc.eslesme.yaklasik} nokta yaklaşık</strong> — hiçbir sınırın içinde
+                değil, en yakın mahalle merkezine atandı ve işaretlendi
+              </>
+            ) : null}
+            {sonuc.eslesme.eslesmeyen > 0
+              ? `, ${sonuc.eslesme.eslesmeyen} nokta hiç eşleşmedi (mahalle merkezi tanımlı değil)`
+              : ''}
+            .
+          </p>
           {sonuc.hatalar.length > 0 ? (
             <ul className="osm-hata-liste">
               {sonuc.hatalar.map((h) => (
@@ -306,6 +346,54 @@ export function OsmSihirbazi({ merkezliMahalleSayisi }: { merkezliMahalleSayisi:
           ) : null}
         </section>
       ) : null}
+
+      {/* ── Geriye dönük eşleştirme ──────────────────────────────────── */}
+      <section className="osm-adim">
+        <h2>Mevcut noktaları mahallelere eşleştir</h2>
+        <p className="osm-not">
+          POI&apos;ler mahalle sınırları henüz yokken içe aktarıldıysa mahallesiz kalmış olabilir.
+          Bu düğme <strong>OpenStreetMap&apos;e hiç dokunmadan</strong> elimizdeki noktaları mevcut
+          sınırlarla eşleştirir — veri zaten bizde, eksik olan yalnızca ilişki.
+        </p>
+        <p className="osm-not">
+          Elle düzeltilmiş kayıtlar atlanır; mahalle ilişkisini panelden değiştirdiyseniz o kayıt
+          bir daha ezilmez.
+        </p>
+
+        <button
+          type="button"
+          className="osm-buton"
+          onClick={() => void mahalleleriEslestirCalistir()}
+          disabled={eslestirmeCalisiyor}
+        >
+          {eslestirmeCalisiyor ? 'Eşleştiriliyor…' : 'Mevcut noktaları eşleştir'}
+        </button>
+
+        {eslestirme ? (
+          <p className="osm-basari" style={{ marginTop: '0.75rem' }}>
+            {eslestirme.incelenen} kayıt incelendi · {eslestirme.guncellenen} güncellendi ·{' '}
+            {eslestirme.degismeyen} zaten doğruydu · {eslestirme.korunan} elle düzeltilmiş kayıt
+            korundu.
+            <br />
+            <strong>{eslestirme.ozet.kesin} nokta mahalleye eşleşti</strong>,{' '}
+            <strong>{eslestirme.ozet.yaklasik} nokta yaklaşık</strong>
+            {eslestirme.ozet.eslesmeyen > 0
+              ? `, ${eslestirme.ozet.eslesmeyen} nokta hiç eşleşmedi`
+              : ''}
+            .
+          </p>
+        ) : null}
+
+        {eslestirme && eslestirme.hatalar.length > 0 ? (
+          <ul className="osm-hata-liste">
+            {eslestirme.hatalar.slice(0, 20).map((h) => (
+              <li key={h.ad}>
+                {h.ad}: {h.mesaj}
+              </li>
+            ))}
+          </ul>
+        ) : null}
+      </section>
     </div>
   )
 }

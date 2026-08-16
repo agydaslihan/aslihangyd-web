@@ -7,6 +7,7 @@ import { getPayload, type Payload, type TypedUser } from 'payload'
 
 import { yoneticiMi } from '@/lib/erisim'
 
+import { poileriMahallelereEslestir, type GeriyeDonukSonuc } from './geriyeDonukEslesme'
 import { SOGUMA_MS, sonIstektenBuYanaMs } from './istemci'
 import {
   onizlemeHazirla,
@@ -98,6 +99,33 @@ export async function poiKutusunuIndir(
     return {
       durum: 'hata',
       mesaj: hata instanceof Error ? hata.message : 'Kutu indirilemedi.',
+    }
+  }
+}
+
+export interface GeriyeDonukCevap {
+  basarili: boolean
+  mesaj?: string
+  sonuc?: GeriyeDonukSonuc
+}
+
+/**
+ * Mevcut POI kayıtlarını geriye dönük mahallelere eşleştirir.
+ *
+ * ⚠️ Overpass'a HİÇ dokunmuyor: veri zaten elimizde, eksik olan yalnızca
+ * ilişki. Yeniden içe aktarma da çözerdi ama paylaşımlı bir kaynağa
+ * gereksiz yük bindirirdi.
+ */
+export async function poiMahalleEslestir(): Promise<GeriyeDonukCevap> {
+  const oturum = await yoneticiOturumu()
+  if (!oturum) return { basarili: false, mesaj: `${OTURUM_YOK} ${YETKI_YOK}` }
+
+  try {
+    return { basarili: true, sonuc: await poileriMahallelereEslestir(oturum.payload, oturum.user) }
+  } catch (hata) {
+    return {
+      basarili: false,
+      mesaj: hata instanceof Error ? hata.message : 'Eşleştirme tamamlanamadı.',
     }
   }
 }
