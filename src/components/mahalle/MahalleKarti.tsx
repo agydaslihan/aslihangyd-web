@@ -2,6 +2,7 @@ import Image from 'next/image'
 import Link from 'next/link'
 
 import { KonumIkon } from '@/components/ui/Ikon'
+import { siluetUret, SILUET_KUTUSU } from '@/lib/mahalle/siluet'
 import { Rozet } from '@/components/ui/Rozet'
 import { carpanYaz, paraYaz } from '@/lib/bicimlendirme'
 import type { Mahalleler } from '@/payload-types'
@@ -44,6 +45,15 @@ export function MahalleKarti({
   const carpan = carpanYaz(mahalle.kiraCarpani)
   const kirsal = mahalle.yerlesimTuru === 'kirsal'
 
+  /**
+   * ⚠️ Silüet SUNUCUDA üretiliyor (bu bir sunucu bileşeni).
+   *
+   * Poligonlar yüzlerce noktalı; istemciye ham koordinat göndermek her
+   * kart için kilobaytlar demekti. Burada sadeleştirilip tek bir `path`
+   * dizesine dönüyor — kart başına birkaç yüz bayt.
+   */
+  const siluet = gorsel?.url ? null : siluetUret(mahalle.sinir)
+
   return (
     <article className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col overflow-hidden border-[0.5px] transition-shadow">
       <div className="bg-vurgu-zemin relative aspect-16/10 overflow-hidden">
@@ -56,7 +66,35 @@ export function MahalleKarti({
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             {...bulanikOzellikleri(gorsel)}
           />
+        ) : siluet ? (
+          /*
+            ⚠️ SİLÜET, MAHALLENİN GERÇEK SINIRI — genel bir ikon değil.
+
+            26 kartın 26'sında aynı konum ikonu duruyordu. Oysa her
+            mahallenin gerçek bir şekli var ve o şekil onu ayırt edilebilir
+            kılıyor — dış görsel gerektirmeden, elimizdeki veriden.
+
+            ⚠️ `aria-hidden`: silüet dekoratif. Mahallenin adı hemen altında
+            yazılı ve şekil tek başına hiçbir bilgi taşımıyor. Ekran okuyucu
+            kullanıcısına "poligon" duyurmanın karşılığı yok.
+          */
+          <svg
+            viewBox={`0 0 ${SILUET_KUTUSU} ${SILUET_KUTUSU}`}
+            className="h-full w-full p-5"
+            aria-hidden="true"
+            focusable="false"
+          >
+            <path
+              d={siluet.yol}
+              className="fill-pudra-zemin stroke-vurgu"
+              strokeWidth={1.5}
+              strokeLinejoin="round"
+              vectorEffect="non-scaling-stroke"
+            />
+          </svg>
         ) : (
+          /* ⚠️ Sınırı olmayan mahallede eski ikon YEDEK olarak kalıyor —
+             OSM kapsaması eksiksiz değil, kart boş kalamaz. */
           <div className="text-vurgu/40 flex h-full items-center justify-center">
             <KonumIkon width={32} height={32} />
           </div>

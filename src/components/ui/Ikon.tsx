@@ -309,3 +309,81 @@ export function AyIkon(ozellikler: IkonOzellikleri) {
     </Govde>
   )
 }
+
+/* ══════════════════════════════════════════════════════════════════════════
+   Araç ikonları
+   ══════════════════════════════════════════════════════════════════════════
+
+   ⚠️ Tabler'ın yol verileri, paket olarak DEĞİL elle taşındı — dosyanın
+   başındaki gerekçenin aynısı: yedi ikon için bir bağımlılık yüzeyi ve
+   derleme süresi eklemenin karşılığı yok. Tabler MIT lisanslı ve yolları
+   yeniden kullanılabilir.
+
+   ⚠️ Hepsi dekoratif (`aria-hidden`): anlam kartın başlığında. İkon tek
+   başına hiçbir bilgi taşımıyor — WCAG 1.4.1'in aynı ilkesi. */
+
+/** Kira getirisi — yüzde. */
+export function YuzdeIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M17 17a1 1 0 1 0 0-2 1 1 0 0 0 0 2M7 9a1 1 0 1 0 0-2 1 1 0 0 0 0 2M6 18 18 6" />
+    </Govde>
+  )
+}
+
+/** Kredi — banka. */
+export function BankaIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="m3 21 18 0M3 10l18 0M5 6l7-3 7 3M4 10l0 11M20 10l0 11M8 14l0 3M12 14l0 3M16 14l0 3" />
+    </Govde>
+  )
+}
+
+/** Yatırım simülatörü — çizgi grafik. */
+export function CizgiGrafikIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M4 19l16 0M4 15l4-6 4 2 4-5 4 4" />
+    </Govde>
+  )
+}
+
+/** Kirala mı satın al mı — karşılıklı oklar. */
+export function KarsilastirIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M7 10h14l-4-4M17 14H3l4 4" />
+    </Govde>
+  )
+}
+
+/** Alım maliyeti — fiş. */
+export function FisIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M5 21V5a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v16l-3-2-2 2-2-2-2 2-2-2z" />
+      <path d="M9 8h6M9 12h6M9 16h3" />
+    </Govde>
+  )
+}
+
+/** Kira geliri vergisi — para raporu. */
+export function ParaRaporuIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M9 5H7a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2v-5" />
+      <path d="M9 3m0 2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v0a2 2 0 0 1-2 2h-2a2 2 0 0 1-2-2z" />
+      <path d="M14 11h-2.5a1.5 1.5 0 0 0 0 3h1a1.5 1.5 0 0 1 0 3H10M12 17v1m0-8v1" />
+    </Govde>
+  )
+}
+
+/** Değer artış kazancı — yükselen trend. */
+export function ArtisIkon(ozellikler: IkonOzellikleri) {
+  return (
+    <Govde {...ozellikler}>
+      <path d="M3 17l6-6 4 4 8-8M14 7h7v7" />
+    </Govde>
+  )
+}

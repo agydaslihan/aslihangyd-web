@@ -126,7 +126,7 @@ const ARACLAR_MEGA: readonly MegaOge[] = [
  * Üst menü — şartname §4'teki sıra.
  *
  * "Değerleme" menüden çıktı: artık sağdaki dolu adaçayı butonu
- * ("Evimi değerlendir") aynı sayfaya götürüyor ve iki kez listelemek
+ * ("Değerleme isteyin") aynı sayfaya götürüyor ve iki kez listelemek
  * butonun vurgusunu düşürürdü.
  */
 export const UST_MENU_YAPISI: readonly UstMenuOgesi[] = [
@@ -138,8 +138,15 @@ export const UST_MENU_YAPISI: readonly UstMenuOgesi[] = [
   { ad: 'İletişim', adres: '/iletisim' },
 ]
 
-/** Sağdaki dolu eylem — şartnamedeki iki adaçayı eyleminden biri. */
-export const BASLIK_EYLEMI = { ad: 'Evimi değerlendir', adres: '/degerleme' } as const
+/**
+ * Sağdaki dolu eylem — şartnamedeki iki adaçayı eyleminden biri.
+ *
+ * ⚠️ Bu artık TEK KAYNAK DEĞİL, YEDEK. Asıl metin "Marka ve Görünüm"
+ * globalinde; burası yalnızca o boş bırakıldığında devreye giriyor.
+ * Kodda kalması bilinçli: veritabanı okunamasa da başlıktaki eylem
+ * görünür kalmalı.
+ */
+export const BASLIK_EYLEMI = { ad: 'Değerleme isteyin', adres: '/degerleme' } as const
 
 /**
  * Endeks üst menüde görünmeli mi?

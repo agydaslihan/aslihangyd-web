@@ -87,9 +87,17 @@ export default async function PortfoySayfasi({
 
   return (
     <div className="kapsayici py-10 sm:py-14">
-      <header className="mb-8 flex flex-col gap-3">
-        <h1 className="text-baslik-1">Portföy</h1>
-        <p className="text-metin-2 olcu">
+      {/*
+        ⚠️ BAŞLIK KÜÇÜLDÜ VE ORTALANDI — `h1` ETİKETİ DURUYOR.
+
+        Görsel sadelik için punto `baslik-1`den `baslik-2`ye indi ve blok
+        ortalandı. Etiket DEĞİŞMEDİ: bu sayfanın arama motoru sıralaması ve
+        ekran okuyucu gezinmesi `h1`e bağlı. "Küçük görünsün" ile "başlık
+        olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı olurdu.
+      */}
+      <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-2 text-center">
+        <h1 className="text-baslik-2">Portföy</h1>
+        <p className="text-metin-2 text-govde-kucuk leading-relaxed">
           Çorlu ve çevresindeki taşınmazlarımız. Her ilanda kira çarpanı ve amortisman süresini
           hesaplayıp gösteriyoruz; kira verisi olmayan ilanlarda bu alanları boş bırakıyoruz.
         </p>

@@ -1743,6 +1743,14 @@ export interface MarkaGorunum {
    * Sosyal medyada bağlantı paylaşıldığında görünen kart görseli. Önerilen 1200×630. Boşsa otomatik üretilen kart kullanılır.
    */
   ogGorseli?: (number | null) | Medya;
+  /**
+   * Sağ üstteki dolu buton. Boşsa "Değerleme isteyin" kullanılır. Kısa tutun — buton tek satırda kalmalı.
+   */
+  baslikEylemMetni?: string | null;
+  /**
+   * Boşsa /degerleme kullanılır.
+   */
+  baslikEylemAdresi?: string | null;
   acikTema: {
     /**
      * Sayfanın genel zemini.
@@ -2144,6 +2152,8 @@ export interface MarkaGorunumSelect<T extends boolean = true> {
   logoKoyu?: T;
   simgeKaynak?: T;
   ogGorseli?: T;
+  baslikEylemMetni?: T;
+  baslikEylemAdresi?: T;
   acikTema?:
     | T
     | {

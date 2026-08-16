@@ -303,7 +303,7 @@ export default function StilRehberiSayfasi() {
           not="Varsayılan görünüm çerçevelidir: bir butonun dolu olması bilinçli bir karar olmalı. Dokunma hedefi en az 44px."
         >
           <Ornek etiket="Görünümler">
-            <Buton gorunum="aksan">Evimi değerlendir</Buton>
+            <Buton gorunum="aksan">Değerleme isteyin</Buton>
             <Buton gorunum="kakao">Talebi gönder</Buton>
             <Buton>İkincil eylem</Buton>
             <Buton gorunum="hayalet">Hayalet</Buton>

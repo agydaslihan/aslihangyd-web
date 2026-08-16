@@ -18,7 +18,7 @@ import { sinif } from '@/lib/sinif'
  * karar olmalı, varsayılanın yan etkisi değil.
  *
  * ⚠️ `aksan` görünümü pazarlığa kapalı bir kuralın taşıyıcısıdır: dolu
- * adaçayı zemin YALNIZCA "Evimi değerlendir" ve "Erişim talep et"
+ * adaçayı zemin YALNIZCA "Değerleme isteyin" ve "Erişim talep et"
  * eylemlerinde kullanılır. Kural `src/lib/tasarim/disiplin.test.ts`
  * içinde denetlenir; yeni bir çağrı yeri eklemek testi kırar.
  * ─────────────────────────────────────────────────────────────────────────

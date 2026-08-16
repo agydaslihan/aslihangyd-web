@@ -38,6 +38,14 @@ export function Baslik({
   whatsapp: string | null
   marka: MarkaAyarlari
 }) {
+  /**
+   * ⚠️ Eylem metni CMS'ten; boşsa koddaki yedek.
+   *
+   * Yedek kodda kalıyor çünkü veritabanı okunamasa bile başlıktaki eylem
+   * görünmeli — marka sesi içerik, ama butonun varlığı işlev.
+   */
+  const eylem = marka.baslikEylemi ?? BASLIK_EYLEMI
+
   const [acik, setAcik] = useState(false)
   const [acikMega, setAcikMega] = useState<string | null>(null)
   const [kaydirildi, setKaydirildi] = useState(false)
@@ -137,10 +145,10 @@ export function Baslik({
           {/* ⚠️ Dolu adaçayı — şartnamedeki iki eylemden biri. Üçüncü bir
               yerde kullanılırsa disiplin testi kırılır. */}
           <Link
-            href={BASLIK_EYLEMI.adres}
+            href={eylem.adres}
             className="bg-aksan hover:bg-aksan-koyu rounded-buton hidden min-h-11 items-center px-5 text-govde-kucuk font-medium text-white transition-colors lg:inline-flex"
           >
-            {BASLIK_EYLEMI.ad}
+            {eylem.ad}
           </Link>
 
           <button
@@ -156,7 +164,9 @@ export function Baslik({
         </div>
       </div>
 
-      {acik ? <MobilMenu menu={menu} yol={yol} whatsappAdresi={whatsappAdresi} /> : null}
+      {acik ? (
+        <MobilMenu menu={menu} yol={yol} whatsappAdresi={whatsappAdresi} eylem={eylem} />
+      ) : null}
     </header>
   )
 }
@@ -251,10 +261,12 @@ function MobilMenu({
   menu,
   yol,
   whatsappAdresi,
+  eylem,
 }: {
   menu: readonly UstMenuOgesi[]
   yol: string | null
   whatsappAdresi: string | null
+  eylem: { ad: string; adres: string }
 }) {
   return (
     <div
@@ -295,10 +307,10 @@ function MobilMenu({
         </ul>
 
         <Link
-          href={BASLIK_EYLEMI.adres}
+          href={eylem.adres}
           className="bg-aksan rounded-buton mt-6 flex min-h-13 w-full items-center justify-center font-medium text-white"
         >
-          {BASLIK_EYLEMI.ad}
+          {eylem.ad}
         </Link>
 
         {whatsappAdresi ? (

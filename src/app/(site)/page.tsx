@@ -388,11 +388,11 @@ const UC_YOL = [
   },
   {
     Ikon: DogrulanmisIkon,
-    baslik: 'Evimi değerlendirmek istiyorum',
+    baslik: 'Değerleme istiyorum',
     metin:
       'Mahalle verisine dayalı değer aralığı — sonucu görmek için iletişim bilgisi istemiyoruz.',
     adres: '/degerleme',
-    eylem: 'Evimi değerlendir',
+    eylem: 'Değerleme isteyin',
     vurgulu: true,
   },
 ]
@@ -664,7 +664,7 @@ function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
             denetleniyor.
           */}
           <Buton href="/degerleme" gorunum="aksan" boyut="buyuk">
-            Evimi değerlendir
+            Değerleme isteyin
           </Buton>
           {whatsapp ? (
             <Buton

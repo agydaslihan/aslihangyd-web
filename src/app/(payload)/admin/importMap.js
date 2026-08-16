@@ -23,6 +23,10 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/components/panel/TalepEslesmeleri'
 import { GorselButceRozeti as GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0 } from '@/components/panel/GorselButceRozeti'
+import { MarkaOzeti as MarkaOzeti_39442ca5242594bbd935166eabf0a217 } from '@/components/marka/MarkaOzeti'
+import { RenkAlani as RenkAlani_ef0f301565c7f9be03293994bc79a9a9 } from '@/components/marka/RenkAlani'
+import { AcikPaletPaneli as AcikPaletPaneli_2402a32bb37cd9c644022ee73817599f } from '@/components/marka/PaletPaneli'
+import { KoyuPaletPaneli as KoyuPaletPaneli_2402a32bb37cd9c644022ee73817599f } from '@/components/marka/PaletPaneli'
 import { SihirbazNavBaglantisi as SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d } from '@/components/sihirbaz/SihirbazNavBaglantisi'
 import { SosyalNavBaglantisi as SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2 } from '@/components/sosyal/SosyalNavBaglantisi'
 import { GozlemNavBaglantisi as GozlemNavBaglantisi_18cba9bdef93245964bb90fef5a851d6 } from '@/components/gozlem/GozlemNavBaglantisi'
@@ -69,6 +73,10 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/panel/TalepEslesmeleri#default": default_1e93637515c2cbbab351072f38d704e3,
   "@/components/panel/GorselButceRozeti#GorselButceRozeti": GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0,
+  "@/components/marka/MarkaOzeti#MarkaOzeti": MarkaOzeti_39442ca5242594bbd935166eabf0a217,
+  "@/components/marka/RenkAlani#RenkAlani": RenkAlani_ef0f301565c7f9be03293994bc79a9a9,
+  "@/components/marka/PaletPaneli#AcikPaletPaneli": AcikPaletPaneli_2402a32bb37cd9c644022ee73817599f,
+  "@/components/marka/PaletPaneli#KoyuPaletPaneli": KoyuPaletPaneli_2402a32bb37cd9c644022ee73817599f,
   "@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi": SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a150941c1d,
   "@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi": SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2,
   "@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi": GozlemNavBaglantisi_18cba9bdef93245964bb90fef5a851d6,
