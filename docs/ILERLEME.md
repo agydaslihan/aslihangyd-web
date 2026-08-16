@@ -4828,6 +4828,42 @@ mobil hero bütçesi anlamını kaybederdi.
 ⚠️ En-boy oranı **sabit ve slayta göre değişmiyor**. Slayt başına yükseklik
 açılsaydı geçişte düzen zıplar ve CLS bozulurdu.
 
+### ⚠️⚠️ İLK SÜRÜM LCP'Yİ BOZDU — ÖLÇÜLDÜ, DEĞİŞTİRİLDİ
+
+CI'daki Lighthouse ilk sürümü ölçtü:
+
+| Ölçüm | LCP önce | LCP sonra | Perf |
+| --- | --- | --- | --- |
+| Mobil ana sayfa | 3,30 s | **3,67 s** | 92 → 89 |
+| Masaüstü ana sayfa | 0,75 s | 0,78 s | 100 |
+
+Ağ isteklerine bakınca sebep göründü:
+
+```
+33,5 kB  Image  demo-hero-900.jpg&w=750   ← LCP öğesi
+33,4 kB  Image  demo-hero-901.jpg&w=750   ← İKİNCİ SLAYT, inmemeliydi
+```
+
+⚠️ **`loading="lazy"` YETMİYOR.** Slaytlar `inset-0` ile görüntü alanının
+**içinde** duruyor — yalnızca saydamlıkları sıfır. Tembel yükleme ise
+görüntü alanı **dışındaki** görselleri erteliyor. İkinci slaydın görseli
+LCP görseliyle bant genişliği için yarışıyordu.
+
+Düzeltme: sunucu artık **yalnızca ilk slaydı** basıyor. Sonrakiler kumanda
+tarafından, ilk kez gösterildiklerinde istemcide kuruluyor. LCP öğesi olan
+ilk slayt sunucuda ve `priority` ile kalıyor.
+
+`yuklenenler` kümesi bir kez gösterilen slaytları hatırlıyor: ileri-geri
+gidildiğinde yeniden kurulmuyorlar.
+
+⚠️ Kayıt EFEKTTE değil geçişin kendisinde yapılıyor. İlk hâlim
+`useEffect(() => setYuklenenler(...), [aktif])` idi ve lint haklı olarak
+uyardı: efektte durum yazmak fazladan bir render turu doğurur ve slaydın
+kurulmasını bir kare geciktirir.
+
+Bir test bu gerilemeyi kilitliyor: **sunucu bileşeni slaytlar üzerinde
+döngü kurmamalı.**
+
 ### ⚠️ Lighthouse'un slider'ı gerçekten ölçmesi için tohuma slayt eklendi
 
 Slider slayt yokken hiç render edilmiyor — yani boş veritabanında

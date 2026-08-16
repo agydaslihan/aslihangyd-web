@@ -45,27 +45,36 @@ export function HeroBolumu({ ayarlar }: { ayarlar: HeroAyarlari }) {
   if (slaytlar.length === 0) return null
 
   const cok = slaytlar.length > 1
+  const ilk = slaytlar[0] as (typeof slaytlar)[number]
 
   return (
     <section aria-label="Öne çıkanlar" className="relative">
       <HeroCercevesi>
+        {/*
+          ⚠️ SUNUCU YALNIZCA İLK SLAYDI BASIYOR — ÖLÇÜMLE ÖĞRENİLDİ.
+
+          İlk sürümde bütün slaytlar sunucuda basılıyor, sonrakiler
+          `loading="lazy"` ile işaretleniyordu. Lighthouse gösterdi ki
+          bu YETMİYOR: slaytlar `inset-0` ile görüntü alanının İÇİNDE
+          duruyor (yalnızca saydamlıkları sıfır), tembel yükleme ise
+          görüntü alanı dışındaki görselleri erteliyor.
+
+          Sonuç: ikinci slaydın görseli (33,4 kB) mobilde de iniyor ve
+          LCP görseliyle bant genişliği için yarışıyordu. Ölçülen bedel
+          mobil ana sayfada LCP 3,30 s → 3,67 s.
+
+          Artık sonraki slaytlar hiç basılmıyor; kumanda onları ilk kez
+          gösterildiklerinde istemcide kuruyor. LCP öğesi olan ilk slayt
+          sunucuda ve `priority` ile kalıyor.
+        */}
         <div data-hero={HERO_ANAHTARI} className="absolute inset-0">
-          {slaytlar.map((slayt, sira) => (
-            <div
-              key={slayt.anahtar}
-              data-hero-slayt=""
-              className="absolute inset-0 transition-opacity duration-500 motion-reduce:transition-none"
-              /*
-                ⚠️ İlk slayt sunucuda GÖRÜNÜR basılıyor.
-                Başlangıç durumunu istemciye bıraksaydık JS inene kadar
-                hero boş kalır ve LCP ölçümü onu beklerdi.
-              */
-              style={{ opacity: sira === 0 ? 1 : 0 }}
-              aria-hidden={sira === 0 ? 'false' : 'true'}
-            >
-              <HeroSlaydi slayt={slayt} oncelikli={sira === 0} />
-            </div>
-          ))}
+          <div
+            data-hero-ilk=""
+            className="absolute inset-0 transition-opacity duration-500 motion-reduce:transition-none"
+            style={{ opacity: 1 }}
+          >
+            <HeroSlaydi slayt={ilk} oncelikli />
+          </div>
         </div>
 
         {cok ? <HeroKumandasi ayarlar={ayarlar} hedefSecici={HERO_ANAHTARI} /> : null}

@@ -56,11 +56,36 @@ describe('overlayOpakligi', () => {
 describe('LCP ve CLS sözleşmesi', () => {
   const slayt = oku('components/hero/HeroSlaydi.tsx')
   const bolum = oku('components/hero/HeroBolumu.tsx')
+  const kumanda = oku('components/hero/HeroKumandasi.tsx')
 
   it('ilk slayt öncelikli, sonrakiler tembel', () => {
     expect(slayt).toContain('priority={oncelikli}')
     expect(slayt).toContain("loading={oncelikli ? undefined : 'lazy'}")
-    expect(bolum).toContain('oncelikli={sira === 0}')
+    expect(bolum).toContain('<HeroSlaydi slayt={ilk} oncelikli />')
+  })
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ SUNUCU YALNIZCA İLK SLAYDI BASMALI — ÖLÇÜMLE ÖĞRENİLDİ.
+   *
+   * İlk sürümde bütün slaytlar sunucuda basılıyor, sonrakiler
+   * `loading="lazy"` ile işaretleniyordu. Lighthouse gösterdi ki bu
+   * YETMİYOR: slaytlar `inset-0` ile görüntü alanının İÇİNDE duruyor
+   * (yalnızca saydamlıkları sıfır) ve tembel yükleme yalnızca görüntü
+   * alanı DIŞINI erteliyor.
+   *
+   * Ölçülen bedel: ikinci slaydın 33,4 kB'lık görseli mobilde de indi ve
+   * LCP görseliyle bant genişliği için yarıştı — mobil ana sayfada
+   * LCP 3,30 s → 3,67 s.
+   *
+   * Bu test o gerilemeyi kilitliyor: sunucu bileşeni slaytlar üzerinde
+   * DÖNGÜ KURMAMALI.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('sunucu sonraki slaytları basmıyor', () => {
+    expect(bolum).not.toContain('slaytlar.map')
+    expect(kumanda).toContain('slaytlar.map')
+    expect(kumanda).toContain('yuklenenler.has(sira)')
   })
 
   /**
@@ -90,7 +115,8 @@ describe('LCP ve CLS sözleşmesi', () => {
    * ve LCP ölçümü onu beklerdi.
    */
   it('ilk slaydın görünürlüğü sunucuda veriliyor', () => {
-    expect(bolum).toContain('opacity: sira === 0 ? 1 : 0')
+    expect(bolum).toContain('style={{ opacity: 1 }}')
+    expect(bolum).toContain('data-hero-ilk')
   })
 })
 
@@ -103,6 +129,7 @@ describe('LCP ve CLS sözleşmesi', () => {
  */
 describe('tek slayt maliyeti', () => {
   const bolum = oku('components/hero/HeroBolumu.tsx')
+  const kumanda = oku('components/hero/HeroKumandasi.tsx')
 
   it('kumanda dinamik olarak ayrı parçaya alınmış', () => {
     expect(bolum).toContain("import dynamic from 'next/dynamic'")
@@ -112,6 +139,14 @@ describe('tek slayt maliyeti', () => {
   it('kumanda yalnızca birden çok slaytta render ediliyor', () => {
     expect(bolum).toContain('slaytlar.length > 1')
     expect(bolum).toContain('{cok ? <HeroKumandasi')
+  })
+
+  /**
+   * ⚠️ Bir kez gösterilen slayt hatırlanıyor: ileri-geri gidildiğinde
+   * yeniden kurulup görseli yeniden istenmiyor.
+   */
+  it('gösterilen slaytlar hatırlanıyor', () => {
+    expect(kumanda).toContain('new Set([0])')
   })
 
   /**
