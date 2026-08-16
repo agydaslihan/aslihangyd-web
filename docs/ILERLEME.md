@@ -5195,7 +5195,7 @@ Sebep aynı: main'deki son şema fotoğrafı (`hero_slider`) #58 birleşmeden
 olmadığı için tuzak tekrarlandı.
 
 Elle budandı — ve bu sefer **statik bir test yazıldı**
-(`src/migrations/migrations.test.ts`):
+(`src/lib/gocler.test.ts`):
 
 - aynı sütun iki göçte eklenmiyor
 - aynı tablo iki göçte oluşturulmuyor
@@ -5207,3 +5207,25 @@ adıyla gösterip kırmızı verdi.
 ⚠️ Bu test SQL ayrıştırmıyor, DESEN arıyor. Amaç eksiksiz doğrulama değil;
 tam olarak yaşanan arızayı bir daha yaşamamak. İki kez düşülen bir tuzak,
 üçüncüsünü hak etmiyor.
+
+### ⚠️ Göç testi `src/migrations/` içinde DURAMAZ
+
+İlk hâli oradaydı ve **`pnpm payload migrate` komutunu tümden kırdı**:
+
+```
+TypeError: Cannot read properties of undefined (reading 'config')
+    at src/migrations/migrations.test.ts:61
+```
+
+Payload göç dizinindeki **her** dosyayı içe aktarıyor; `.test.ts` ayrımı
+yapmıyor. Test yüklenince vitest koşum bağlamı dışında `describe()`
+çağrılıyor ve komut ölüyor.
+
+Yani göçleri koruyacak test, göç adımının kendisini imkânsız hâle
+getiriyordu — CLAUDE.md §5.3'ün koşulsuz zorunlu adımını. Dosya
+`src/lib/gocler.test.ts` altına taşındı; göç dizinine yalnızca **okumak**
+için bakıyor.
+
+⚠️ Bu, testin kendisinin bir üretim arızası ürettiği ikinci durum. Ders
+aynı: bir dizinin sahibi bir çerçeveyse (Payload burada), o dizine
+çerçevenin beklemediği dosya konmaz.

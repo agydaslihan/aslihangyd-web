@@ -32,7 +32,21 @@ import { describe, expect, it } from 'vitest'
  * değil; tam olarak yaşanan arızayı bir daha yaşamamak.
  */
 
-const DIZIN = path.join(import.meta.dirname)
+/**
+ * ⚠️ BU TEST `src/migrations/` İÇİNDE DURAMAZ.
+ *
+ * İlk hâli oradaydı ve `pnpm payload migrate` komutunu TÜMDEN kırdı:
+ * Payload göç dizinindeki HER dosyayı içe aktarıyor, `.test.ts` ayrımı
+ * yapmıyor. Test dosyası yüklenince vitest koşum bağlamı dışında
+ * `describe()` çağrılıyor ve komut şu satırla ölüyordu:
+ *
+ *     TypeError: Cannot read properties of undefined (reading 'config')
+ *
+ * Yani göçleri koruyacak test, göç adımının kendisini imkânsız hâle
+ * getiriyordu — CLAUDE.md §5.3'ün koşulsuz zorunlu adımını. Dosya bu
+ * yüzden `src/lib/` altında; göç dizinine yalnızca okumak için bakıyor.
+ */
+const DIZIN = path.resolve(import.meta.dirname, '..', 'migrations')
 
 interface Gocs {
   ad: string
@@ -48,13 +62,19 @@ function gocleriOku(): Gocs[] {
 
 /** `ALTER TABLE "x" ADD COLUMN "y"` çiftlerini çıkarır. */
 function eklenenSutunlar(icerik: string): string[] {
-  const up = icerik.slice(icerik.indexOf('export async function up'), icerik.indexOf('export async function down'))
+  const up = icerik.slice(
+    icerik.indexOf('export async function up'),
+    icerik.indexOf('export async function down'),
+  )
   return [...up.matchAll(/ALTER TABLE "(\w+)" ADD COLUMN "(\w+)"/g)].map((m) => `${m[1]}.${m[2]}`)
 }
 
 /** `CREATE TABLE "x"` adlarını çıkarır. */
 function olusturulanTablolar(icerik: string): string[] {
-  const up = icerik.slice(icerik.indexOf('export async function up'), icerik.indexOf('export async function down'))
+  const up = icerik.slice(
+    icerik.indexOf('export async function up'),
+    icerik.indexOf('export async function down'),
+  )
   return [...up.matchAll(/CREATE TABLE "(\w+)"/g)].map((m) => m[1] as string)
 }
 
