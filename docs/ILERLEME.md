@@ -4880,3 +4880,109 @@ stilin dış istek yapmaması birim testleriyle kapatıldı.
 `ayarlar.test.ts`e eklenen test, **eski adı tanımlı HER ayarın** geri
 düşüşünü tek tek sınıyor. "Şu değişken neden kapsam dışı?" sorusu bir daha
 sorulmak zorunda kalmasın diye; biri listeden düşerse orada kırmızı yanar.
+## POI ↔ mahalle eşleşmesi (16 Ağustos 2026)
+
+OSM'den yüzlerce POI geliyordu ama hiçbirinde "hangi mahallede" bilgisi
+yoktu; alan vardı, dolduran yoktu. Mahalle sayfalarındaki **çevre bölümü**
+bu ilişkiye dayandığı için boş kalıyordu.
+
+26 mahallenin PostGIS poligonu geldikten sonra soru artık cevaplanabilir:
+nokta hangi poligonun içinde?
+
+### İki kademe ve aralarındaki fark gizlenmiyor
+
+| Kademe | Ne yapıyor | İşaret |
+| --- | --- | --- |
+| 1 | Nokta bir mahalle poligonunun **içinde** | kesin eşleşme |
+| 2 | Hiçbir poligona düşmüyor → **en yakın mahalle merkezine** | `mahalleYaklasik` ✓ |
+| — | Hiç mahalle yok (merkez bile tanımsız) | boş bırakılır |
+
+⚠️ İkinci kademe gerekli: OSM'de sınır kapsaması eksiksiz değil ve ilçe
+sınırına yakın noktalar hiçbir poligona düşmeyebiliyor. Ama **"yaklaşık"
+ile "kesin" aynı kutuya konsaydı**, mahalle sayfası komşu mahallenin
+okulunu kendi okulu gibi gösterirdi ve bunu kimse fark edemezdi. Uydurma
+veri yasağının aynı mantığı: tahmin edilebilir, ama tahmin olduğu saklanamaz.
+
+⚠️ Hiç mahalle bulunamadıysa "yaklaşık" da denmiyor — yaklaşık bir şey yok,
+hiçbir şey yok.
+
+### Sorgu: tek turda, geçersiz geometriye dayanıklı
+
+Nokta başına sorgu atmak yüzlerce POI'de veritabanına yüzlerce tur demekti.
+Hepsi tek `VALUES` listesiyle tek turda çözülüyor.
+
+⚠️ **İlk hâli `unnest(${'${siralar}'}::int[], …)` idi ve PostgreSQL reddetti:**
+`cannot cast type record to integer[]`. Drizzle bir JS dizisini TEK parametre
+olarak değil, virgülle ayrılmış parametre listesi olarak açıyor (`($1, $2)`),
+o da diziye değil kayıt tipine dönüşüyor. `sql.join` ile kurulan `VALUES`
+listesinde her değer yine ayrı parametre — enjeksiyona kapalı — ama sözdizimi
+doğru.
+
+⚠️ `ST_MakeValid` bilinçli: OSM poligonları kendi kendini kesebiliyor ve
+geçersiz geometride `ST_Contains` hata fırlatıp **bütün içe aktarmayı**
+düşürürdü. Bozuk bir sınır yüzünden yüzlerce POI'nin kaybolması, o sınırı
+onarmaktan çok daha pahalı.
+
+### ⚠️⚠️ Yan bulgu: ALAN MERKEZİ POLİGONUN DIŞINA DÜŞEBİLİYOR
+
+Eşleştirmeyi gerçek veriyle sınarken bir nokta beklenmedik mahalleye düştü.
+Doğrudan PostGIS'e soruldu:
+
+```
+Türkgücü   merkez içinde=true
+Şahpaz     merkez içinde=true
+Zafer      merkez içinde=FALSE   ← kendi sınırının dışında
+Yenice     merkez içinde=true
+Seymen     merkez içinde=true
+Maksutlu   merkez içinde=true
+```
+
+Eşleştirme doğru çalışıyordu; **merkez yanlıştı.** İçbükey şekillerde
+(hilal, L, U) alan merkezinin şeklin dışına düşmesi olağan bir geometri
+özelliği, hata değil.
+
+Sonuçları gerçekti ve hiçbiri hata vermiyordu:
+- Mahalle sayfasının haritası **komşu mahalleye** odaklanır
+- POI arama kutusu yanlış yerde kurulur
+- "En yakın mahalle" eşleştirmesi yanlış mahalleyi seçer
+
+`yuzeydeNokta` eklendi — PostGIS'in `ST_PointOnSurface`ının yaptığını
+yapıyor: merkezin enleminde yatay çizgi çekip halkayla kesişimlerini bulur,
+en geniş iç aralığın ortasını döndürür. O nokta tanım gereği içeridedir.
+
+⚠️ Merkez zaten içerideyse **dokunulmuyor**: alan merkezi, "içeride herhangi
+bir nokta"dan daha anlamlıdır — mahallenin ağırlık noktasıdır.
+
+Düzeltme sonrası ölçüm: **26/26 merkez kendi poligonunun içinde** (önce 25/26).
+
+### Geriye dönük eşleştirme
+
+POI'ler sınırlar henüz yokken içe aktarılmıştı. Yeniden içe aktarma bunu
+çözerdi ama Overpass'a gereksiz yük bindirirdi — **veri zaten elimizde,
+eksik olan yalnızca ilişki.**
+
+Panelde POI sihirbazının altında "Mevcut noktaları eşleştir" düğmesi.
+Overpass'a hiç dokunmuyor; bu yüzden soğuma uyarısı ve yeniden deneme
+merdiveni burada geçerli değil.
+
+⚠️ Elle düzeltilmiş kayıtlar atlanıyor. `elleDuzenlendi` işaretli bir kayıt
+panelden düzenlenmiş demektir ve mahalle ilişkisi de elle verilmiş olabilir.
+Burada delinirse koruma "bazen geçerli" olur — ki bu korumasızlıktır.
+
+⚠️ Değişmeyen kayda yazma yapılmıyor: gereksiz güncelleme hem `updatedAt`i
+kirletir hem kancaları boşuna çalıştırır.
+
+### Canlı doğrulama
+
+```
+3 mahalleye gerçek OSM sınırı + merkezi yazıldı
+  nokta  0 (Türkgücü) → kesin
+  nokta  1 (Şahpaz)   → kesin
+  nokta  2 (Zafer)    → kesin
+  nokta 99 (Ankara)   → YAKLAŞIK 440.250 m
+özet: kesin=3 yaklasik=1 eslesmeyen=0
+```
+
+Ankara koordinatı bilinçli: hiçbir Çorlu poligonuna düşmeyen bir nokta,
+ikinci kademenin gerçekten devreye girdiğini ve mesafenin hesaplandığını
+gösteriyor.

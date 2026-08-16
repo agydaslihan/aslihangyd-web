@@ -121,7 +121,32 @@ export const IlgiNoktalari: CollectionConfig = {
       index: true,
       admin: {
         description:
-          'İsteğe bağlı. Mahalle sınırı tanımlıysa sistem bunu ileride otomatik belirleyebilir.',
+          'İçe aktarmada otomatik belirlenir: nokta hangi mahalle poligonunun içindeyse o. ' +
+          'Elle değiştirdiğinizde kayıt "elle düzeltildi" işaretlenir ve bir daha ezilmez.',
+      },
+    },
+    {
+      /**
+       * ⚠️ "YAKLAŞIK" İLE "KESİN" AYNI KUTUYA KONMUYOR.
+       *
+       * OSM'de mahalle sınırı kapsaması eksiksiz değil; ilçe sınırına yakın
+       * noktalar hiçbir poligona düşmeyebiliyor. Onları en yakın mahalle
+       * merkezine atamak makul bir tahmin — ama TAHMİN olduğu görünmeli.
+       *
+       * İşaretlenmeseydi mahalle sayfası komşu mahallenin okulunu kendi
+       * okulu gibi gösterirdi ve bunu kimse fark edemezdi. Uydurma veri
+       * yasağının aynı mantığı: tahmin edilebilir, ama tahmin olduğu
+       * saklanamaz.
+       */
+      name: 'mahalleYaklasik',
+      type: 'checkbox',
+      label: 'Mahalle yaklaşık — poligon içinde değil, en yakın merkeze atandı',
+      defaultValue: false,
+      index: true,
+      admin: {
+        description:
+          'İçe aktarma bu noktayı hiçbir mahalle sınırının içinde bulamadı ve en yakın ' +
+          'mahalle merkezine atadı. Doğru mahalleyi biliyorsanız elle düzeltin.',
       },
     },
     {

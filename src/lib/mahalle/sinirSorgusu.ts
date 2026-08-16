@@ -499,6 +499,60 @@ export function geometriKur(
 }
 
 /**
+ * Halkanın İÇİNDE garanti bir nokta bulur (yatay tarama).
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ ALAN MERKEZİ POLİGONUN İÇİNDE OLMAK ZORUNDA DEĞİL.
+ *
+ * 16 Ağustos 2026'da PostGIS ile ölçüldü: Çorlu'nun altı mahallesinden
+ * **Zafer'in alan merkezi kendi sınırının dışına düşüyor.** İçbükey
+ * şekillerde (hilal, L, U) bu olağan bir geometri özelliği, bir hata değil.
+ *
+ * Sonuçları gerçek: mahalle sayfasının haritası komşu mahalleye odaklanır,
+ * POI arama kutusu yanlış yerde kurulur ve "en yakın mahalle" eşleştirmesi
+ * yanlış mahalleyi seçer. Hiçbiri hata vermez, hepsi sessizce yanlıştır.
+ *
+ * Bu fonksiyon PostGIS'in `ST_PointOnSurface`ının yaptığını yapıyor:
+ * merkezin enleminde yatay bir çizgi çekip halkayla kesişimlerini bulur,
+ * en geniş iç aralığın ortasını döndürür. O nokta tanım gereği içeridedir.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function yuzeydeNokta(halka: readonly Nokta[], tercih: Nokta): Nokta {
+  // Merkez zaten içerideyse ona dokunma: alan merkezi, "içeride bir nokta"dan
+  // daha anlamlıdır — mahallenin ağırlık noktasıdır.
+  if (noktaHalkadaMi(tercih, halka)) return tercih
+
+  const kesisimler: number[] = []
+  for (let i = 0, j = halka.length - 1; i < halka.length; j = i, i += 1) {
+    const a = halka[i] as Nokta
+    const b = halka[j] as Nokta
+    const kesiyor = a.enlem > tercih.enlem !== b.enlem > tercih.enlem
+    if (!kesiyor) continue
+
+    const x = ((b.boylam - a.boylam) * (tercih.enlem - a.enlem)) / (b.enlem - a.enlem) + a.boylam
+    if (Number.isFinite(x)) kesisimler.push(x)
+  }
+
+  kesisimler.sort((a, b) => a - b)
+
+  let enGenis = -1
+  let sonuc: number | null = null
+  for (let i = 0; i + 1 < kesisimler.length; i += 2) {
+    const sol = kesisimler[i] as number
+    const sag = kesisimler[i + 1] as number
+    const genislik = sag - sol
+    if (genislik > enGenis) {
+      enGenis = genislik
+      sonuc = (sol + sag) / 2
+    }
+  }
+
+  // Dejenere halka: tarama hiçbir aralık bulamadıysa merkezi bırak.
+  if (sonuc === null) return tercih
+  return { boylam: sonuc, enlem: tercih.enlem }
+}
+
+/**
  * Geometrinin merkezi — en büyük dış halkanın alan merkezi.
  *
  * En büyüğü seçmek bilinçli: bir mahallenin sınırı ana gövde ile birlikte
@@ -521,7 +575,13 @@ export function geometriMerkezi(disHalkalar: readonly Nokta[][]): [number, numbe
   const merkez = halkaMerkezi(enBuyuk)
   if (!merkez) return null
 
-  return [yuvarla(merkez.boylam), yuvarla(merkez.enlem)]
+  /**
+   * ⚠️ Merkez poligonun DIŞINA düşebilir — ölçüldü, Çorlu'da bir örneği var.
+   * Dışarı düşerse içeride garanti bir noktaya çekiliyor.
+   */
+  const icerde = yuzeydeNokta(enBuyuk, merkez)
+
+  return [yuvarla(icerde.boylam), yuvarla(icerde.enlem)]
 }
 
 /* ══════════════════════════════════════════════════════════════════════════

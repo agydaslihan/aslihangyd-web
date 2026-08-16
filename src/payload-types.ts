@@ -658,9 +658,13 @@ export interface IlgiNoktalari {
    */
   konum: [number, number];
   /**
-   * İsteğe bağlı. Mahalle sınırı tanımlıysa sistem bunu ileride otomatik belirleyebilir.
+   * İçe aktarmada otomatik belirlenir: nokta hangi mahalle poligonunun içindeyse o. Elle değiştirdiğinizde kayıt "elle düzeltildi" işaretlenir ve bir daha ezilmez.
    */
   mahalle?: (number | null) | Mahalleler;
+  /**
+   * İçe aktarma bu noktayı hiçbir mahalle sınırının içinde bulamadı ve en yakın mahalle merkezine atadı. Doğru mahalleyi biliyorsanız elle düzeltin.
+   */
+  mahalleYaklasik?: boolean | null;
   /**
    * Şehir hastanesi, OSB, tren istasyonu gibi bölgenin değerini belirleyen noktalar. Mahalle sayfasında ayrıca vurgulanır.
    */
@@ -1292,6 +1296,7 @@ export interface IlgiNoktalariSelect<T extends boolean = true> {
   tip?: T;
   konum?: T;
   mahalle?: T;
+  mahalleYaklasik?: T;
   onemli?: T;
   detay?: T;
   kaynak?: T;
