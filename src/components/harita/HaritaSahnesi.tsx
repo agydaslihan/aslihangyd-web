@@ -83,6 +83,16 @@ export function HaritaSahnesi({
   const [boyutlu, setBoyutlu] = useState(true)
   const [seciliSlug, setSeciliSlug] = useState<string | null>(null)
   const [hata, setHata] = useState<string | null>(null)
+
+  /**
+   * Altlık durumu — hata değil, DURUM.
+   *
+   * ⚠️ `hata`dan ayrı tutuluyor. "Altlık yok ama sınırlar çiziliyor" bir
+   * arıza bildirimi değil, bir eksiklik bildirimi: harita çalışıyor,
+   * yalnızca sokak görüntüsü yok. İkisini aynı kutuya koymak, çalışan bir
+   * haritayı bozukmuş gibi gösterirdi.
+   */
+  const [altlikNotu, setAltlikNotu] = useState<string | null>(null)
   /** Mobilde açık olan alt sayfa. Masaüstünde paneller zaten görünür. */
   const [acikSayfa, setAcikSayfa] = useState<'katman' | 'detay' | 'liste' | null>(null)
 
@@ -170,31 +180,31 @@ export function HaritaSahnesi({
     <div className="bg-yuzey-2 relative h-full w-full overflow-hidden">
       {/* ── Harita ──────────────────────────────────────────────────── */}
       <div className="absolute inset-0">
-        {stilAdresi !== null ? (
-          <Harita3B
-            stilAdresi={stilAdresi}
-            mahalleler={geometriler}
-            sutunlar={sutunlar}
-            noktalar={noktalar}
-            acikKatmanlar={acikKatmanlar}
-            noktaKatmanlari={noktaKatmanlari.map(({ anahtar, renk }) => ({ anahtar, renk }))}
-            boyutlu={boyutlu}
-            seciliSlug={seciliSlug}
-            onSecim={mahalleSec}
-            onHata={setHata}
-          />
-        ) : (
-          <div className="doku-kilit flex h-full items-center justify-center px-6">
-            <div className="bg-yuzey/94 rounded-kart olcu border-[0.5px] border-kenar p-6 text-center">
-              <KonumIkon width={32} height={32} className="text-metin-3 mx-auto" />
-              <p className="mt-2 font-medium">Etkileşimli harita hazırlanıyor</p>
-              <p className="text-metin-2 text-govde-kucuk mt-1.5">
-                Harita servisi yapılandırması tamamlandığında burada gezilebilir bir Çorlu haritası
-                olacak. Yandaki liste aynı mahalleleri şimdiden gösteriyor.
-              </p>
-            </div>
-          </div>
-        )}
+        {/*
+          ⚠️ ANAHTAR OLMASA BİLE HARİTA KURULUYOR.
+
+          Eski hâlinde `stilAdresi === null` iken haritanın YERİNE bir boş
+          durum kutusu konuyordu. Ama mahalle sınırları BİZİM verimiz;
+          MapTiler yalnızca taban görüntü. Altlık yokken poligonları da
+          gizlemek, elimizdeki veriyi dış bir servisin durumuna bağlamaktı.
+
+          Artık `Harita3B` her hâlükârda kuruluyor: altlık alınamazsa
+          bağımlılıksız yerel stile düşüyor ve sınırlar yine çiziliyor.
+          Sebep, haritanın üstündeki şeritte yazılı.
+        */}
+        <Harita3B
+          stilAdresi={stilAdresi}
+          mahalleler={geometriler}
+          sutunlar={sutunlar}
+          noktalar={noktalar}
+          acikKatmanlar={acikKatmanlar}
+          noktaKatmanlari={noktaKatmanlari.map(({ anahtar, renk }) => ({ anahtar, renk }))}
+          boyutlu={boyutlu}
+          seciliSlug={seciliSlug}
+          onSecim={mahalleSec}
+          onHata={setHata}
+          onAltlikDurumu={setAltlikNotu}
+        />
       </div>
 
       {/* ── Üst kontrol şeridi ──────────────────────────────────────── */}
@@ -237,6 +247,10 @@ export function HaritaSahnesi({
             Liste
           </SeritButonu>
         </div>
+
+        {altlikNotu ? (
+          <p className="bg-bilgi-zemin text-bilgi text-mikro px-3 py-1.5">{altlikNotu}</p>
+        ) : null}
 
         {hata ? (
           <p className="bg-uyari-zemin text-uyari-metin text-mikro px-3 py-1.5">{hata}</p>
