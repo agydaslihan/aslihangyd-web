@@ -17,6 +17,7 @@ import * as migration_20260813_133647_cephe_yonu from './20260813_133647_cephe_y
 import * as migration_20260814_203859_mahalle_yerlesim_ve_sinir_kaynagi from './20260814_203859_mahalle_yerlesim_ve_sinir_kaynagi';
 import * as migration_20260814_210730_rayic_google_ve_kullanim_sayaci from './20260814_210730_rayic_google_ve_kullanim_sayaci';
 import * as migration_20260815_213935_marka_gorunum from './20260815_213935_marka_gorunum';
+import * as migration_20260816_172048_hero_slider from './20260816_172048_hero_slider';
 
 export const migrations = [
   {
@@ -112,6 +113,11 @@ export const migrations = [
   {
     up: migration_20260815_213935_marka_gorunum.up,
     down: migration_20260815_213935_marka_gorunum.down,
-    name: '20260815_213935_marka_gorunum'
+    name: '20260815_213935_marka_gorunum',
+  },
+  {
+    up: migration_20260816_172048_hero_slider.up,
+    down: migration_20260816_172048_hero_slider.down,
+    name: '20260816_172048_hero_slider'
   },
 ];

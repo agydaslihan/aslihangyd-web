@@ -4772,3 +4772,126 @@ zeminini yazmıştı.** İddia açık tema bloğuna daraltıldı. Test, süzgeci
 dokunma hedefleri en az 44 px (WCAG 2.2), kontrast tablosu kendi içinde
 yatay kayıyor, hazır palet kartları `auto-fill` ızgarada. Ama bu ortamda
 tarayıcı yok; gerçek bir telefonda açılıp denenmesi gerekiyor.
+
+---
+
+## Ana sayfa hero slider (16 Ağustos 2026)
+
+Yeni global: **Ana Sayfa Hero**. Slaytlar, otomatik geçiş anahtarı ve
+geçiş süresi panelden yönetiliyor.
+
+### Üç yol, üç farklı JS maliyeti
+
+| Durum | Ne çizilir | İstemci JS |
+| --- | --- | --- |
+| Slayt yok | Mevcut metin hero'su | **0** |
+| Tek slayt | Sunucuda basılmış tek görsel | **0** |
+| Çok slayt | Aynı işaretleme + kumanda | +3,1 kB gzip |
+
+⚠️ **Koşullu render tek başına yetmezdi.** Kumanda bileşeni `next/dynamic`
+ile ayrı parçaya alınmasaydı, tek slaytlı bir sayfada da ana parçaya girer
+ve indirilirdi. İsteğin "tek slayt varsa slider mekanizması hiç
+yüklenmesin" şartı tam olarak bunu diyor.
+
+Ölçüm:
+
+```
+main (öncesi)        /  12 dosya  202,0 kB gzip
+hero-slider (sonrası)/  12 dosya  202,0 kB gzip     ← değişmedi
+kumanda parçası                     3.114 bayt gzip  ← ayrı, tembel
+eşik                              220,0 kB
+```
+
+### ⚠️ Slaytlar sunucuda basılıyor, istemcide değil
+
+Hero sayfanın LCP öğesi. Slaytlar istemcide çizilseydi ilk boyama JS'in
+inip çalışmasını beklerdi. Kumanda yalnızca **hangisinin görüneceğini**
+yönetiyor; işaretlemeyi sunucu basıyor. JS hiç gelmese bile ilk slayt
+görünüyor ve okunuyor.
+
+### LCP ve CLS — gerçek HTML'de doğrulandı
+
+Gerçek derlenmiş sunucudan, iki slaytlı veriyle:
+
+```
+preload as=image            : 1  (yalnızca ilk slayt, responsive srcset)
+ilk slayt style             : opacity:1        ← sunucuda görünür
+başlık HTML'de              : var
+sizes="100vw"               : var
+ikinci slayt loading="lazy" : var
+aspect-ratio kapsayıcı      : var              ← CLS 0
+```
+
+⚠️ `sizes="100vw"` olmadan tarayıcı en büyük varyantı iner ve 80 kB'lık
+mobil hero bütçesi anlamını kaybederdi.
+
+⚠️ En-boy oranı **sabit ve slayta göre değişmiyor**. Slayt başına yükseklik
+açılsaydı geçişte düzen zıplar ve CLS bozulurdu.
+
+### ⚠️ Lighthouse'un slider'ı gerçekten ölçmesi için tohuma slayt eklendi
+
+Slider slayt yokken hiç render edilmiyor — yani boş veritabanında
+Lighthouse onu hiç ölçmez ve "LCP bozulmadı" demek **ölçülmemiş bir iddia**
+olurdu. `scripts/seed.ts` artık iki demo slayt basıyor (birincisi LCP
+öğesi, ikincisi tembel) ve CI koşumu gerçek slider'lı sayfayı ölçüyor.
+
+⚠️ Otomatik geçiş tohumda da KAPALI — üretim varsayılanıyla aynı. Açık
+tohumlamak, ölçtüğümüz sayfayı gerçekte yayınlanacak sayfadan farklı
+kılardı.
+
+### Erişilebilirlik
+
+- Klavye sağ/sol ok tuşları
+- `aria-live` **yalnızca otomatik geçişte** "polite" — elle geçişte
+  kullanıcı ne yaptığını zaten biliyor, her tıklamada duyuru gürültü olurdu
+- Duraklat düğmesi (yalnızca otomatik geçiş açıkken; kapalıyken
+  duraklatılacak bir şey yok)
+- Fare üzerine gelince ve odak alınca otomatik geçiş duruyor
+- Nokta göstergeleri 44 px dokunma hedefi (WCAG 2.5.8)
+
+⚠️ `prefers-reduced-motion` otomatik geçişi **tümden kapatıyor**, süreyi
+kısaltmıyor. WCAG 2.2.2'nin konusu hareketin kendisi, hızı değil.
+
+⚠️ Görünmeyen slayt `inert` ile klavye sırasından da çıkarılıyor;
+`opacity: 0` tek başına odaklanmayı engellemiyor.
+
+### ⚠️ Otomatik geçiş varsayılan KAPALI
+
+Hem erişilebilirlik hem LCP kararı: her otomatik geçiş bir boyama daha
+demek ve LCP ölçümünün ortasında yeni bir büyük görsel çizmek ölçülen
+değeri kötüleştiriyor. Açmak Aslıhan'ın kararı; varsayılan açık gelmesi
+bizim kararımız olurdu ve yanlış olurdu.
+
+Geçiş süresi 4 saniyenin altına inemiyor: okumaya vakit bırakmayan bir
+slider, olmayan bir slider'dan kötüdür.
+
+### ⚠️ Disiplin testi buton seçimini düzeltti
+
+Hero eylemini adaçayı butonla yazmıştım; `disiplin.test.ts` yakaladı —
+adaçayı çağrıları 4 ile sınırlı ve bu beşincisi olurdu.
+
+Test haklıydı ama asıl mesele daha derindi: **koyu fotoğraf üzerinde
+adaçayı zaten doğru cevap değil.** Karartma oranı kullanıcıya bağlı olduğu
+için buton-zemin kontrastı öngörülemez hâle gelirdi. Yeni `acikBant`
+görünümü eklendi — beyaz zemin, kakao metin; karartmadan bağımsız olarak
+fotoğraftan ayrışıyor.
+
+Ölçüm: metin açık temada **13,24:1**, koyu temada **7,23:1**.
+
+⚠️ Kontrast testine yeni çift EKLENMEDİ: WCAG oranı simetrik olduğu için
+mevcut `BEYAZ / kakao-yuzey` çifti aynı sayıyı zaten ölçüyor. Ayrı çift
+eklemek aynı ölçümü ikinci kez yapmak olurdu; onun yerine mevcut çiftin
+kapsamı yazıldı.
+
+### Arama kartı slaydın üstüne bindirilmedi
+
+Metin hero'sunda kart hero'ya biniyor (-3rem) çünkü altındaki zemin sakin.
+Fotoğraf üstünde aynı şey iki sorun doğururdu: kart slaydın başlığıyla
+çakışır ve okunurluğu **kullanıcının seçtiği karartma oranına** bağlı hâle
+gelir. Slider varken kart hero'nun altında, kendi zemininde duruyor.
+
+### Panelde açılmayanlar
+
+Geçiş efekti seçimi, slayt başına yükseklik ve video slayt bilinçli olarak
+yok. Sırasıyla: her efekt ek JS ve ek boyama; değişken yükseklik CLS'i
+bozar; video LCP'yi ölçülemez hâle getirir.

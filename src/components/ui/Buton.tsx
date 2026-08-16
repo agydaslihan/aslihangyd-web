@@ -24,7 +24,7 @@ import { sinif } from '@/lib/sinif'
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-type Gorunum = 'ikincil' | 'hayalet' | 'kakao' | 'whatsapp' | 'aksan'
+type Gorunum = 'ikincil' | 'hayalet' | 'kakao' | 'whatsapp' | 'aksan' | 'acikBant'
 type Boyut = 'kucuk' | 'orta' | 'buyuk'
 
 const GORUNUMLER: Record<Gorunum, string> = {
@@ -44,6 +44,23 @@ const GORUNUMLER: Record<Gorunum, string> = {
    * kullanılıyor; aynı rengi butona da vermek ikisini birbirine karıştırırdı.
    */
   kakao: 'bg-kakao-yuzey text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
+  /**
+   * ⚠️ KOYU FOTOĞRAF ÜZERİNDE ADAÇAYI DOĞRU CEVAP DEĞİL.
+   *
+   * Hero slaydının zemini karartılmış bir fotoğraf. Orada adaçayı butonu
+   * hem beşinci bir "aksan" çağrısı olur (disiplin testi bunu yakaladı) hem
+   * de fotoğrafın renkleriyle yarışır — karartma oranı kullanıcıya bağlı
+   * olduğu için buton-zemin kontrastı öngörülemez hâle gelirdi.
+   *
+   * Açık buton, koyu bant üzerindeki en yüksek kontrastlı ve en yaygın
+   * çözüm; `ticari` sayfasındaki çağrı bandında da aynı desen elle
+   * yazılmıştı. Burada jetonlaştırılıyor.
+   *
+   * Ölçüm: metin açık temada 13,24:1, koyu temada 7,23:1. Buton zemini
+   * beyaz olduğu için karartma oranından bağımsız olarak fotoğraftan
+   * ayrışıyor.
+   */
+  acikBant: 'bg-white text-kakao-yuzey border-[0.5px] border-transparent hover:opacity-90',
   // WhatsApp'ın kurumsal yeşili bilinçli olarak kullanılmıyor: sayfadaki
   // tek parlak renk olurdu ve sakin paleti bozardı. Tanınırlık ikondan gelir.
   whatsapp:

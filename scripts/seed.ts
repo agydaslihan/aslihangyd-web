@@ -103,6 +103,15 @@ try {
     await payload.delete({ collection: 'ilanlar', where: { baslik: { like: DEMO_ONEKI } } })
     await payload.delete({ collection: 'mahalleler', where: { ad: { like: DEMO_ONEKI } } })
     await payload.delete({ collection: 'sayfalar', where: { baslik: { like: DEMO_ONEKI } } })
+    /**
+     * ⚠️ Hero slaytları görsellerden ÖNCE boşaltılıyor.
+     *
+     * Slaytlar demo görsellere bağlı; görsel önce silinirse ilişki kırık
+     * kalır ve ana sayfa görselsiz bir slayt çizmeye çalışır. Global
+     * silinemediği için içi boşaltılıyor.
+     */
+    await payload.updateGlobal({ slug: 'hero-slider', data: { slaytlar: [] } })
+
     // ⚠️ Görseller en sona: ilan ve mahalle kayıtları onlara bağlı, önce
     // silinirse ilişki kırılır ve Payload hata verir.
     await payload.delete({ collection: 'medya', where: { alt: { like: DEMO_ONEKI } } })
@@ -346,6 +355,55 @@ try {
   }
 
   console.log(`✓ ${sayfaSayisi} hukuki sayfa iskeleti oluşturuldu (içerik boş)`)
+
+  /* ── Hero slaytları ─────────────────────────────────────────────────── */
+
+  /**
+   * ⚠️ TOHUMA SLAYT EKLEMENİN SEBEBİ ÖLÇÜM.
+   *
+   * Hero slider sayfanın LCP öğesi ama slayt YOKKEN hiç render edilmiyor —
+   * yani boş bir veritabanında Lighthouse slider'ı hiç ölçmez ve "LCP
+   * bozulmadı" demek ölçülmemiş bir iddia olurdu.
+   *
+   * Tohum iki slayt basıyor: birincisi LCP öğesi, ikincisi tembel. CI'daki
+   * Lighthouse koşumu böylece gerçek slider'lı sayfayı ölçüyor.
+   *
+   * ⚠️ Otomatik geçiş KAPALI bırakıldı — üretimdeki varsayılanla aynı.
+   * Açık tohumlamak, ölçtüğümüz sayfayı gerçekte yayınlanacak sayfadan
+   * farklı kılardı.
+   */
+  await payload.updateGlobal({
+    slug: 'hero-slider',
+    data: {
+      slaytlar: [
+        {
+          gorsel: await gorselYukle('hero', 900, 'Çorlu genel görünüm'),
+          baslik: 'Çorlu’da kararı rakam verir',
+          altBaslik:
+            'Mahalle verileri, kira çarpanı ve yatırım skoruyla veriye dayalı karar desteği.',
+          butonMetni: 'Değerleme isteyin',
+          butonLink: '/degerleme',
+          metinHizasi: 'sol',
+          overlayKoyulugu: 45,
+          aktif: true,
+        },
+        {
+          gorsel: await gorselYukle('hero', 901, 'Çorlu sanayi bölgesi'),
+          baslik: 'Ticari ve sanayi portföyü',
+          altBaslik: 'OSB yakınlığı ve ulaşım bağlantılarıyla değerlenen alanlar.',
+          butonMetni: 'Ticari portföy',
+          butonLink: '/ticari',
+          metinHizasi: 'orta',
+          overlayKoyulugu: 55,
+          aktif: true,
+        },
+      ],
+      otomatikGecis: false,
+      gecisSuresi: 7,
+    },
+  })
+
+  console.log('✓ 2 hero slaydı yazıldı (LCP ölçümü için)')
   console.log('\n⚠️  Bu veriler DEMO amaçlıdır ve yayınlanmamalıdır.')
   console.log('   Silmek için: TEMIZLE=1 pnpm seed\n')
 

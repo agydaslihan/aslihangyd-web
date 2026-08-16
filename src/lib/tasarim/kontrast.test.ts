@@ -126,7 +126,18 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
     asgari: AA_METIN,
     nerede: 'DOLU terracotta bant — üzerine daima beyaz',
   },
-  { on: BEYAZ, arka: '--color-kakao-yuzey', asgari: AA_METIN, nerede: 'WhatsApp butonu, şerit' },
+  /**
+   * ⚠️ Bu çift TERS YÖNÜ DE kapsıyor: `acikBant` butonu beyaz zemin üzerine
+   * `kakao-yuzey` metin kullanıyor. WCAG kontrast oranı simetriktir
+   * (L1/L2 sıralaması sabit), yani ayrı bir çift eklemek aynı sayıyı ikinci
+   * kez ölçmek olurdu.
+   */
+  {
+    on: BEYAZ,
+    arka: '--color-kakao-yuzey',
+    asgari: AA_METIN,
+    nerede: 'WhatsApp butonu, şerit, hero açık bant butonu (ters yön)',
+  },
   // ── Adaçayı: eylem rengi ───────────────────────────────────────────────
   {
     on: '--color-aksan-metin',

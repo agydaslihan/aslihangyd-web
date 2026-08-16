@@ -111,6 +111,7 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
+    'hero-slider': HeroSlider;
     'marka-gorunum': MarkaGorunum;
     'site-bolumleri': SiteBolumleri;
     'portfoy-bolumleri': PortfoyBolumleri;
@@ -122,6 +123,7 @@ export interface Config {
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
+    'hero-slider': HeroSliderSelect<false> | HeroSliderSelect<true>;
     'marka-gorunum': MarkaGorunumSelect<false> | MarkaGorunumSelect<true>;
     'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
     'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
@@ -1655,6 +1657,56 @@ export interface KurumsalBilgiler {
   createdAt?: string | null;
 }
 /**
+ * Ana sayfanın en üstündeki alan. Hiç slayt eklemezseniz mevcut metin hero’su görünmeye devam eder — site slayt olmadan da düzgün çalışır.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero-slider".
+ */
+export interface HeroSlider {
+  id: number;
+  /**
+   * Sıra bu listedeki sıradır; sürükleyerek değiştirin. ⚠️ İLK slayt sayfanın LCP öğesidir: görselini "Hero" kullanımıyla yükleyin ve mobil bütçesini (80 kB) aşmayın.
+   */
+  slaytlar?:
+    | {
+        /**
+         * Yatay, en az 1920 piksel geniş. Medya kaydında "Kullanım: Hero" seçerseniz panel size ziyaretçiye inecek gerçek boyutu ve bütçe durumunu gösterir.
+         */
+        gorsel: number | Medya;
+        baslik: string;
+        altBaslik?: string | null;
+        /**
+         * Boşsa buton hiç çıkmaz.
+         */
+        butonMetni?: string | null;
+        /**
+         * Örn. /degerleme veya /portfoy
+         */
+        butonLink?: string | null;
+        metinHizasi?: ('sol' | 'orta') | null;
+        /**
+         * Görselin üstündeki koyu perde. ⚠️ Metnin okunabilmesi buna bağlı: açık renkli bir fotoğrafta düşük karartma başlığı okunmaz yapar.
+         */
+        overlayKoyulugu?: number | null;
+        /**
+         * Kapalı slayt sitede hiç görünmez ama kaydı silinmez.
+         */
+        aktif?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Varsayılan KAPALI. Açarsanız slaytlar kendiliğinden ilerler; duraklat düğmesi her zaman görünür ve "hareketi azalt" tercihi olan ziyaretçilerde geçiş hiç başlamaz.
+   */
+  otomatikGecis?: boolean | null;
+  /**
+   * Otomatik geçiş açıkken beklenecek süre. ⚠️ 4 saniyenin altına inilemiyor: okumaya vakit bırakmayan bir slider, olmayan bir slider’dan kötüdür.
+   */
+  gecisSuresi?: number | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Logo, site adı ve renkler. Renk değişikliği kaydedildiği anda yayına girer — imajın yeniden derlenmesi gerekmez.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2048,6 +2100,30 @@ export interface KurumsalBilgilerSelect<T extends boolean = true> {
   veriSorumlusu?: T;
   verbisKayitNo?: T;
   kvkkBasvuruEpostasi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hero-slider_select".
+ */
+export interface HeroSliderSelect<T extends boolean = true> {
+  slaytlar?:
+    | T
+    | {
+        gorsel?: T;
+        baslik?: T;
+        altBaslik?: T;
+        butonMetni?: T;
+        butonLink?: T;
+        metinHizasi?: T;
+        overlayKoyulugu?: T;
+        aktif?: T;
+        id?: T;
+      };
+  otomatikGecis?: T;
+  gecisSuresi?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
