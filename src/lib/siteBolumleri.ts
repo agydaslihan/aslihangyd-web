@@ -24,6 +24,7 @@
 
 export type BolumAnahtari =
   | 'danisman_ol'
+  | 'harita'
   | 'ticari'
   | 'endeks'
   | 'raporlar'
@@ -78,6 +79,26 @@ export const BOLUMLER: readonly BolumTanimi[] = [
     adres: '/danisman-ol',
     gezinmede: true,
     varsayilanAcik: false,
+  },
+  {
+    /**
+     * ⚠️ VARSAYILAN AÇIK. Harita bugün yayında; bu anahtar eklendi diye
+     * kaybolması gerileme olurdu.
+     *
+     * Kapatma gerekçesi teknik olabilir: MapTiler anahtarı bitmiş, kota
+     * dolmuş ya da altlık geçici olarak gelmiyor. O durumda sayfayı
+     * bozuk bırakmaktansa kapatmak dürüst davranış — ve kapatınca menüden
+     * de kalkıyor, altbilgiden de, site haritasından da.
+     */
+    anahtar: 'harita',
+    ad: '3B harita',
+    aciklama:
+      'Tam ekran 3B Çorlu haritası. ⚠️ Altlık MapTiler’dan geliyor; anahtar ya da kota ' +
+      'sorunu yaşarsanız sayfayı bozuk bırakmak yerine buradan kapatabilirsiniz.',
+    rotalar: ['/harita'],
+    adres: '/harita',
+    gezinmede: true,
+    varsayilanAcik: true,
   },
   {
     anahtar: 'ticari',

@@ -47,6 +47,14 @@ export interface MegaOge {
 }
 
 export interface UstMenuOgesi {
+  /**
+   * Sıralamada kullanılan kalıcı kimlik.
+   *
+   * ⚠️ ADRESE ya da ADA BAĞLANMAZ. Panelde kaydedilen sıra bu anahtarları
+   * saklıyor; "Hakkımızda"nın adı değiştiğinde ya da `/portfoy` başka bir
+   * adrese taşındığında Aslıhan'ın kurduğu sıra bozulmamalı.
+   */
+  anahtar: string
   ad: string
   adres: string
   /** Doluysa üzerine gelince mega menü açılır. */
@@ -130,13 +138,24 @@ const ARACLAR_MEGA: readonly MegaOge[] = [
  * butonun vurgusunu düşürürdü.
  */
 export const UST_MENU_YAPISI: readonly UstMenuOgesi[] = [
-  { ad: 'Portföy', adres: '/portfoy', mega: PORTFOY_MEGA },
-  { ad: 'Mahalleler', adres: '/mahalleler' },
-  { ad: 'Araçlar', adres: '/araclar', mega: ARACLAR_MEGA },
-  { ad: 'Endeks', adres: '/endeks', bolum: 'endeks' },
-  { ad: 'Hakkımızda', adres: '/hakkimizda' },
-  { ad: 'İletişim', adres: '/iletisim' },
+  { anahtar: 'portfoy', ad: 'Portföy', adres: '/portfoy', mega: PORTFOY_MEGA },
+  { anahtar: 'mahalleler', ad: 'Mahalleler', adres: '/mahalleler' },
+  { anahtar: 'harita', ad: 'Harita', adres: '/harita', bolum: 'harita' },
+  { anahtar: 'araclar', ad: 'Araçlar', adres: '/araclar', mega: ARACLAR_MEGA },
+  { anahtar: 'endeks', ad: 'Endeks', adres: '/endeks', bolum: 'endeks' },
+  { anahtar: 'hakkimizda', ad: 'Hakkımızda', adres: '/hakkimizda' },
+  { anahtar: 'danisman_ol', ad: 'Danışman Ol', adres: '/danisman-ol', bolum: 'danisman_ol' },
+  { anahtar: 'iletisim', ad: 'İletişim', adres: '/iletisim' },
 ]
+
+/** Panelin sıralama listesinde gösterilecek seçenekler. */
+export const MENU_SIRA_SECENEKLERI = UST_MENU_YAPISI.map((oge) => ({
+  value: oge.anahtar,
+  label: oge.ad,
+}))
+
+/** Kod sırası — panel hiç ayarlanmamışsa bu geçerli. */
+export const VARSAYILAN_MENU_SIRASI: readonly string[] = UST_MENU_YAPISI.map((oge) => oge.anahtar)
 
 /** Sağdaki dolu eylem — şartnamedeki iki adaçayı eyleminden biri. */
 export const BASLIK_EYLEMI = { ad: 'Evimi değerlendir', adres: '/degerleme' } as const
@@ -170,6 +189,51 @@ export function endeksMenudeGorunurMu(bolumAcik: boolean, sayfaAcik: boolean): b
  * istemcide çözmek, kapalı bir bağlantının bir kare boyunca görünmesi
  * demekti.
  */
+/**
+ * Panelde kurulan sıraya göre menüyü dizer.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SIRA LİSTESİ MENÜYÜ TANIMLAMAZ, YALNIZCA DİZER.
+ *
+ * Bu ayrım kritik: menünün NE İÇERDİĞİ koddan, HANGİ SIRADA olduğu
+ * panelden geliyor. Panel içeriği de tanımlasaydı, kayıtta unutulan bir
+ * satır sayfayı menüden düşürürdü ve sebebi hiçbir yerde görünmezdi.
+ *
+ * Bunun üç somut karşılığı var:
+ *
+ *  1. Listede OLMAYAN öğe kaybolmaz — sona eklenir. Koda yeni bir menü
+ *     girişi geldiğinde (ya da Aslıhan bir satırı silmiş olduğunda) sayfa
+ *     menüden düşmez; görünür ve yeri panelden düzeltilebilir.
+ *  2. Listedeki TANINMAYAN anahtar yok sayılır. Kaldırılmış bir menü
+ *     girişinin kaydı, menüye boş bir öğe basmamalı.
+ *  3. TEKRAR EDEN anahtarın ilki geçerli. Aynı sayfa menüde iki kez
+ *     görünemez.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function menuyuSirala(
+  ogeler: readonly UstMenuOgesi[],
+  sira: readonly string[],
+): UstMenuOgesi[] {
+  const kalan = new Map(ogeler.map((oge) => [oge.anahtar, oge]))
+  const dizili: UstMenuOgesi[] = []
+
+  for (const anahtar of sira) {
+    const oge = kalan.get(anahtar)
+    // Tanınmayan anahtar atlanır; tekrar eden anahtar ikinci kez gelmez
+    // (ilk alışta haritadan siliniyor).
+    if (oge === undefined) continue
+    kalan.delete(anahtar)
+    dizili.push(oge)
+  }
+
+  // Listede adı geçmeyenler kod sırasını koruyarak sona iner.
+  for (const oge of ogeler) {
+    if (kalan.has(oge.anahtar)) dizili.push(oge)
+  }
+
+  return dizili
+}
+
 export function menuyuSuz(
   yapi: readonly UstMenuOgesi[],
   acikBolumler: ReadonlySet<string>,

@@ -36,6 +36,7 @@ import { GooglePlacesKullanimi } from '@/globals/GooglePlacesKullanimi'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
 import { HeroSlider } from '@/globals/HeroSlider'
 import { MarkaGorunum } from '@/globals/MarkaGorunum'
+import { MenuDuzeni } from '@/globals/MenuDuzeni'
 import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
 import { SiteBolumleri } from '@/globals/SiteBolumleri'
 
@@ -210,6 +211,7 @@ export default buildConfig({
     HeroSlider,
     MarkaGorunum,
     SiteBolumleri,
+    MenuDuzeni,
     PortfoyBolumleri,
     DanismanOl,
     DegerlemeAyarlari,

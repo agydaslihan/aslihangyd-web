@@ -1,11 +1,19 @@
-import { existsSync } from 'node:fs'
+import { existsSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
 import { ARACLAR } from '@/lib/araclar'
-import { BASLIK_EYLEMI, endeksMenudeGorunurMu, menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
+import {
+  BASLIK_EYLEMI,
+  endeksMenudeGorunurMu,
+  MENU_SIRA_SECENEKLERI,
+  menuyuSirala,
+  menuyuSuz,
+  UST_MENU_YAPISI,
+  VARSAYILAN_MENU_SIRASI,
+} from '@/lib/gezinme'
 import { BOLUMLER } from '@/lib/siteBolumleri'
 
 /**
@@ -187,5 +195,147 @@ describe('endeksMenudeGorunurMu', () => {
 
   it('ikisi de kapalıysa görünmez', () => {
     expect(endeksMenudeGorunurMu(false, false)).toBe(false)
+  })
+})
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ MENÜ SIRASI PANELDEN GELİYOR — VE MENÜYÜ TANIMLAMIYOR.
+ *
+ * Ayrım bu testlerin bütün konusu: panel yalnızca DİZER. Bir başlığın
+ * menüde OLUP OLMAMASI Site Bölümleri anahtarına bağlı. Sıra listesi
+ * içeriği de belirleseydi, kayıtta eksik kalan bir satır bir sayfayı
+ * sessizce erişilemez yapardı — ve sebebi hiçbir yerde görünmezdi.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+describe('menuyuSirala', () => {
+  const yapi = UST_MENU_YAPISI
+
+  it('paneldeki sırayı uygular', () => {
+    const sirali = menuyuSirala(yapi, ['iletisim', 'harita', 'portfoy'])
+    expect(sirali.slice(0, 3).map((oge) => oge.anahtar)).toEqual(['iletisim', 'harita', 'portfoy'])
+  })
+
+  /**
+   * ⚠️ EN ÖNEMLİ KURAL: listede adı geçmeyen başlık KAYBOLMAZ.
+   *
+   * Koda yeni bir menü girişi eklendiğinde ya da Aslıhan bir satırı
+   * silmiş olduğunda sayfa menüden düşmemeli. Sona iniyor; görünür
+   * kalıyor ve yeri panelden düzeltilebiliyor.
+   */
+  it('listede olmayan başlığı düşürmez, sona alır', () => {
+    const sirali = menuyuSirala(yapi, ['iletisim'])
+    expect(sirali).toHaveLength(yapi.length)
+    expect(sirali[0]?.anahtar).toBe('iletisim')
+    expect(new Set(sirali.map((oge) => oge.anahtar))).toEqual(
+      new Set(yapi.map((oge) => oge.anahtar)),
+    )
+  })
+
+  it('listede olmayanlar kod sırasını korur', () => {
+    const sirali = menuyuSirala(yapi, ['iletisim'])
+    const kalanKodSirasi = yapi
+      .map((oge) => oge.anahtar)
+      .filter((anahtar) => anahtar !== 'iletisim')
+    expect(sirali.slice(1).map((oge) => oge.anahtar)).toEqual(kalanKodSirasi)
+  })
+
+  /** ⚠️ Kaldırılmış bir menü girişinin kaydı menüye boş öğe basmamalı. */
+  it('tanınmayan anahtarı yok sayar', () => {
+    const sirali = menuyuSirala(yapi, ['artik-yok', 'portfoy'])
+    expect(sirali[0]?.anahtar).toBe('portfoy')
+    expect(sirali).toHaveLength(yapi.length)
+  })
+
+  /** ⚠️ Aynı sayfa menüde iki kez duramaz. */
+  it('tekrar eden anahtarı bir kez basar', () => {
+    const sirali = menuyuSirala(yapi, ['portfoy', 'portfoy', 'iletisim'])
+    expect(sirali.filter((oge) => oge.anahtar === 'portfoy')).toHaveLength(1)
+    expect(sirali).toHaveLength(yapi.length)
+  })
+
+  it('boş liste kod sırasını verir', () => {
+    expect(menuyuSirala(yapi, []).map((o) => o.anahtar)).toEqual(yapi.map((o) => o.anahtar))
+    expect(menuyuSirala(yapi, [...VARSAYILAN_MENU_SIRASI]).map((o) => o.anahtar)).toEqual(
+      yapi.map((o) => o.anahtar),
+    )
+  })
+
+  /**
+   * ⚠️ SÜZME İLE SIRALAMA BİRLİKTE: kapalı bölüm geri gelmemeli.
+   *
+   * "Listede yoksa sona ekle" kuralı, süzme SONRA çalıştırılsaydı kapalı
+   * bir öğeyi menüye geri koyabilirdi. `layout.tsx` önce süzüyor; bu test
+   * o sıranın sonucunu kilitliyor.
+   */
+  it('kapalı bölüm sıralamadan sonra da menüde değil', () => {
+    const acik = new Set(
+      BOLUMLER.map((bolum) => bolum.anahtar).filter((anahtar) => anahtar !== 'harita'),
+    )
+    const menu = menuyuSirala(menuyuSuz(UST_MENU_YAPISI, acik), ['harita', 'portfoy'])
+    expect(menu.map((oge) => oge.anahtar)).not.toContain('harita')
+    expect(menu[0]?.anahtar).toBe('portfoy')
+  })
+
+  /** ⚠️ Anahtarlar sıralamanın kimliği: benzersiz ve boş olmamalı. */
+  it('menü anahtarları benzersiz', () => {
+    const anahtarlar = yapi.map((oge) => oge.anahtar)
+    expect(new Set(anahtarlar).size).toBe(anahtarlar.length)
+    expect(anahtarlar.every((anahtar) => anahtar.length > 0)).toBe(true)
+  })
+
+  /**
+   * ⚠️ Panelin seçenek listesi menüden TÜRETİLMELİ. Elle yazılsaydı yeni
+   * bir başlık eklendiğinde sıralanamaz olurdu ve kimse fark etmezdi.
+   */
+  it('panel seçenekleri menüyle birebir aynı', () => {
+    expect(MENU_SIRA_SECENEKLERI.map((secenek) => secenek.value)).toEqual(
+      yapi.map((oge) => oge.anahtar),
+    )
+    expect(VARSAYILAN_MENU_SIRASI).toEqual(yapi.map((oge) => oge.anahtar))
+  })
+})
+
+/**
+ * ⚠️ AÇILIP KAPANABİLEN MENÜ ÖĞESİNİN ROTASI DA KAPANMALI.
+ *
+ * Menüden düşen ama adresi çalışmaya devam eden bir sayfa, "kapattım ama
+ * Google hâlâ gösteriyor" durumudur. Şartname Danışman Ol ve Harita için
+ * açıkça 404 istiyor; bu test ikisinin de rota tanımını ve sayfadaki
+ * kapıyı arıyor.
+ */
+describe('kapatılabilir menü öğeleri', () => {
+  it.each([
+    ['danisman_ol', '/danisman-ol', 'danisman-ol'],
+    ['harita', '/harita', 'harita'],
+  ])('%s bölümü rota taşıyor ve sayfası kapı çağırıyor', (anahtar, adres, klasor) => {
+    const bolum = BOLUMLER.find((aday) => aday.anahtar === anahtar)
+    expect(bolum?.rotalar).toContain(adres)
+
+    const sayfa = readFileSync(path.join(SITE_KOKU, klasor, 'page.tsx'), 'utf8')
+    expect(sayfa).toContain(`bolumKapisi('${anahtar}')`)
+  })
+
+  it('ikisi de üst menüde ve bölüm anahtarına bağlı', () => {
+    for (const anahtar of ['danisman_ol', 'harita']) {
+      const oge = UST_MENU_YAPISI.find((aday) => aday.anahtar === anahtar)
+      expect(oge, `${anahtar} üst menüde yok`).toBeDefined()
+      expect(oge?.bolum).toBe(anahtar)
+    }
+  })
+
+  /**
+   * ⚠️ ENDEKS'İN İKİNCİ KAPISI SIRALAMADAN SONRA DA DURUYOR.
+   *
+   * Sıralama eklenirken en kolay hata, süzülmüş listeyi bırakıp ham
+   * yapıyı dizmek olurdu. O durumda Endeks veri eşiği sağlanmasa da
+   * menüye geri gelirdi — tam olarak bir kez yaşanan hata.
+   */
+  it('endeks eşik sağlanmadığında sıralamadan sonra da menüde değil', () => {
+    const acik = new Set(BOLUMLER.map((bolum) => bolum.anahtar))
+    if (!endeksMenudeGorunurMu(true, false)) acik.delete('endeks')
+
+    const menu = menuyuSirala(menuyuSuz(UST_MENU_YAPISI, acik), ['endeks', 'portfoy'])
+    expect(menu.map((oge) => oge.anahtar)).not.toContain('endeks')
   })
 })

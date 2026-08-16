@@ -114,6 +114,7 @@ export interface Config {
     'hero-slider': HeroSlider;
     'marka-gorunum': MarkaGorunum;
     'site-bolumleri': SiteBolumleri;
+    'menu-duzeni': MenuDuzeni;
     'portfoy-bolumleri': PortfoyBolumleri;
     'danisman-ol': DanismanOl;
     'degerleme-ayarlari': DegerlemeAyarlari;
@@ -126,6 +127,7 @@ export interface Config {
     'hero-slider': HeroSliderSelect<false> | HeroSliderSelect<true>;
     'marka-gorunum': MarkaGorunumSelect<false> | MarkaGorunumSelect<true>;
     'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
+    'menu-duzeni': MenuDuzeniSelect<false> | MenuDuzeniSelect<true>;
     'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
     'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
@@ -1843,6 +1845,10 @@ export interface SiteBolumleri {
    */
   danisman_ol?: boolean | null;
   /**
+   * Tam ekran 3B Çorlu haritası. ⚠️ Altlık MapTiler’dan geliyor; anahtar ya da kota sorunu yaşarsanız sayfayı bozuk bırakmak yerine buradan kapatabilirsiniz.
+   */
+  harita?: boolean | null;
+  /**
    * İş yeri, depo, fabrika ve arsa odaklı dikey sayfa.
    */
   ticari?: boolean | null;
@@ -1878,6 +1884,26 @@ export interface SiteBolumleri {
    * Mahalle medyanına göre fırsat ve risk sinyalleri.
    */
   bolge_radari?: boolean | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Üst menüdeki başlıkların sırası. Satırları sürükleyerek düzenleyin. Bir başlığı tamamen kaldırmak için Site Bölümleri’nden kapatın — buradan silmek onu yalnızca menünün sonuna atar.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "menu-duzeni".
+ */
+export interface MenuDuzeni {
+  id: number;
+  /**
+   * Soldan sağa menü sırası. Kapalı bölümler bu listede dursa da sitede görünmez.
+   */
+  sira?:
+    | {
+        oge: 'portfoy' | 'mahalleler' | 'harita' | 'araclar' | 'endeks' | 'hakkimizda' | 'danisman_ol' | 'iletisim';
+        id?: string | null;
+      }[]
+    | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2182,6 +2208,7 @@ export interface MarkaGorunumSelect<T extends boolean = true> {
  */
 export interface SiteBolumleriSelect<T extends boolean = true> {
   danisman_ol?: T;
+  harita?: T;
   ticari?: T;
   endeks?: T;
   raporlar?: T;
@@ -2191,6 +2218,21 @@ export interface SiteBolumleriSelect<T extends boolean = true> {
   ai_arama?: T;
   google_places?: T;
   bolge_radari?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "menu-duzeni_select".
+ */
+export interface MenuDuzeniSelect<T extends boolean = true> {
+  sira?:
+    | T
+    | {
+        oge?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

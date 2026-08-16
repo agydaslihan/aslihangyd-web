@@ -14,6 +14,7 @@ import { mutlakAdres } from '@/lib/site'
 import { ilanlariGetir } from '@/lib/veri/ilanlar'
 import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
+import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 
 export const metadata: Metadata = {
   title: 'Çorlu 3B harita — m² fiyatı, kira ve yatırım skoru',
@@ -45,6 +46,11 @@ const POI_GRUPLARI: Record<string, string> = {
 }
 
 export default async function HaritaSayfasi() {
+  // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın.
+  // Harita sayfası ilan, mahalle ve POI'yi birden okuyor; kapıyı aşağı
+  // koymak kapalı bir bölüm için üç sorgu çalıştırmak olurdu.
+  await bolumKapisi('harita')
+
   const [poiler, mahalleKayitlari, ilanSonucu] = await Promise.all([
     ilgiNoktalariniGetir(),
     mahalleleriGetir(),

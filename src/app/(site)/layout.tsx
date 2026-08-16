@@ -7,8 +7,9 @@ import { CerezBanneri } from '@/components/cerez/CerezBanneri'
 import { Altbilgi } from '@/components/duzen/Altbilgi'
 import { Baslik, IcerigeAtla } from '@/components/duzen/Baslik'
 import { UstSerit } from '@/components/duzen/UstSerit'
-import { endeksMenudeGorunurMu, menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
+import { endeksMenudeGorunurMu, menuyuSirala, menuyuSuz, UST_MENU_YAPISI } from '@/lib/gezinme'
 import { endeksSayfasiAcikMi } from '@/lib/veri/endeks'
+import { menuSirasiniGetir } from '@/lib/veri/menuDuzeni'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import {
   iletisimEpostasi,
@@ -209,7 +210,16 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
     acikAnahtarlar.delete('endeks')
   }
 
-  const menu = menuyuSuz(UST_MENU_YAPISI, acikAnahtarlar)
+  /**
+   * ⚠️ ÖNCE SÜZ, SONRA DİZ.
+   *
+   * Sıralama listesi kapalı bölümlerin anahtarlarını da taşıyor (panelde
+   * duruyorlar; kapalı olmak listeden silinmek değil). Ters sırada
+   * çalıştırılsaydı sonuç aynı görünürdü ama kapalı öğeler için boşuna
+   * iş yapılırdı — ve daha kötüsü, "listede yoksa sona ekle" kuralı
+   * kapalı bir öğeyi menüye geri koyabilirdi.
+   */
+  const menu = menuyuSirala(menuyuSuz(UST_MENU_YAPISI, acikAnahtarlar), await menuSirasiniGetir())
 
   return (
     <html lang="tr" className={`${yaziArayuz.variable} ${yaziBaslik.variable}`}>
