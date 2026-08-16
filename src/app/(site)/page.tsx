@@ -1,5 +1,6 @@
 import Link from 'next/link'
 
+import { HeroBolumu } from '@/components/hero/HeroBolumu'
 import { AramaWidgeti, type MahalleSecenegi } from '@/components/ilan/AramaWidgeti'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
@@ -24,16 +25,27 @@ import { sinif } from '@/lib/sinif'
 import { gizliPortfoySayisi } from '@/lib/veri/gizliPortfoy'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
+import { heroAyarlari } from '@/lib/hero/sunucu'
 
 export default async function AnaSayfa() {
-  const [ilanlar, mahalleler, kurumsal, portfoy, bolumler] = await Promise.all([
+  const [ilanlar, mahalleler, kurumsal, portfoy, bolumler, hero] = await Promise.all([
     oneCikanIlanlariGetir(3),
     mahalleleriGetir(),
     kurumsalBilgileriGetir(),
     // Yalnızca sayaç için; ilk sayfa yeterli, `toplam` tüm kümeyi verir.
     ilanlariGetir({}, 1, 1),
     bolumDurumlariniGetir(),
+    heroAyarlari(),
   ])
+
+  /**
+   * ⚠️ Hero ayarları BURADA okunuyor, `HeroBolumu` içinde ikinci kez değil.
+   *
+   * Sayfanın hangi hero'yu çizeceğini bilmesi gerekiyor (slider mı, metin
+   * mi) ve `HeroBolumu` da aynı veriyi okuyor. İki ayrı okuma iki ayrı
+   * veritabanı turu demek olurdu; Payload aynı istek içinde önbelleklemiyor.
+   */
+  const heroSlaytVar = hero.slaytlar.length > 0
 
   /**
    * Gizli portföy sayacı yalnızca bölüm AÇIKSA sorgulanıyor.
@@ -82,11 +94,32 @@ export default async function AnaSayfa() {
 
   return (
     <>
-      <Kahraman
-        whatsapp={whatsapp}
-        mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
-        ticariAcik={bolumler.ticari}
-      />
+      {/*
+        ⚠️ SLAYT VARSA SLIDER, YOKSA METİN HERO'SU — İKİSİ BİRDEN DEĞİL.
+
+        `HeroBolumu` slayt yoksa `null` dönüyor; o zaman aşağıdaki
+        `Kahraman` çiziliyor. Slider bir ek, bir varlık şartı değil:
+        Aslıhan hiç görsel yüklemese de ana sayfa bugünkü hâliyle çalışır.
+
+        ⚠️ Slider varken arama kartı yine görünüyor ama hero'nun ALTINDA,
+        kendi bölümünde. Kartı slaydın üstüne bindirmek metinle çakışırdı
+        ve karartma ayarını kullanıcının kontrolünden çıkarırdı.
+      */}
+      <HeroBolumu ayarlar={hero} />
+
+      {heroSlaytVar ? (
+        <AramaBolumu
+          whatsapp={whatsapp}
+          mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
+          ticariAcik={bolumler.ticari}
+        />
+      ) : (
+        <Kahraman
+          whatsapp={whatsapp}
+          mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
+          ticariAcik={bolumler.ticari}
+        />
+      )}
 
       <GuvenSeridi ogeler={guvenOgeleri} />
 
@@ -241,6 +274,62 @@ function Kahraman({
 
       {/* Yüzen arama kartı */}
       <div className="kapsayici relative -mt-12 sm:-mt-14">
+        <div className="max-w-4xl">
+          <AramaWidgeti mahalleler={mahalleler} ticariAcik={ticariAcik} />
+
+          <p className="text-metin-3 mt-3 text-govde-kucuk">
+            veya{' '}
+            <Link href="/harita" className="text-aksan-metin underline underline-offset-2">
+              haritada keşfedin
+            </Link>{' '}
+            {whatsapp ? (
+              <>
+                ·{' '}
+                <a
+                  href={whatsapp}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-aksan-metin underline underline-offset-2"
+                >
+                  WhatsApp&apos;tan sorun
+                </a>
+              </>
+            ) : null}
+          </p>
+        </div>
+      </div>
+    </section>
+  )
+}
+
+/**
+ * Arama bölümü — slider varken hero'nun ALTINDA duruyor.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SLAYDIN ÜSTÜNE BİNDİRİLMEDİ VE BU BİLİNÇLİ.
+ *
+ * Metin hero'sunda kart hero'ya biniyor (-3rem) çünkü altındaki zemin
+ * sakin ve kartın okunurluğu garanti. Fotoğraf üstünde aynı şey iki sorun
+ * doğururdu: kart slaydın başlığıyla çakışır ve okunurluğu kullanıcının
+ * seçtiği karartma oranına bağlı hâle gelir — yani bizim kontrolümüzden
+ * çıkar.
+ *
+ * Kart hero'nun altında, kendi zemininde duruyor: her karartma ayarında
+ * aynı kontrastla okunuyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+function AramaBolumu({
+  whatsapp,
+  mahalleler,
+  ticariAcik,
+}: {
+  whatsapp: string | null
+  mahalleler: MahalleSecenegi[]
+  ticariAcik: boolean
+}) {
+  return (
+    <section className="bg-yuzey-2">
+      <div className="kapsayici py-8 sm:py-10">
         <div className="max-w-4xl">
           <AramaWidgeti mahalleler={mahalleler} ticariAcik={ticariAcik} />
 
