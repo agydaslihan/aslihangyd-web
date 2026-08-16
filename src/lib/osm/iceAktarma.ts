@@ -1,6 +1,7 @@
 import type { Payload, TypedUser } from 'payload'
 
 import { HazirlikDeposu } from './hazirlikDeposu'
+import { eslesmeyiOzetle, mahalleleriEslestir, type EslesmeOzeti } from './mahalleEslesme'
 import { overpassDene } from './istemci'
 import { merkezlerdenKutu, kutuMakulMu, overpassCevabiniCoz, overpassSorgusu } from './sorgu'
 import type { CozumlemeOzeti, Kutu, OsmAdayi } from './sorgu'
@@ -389,6 +390,8 @@ export interface YazmaSonucu {
   eklenen: number
   guncellenen: number
   korunan: number
+  /** Mahalle eşleşmesinin dökümü — kesin / yaklaşık / eşleşmeyen. */
+  eslesme: EslesmeOzeti
   hatalar: { ad: string; mesaj: string }[]
 }
 
@@ -405,13 +408,45 @@ export async function satirlariYaz(
   user: TypedUser,
   satirlar: readonly OnizlemeSatiri[],
 ): Promise<YazmaSonucu> {
-  const sonuc: YazmaSonucu = { eklenen: 0, guncellenen: 0, korunan: 0, hatalar: [] }
+  const sonuc: YazmaSonucu = {
+    eklenen: 0,
+    guncellenen: 0,
+    korunan: 0,
+    eslesme: { kesin: 0, yaklasik: 0, eslesmeyen: 0 },
+    hatalar: [],
+  }
 
+  /**
+   * ⚠️ MAHALLE EŞLEŞMESİ TEK SORGUDA, YAZMADAN ÖNCE.
+   *
+   * Nokta başına sorgu atmak yüzlerce POI'de veritabanına yüzlerce tur
+   * demekti. `unnest` ile hepsi tek turda çözülüyor.
+   *
+   * ⚠️ "Korunacak" satırlar dışarıda: onlar elle düzeltilmiş kayıtlar ve
+   * mahalle ilişkileri de elle verilmiş olabilir. Yeniden hesaplamak,
+   * korumanın kendisini delerdi.
+   */
+  const yazilacaklar = satirlar.filter((satir) => satir.islem !== 'korunacak')
+
+  const eslesmeler = await mahalleleriEslestir(
+    payload,
+    yazilacaklar.map((satir, sira) => ({
+      sira,
+      boylam: satir.aday.boylam,
+      enlem: satir.aday.enlem,
+    })),
+  )
+  sonuc.eslesme = eslesmeyiOzetle(eslesmeler.values())
+
+  let sira = -1
   for (const satir of satirlar) {
     if (satir.islem === 'korunacak') {
       sonuc.korunan += 1
       continue
     }
+    sira += 1
+
+    const eslesme = eslesmeler.get(sira)
 
     const veri = {
       ad: satir.aday.ad,
@@ -420,6 +455,8 @@ export async function satirlariYaz(
       onemli: satir.aday.onemli,
       kaynak: 'osm' as const,
       osmKimlik: satir.aday.osmKimlik,
+      mahalle: eslesme?.mahalleId ?? null,
+      mahalleYaklasik: eslesme?.yaklasik ?? false,
     }
 
     try {
