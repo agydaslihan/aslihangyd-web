@@ -34,6 +34,7 @@ import { BakimDurumu } from '@/globals/BakimDurumu'
 import { DanismanOl } from '@/globals/DanismanOl'
 import { GooglePlacesKullanimi } from '@/globals/GooglePlacesKullanimi'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
+import { Hakkimizda } from '@/globals/Hakkimizda'
 import { HeroSlider } from '@/globals/HeroSlider'
 import { MarkaGorunum } from '@/globals/MarkaGorunum'
 import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
@@ -207,6 +208,7 @@ export default buildConfig({
 
   globals: [
     KurumsalBilgiler,
+    Hakkimizda,
     HeroSlider,
     MarkaGorunum,
     SiteBolumleri,
