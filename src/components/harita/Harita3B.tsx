@@ -4,6 +4,8 @@
 // dışa aktarımı yoktur. `Map` küresel `Map` tipini gölgelediği için
 // `MapLibreMap` takma adıyla alınıyor.
 import type { AllPaintProperties } from 'maplibre-gl'
+
+import { stiliCoz, type StilSonucu } from '@/lib/harita/stil'
 import { GeolocateControl, MapLibreMap, NavigationControl, ScaleControl } from 'maplibre-gl'
 import { useEffect, useRef, useState } from 'react'
 
@@ -72,7 +74,7 @@ export interface Harita3BOzellikleri {
    * `process.env`'den okumak, değeri derleme anına bağlar ve üretimde
    * haritayı sessizce kapatırdı. Gerekçenin tamamı o dosyada.
    */
-  stilAdresi: string
+  stilAdresi: string | null
   mahalleler: MahalleGeometrisi[]
   sutunlar: SutunOzelligi[]
   noktalar: HaritaNoktasi[]
@@ -85,6 +87,13 @@ export interface Harita3BOzellikleri {
   onSecim: (slug: string | null) => void
   /** Göstergede yazacak açıklama — MapLibre'ye değil, sahneye ait. */
   onHata: (mesaj: string | null) => void
+  /**
+   * Altlık durumu — `null` ise altlık yerinde.
+   *
+   * ⚠️ `onHata`dan ayrı: altlığın olmaması haritanın bozuk olduğu anlamına
+   * gelmiyor. Sınırlar, sütunlar ve POI'ler çizilmeye devam ediyor.
+   */
+  onAltlikDurumu: (mesaj: string | null) => void
 }
 
 /**
@@ -190,13 +199,43 @@ export function Harita3B({
    */
   const [webglVar] = useState(() => webglDestekleniyorMu())
 
+  /**
+   * ── Stil çözümü ────────────────────────────────────────────────────
+   *
+   * ⚠️ HARİTA STİL ÇÖZÜLMEDEN KURULMUYOR.
+   *
+   * MapLibre `load` olayını yalnızca stil başarıyla yüklendiğinde
+   * ateşliyor; katmanlarımız o olayın içinde kuruluyor. Uzak stil
+   * doğrudan MapLibre'ye verilseydi (eski hâli), MapTiler 401 döndüğünde
+   * `load` hiç gelmez ve **mahalle sınırları da çizilmezdi.**
+   *
+   * Stil önce burada çözülüyor; alınamazsa yerine bağımlılıksız yerel
+   * stil konuyor. Harita her hâlükârda kuruluyor, poligonlar her
+   * hâlükârda ekleniyor. Poligonlar bizim verimiz — MapTiler yalnızca
+   * taban görüntü.
+   */
+  const [stilSonucu, setStilSonucu] = useState<StilSonucu | null>(null)
+
+  useEffect(() => {
+    let iptal = false
+    void stiliCoz(stilAdresi).then((sonuc) => {
+      if (!iptal) setStilSonucu(sonuc)
+    })
+    return () => {
+      iptal = true
+    }
+  }, [stilAdresi])
+
   /* ── Kurulum ─────────────────────────────────────────────────────────── */
   useEffect(() => {
     if (!webglVar || !kapsayiciRef.current || haritaRef.current) return
+    if (stilSonucu === null) return
+
+    const yedekKip = stilSonucu.durum !== 'uzak'
 
     const harita = new MapLibreMap({
       container: kapsayiciRef.current,
-      style: stilAdresi,
+      style: stilSonucu.stil,
       center: CORLU_MERKEZ,
       zoom: VARSAYILAN_YAKINLIK,
       // Eğim ve döndürme 3B'nin ön koşulu; sahnedeki düğmeler bunları sürer.
@@ -227,17 +266,23 @@ export function Harita3B({
     )
     harita.addControl(new ScaleControl({ unit: 'metric' }), 'bottom-left')
 
+    /**
+     * ⚠️ Tek bir kayıp karo yüzünden "harita bozuk" denmiyor.
+     *
+     * Stil zaten yukarıda çözüldü ve sınıflandırıldı; buraya düşen hatalar
+     * karo/kaynak düzeyinde. Yedek kipte zaten dış kaynak yok, o yüzden
+     * bu yol yalnızca uzak altlık varken anlamlı.
+     */
     harita.on('error', (olay) => {
-      // Tek bir kayıp karo yüzünden "harita bozuk" demek yanlış olur;
-      // yalnızca stil yüklenemediğinde kullanıcıya haber verilir.
-      if (olay.error?.message?.includes('style')) {
-        onHata('Harita katmanı yüklenemedi. Aşağıdaki liste aynı bilgileri gösteriyor.')
+      if (!yedekKip && olay.error?.message?.includes('style')) {
+        onHata('Harita altlığı yüklenemedi. Sınırlar ve veriler çizilmeye devam ediyor.')
       }
     })
 
     harita.on('load', () => {
-      kagitTonunaCevir(harita)
-      katmanlariKur(harita)
+      // ⚠️ Yedek kipte satıcı katmanı yok; tonlamanın dokunacağı bir şey de yok.
+      if (!yedekKip) kagitTonunaCevir(harita)
+      katmanlariKur(harita, { etiketler: !yedekKip })
       setHazir(true)
     })
 
@@ -256,7 +301,7 @@ export function Harita3B({
     // fonksiyon üretiyor ve listeye girseydi harita her seferinde sökülüp
     // yeniden kurulurdu.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [webglVar, stilAdresi])
+  }, [webglVar, stilSonucu])
 
   /* ── Mahalle poligonları ─────────────────────────────────────────────── */
   useEffect(() => {
@@ -530,7 +575,15 @@ function kagitTonunaCevir(harita: MapLibreMap): void {
   })
 }
 
-function katmanlariKur(harita: MapLibreMap): void {
+/**
+ * @param secenekler.etiketler Metin katmanları eklensin mi?
+ *
+ * ⚠️ Yedek stilde `glyphs` YOK — yazı tipi kaynağını da MapTiler sağlıyor.
+ * Metin katmanlarını yine de eklemek, her karo için konsola hata yağdırır
+ * ve hiçbir etiket çizilmez. Etiketsiz bir sınır haritası, hiç harita
+ * olmamasından kat kat iyi.
+ */
+function katmanlariKur(harita: MapLibreMap, secenekler: { etiketler: boolean }): void {
   const renkler = haritaRenkleri()
 
   const bosKoleksiyon: GeoJSON.FeatureCollection = { type: 'FeatureCollection', features: [] }
@@ -658,6 +711,8 @@ function katmanlariKur(harita: MapLibreMap): void {
         'text-halo-width': 1.5,
       },
     }) as Parameters<MapLibreMap['addLayer']>[0]
+
+  if (!secenekler.etiketler) return
 
   if (!dene(() => harita.addLayer(etiketKatmani(true)))) {
     dene(() => harita.addLayer(etiketKatmani(false)))

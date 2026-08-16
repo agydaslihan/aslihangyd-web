@@ -149,3 +149,54 @@ describe('ayar tanımları', () => {
     expect(kritikler).toContain('SITE_ADRESI')
   })
 })
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ HİÇBİR AYAR GERİ DÜŞÜŞÜN "KAPSAM DIŞI"NDA DEĞİL.
+ *
+ * 16 Ağustos 2026'da şu soru soruldu: "MapTiler .env'de eski adla dolu,
+ * yeni adla boş; geri düşüş diğerlerinde çalışıyor, MapTiler neden kapsam
+ * dışı?"
+ *
+ * Ölçüldü: kapsam dışı DEĞİLDİ. Mekanizma MapTiler için de çalışıyordu —
+ * hem birim düzeyinde hem gerçek üretim derlemesinde (anahtar sunucuda
+ * render edilen HTML'e ulaşıyordu). Haritanın boş kalmasının sebebi
+ * başkaydı: katmanlarımız MapLibre'nin `load` olayına bağlıydı ve o olay
+ * altlık yüklenmezse hiç ateşlenmiyordu.
+ *
+ * Bu test soruyu bir daha sordurtmuyor: TANIMLI HER ayarın geri düşüşü tek
+ * tek sınanıyor. Biri listeden düşerse ya da özel bir yol kazanırsa burada
+ * kırmızı yanar.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+describe('geri düşüş hiçbir ayarı atlamıyor', () => {
+  it('eski adı tanımlı her ayar eski addan okunabiliyor', () => {
+    const basarisiz: string[] = []
+
+    for (const tanim of AYARLAR) {
+      if (!tanim.eskiAd) continue
+
+      vi.stubEnv(tanim.ad, '')
+      vi.stubEnv(tanim.eskiAd, `ESKI_${tanim.ad}`)
+
+      if (ayar(tanim.ad) !== `ESKI_${tanim.ad}`) {
+        basarisiz.push(`${tanim.ad} ← ${tanim.eskiAd}`)
+      }
+    }
+
+    expect(
+      basarisiz,
+      'Bu ayarlar eski addan okunamıyor; sunucudaki .env güncellenmemişse sessizce boş kalırlar.',
+    ).toEqual([])
+  })
+
+  it('MapTiler geri düşüşü çalışıyor ve stil adresi üretiyor', async () => {
+    vi.stubEnv('MAPTILER_ANAHTARI', '')
+    vi.stubEnv('NEXT_PUBLIC_MAPTILER_API_KEY', 'ANAHTAR_123')
+
+    const { haritaStilAdresi } = await import('@/lib/harita/sunucu')
+
+    expect(ayar('MAPTILER_ANAHTARI')).toBe('ANAHTAR_123')
+    expect(haritaStilAdresi()).toContain('key=ANAHTAR_123')
+  })
+})

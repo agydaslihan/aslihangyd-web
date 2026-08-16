@@ -4772,3 +4772,111 @@ zeminini yazmıştı.** İddia açık tema bloğuna daraltıldı. Test, süzgeci
 dokunma hedefleri en az 44 px (WCAG 2.2), kontrast tablosu kendi içinde
 yatay kayıyor, hazır palet kartları `auto-fill` ızgarada. Ama bu ortamda
 tarayıcı yok; gerçek bir telefonda açılıp denenmesi gerekiyor.
+
+---
+
+## /harita boş geliyordu — teşhis ve dayanıklılık (16 Ağustos 2026)
+
+Belirti: katman kontrolleri ve mahalle listesi çalışıyor, harita altlığı yok.
+
+### ⚠️ Sorulan soru yanlış yeri işaret ediyordu
+
+Soru şuydu: *"MapTiler .env'de eski adla dolu, yeni adla boş. Geri düşüş
+diğer değişkenlerde çalışıyor, MapTiler neden kapsam dışı?"*
+
+**Kapsam dışı değildi.** Üç ayrı düzeyde ölçüldü:
+
+| Ölçüm | Sonuç |
+| --- | --- |
+| `ayar('MAPTILER_ANAHTARI')` birim testi (yeni ad boş, eski ad dolu) | `TEST_ANAHTAR_123` döndü |
+| `haritaStilAdresi()` | Geçerli stil adresi üretti |
+| **Gerçek üretim derlemesi**, `MAPTILER_ANAHTARI=""` + eski ad dolu | Anahtar sunucuda render edilen HTML'e ulaştı |
+
+`ayarlar.ts` içindeki `ham()` `process.env[ad]` ile **dinamik** okuma
+yapıyor; Next.js dinamik erişimi derleme anında gömemiyor. `compose.prod.yml`
+eski adları da geçiriyor. Yani zincirin hiçbir halkası kopuk değildi.
+
+### Asıl sebep: katmanlarımız altlığın başarısına bağlıydı
+
+```ts
+harita.on('load', () => {
+  kagitTonunaCevir(harita)
+  katmanlariKur(harita)   // ← mahalle sınırları, sütunlar, POI'ler
+  setHazir(true)
+})
+```
+
+MapLibre `load` olayını **yalnızca stil başarıyla yüklendiğinde** ateşliyor.
+MapTiler 401/403 döndüğünde ya da anahtar hiç yokken `load` hiç gelmiyor ve
+**bizim poligonlarımız da hiç eklenmiyordu.**
+
+Üstelik sahne, anahtar yokken haritanın YERİNE bir boş durum kutusu
+koyuyordu — yani elimizdeki veri, dış bir servisin durumuna bağlanmıştı.
+
+⚠️ **Mahalle sınırları bizim verimiz; MapTiler yalnızca taban görüntü.**
+Altlık gelmediğinde sınırların da kaybolması için hiçbir teknik sebep yoktu,
+yalnızca kurulum sırası öyleydi.
+
+### Düzeltme
+
+Stil artık **önce çözülüyor, harita sonra kuruluyor** (`lib/harita/stil.ts`):
+
+```
+stiliCoz(adres) → { durum, stil }
+  anahtar_yok   → yerel stil
+  reddedildi    → yerel stil + kod
+  ulasilamadi   → yerel stil + sebep
+  uzak          → MapTiler stili
+```
+
+MapLibre'ye artık **adres değil çözülmüş stil nesnesi** veriliyor; `load`
+her hâlükârda ateşleniyor, katmanlar her hâlükârda ekleniyor.
+
+⚠️ **Ek istek yok:** stil JSON'unu biz alıp nesne olarak veriyoruz, MapLibre
+aynı adresi ikinci kez istemiyor. Hata sınıflandırması bedavaya geliyor.
+
+⚠️ Yedek stilde `glyphs` **yok ve olamaz** — yazı tipi kaynağını da MapTiler
+sağlıyor. Bu yüzden yedek kipte metin katmanları hiç eklenmiyor; eklenseydi
+her karo için konsola hata yağar ve yine hiçbir etiket çizilmezdi. Etiketsiz
+bir sınır haritası, hiç harita olmamasından kat kat iyi.
+
+### Üç arıza, üç ayrı mesaj
+
+| Durum | Ekranda |
+| --- | --- |
+| Anahtar yok | "Harita anahtarı girilmemiş… MAPTILER_ANAHTARI yapılandırılmalı." |
+| 401 / 403 | "Harita anahtarı reddedildi (403)… **MapTiler hesabındaki origin kısıtını kontrol edin.**" |
+| Ağ / diğer | "Harita servisine ulaşılamadı… bağlantınızı kontrol edip sayfayı yenileyin." |
+
+Üçü de "sınırlar çiziliyor ama sokak altlığı yok" diye başlıyor: harita
+bozuk değil, eksik.
+
+⚠️ Bu mesaj `hata` şeridinde değil ayrı bir **bilgi** şeridinde. İkisini
+aynı kutuya koymak, çalışan bir haritayı bozukmuş gibi gösterirdi.
+
+⚠️ HTTP 200 her zaman stil demek değil: yanlış yapılandırılmış bir vekil ya
+da yakalama portalı 200 ile HTML döndürebilir. Biçim kontrolü olmasa
+MapLibre'ye çöp verilir ve hata anlaşılmaz bir yerde patlardı.
+
+### Uçtan uca doğrulama — gerçek derlenmiş sunucu
+
+`MAPTILER_ANAHTARI=""` ve `NEXT_PUBLIC_MAPTILER_API_KEY=""` (yani hiç
+anahtar yok), üç mahalleye gerçek OSM sınırı yazılmış hâlde:
+
+```
+✅ eski boş durum ("Etkileşimli harita hazırlanıyor"): yok
+✅ veri boş durumu ("Harita verisi henüz girilmedi"):  yok
+✅ poligon geometrisi HTML'de:                          var
+✅ harita kapsayıcısı:                                  var
+```
+
+⚠️ **Doğrulanmayan kısım, dürüstçe:** sunucunun poligon verisini gönderdiği
+ve harita bileşeninin kurulduğu ölçüldü. Tuvale gerçekten çizildiği bir
+tarayıcı gerektiriyor ve bu ortamda tarayıcı yok. Sınıflandırma ve yerel
+stilin dış istek yapmaması birim testleriyle kapatıldı.
+
+### Kalıcı koruma
+
+`ayarlar.test.ts`e eklenen test, **eski adı tanımlı HER ayarın** geri
+düşüşünü tek tek sınıyor. "Şu değişken neden kapsam dışı?" sorusu bir daha
+sorulmak zorunda kalmasın diye; biri listeden düşerse orada kırmızı yanar.
