@@ -458,3 +458,61 @@ describe('fiyat bantları', () => {
     expect(fiyatBandiEtiketi('bilinmeyen')).toBe('bilinmeyen')
   })
 })
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BOŞ PANEL BİR CEVAP DEĞİL, BİR SORU DOĞURUR.
+ *
+ * Panel ilk açıldığında boş geldi ve akla gelen ilk soru "bozuk mu?" oldu.
+ * Cevabı vermek için sunucuya bağlanıp tabloya bakmak gerekti — yani
+ * panelin var olma sebebiyle çelişen bir iş.
+ *
+ * Ölçüldü: Katman A hem yerelde hem ÜRETİM İMAJINDA (standalone) doğru
+ * sayıyor — 14 istek gönderildi, 14'ü yazıldı. Yani arıza yoktu, ekran
+ * ayırt edemiyordu.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+describe('boş durum tanısı', () => {
+  const gorunum = oku('src/components/olcum/OlcumGorunumu.tsx')
+  const rapor = oku('src/lib/olcum/rapor.ts')
+
+  it('rapor tanı bilgisi taşıyor', () => {
+    for (const alan of [
+      'sonYazma',
+      'gunKaydi',
+      'bekleyenIstek',
+      'bekleyenOlay',
+      'yazmaAraligiSn',
+    ]) {
+      expect(rapor, alan).toContain(alan)
+    }
+  })
+
+  /**
+   * ⚠️ ASIL AYIRT EDİCİ BU: bellekte bekleyen sayı, veritabanı boşken bile
+   * "ölçüm çalışıyor" diyebilmenin tek doğrudan yolu. Yalnızca son yazma
+   * zamanına bakılsaydı, hiç yazılmamış bir sistemle bozuk bir sistem aynı
+   * görünürdü.
+   */
+  it('tanı bellekteki tamponu okuyor', () => {
+    expect(rapor).toContain('tamponuOku()')
+  })
+
+  it('boş durum beklenen metni ve tanıyı gösteriyor', () => {
+    expect(gorunum).toContain('Henüz veri toplanmadı')
+    expect(gorunum).toContain('saniyede bir')
+    expect(gorunum).toContain('Son yazma')
+    expect(gorunum).toContain('Bellekte bekleyen')
+  })
+
+  /** Boş durumda rakam yığını çizilmemeli — asıl şikâyet buydu. */
+  it('veri yokken diğer bölümler çizilmiyor', () => {
+    expect(gorunum).toContain('{rapor.bos ? <BosDurum tani={rapor.tani} /> : null}')
+    expect(gorunum).toContain('{rapor.bos ? null : (')
+  })
+
+  /** ⚠️ Saat yerel olmalı; UTC göstermek "yazılmıyor" izlenimi verirdi. */
+  it('zaman Europe/Istanbul ile yazılıyor', () => {
+    expect(gorunum).toContain("timeZone: 'Europe/Istanbul'")
+  })
+})
