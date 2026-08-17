@@ -5,6 +5,9 @@ import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { DogrulanmisIkon } from '@/components/ui/Ikon'
 import { ZenginMetin } from '@/components/ui/ZenginMetin'
+import Image from 'next/image'
+
+import { hakkimizdaGetir } from '@/lib/veri/hakkimizda'
 import { kurumsalBilgileriGetir } from '@/lib/kurumsal'
 import { mutlakAdres, SITE_UNVANI } from '@/lib/site'
 import { sayfaGetir } from '@/lib/veri/sayfalar'
@@ -18,7 +21,23 @@ export const metadata: Metadata = {
 }
 
 export default async function HakkimizdaSayfasi() {
-  const [kurumsal, sayfa] = await Promise.all([kurumsalBilgileriGetir(), sayfaGetir('hakkimizda')])
+  const [kurumsal, sayfa, hakkimizda] = await Promise.all([
+    kurumsalBilgileriGetir(),
+    sayfaGetir('hakkimizda'),
+    hakkimizdaGetir(),
+  ])
+
+  /**
+   * ⚠️ İÇERİK İKİ KAYNAKTAN OKUNUYOR VE SIRA ÖNEMLİ.
+   *
+   * Asıl kaynak yeni "Hakkımızda Sayfası" globali. Ama bu sayfa daha önce
+   * `Sayfalar` koleksiyonundaki `hakkimizda` kaydından besleniyordu; oraya
+   * metin girilmişse globale geçişte sessizce kaybolurdu.
+   *
+   * Global boşsa eski kayda düşülüyor. Yedek, taşınma tamamlanınca
+   * kaldırılabilir — ama içerik kaybettirmeden.
+   */
+  const icerik = hakkimizda.icerik ?? sayfa?.icerik ?? null
 
   const yasalSatirlar = [
     { etiket: 'Ticaret unvanı', deger: kurumsal?.ticaretUnvani },
@@ -37,25 +56,74 @@ export default async function HakkimizdaSayfasi() {
             Hakkımızda
           </h1>
           <p className="text-metin-2 leading-relaxed">
-            Çorlu&apos;da gayrimenkul danışmanlığı yapıyoruz. İşimizin merkezinde ilan değil, karar
-            var.
+            {hakkimizda.girisMetni ??
+              'Çorlu’da gayrimenkul danışmanlığı yapıyoruz. İşimizin merkezinde ilan değil, karar var.'}
           </p>
         </header>
 
-        {sayfa?.icerik ? (
-          <ZenginMetin veri={sayfa.icerik} />
-        ) : (
-          <BosDurum
-            baslik="Tanıtım metni hazırlanıyor"
-            neden="Bu sayfada kimiz, nasıl çalışıyoruz ve neye göre tavsiye veriyoruz sorularının cevabı yer alacak."
-            sade
-            eylem={
-              <Buton href="/iletisim" gorunum="ikincil">
-                Bize ulaşın
-              </Buton>
-            }
-          />
-        )}
+        {/*
+          ⚠️ Portre metnin YANINDA, üstünde değil: metnin ilk satırı
+          sayfanın en çok okunan yeri ve bir fotoğraf onu aşağı iterdi.
+          Mobilde alt alta düşüyor.
+        */}
+        <div className={hakkimizda.portre ? 'gap-8 lg:flex lg:items-start' : undefined}>
+          <div className={hakkimizda.portre ? 'lg:flex-1' : undefined}>
+            {icerik ? (
+              <ZenginMetin veri={icerik} />
+            ) : (
+              <BosDurum
+                baslik="Tanıtım metni hazırlanıyor"
+                neden="Bu sayfada kimiz, nasıl çalışıyoruz ve neye göre tavsiye veriyoruz sorularının cevabı yer alacak."
+                sade
+                eylem={
+                  <Buton href="/iletisim" gorunum="ikincil">
+                    Bize ulaşın
+                  </Buton>
+                }
+              />
+            )}
+          </div>
+
+          {hakkimizda.portre ? (
+            <figure className="mt-8 shrink-0 lg:mt-0 lg:w-72">
+              <Image
+                src={hakkimizda.portre.url}
+                alt={hakkimizda.portre.alt || hakkimizda.portreAltMetni || 'Portre'}
+                width={hakkimizda.portre.en ?? 640}
+                height={hakkimizda.portre.boy ?? 800}
+                sizes="(max-width: 1024px) 100vw, 18rem"
+                className="rounded-kart w-full object-cover"
+              />
+              {hakkimizda.portreAltMetni ? (
+                <figcaption className="text-metin-3 mt-2 text-govde-kucuk">
+                  {hakkimizda.portreAltMetni}
+                </figcaption>
+              ) : null}
+            </figure>
+          ) : null}
+        </div>
+
+        {/* ⚠️ Ek görseller TEMBEL: sayfanın altında, ilk ekranda değiller. */}
+        {hakkimizda.ekGorseller.length > 0 ? (
+          <div className="mt-12 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {hakkimizda.ekGorseller.map((oge) => (
+              <figure key={oge.url} className="flex flex-col gap-2">
+                <Image
+                  src={oge.url}
+                  alt={oge.alt || oge.aciklama || ''}
+                  width={oge.en ?? 1200}
+                  height={oge.boy ?? 750}
+                  sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+                  loading="lazy"
+                  className="rounded-kart w-full object-cover"
+                />
+                {oge.aciklama ? (
+                  <figcaption className="text-metin-3 text-govde-kucuk">{oge.aciklama}</figcaption>
+                ) : null}
+              </figure>
+            ))}
+          </div>
+        ) : null}
       </div>
 
       <Bolum zemin="yuzey">

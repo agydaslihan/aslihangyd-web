@@ -111,6 +111,7 @@ export interface Config {
   fallbackLocale: null;
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
+    hakkimizda: Hakkimizda;
     'hero-slider': HeroSlider;
     'marka-gorunum': MarkaGorunum;
     'site-bolumleri': SiteBolumleri;
@@ -123,6 +124,7 @@ export interface Config {
   };
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
+    hakkimizda: HakkimizdaSelect<false> | HakkimizdaSelect<true>;
     'hero-slider': HeroSliderSelect<false> | HeroSliderSelect<true>;
     'marka-gorunum': MarkaGorunumSelect<false> | MarkaGorunumSelect<true>;
     'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
@@ -1662,6 +1664,60 @@ export interface KurumsalBilgiler {
   createdAt?: string | null;
 }
 /**
+ * Sayfanın tanıtım metni ve görselleri. Yetki belgesi ve vergi bilgileri buraya YAZILMAZ — onlar Kurumsal Bilgiler’den otomatik geliyor.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hakkimizda".
+ */
+export interface Hakkimizda {
+  id: number;
+  /**
+   * Başlığın hemen altındaki tek paragraf. Boşsa koddaki varsayılan cümle kullanılır.
+   */
+  girisMetni?: string | null;
+  /**
+   * Kimiz, nasıl çalışıyoruz, neye göre tavsiye veriyoruz. Biçimlendirme bilinçli olarak sınırlı: başlık, kalın, italik, liste, bağlantı.
+   */
+  icerik?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Dikey ya da kare çekim. Boş bırakılabilir — sayfa portresiz de düzgün çalışır.
+   */
+  portre?: (number | null) | Medya;
+  /**
+   * Fotoğrafın altında görünen kısa satır (ad, unvan).
+   */
+  portreAltMetni?: string | null;
+  /**
+   * Ofis, ekip, saha fotoğrafları. ⚠️ Bunlar sayfanın altında ızgarada gösteriliyor; her biri için medya kaydında "Kullanım: Kart" seçmek bütçe uyarısını doğru çalıştırır.
+   */
+  ekGorseller?:
+    | {
+        gorsel: number | Medya;
+        /**
+         * Görselin altında görünür. Boşsa yazı çıkmaz.
+         */
+        aciklama?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Ana sayfanın en üstündeki alan. Hiç slayt eklemezseniz mevcut metin hero’su görünmeye devam eder — site slayt olmadan da düzgün çalışır.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2113,6 +2169,26 @@ export interface KurumsalBilgilerSelect<T extends boolean = true> {
   veriSorumlusu?: T;
   verbisKayitNo?: T;
   kvkkBasvuruEpostasi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "hakkimizda_select".
+ */
+export interface HakkimizdaSelect<T extends boolean = true> {
+  girisMetni?: T;
+  icerik?: T;
+  portre?: T;
+  portreAltMetni?: T;
+  ekGorseller?:
+    | T
+    | {
+        gorsel?: T;
+        aciklama?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
