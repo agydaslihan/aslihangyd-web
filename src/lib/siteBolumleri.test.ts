@@ -13,6 +13,7 @@ describe('bölüm tanımları', () => {
   it('tanımlı bölümler ve sıraları', () => {
     expect(BOLUMLER.map((b) => b.anahtar)).toEqual([
       'danisman_ol',
+      'harita',
       'ticari',
       'endeks',
       'raporlar',
