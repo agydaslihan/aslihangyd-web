@@ -389,9 +389,21 @@ export interface Ilanlar {
     | null;
   katPlani?: (number | null) | Medya;
   /**
-   * Bunny Stream video kimliği. Boşsa video bölümü hiç gösterilmez.
+   * Hangi servisten yayınlanacak. Boşsa video bölümü hiç gösterilmez. Bunny Stream hesabı gelene kadar YouTube kullanın; kayıt başına ayrı ayrı değiştirilebilir, toplu geçiş gerekmez.
+   */
+  videoKaynagi?: ('yok' | 'youtube' | 'bunny') | null;
+  /**
+   * Adresi olduğu gibi yapıştırın — youtube.com/watch?v=…, youtu.be/… ve /embed/… biçimleri kabul edilir. Liste dışı (unlisted) videolar da çalışır. Desteklenen: YouTube (herkese açık veya liste dışı) ve Bunny Stream. ÇALIŞMAYAN: Google Drive, Dropbox, WeTransfer, OneDrive, iCloud, Vimeo — bu servislerin paylaşım adresleri video dosyası değil web sayfası döndürür.
+   */
+  droneVideoYoutube?: string | null;
+  /**
+   * Bunny panelindeki video kimliği (8-4-4-4-12 haneli). Bunny hesabı henüz yoksa kaynağı YouTube yapın.
    */
   droneVideoId?: string | null;
+  /**
+   * Video oynatılmadan önce görünen kare. Boş bırakırsanız servisin kendi kapağı kullanılır — ama kendi kapağınız daha iyi görünür. ⚠️ Sayfanın en büyük görseli budur; LCP'yi belirler.
+   */
+  droneVideoPosteri?: (number | null) | Medya;
   /**
    * Tam adres (https://...). Boşsa tur bölümü gösterilmez.
    */
@@ -639,11 +651,19 @@ export interface Mahalleler {
    */
   sinirElleDuzenlendi?: boolean | null;
   /**
-   * Bunny Stream video kimliği. Boşsa hero bölümü görsele düşer.
+   * Hangi servisten yayınlanacak. Boşsa hero bölümü görsele düşer. Bunny Stream hesabı gelene kadar YouTube kullanın; kayıt başına ayrı ayrı değiştirilebilir, toplu geçiş gerekmez.
+   */
+  videoKaynagi?: ('yok' | 'youtube' | 'bunny') | null;
+  /**
+   * Adresi olduğu gibi yapıştırın — youtube.com/watch?v=…, youtu.be/… ve /embed/… biçimleri kabul edilir. Liste dışı (unlisted) videolar da çalışır. Desteklenen: YouTube (herkese açık veya liste dışı) ve Bunny Stream. ÇALIŞMAYAN: Google Drive, Dropbox, WeTransfer, OneDrive, iCloud, Vimeo — bu servislerin paylaşım adresleri video dosyası değil web sayfası döndürür.
+   */
+  droneVideoYoutube?: string | null;
+  /**
+   * Bunny panelindeki video kimliği (8-4-4-4-12 haneli). Bunny hesabı henüz yoksa kaynağı YouTube yapın.
    */
   droneVideoId?: string | null;
   /**
-   * Video yüklenene kadar gösterilir. Sayfanın en büyük görseli budur — LCP'yi belirler.
+   * Video oynatılmadan önce görünen kare. Boş bırakırsanız servisin kendi kapağı kullanılır — ama kendi kapağınız daha iyi görünür. ⚠️ Sayfanın en büyük görseli budur; LCP'yi belirler.
    */
   droneVideoPosteri?: (number | null) | Medya;
   sanalTurUrl?: string | null;
@@ -1351,7 +1371,10 @@ export interface IlanlarSelect<T extends boolean = true> {
         id?: T;
       };
   katPlani?: T;
+  videoKaynagi?: T;
+  droneVideoYoutube?: T;
   droneVideoId?: T;
+  droneVideoPosteri?: T;
   sanalTurUrl?: T;
   yetkilendirmeSozlesmesi?: T;
   gostermeBelgesi?: T;
@@ -1402,6 +1425,8 @@ export interface MahallelerSelect<T extends boolean = true> {
   sinirKaynagi?: T;
   sinirOsmKimlik?: T;
   sinirElleDuzenlendi?: T;
+  videoKaynagi?: T;
+  droneVideoYoutube?: T;
   droneVideoId?: T;
   droneVideoPosteri?: T;
   sanalTurUrl?: T;

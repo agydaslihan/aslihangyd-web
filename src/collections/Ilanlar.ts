@@ -1,3 +1,4 @@
+import { videoAlanlari } from '@/lib/medya/videoAlanlari'
 import type { CollectionConfig } from 'payload'
 
 import { CEPHE_YONLERI } from '@/lib/gunes/cephe'
@@ -604,14 +605,7 @@ export const Ilanlar: CollectionConfig = {
               relationTo: 'medya',
               label: 'Kat planı',
             },
-            {
-              name: 'droneVideoId',
-              type: 'text',
-              label: 'Drone video kimliği (CDN)',
-              admin: {
-                description: 'Bunny Stream video kimliği. Boşsa video bölümü hiç gösterilmez.',
-              },
-            },
+            ...videoAlanlari('ilan'),
             {
               name: 'sanalTurUrl',
               type: 'text',

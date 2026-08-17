@@ -6,7 +6,7 @@ import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
 import { KiraGetirisiFormu } from '@/components/hesaplayici/KiraGetirisiFormu'
 import { IlanGalerisi } from '@/components/ilan/IlanGalerisi'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
-import { DroneVideo } from '@/components/medya/DroneVideo'
+import { DroneVideo, videoGosterilebilirMi } from '@/components/medya/DroneVideo'
 import { SanalTur } from '@/components/medya/SanalTur'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
@@ -191,10 +191,26 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               Alan boşsa bölüm HİÇ gösterilmiyor — "video yok" yazan bir
               başlık, olmayan bir şeyi vaat etmektir.
             */}
-            {ilan.droneVideoId ? (
+            {videoGosterilebilirMi({
+              kaynak: ilan.videoKaynagi,
+              bunnyId: ilan.droneVideoId,
+              youtube: ilan.droneVideoYoutube,
+            }) ? (
               <section className="mt-10">
                 <h2 className="mb-3 font-sans text-baslik-3 font-medium">Drone videosu</h2>
-                <DroneVideo videoId={ilan.droneVideoId} baslik={`${ilan.baslik} drone videosu`} />
+                <DroneVideo
+                  kaynak={ilan.videoKaynagi}
+                  bunnyId={ilan.droneVideoId}
+                  youtube={ilan.droneVideoYoutube}
+                  kapakUrl={
+                    typeof ilan.droneVideoPosteri === 'object' &&
+                    ilan.droneVideoPosteri !== null &&
+                    typeof ilan.droneVideoPosteri.url === 'string'
+                      ? ilan.droneVideoPosteri.url
+                      : null
+                  }
+                  baslik={`${ilan.baslik} drone videosu`}
+                />
               </section>
             ) : null}
 

@@ -1,3 +1,4 @@
+import { videoAlanlari } from '@/lib/medya/videoAlanlari'
 import type { CollectionConfig } from 'payload'
 
 import { yalnizcaPanel, yalnizcaYoneticiSiler, yayimlananlariHerkesOkur } from '@/lib/erisim'
@@ -364,24 +365,7 @@ export const Mahalleler: CollectionConfig = {
           description:
             'Drone ve 360° içerik hazır olana kadar bu alanlar boş kalır; sayfa boş durum tasarımıyla çalışır.',
           fields: [
-            {
-              name: 'droneVideoId',
-              type: 'text',
-              label: 'Drone video kimliği (CDN)',
-              admin: {
-                description: 'Bunny Stream video kimliği. Boşsa hero bölümü görsele düşer.',
-              },
-            },
-            {
-              name: 'droneVideoPosteri',
-              type: 'upload',
-              relationTo: 'medya',
-              label: 'Video kapak görseli',
-              admin: {
-                description:
-                  "Video yüklenene kadar gösterilir. Sayfanın en büyük görseli budur — LCP'yi belirler.",
-              },
-            },
+            ...videoAlanlari('mahalle'),
             {
               name: 'sanalTurUrl',
               type: 'text',

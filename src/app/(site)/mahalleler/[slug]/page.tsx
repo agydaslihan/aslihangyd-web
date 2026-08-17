@@ -6,7 +6,7 @@ import { notFound } from 'next/navigation'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
 import { RayicPiyasaOrani } from '@/components/mahalle/RayicPiyasaOrani'
-import { DroneVideo } from '@/components/medya/DroneVideo'
+import { DroneVideo, videoGosterilebilirMi } from '@/components/medya/DroneVideo'
 import { SanalTur } from '@/components/medya/SanalTur'
 import { MahalleSkoru } from '@/components/skor/MahalleSkoru'
 import { YakindaBolumu } from '@/components/mahalle/YakindaBolumu'
@@ -471,9 +471,25 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
         hedefini doğrudan bozardı. Oynatıcı zaten tıkla-oynat: kapak
         görünür, çerçeve ancak dokununca yüklenir.
       */}
-      {mahalle.droneVideoId ? (
+      {videoGosterilebilirMi({
+        kaynak: mahalle.videoKaynagi,
+        bunnyId: mahalle.droneVideoId,
+        youtube: mahalle.droneVideoYoutube,
+      }) ? (
         <div className="kapsayici py-4">
-          <DroneVideo videoId={mahalle.droneVideoId} baslik={`${mahalle.ad} drone videosu`} />
+          <DroneVideo
+            kaynak={mahalle.videoKaynagi}
+            bunnyId={mahalle.droneVideoId}
+            youtube={mahalle.droneVideoYoutube}
+            kapakUrl={
+              typeof mahalle.droneVideoPosteri === 'object' &&
+              mahalle.droneVideoPosteri !== null &&
+              typeof mahalle.droneVideoPosteri.url === 'string'
+                ? mahalle.droneVideoPosteri.url
+                : null
+            }
+            baslik={`${mahalle.ad} drone videosu`}
+          />
         </div>
       ) : (
         <p className="kapsayici text-metin-3 py-3 text-mikro">
