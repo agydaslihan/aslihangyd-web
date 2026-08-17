@@ -5269,3 +5269,19 @@ $ curl -o /dev/null -w "%{http_code} %{content_type}" …/maplibre-gl-worker.mjs
 480 kB'lık küçültülmüş dosyalar `eslint .` kapsamına girince 19 hata +
 1057 uyarı çıkardı: kapıyı bizim yazmadığımız kod kapatıyordu.
 `public/maplibre/**` yok sayılıyor.
+
+### ⚠️ Koruma testi kendi kurduğu tuzağa düştü — ilk CI koşusunda
+
+İlk hâli `public/maplibre/<sürüm>/` dizininin VARLIĞINI şart koşuyordu.
+Yerelde geçti (önceki derlemeden kalmıştı), CI'da düştü: iş akışı
+`pnpm test`i `pnpm build`ten ÖNCE koşuyor ve kopyalar henüz yok.
+
+Test kopyaya değil KAYNAĞA bakacak biçimde yazıldı: worker'ın
+`node_modules`taki hâlinden göreli içe aktarımları çıkarıp kopyalama
+listesinin hepsini kapsadığını doğruluyor. Hem her zaman çalışıyor hem de
+daha erken uyarıyor — worker yarın yeni bir dosyaya bağımlı olursa liste
+eksik kaldığı ANDA görünüyor. Kopyanın gerçekten yerinde olduğunu zaten
+duman testi ölçüyor, derlemeden sonra.
+
+⚠️ Ders: bir testin ön koşulu yerelde artık dosyalardan sağlanıyorsa, o
+test aslında bir şey kanıtlamıyor.

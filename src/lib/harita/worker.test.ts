@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -37,9 +37,6 @@ import { describe, expect, it } from 'vitest'
 
 const KOK = path.resolve(path.join(import.meta.dirname, '..', '..', '..'))
 const oku = (yol: string) => readFileSync(path.join(KOK, yol), 'utf8')
-
-const maplibreSurumu = (): string =>
-  JSON.parse(oku('node_modules/maplibre-gl/package.json')).version
 
 describe('MapLibre worker adresi', () => {
   const bilesen = oku('src/components/harita/Harita3B.tsx')
@@ -88,30 +85,36 @@ describe('worker dosyalarının hazırlanması', () => {
   })
 
   /**
-   * ⚠️ İKİ DOSYA BİRDEN gerekiyor.
+   * ⚠️ İKİ DOSYA BİRDEN gerekiyor — ve bu liste eksik kalabilir.
    *
-   * Turbopack'in `.next/static/media/` altına attığı kopya tam olarak
-   * burada kırılıyor: worker orada ama ilk satırındaki
-   * `import "./maplibre-gl-shared.mjs"` yanında bir dosya bulamıyor.
+   * Worker'ın ilk satırı `import "./maplibre-gl-shared.mjs"`. Yanına o
+   * dosya konmazsa worker yüklenir ve ilk satırında 404 alır: harita yine
+   * boş kalır. Turbopack'in `.next/static/media/` altına attığı kopya tam
+   * olarak burada kırılıyor.
+   *
+   * ⚠️ DENETİM KOPYAYA DEĞİL KAYNAĞA BAKIYOR. Kopya `pnpm build` ürünü ve
+   * CI testleri derlemeden ÖNCE koşuyor; kopyanın varlığını şart koşan bir
+   * test, ilk CI koşusunda kendi kurduğu tuzağa düştü. Kaynağa bakmak hem
+   * her zaman çalışıyor hem de daha erken uyarıyor: worker yarın yeni bir
+   * dosyaya bağımlı olursa, kopyalama listesi eksik kaldığı ANDA görünür.
    */
-  it('worker göreli içe aktarımı yanındaki dosyaya düşüyor', () => {
-    const surum = maplibreSurumu()
-    const dizin = path.join(KOK, 'public', 'maplibre', surum)
-    const worker = path.join(dizin, 'maplibre-gl-worker.mjs')
+  it("kopyalama listesi worker'ın bütün bağımlılıklarını kapsıyor", async () => {
+    const { GEREKEN_DOSYALAR } = await import('../../../scripts/maplibre-worker-hazirla.mjs')
+    const govde = oku('node_modules/maplibre-gl/dist/maplibre-gl-worker.mjs')
 
-    // Kopya yoksa test atlanmıyor, ipucu veriliyor: `pnpm build` üretir.
-    expect(existsSync(worker), `public/maplibre/${surum}/ yok — \`pnpm build\` çalıştırın`).toBe(
-      true,
-    )
+    const bagimliliklar = [...govde.matchAll(/from\s*["']\.\/([^"']+)["']/g)]
+      .map(([, ad]) => ad)
+      .filter((ad): ad is string => ad !== undefined)
 
-    const govde = readFileSync(worker, 'utf8')
-    const hedefler = [...govde.matchAll(/from\s*["'](\.[^"']+)["']/g)]
-      .map(([, h]) => h)
-      .filter((h): h is string => h !== undefined)
-    expect(hedefler.length).toBeGreaterThan(0)
-    for (const hedef of hedefler) {
-      expect(existsSync(path.join(dizin, hedef)), `${hedef} worker'ın yanında yok`).toBe(true)
+    expect(bagimliliklar.length).toBeGreaterThan(0)
+    for (const ad of bagimliliklar) {
+      expect(
+        GEREKEN_DOSYALAR,
+        `worker "${ad}" dosyasını içe aktarıyor ama kopyalama listesinde yok — ` +
+          'yüklenince 404 alır ve harita boş kalır',
+      ).toContain(ad)
     }
+    expect(GEREKEN_DOSYALAR).toContain('maplibre-gl-worker.mjs')
   })
 })
 
