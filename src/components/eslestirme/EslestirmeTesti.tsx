@@ -1,6 +1,8 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
+
+import { gozlemOlayi } from '@/lib/olcum/istemci'
 
 import { SayiAlani, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
 import { BosDurum } from '@/components/ui/BosDurum'
@@ -109,6 +111,15 @@ export function EslestirmeTesti({
   const [adimNo, setAdimNo] = useState(0)
   const [cevaplar, setCevaplar] = useState<TestCevaplari>({})
   const [bitti, setBitti] = useState(false)
+
+  /**
+   * ⚠️ Ölçüm testin davranışına dokunmuyor: sonuç yine kilitsiz görünüyor
+   * (bal küpü kuralı 6b). Yalnızca "sonuna kadar dolduruldu" bilgisi
+   * sayılıyor.
+   */
+  useEffect(() => {
+    if (bitti) gozlemOlayi('mahalle_testi_tamamlandi')
+  }, [bitti])
 
   // Hedef nokta yoksa o adım hiç gösterilmez: seçenek listesi boş bir soru
   // sormak, ziyaretçiye çıkmaz bir ekran göstermektir.

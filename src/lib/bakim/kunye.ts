@@ -27,7 +27,7 @@ import { YETKI_UYARI_ESIGI_GUN } from '@/lib/eids'
  * her gece 500 dönerdi; işletmecinin en olası tepkisi cron satırını
  * susturmak olurdu ve EİDS kontrolü de onunla birlikte susardı.
  */
-export type GorevAnahtari = 'eids-kaldir' | 'eids-uyar' | 'kvkk-sil'
+export type GorevAnahtari = 'eids-kaldir' | 'eids-uyar' | 'kvkk-sil' | 'olcum-ayrinti-sil'
 
 export interface GorevKunyesi {
   anahtar: GorevAnahtari
@@ -77,6 +77,19 @@ export const GOREV_KUNYELERI: readonly GorevKunyesi[] = [
       'başvurusu ya da denetim halinde yaptırım riski. Gecikme her gün büyür, ' +
       'kendiliğinden düzelmez.',
     yasal: true,
+  },
+  {
+    anahtar: 'olcum-ayrinti-sil',
+    ad: 'Ölçüm — 90 günden eski olay ayrıntılarını temizle',
+    siklik: 'Her gün 04:10 (Europe/Istanbul)',
+    calismazsaSonuc:
+      'Gözlem kayıtlarının en ayrıntılı katmanı (hangi filtre, hangi alan, hangi ' +
+      'fiyat bandı) 90 günden uzun saklanır. ⚠️ Bu kayıtlar KİŞİSEL VERİ DEĞİL — ' +
+      'gün bazında toplulaştırılmış sayaçlar ve tek bir ziyaretçiyi işaret edemezler; ' +
+      'dolayısıyla aksaması KVKK ihlali doğurmaz. Yine de aydınlatma metninde 90 gün ' +
+      'taahhüt edildiği için verilen sözün tutulmaması demek. Toplulaştırılmış ' +
+      'sayaçlar (sayfa, kaynak, cihaz) kalıcıdır ve bu görev onlara dokunmaz.',
+    yasal: false,
   },
 ]
 

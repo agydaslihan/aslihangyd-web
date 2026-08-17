@@ -67,6 +67,7 @@ export interface Config {
   };
   blocks: {};
   collections: {
+    'gozlem-gunluk': GozlemGunluk;
     ilanlar: Ilanlar;
     mahalleler: Mahalleler;
     'ilgi-noktalari': IlgiNoktalari;
@@ -87,6 +88,7 @@ export interface Config {
   };
   collectionsJoins: {};
   collectionsSelect: {
+    'gozlem-gunluk': GozlemGunlukSelect<false> | GozlemGunlukSelect<true>;
     ilanlar: IlanlarSelect<false> | IlanlarSelect<true>;
     mahalleler: MahallelerSelect<false> | MahallelerSelect<true>;
     'ilgi-noktalari': IlgiNoktalariSelect<false> | IlgiNoktalariSelect<true>;
@@ -164,6 +166,77 @@ export interface KullanicilarAuthOperations {
     email: string;
     password: string;
   };
+}
+/**
+ * Günlük toplulaştırılmış ölçüm. Her satır bir GÜNDÜR, bir kişi değil. Okumak için "Gözlemlenebilirlik" ekranını kullanın; burası ham depodur.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gozlem-gunluk".
+ */
+export interface GozlemGunluk {
+  id: number;
+  gun: string;
+  toplamIstek?: number | null;
+  onayliIstek?: number | null;
+  sayfalar?:
+    | {
+        rota: string;
+        goruntuleme?: number | null;
+        hata?: number | null;
+        toplamMs?: number | null;
+        enYavasMs?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * ⚠️ Yalnızca alan adı. Tam URL hiç kaydedilmiyor.
+   */
+  kaynaklar?:
+    | {
+        alan: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  utmKaynaklar?:
+    | {
+        kaynak: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Cloudflare ülke başlığından. IP okunmuyor.
+   */
+  ulkeler?:
+    | {
+        kod: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  cihazlar?:
+    | {
+        sinif: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * ⚠️ 90 günden eski satırlarda bu dizi bakım göreviyle temizlenir; toplulaştırılmış sayaçlar kalır.
+   */
+  olaylar?:
+    | {
+        ad: string;
+        ayrinti?: string | null;
+        niyet?: string | null;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  ayrintiTemizlendi?: boolean | null;
+  updatedAt: string;
+  createdAt: string;
 }
 /**
  * Portföydeki taşınmazlar. Bir ilan yayına alınabilmesi için EİDS yetkisinin geçerli olması zorunludur.
@@ -1058,6 +1131,10 @@ export interface PayloadLockedDocument {
   id: number;
   document?:
     | ({
+        relationTo: 'gozlem-gunluk';
+        value: number | GozlemGunluk;
+      } | null)
+    | ({
         relationTo: 'ilanlar';
         value: number | Ilanlar;
       } | null)
@@ -1150,6 +1227,65 @@ export interface PayloadMigration {
   batch?: number | null;
   updatedAt: string;
   createdAt: string;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "gozlem-gunluk_select".
+ */
+export interface GozlemGunlukSelect<T extends boolean = true> {
+  gun?: T;
+  toplamIstek?: T;
+  onayliIstek?: T;
+  sayfalar?:
+    | T
+    | {
+        rota?: T;
+        goruntuleme?: T;
+        hata?: T;
+        toplamMs?: T;
+        enYavasMs?: T;
+        id?: T;
+      };
+  kaynaklar?:
+    | T
+    | {
+        alan?: T;
+        adet?: T;
+        id?: T;
+      };
+  utmKaynaklar?:
+    | T
+    | {
+        kaynak?: T;
+        adet?: T;
+        id?: T;
+      };
+  ulkeler?:
+    | T
+    | {
+        kod?: T;
+        adet?: T;
+        id?: T;
+      };
+  cihazlar?:
+    | T
+    | {
+        sinif?: T;
+        adet?: T;
+        id?: T;
+      };
+  olaylar?:
+    | T
+    | {
+        ad?: T;
+        ayrinti?: T;
+        niyet?: T;
+        adet?: T;
+        id?: T;
+      };
+  ayrintiTemizlendi?: T;
+  updatedAt?: T;
+  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2134,7 +2270,7 @@ export interface EndeksAyarlari {
 export interface BakimDurumu {
   id: number;
   /**
-   * Her satır bir bakım görevinin son durumunu tutar. Tanımlı görevler: eids-kaldir, eids-uyar, kvkk-sil
+   * Her satır bir bakım görevinin son durumunu tutar. Tanımlı görevler: eids-kaldir, eids-uyar, kvkk-sil, olcum-ayrinti-sil
    */
   gorevler?:
     | {

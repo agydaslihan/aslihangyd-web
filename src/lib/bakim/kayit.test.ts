@@ -11,10 +11,26 @@ import { gecerliGorevMi, GOREV_KAYDI, gorevTanimi } from './gorevler'
  * yasal etiketi olmalı.
  */
 describe('bakım görev kaydı', () => {
-  it('üç görev tanımlı', () => {
+  it('dört görev tanımlı', () => {
     expect(GOREV_KAYDI.map((gorev) => gorev.anahtar)).toEqual([
       'eids-kaldir',
       'eids-uyar',
+      'kvkk-sil',
+      'olcum-ayrinti-sil',
+    ])
+  })
+
+  /**
+   * ⚠️ YASAL OLAN İLE OLMAYAN AYRIMI KORUNUYOR.
+   *
+   * Ölçüm ayrıntısı temizliği `yasal: false` — silinen şey kişisel veri
+   * değil, gün bazında toplulaştırılmış sayaç. Yasal işaretlenseydi
+   * bildirim tonu ve aciliyet yanlış olurdu; işletmeci gerçek yasal
+   * görevlerle onu aynı kefeye koyar ve ikisine de aynı gözle bakardı.
+   */
+  it('yasal görevler yalnızca EİDS ve KVKK', () => {
+    expect(GOREV_KAYDI.filter((gorev) => gorev.yasal).map((gorev) => gorev.anahtar)).toEqual([
+      'eids-kaldir',
       'kvkk-sil',
     ])
   })

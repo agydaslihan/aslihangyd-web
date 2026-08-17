@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { KullanimIsareti } from '@/components/olcum/KullanimIsareti'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat } from '@/components/ui/Feragat'
 import { BilgiIkon } from '@/components/ui/Ikon'
@@ -39,7 +40,8 @@ export function HesaplayiciKabugu({
         <p className="text-metin-2 leading-relaxed">{aciklama}</p>
       </header>
 
-      {children}
+      {/* Ölçüm: sayfayı açmak değil, bir değer girmek 'kullanım' sayılıyor. */}
+      <KullanimIsareti>{children}</KullanimIsareti>
 
       <div className="border-kenar mt-10 max-w-2xl border-t-[0.5px] pt-6">
         <details className="group">

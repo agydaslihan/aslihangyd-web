@@ -143,6 +143,7 @@ export function IlanKarti({
           {/* Tüm kart tıklanabilir olsun ama DOM'da tek bağlantı kalsın. */}
           <Link
             href={`/portfoy/${ilan.slug}`}
+            data-gozlem="ilan_karti_tikla"
             className="line-clamp-2 after:absolute after:inset-0"
           >
             {ilan.baslik}

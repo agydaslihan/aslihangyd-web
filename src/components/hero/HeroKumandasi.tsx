@@ -2,6 +2,8 @@
 
 import { useCallback, useEffect, useRef, useState } from 'react'
 
+import { gozlemOlayi } from '@/lib/olcum/istemci'
+
 import { HeroSlaydi } from '@/components/hero/HeroSlaydi'
 import { OkIkon } from '@/components/ui/Ikon'
 import type { HeroAyarlari } from '@/lib/hero/tipler'
@@ -106,8 +108,15 @@ export function HeroKumandasi({ ayarlar, hedefSecici }: KumandaOzellikleri) {
     dugum.inert = !gorunur
   }, [aktif, hedefSecici])
 
+  /**
+   * ⚠️ `elle` bayrağı ölçüm için var ve gerekli: `git(1)` hem oklar hem
+   * OTOMATİK GEÇİŞ tarafından çağrılıyor. Ayrım yapılmasaydı otomatik geçiş
+   * açık olan bir sitede "ziyaretçi slaytları geziyor" sinyali kendiliğinden
+   * üretilir ve düpedüz yanlış olurdu.
+   */
   const git = useCallback(
-    (yon: 1 | -1) => {
+    (yon: 1 | -1, elle = false) => {
+      if (elle) gozlemOlayi('slider_gezinme')
       setAktif((onceki) => {
         const yeni = (onceki + yon + toplam) % toplam
         setYuklenenler((oncekiKume) =>
@@ -131,10 +140,10 @@ export function HeroKumandasi({ ayarlar, hedefSecici }: KumandaOzellikleri) {
   function tusaBasildi(olay: React.KeyboardEvent): void {
     if (olay.key === 'ArrowRight') {
       olay.preventDefault()
-      git(1)
+      git(1, true)
     } else if (olay.key === 'ArrowLeft') {
       olay.preventDefault()
-      git(-1)
+      git(-1, true)
     }
   }
 
@@ -188,7 +197,7 @@ export function HeroKumandasi({ ayarlar, hedefSecici }: KumandaOzellikleri) {
           <div className="flex items-center gap-2">
             <button
               type="button"
-              onClick={() => git(-1)}
+              onClick={() => git(-1, true)}
               aria-label="Önceki slayt"
               className="text-koyu-bant-metin bg-black/35 hover:bg-black/50 flex size-11 items-center justify-center rounded-full backdrop-blur-sm transition-colors"
             >
@@ -197,7 +206,7 @@ export function HeroKumandasi({ ayarlar, hedefSecici }: KumandaOzellikleri) {
 
             <button
               type="button"
-              onClick={() => git(1)}
+              onClick={() => git(1, true)}
               aria-label="Sonraki slayt"
               className="text-koyu-bant-metin bg-black/35 hover:bg-black/50 flex size-11 items-center justify-center rounded-full backdrop-blur-sm transition-colors"
             >

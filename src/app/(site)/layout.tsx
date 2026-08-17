@@ -3,6 +3,7 @@ import localFont from 'next/font/local'
 import type React from 'react'
 
 import { Analitik } from '@/components/analitik/Analitik'
+import { KatmanB } from '@/components/olcum/KatmanB'
 import { CerezBanneri } from '@/components/cerez/CerezBanneri'
 import { Altbilgi } from '@/components/duzen/Altbilgi'
 import { Baslik, IcerigeAtla } from '@/components/duzen/Baslik'
@@ -286,6 +287,8 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <CerezBanneri onayVar={onay !== null} />
         {/* Onay yoksa bu bileşen hiçbir şey render etmez — betik HTML'e girmez. */}
         <Analitik />
+        {/* Katman B ölçümü — onay yoksa kodu istemciye hiç inmiyor. */}
+        <KatmanB />
       </body>
     </html>
   )

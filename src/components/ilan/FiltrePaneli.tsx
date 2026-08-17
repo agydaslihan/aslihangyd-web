@@ -1,6 +1,9 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+
+import { gozlemOlayi } from '@/lib/olcum/istemci'
+import { fiyatBandi } from '@/lib/olcum/tipler'
 import { useId, useState, useTransition, type ReactNode } from 'react'
 
 import { KapatIkon } from '@/components/ui/Ikon'
@@ -66,6 +69,23 @@ export function FiltrePaneli({
   const aktifler = ANAHTARLAR.filter((anahtar) => sorgu.get(anahtar))
 
   function degistir(anahtar: string, deger: string) {
+    if (deger) {
+      /**
+       * ⚠️ ÖLÇÜLEN ŞEY ÖLÇÜTÜN ADI; fiyatta ise BANT.
+       *
+       * Girilen tam sayı gönderilmiyor: "4.237.500 arandı" bilgisi hiçbir
+       * kararı değiştirmezken, mahalle ve zamanla birleştiğinde tek bir
+       * ziyaretçiyi işaret edebilir. "3–5 mn arası arayanlar arttı" aynı
+       * kararı aldırıyor ve kimseyi göstermiyor.
+       */
+      gozlemOlayi('filtre_uygulandi', anahtar)
+
+      if (anahtar === 'enAz' || anahtar === 'enCok') {
+        const bant = fiyatBandi(Number(deger))
+        if (bant !== null) gozlemOlayi('fiyat_bandi', bant.anahtar)
+      }
+    }
+
     const yeni = new URLSearchParams(sorgu.toString())
     if (deger) yeni.set(anahtar, deger)
     else yeni.delete(anahtar)

@@ -1,6 +1,8 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+
+import { gozlemOlayi } from '@/lib/olcum/istemci'
 import { useId, useState, useTransition } from 'react'
 
 import { Buton } from '@/components/ui/Buton'
@@ -32,6 +34,16 @@ export function IlanFiltreleri({ mahalleler }: { mahalleler: Mahalleler[] }) {
   ).length
 
   function degistir(anahtar: string, deger: string) {
+    /**
+     * ⚠️ ÖLÇÜLEN ŞEY ÖLÇÜTÜN ADI, DEĞERİ DEĞİL.
+     *
+     * "Fiyat filtresi kullanıldı" bilgisi Aslıhan'a hangi filtrenin işe
+     * yaradığını söylüyor. Girilen DEĞERİ göndermek ise gereksiz: fiyat
+     * aralıkları ayrıca ve bant olarak ölçülüyor, tam değer tek bir
+     * ziyaretçiyi işaret edebilir.
+     */
+    if (deger) gozlemOlayi('filtre_uygulandi', anahtar)
+
     const yeni = new URLSearchParams(sorgu.toString())
     if (deger) yeni.set(anahtar, deger)
     else yeni.delete(anahtar)

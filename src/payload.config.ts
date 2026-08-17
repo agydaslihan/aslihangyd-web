@@ -11,6 +11,7 @@ import { AltbilgiBaglantilari } from '@/collections/AltbilgiBaglantilari'
 import { DanismanBasvurulari } from '@/collections/DanismanBasvurulari'
 import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
+import { OLCUM_YOLU } from '@/components/olcum/yol'
 import { SOSYAL_YOLU } from '@/components/sosyal/yol'
 import { GOZLEM_ICE_AKTARMA_YOLU } from '@/components/gozlem/yol'
 import { GOOGLE_YOLU } from '@/components/google/yol'
@@ -18,6 +19,7 @@ import { MAHALLE_VERISI_YOLU } from '@/components/mahalleVerisi/yol'
 import { OSM_YOLU } from '@/components/osm/yol'
 import { RAYIC_YOLU } from '@/components/rayic/yol'
 import { YAKINLIK_YOLU } from '@/components/yakinlik/yol'
+import { GozlemGunluk } from '@/collections/GozlemGunluk'
 import { Gozlemler } from '@/collections/Gozlemler'
 import { Ilanlar } from '@/collections/Ilanlar'
 import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
@@ -94,6 +96,19 @@ export default buildConfig({
          * üretir. Otomatik paylaşım bilinçli olarak yok — hesaptan çıkan
          * her cümle Aslıhan'ın sözü ve ilan metni yasal sonuç doğuruyor.
          */
+        /**
+         * Gözlemlenebilirlik.
+         *
+         * ⚠️ Bu ekran hiçbir şey YAZMAZ ve tek ziyaretçi göstermez;
+         * `gozlem-gunluk` koleksiyonundaki gün satırlarını okuyup soruya
+         * çevirir. Yalnızca yönetici: dönüşüm ve trafik verisi editoryal
+         * değil ticari bilgi.
+         */
+        gozlemlenebilirlik: {
+          Component: '@/components/olcum/OlcumGorunumu#default',
+          path: OLCUM_YOLU,
+        },
+
         sosyalMateryal: {
           Component: '@/components/sosyal/SosyalGorunumu#default',
           path: SOSYAL_YOLU,
@@ -182,6 +197,7 @@ export default buildConfig({
         '@/components/sihirbaz/SihirbazNavBaglantisi#SihirbazNavBaglantisi',
         '@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi',
         '@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi',
+        '@/components/olcum/OlcumNavBaglantisi#OlcumNavBaglantisi',
         '@/components/mahalleVerisi/MahalleVerisiNavBaglantisi#MahalleVerisiNavBaglantisi',
         '@/components/osm/OsmNavBaglantisi#OsmNavBaglantisi',
         '@/components/google/GoogleNavBaglantisi#GoogleNavBaglantisi',
@@ -192,6 +208,7 @@ export default buildConfig({
   },
 
   collections: [
+    GozlemGunluk,
     Ilanlar,
     Mahalleler,
     IlgiNoktalari,

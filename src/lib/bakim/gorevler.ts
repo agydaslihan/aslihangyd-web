@@ -179,6 +179,78 @@ export async function saklamaSuresiDolanlariSil(payload: Payload): Promise<Gorev
   return rapor
 }
 
+/**
+ * Ölçüm olay ayrıntılarının saklama süresi.
+ *
+ * ⚠️ Şartnamedeki 90 gün. Değer burada tek yerde ve aydınlatma metniyle
+ * (`docs/KVKK-ANALITIK.md`) aynı olmak zorunda: belgede 90 yazıp kodda 180
+ * uygulamak, verilen sözü tutmamak olur.
+ */
+export const OLCUM_AYRINTI_GUN = 90
+
+/**
+ * Ölçüm kayıtlarının ayrıntı katmanını 90 gün sonra temizler.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SATIR SİLİNMİYOR, YALNIZCA AYRINTI DİZİSİ BOŞALTILIYOR.
+ *
+ * Şartname "ham olay kaydı 90 gün sonra silinir; toplulaştırılmış özetler
+ * kalıcı" diyor ve ikisi aynı satırda duruyor: gün satırının kendisi
+ * özettir, `olaylar` dizisi ise en ayrıntılı katman. Satırı silmek geçmiş
+ * trafiği de silmek olurdu — karşılaştırma yapılamaz hâle gelirdi.
+ *
+ * ⚠️ Bu görev bir KVKK zorunluluğu değil, verilen sözün tutulması.
+ * Silinen şey kişisel veri değil: gün bazında toplanmış sayaçlar tek bir
+ * ziyaretçiyi işaret edemez. Aydınlatma metninde 90 gün yazdığı için
+ * yapılıyor — ve bu ayrım künyede de yazılı (`yasal: false`).
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function olcumAyrintilariniTemizle(payload: Payload): Promise<GorevRaporu> {
+  const rapor: GorevRaporu = {
+    anahtar: 'olcum-ayrinti-sil',
+    ad: 'Ölçüm — 90 günden eski olay ayrıntılarını temizle',
+    islenen: 0,
+    detay: [],
+  }
+
+  try {
+    const sinir = new Date()
+    sinir.setUTCDate(sinir.getUTCDate() - OLCUM_AYRINTI_GUN)
+    const sinirGunu = sinir.toISOString().slice(0, 10)
+
+    const eskiler = await payload.find({
+      collection: 'gozlem-gunluk',
+      where: {
+        and: [{ gun: { less_than: sinirGunu } }, { ayrintiTemizlendi: { not_equals: true } }],
+      },
+      limit: 500,
+      depth: 0,
+      overrideAccess: true,
+    })
+
+    for (const kayit of eskiler.docs) {
+      await payload.update({
+        collection: 'gozlem-gunluk',
+        id: (kayit as { id: string | number }).id,
+        data: { olaylar: [], ayrintiTemizlendi: true },
+        overrideAccess: true,
+      })
+      rapor.islenen += 1
+    }
+
+    if (rapor.islenen > 0) {
+      rapor.detay.push(
+        `${rapor.islenen} gün kaydının olay ayrıntısı temizlendi ` +
+          `(${OLCUM_AYRINTI_GUN} günden eski). Toplulaştırılmış sayaçlar korundu.`,
+      )
+    }
+  } catch (hata) {
+    rapor.hata = hata instanceof Error ? hata.message : 'Bilinmeyen hata'
+  }
+
+  return rapor
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    Görev kaydı
    ══════════════════════════════════════════════════════════════════════════ */
@@ -199,6 +271,7 @@ const CALISTIRICILAR: Record<GorevAnahtari, (payload: Payload) => Promise<GorevR
   'eids-kaldir': yetkisiDolanlariKaldir,
   'eids-uyar': yetkisiBitecekleriBildir,
   'kvkk-sil': saklamaSuresiDolanlariSil,
+  'olcum-ayrinti-sil': olcumAyrintilariniTemizle,
 }
 
 export const GOREV_KAYDI: readonly GorevTanimi[] = GOREV_KUNYELERI.map((kunye) => ({

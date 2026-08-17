@@ -2,6 +2,8 @@
 
 import Script from 'next/script'
 
+import { gozlemOlayi } from '@/lib/olcum/istemci'
+
 import Link from 'next/link'
 import { useActionState, useEffect, useId, useRef } from 'react'
 import { useFormStatus } from 'react-dom'
@@ -58,6 +60,16 @@ export function TalepFormu({
   useEffect(() => {
     if (durum.hatalar || durum.genelHata) ozetRef.current?.focus()
   }, [durum])
+
+  /**
+   * ⚠️ Yalnızca GERÇEKTEN gönderilmiş form sayılıyor.
+   *
+   * Tıklama anında saymak, doğrulamadan geçmeyen ya da Turnstile'a takılan
+   * denemeleri de lead sayardı ve dönüşüm oranı sistematik olarak şişerdi.
+   */
+  useEffect(() => {
+    if (durum.basarili) gozlemOlayi('iletisim_gonderildi')
+  }, [durum.basarili])
 
   if (durum.basarili) {
     return <BasariEkrani />

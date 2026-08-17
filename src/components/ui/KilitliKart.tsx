@@ -82,6 +82,7 @@ export function KilitliKart({
             dolu bakır yalnızca gerçek butonun rengi. */}
         <a
           href={talepAdresi}
+          data-gozlem="gizli_portfoy_talep"
           className="text-aksan-metin text-govde-kucuk mt-auto inline-flex min-h-11 items-center gap-1.5 font-medium"
         >
           Erişim talep et

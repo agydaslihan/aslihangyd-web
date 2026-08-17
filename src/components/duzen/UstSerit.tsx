@@ -42,6 +42,7 @@ export function UstSerit({
         {telefon ? (
           <a
             href={`tel:${telefon.replace(/\s/g, '')}`}
+            data-gozlem="telefon_tikla"
             className="text-notr-50/85 hover:text-notr-50 inline-flex items-center gap-1.5 text-mikro transition-colors"
           >
             <TelefonIkon width={13} height={13} className="shrink-0" />
@@ -62,6 +63,7 @@ export function UstSerit({
         {whatsappAdresi ? (
           <a
             href={whatsappAdresi}
+            data-gozlem="whatsapp_tikla"
             target="_blank"
             rel="noopener noreferrer"
             className="text-notr-50/85 hover:text-notr-50 inline-flex items-center gap-1.5 text-mikro transition-colors"
