@@ -5218,3 +5218,37 @@ Doğrulandı: harita kayıtları eklendi · bileşen metinleri derlenmiş çıkt
 
 ⚠️ Panelin tarayıcıda çizildiği **görülmedi**: `/admin` oturum istiyor ve
 bu ortamda tarayıcı yok. Kanıt dolaylı ama zincirin her halkası ölçüldü.
+
+### ⚠️ İkinci katman: Payload'ın kendi talebini gezen denetim
+
+İlk denetim kaynak dosyaları TARIYOR: `'@/components/…#Ad'` biçiminde
+yazılmış her dizgeyi bulup haritada arıyor. Yaşanan arızayı yakalar ama bir
+varsayıma dayanır — bileşen yolunun kaynakta düz bir dizge olarak
+yazıldığına.
+
+İkinci denetim varsayımı kaldırıyor: **sanitize edilmiş yapılandırmayı**
+geziyor ve her `components` girdisini haritadaki anahtarlarla karşılaştırıyor.
+Yol nasıl üretilmiş olursa olsun — `{ path }` nesnesi, yardımcıdan dönen
+değer, döngüyle kurulan alan — kayıtsızsa görünür.
+
+⚠️ Marka panelinde arıza tam olarak bu yüzden sessizdi: on renk alanı
+`renkAlanlari()` yardımcısıyla ÜRETİLİYOR. Panel çözemediği bileşen için
+hata atmıyor, hiçbir şey basmıyor — sekmenin başlığı duruyor, içeriği yok.
+
+⚠️ Yakaladığı doğrulandı: dört satır haritadan çıkarıldı ve test hem
+sayfayı hem **yerini** gösterdi:
+
+```
+@/components/marka/RenkAlani#RenkAlani
+  ← config.globals[2].fields[0].tabs[1].fields[0].fields[0].admin.components.Field
+  … (açık tema on alan, koyu tema on alan)
+@/components/marka/PaletPaneli#AcikPaletPaneli
+  ← config.globals[2].fields[0].tabs[1].fields[1].admin.components.Field
+```
+
+Yani bildirilen belirtinin tamamı: iki renk sekmesi de boş, yalnızca başlık.
+
+⚠️ Harita DOSYA OLARAK okunuyor, içe aktarılmıyor. `importMap.js` bütün
+panel bileşenlerini içe aktarıyor; testte yüklemek `.css` içe aktarımlarını
+da sürüklüyor ve denetimi kütüphanelerin paketleme ayrıntılarına bağlıyordu.
+Değerli olan taraf zaten TALEP tarafı.

@@ -152,3 +152,93 @@ describe('panel içe aktarma haritası', () => {
     expect(harita).toContain('importMap')
   })
 })
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ İKİNCİ KATMAN: PAYLOAD'IN KENDİ ÇÖZÜCÜSÜ.
+ *
+ * Yukarıdaki denetimler kaynak dosyaları TARIYOR: `'@/components/…#Ad'`
+ * biçiminde yazılmış her dizgeyi bulup haritada arıyorlar. Bu, yaşanan
+ * arızayı yakalar ama bir varsayıma dayanır — bileşen yolunun kaynakta o
+ * biçimde, düz bir dizge olarak yazıldığına.
+ *
+ * Bu blok varsayımı kaldırıyor: SANITIZE EDİLMİŞ yapılandırmayı geziyor ve
+ * her bileşeni panelin çalışma anında kullandığı fonksiyonla
+ * (`getFromImportMap`) çözüyor. Yol nasıl üretilmiş olursa olsun —
+ * `{ path }` nesnesi, yardımcıdan dönen değer, döngüyle kurulan alan —
+ * çözülemiyorsa burada görünür.
+ *
+ * Renk sekmelerinin boş kalması tam olarak bu yüzden sessizdi: alanlar
+ * `renkAlanlari()` yardımcısıyla ÜRETİLİYOR ve panel, çözemediği bileşen
+ * için hata atmıyor; hiçbir şey basmıyor. Başlık duruyor, içerik yok.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+describe('yapılandırmadaki her bileşen çalışma anında çözülüyor', () => {
+  interface Bulgu {
+    yol: string
+    yer: string
+  }
+
+  function bilesenleriTopla(dugum: unknown, yer: string, bulunan: Bulgu[]): void {
+    if (dugum === null || typeof dugum !== 'object') return
+
+    if (Array.isArray(dugum)) {
+      dugum.forEach((oge, sira) => bilesenleriTopla(oge, `${yer}[${sira}]`, bulunan))
+      return
+    }
+
+    for (const [anahtar, deger] of Object.entries(dugum as Record<string, unknown>)) {
+      if (anahtar === 'components' && deger !== null && typeof deger === 'object') {
+        for (const [rol, bilesen] of Object.entries(deger as Record<string, unknown>)) {
+          for (const aday of Array.isArray(bilesen) ? bilesen : [bilesen]) {
+            const yol =
+              typeof aday === 'string' ? aday : ((aday as { path?: unknown } | null)?.path ?? null)
+            if (typeof yol === 'string') bulunan.push({ yol, yer: `${yer}.${anahtar}.${rol}` })
+          }
+        }
+      }
+      bilesenleriTopla(deger, `${yer}.${anahtar}`, bulunan)
+    }
+  }
+
+  /**
+   * ⚠️ Harita DOSYA OLARAK okunuyor, içe aktarılmıyor.
+   *
+   * `importMap.js` bütün panel bileşenlerini içe aktarıyor; onları bu
+   * testte yüklemek `.css` içe aktarımlarını da sürüklüyor ve testi
+   * kütüphanelerin paketleme ayrıntılarına bağımlı hâle getiriyordu.
+   * Değerli olan taraf zaten TALEP tarafı: yapılandırmada gerçekten hangi
+   * bileşenlerin istendiği. Arz tarafı için anahtar listesi yeterli.
+   */
+  function haritaAnahtarlari(): Set<string> {
+    const icerik = readFileSync(HARITA_YOLU, 'utf8')
+    const anahtarlar = new Set<string>()
+    for (const eslesme of icerik.matchAll(/"([^"]+#[A-Za-z_]\w*)":/g)) {
+      const anahtar = eslesme[1]
+      if (anahtar !== undefined) anahtarlar.add(anahtar)
+    }
+    return anahtarlar
+  }
+
+  it('sanitize edilmiş yapılandırmadaki hiçbir bileşen çözümsüz kalmıyor', async () => {
+    const yapilandirma = await import('@payload-config')
+    const config = await (yapilandirma.default as Promise<unknown>)
+
+    const bulunan: Bulgu[] = []
+    bilesenleriTopla(config, 'config', bulunan)
+
+    // Denetimin kendisi boşa düşmesin: bileşen bulunamadıysa gezinme
+    // bozulmuştur ve testin yeşil olması yanıltıcı olurdu.
+    expect(bulunan.length).toBeGreaterThan(10)
+
+    const anahtarlar = haritaAnahtarlari()
+    const eksikler = bulunan.filter(({ yol }) => !anahtarlar.has(yol))
+
+    expect(
+      eksikler,
+      'Bu bileşenler panelde ÇÖZÜLEMİYOR. Payload hata atmaz, hiçbir şey basmaz: ' +
+        'alan ya da sekme boş görünür. Çözüm: `pnpm payload generate:importmap`.\n' +
+        eksikler.map(({ yol, yer }) => `  ${yol}  ←  ${yer}`).join('\n'),
+    ).toEqual([])
+  })
+})
