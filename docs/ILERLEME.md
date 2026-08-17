@@ -1,7 +1,31 @@
-# İlerleme Kaydı
+# İlerleme Kaydı — ARŞİV
 
 Bu dosya oturumlar arası hafızadır. **Yeni bir oturuma başlarken önce bunu oku.**
-Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik kaldı.
+Ne yapıldı, hangi karar neden verildi, ne eksik kaldı.
+
+> ## ⚠️ BU DOSYAYA ARTIK EKLEME YAPILMIYOR
+>
+> **Yeni kayıtlar `docs/ilerleme/` altına, PR başına AYRI bir dosyaya yazılır:**
+> `docs/ilerleme/YYYY-AA-GG-kisa-ad.md`
+>
+> Buradaki içerik 17 Ağustos 2026'ya kadarki tarihçedir ve olduğu gibi
+> duruyor — okumaya devam edin, yazmayın.
+>
+> **Neden:** bu dosya her PR'da çakışıyordu. Sebebi içeriği değil ŞEKLİYDİ:
+> her dal aynı yere, dosyanın sonuna ekliyordu. Aynı satır aralığına iki
+> farklı ekleme yapan iki dal, git'in üç yollu birleştirmesinde daima
+> çakışır. Dört PR'lık bir turda bu, her turda tekrarlayan elle iş demekti.
+>
+> ⚠️ Kaydı dosyanın BAŞINA eklemek bunu çözmez — yalnızca çakışmanın yerini
+> değiştirir. Git satır aralığına bakar, dosyadaki konuma değil: 1. satıra
+> ekleyen iki dal da tıpkı sona ekleyen ikisi gibi çakışır.
+>
+> Çakışmayı gerçekten ortadan kaldıran tek şey, iki dalın AYNI DOSYAYA
+> dokunmaması. Bu yüzden her kayıt kendi dosyasında.
+>
+> ⚠️ Elle tutulan bir dizin (indeks) de eklenmedi — o da her PR'da bir satır
+> alacağı için çakışmayı geri getirirdi. Dizin, dosya adlarının kendisi:
+> tarih önde olduğu için listeleme zaten kronolojik.
 
 ---
 
@@ -5145,110 +5169,149 @@ bozar; video LCP'yi ölçülemez hâle getirir.
 
 ---
 
-## Marka paneli renk sekmeleri boş geliyordu (16 Ağustos 2026)
+## ⚠️⚠️ HARİTA ÜRETİMDE TAMAMEN KIRIKTI — DÖRT KAPI DA YEŞİLDİ (17 Ağustos 2026)
 
-Belirti: `/admin/globals/marka-gorunum` → "Renkler — açık tema" ve
-"Renkler — koyu tema" sekmelerinde **yalnızca başlık** görünüyor. On renk
-alanının hiçbiri çizilmiyor, kaydetme çalışmıyor.
+`pnpm typecheck && lint && test && build` dördü de temizdi. Harita hiçbir
+şey çizmiyordu.
 
-### Sebep: içe aktarma haritası güncellenmemişti
+### Belirti
 
-"Marka ve Görünüm" globali dört özel bileşen tanımlıyor:
-
-```
-@/components/marka/RenkAlani#RenkAlani
-@/components/marka/PaletPaneli#AcikPaletPaneli
-@/components/marka/PaletPaneli#KoyuPaletPaneli
-@/components/marka/MarkaOzeti#MarkaOzeti
-```
-
-Dördü de `src/app/(payload)/admin/importMap.js` içinde **yoktu**. O dosya
-Payload'ın "bu yol hangi bileşen" sorusuna cevabı; kayıt eksikse Payload
-bileşeni bulamıyor ve **sessizce hiçbir şey çizmiyor** — istisna bile
-fırlatmıyor.
-
-Ölçüm: yapılandırmalarda başvurulan 23 özel bileşenin 19'u haritada vardı,
-**4'ü yoktu** — hepsi marka paketinden. Diğer PR'lar `generate:importmap`
-çalıştırmıştı; marka PR'ında atlanmıştı.
-
-### ⚠️ HİÇBİR KAPI BUNU YAKALAMADI
+Ağ sekmesi:
 
 ```
-pnpm typecheck  ✅   bileşenler geçerli TypeScript
-pnpm lint       ✅
-pnpm test       ✅
-pnpm build      ✅   Next.js dosyaları zaten derliyordu
-CI (4 kontrol)  ✅
+harita    (pending)   script   Other   0.0 kB
 ```
 
-İçe aktarma haritası bir KOD dosyası değil, bir KAYIT dosyası. Kod doğru,
-kayıt eksikti. Tarayıcı konsolundaki
-`Failed to load module script: non-JavaScript MIME type text/html`
-hatası da aynı ailedendi: var olmayan bir modül isteniyor, sunucu 404 HTML
-döndürüyor.
-
-### Düzeltme ve kalıcı koruma
-
-`pnpm payload generate:importmap` → dört kayıt eklendi (8 satır).
-
-Yeni test (`src/lib/panel/importMap.test.ts`) üç şeyi denetliyor:
-
-1. Yapılandırmada başvurulan **her** özel bileşen haritada kayıtlı mı
-2. Haritadaki her bileşen **dosyası gerçekten var mı** (404/MIME hatasının
-   diğer yarısı)
-3. Tarama gerçekten bileşen buluyor mu — testin kendi kendini boşa
-   çıkarmasına karşı
-
-⚠️ **Testin gerçekten yakaladığı doğrulandı:** düzeltme geri alınıp
-koşturuldu, dört bileşeni adıyla sayıp `pnpm payload generate:importmap`
-komutunu yazarak kırmızı verdi.
-
-### ⚠️ Neden derleme adımı EKLENMEDİ
-
-`generate:importmap`i derlemeye eklemek de bir seçenekti. Eklenmedi: o
-zaman depodaki dosya ile üretilen dosya sessizce ayrışabilir ve
-"yerelde çalışıyor, üretimde çalışmıyor" sınıfına yeni bir örnek eklerdi.
-Harita depoda duruyor, gözle görülüyor ve test onu koddan sapmaya karşı
-koruyor.
-
-### Doğrulanan ve doğrulanamayan
-
-Doğrulandı: harita kayıtları eklendi · bileşen metinleri derlenmiş çıktıda
-(`.next`) bulunuyor · test kırılmayı yakalıyor.
-
-⚠️ Panelin tarayıcıda çizildiği **görülmedi**: `/admin` oturum istiyor ve
-bu ortamda tarayıcı yok. Kanıt dolaylı ama zincirin her halkası ölçüldü.
-
-### ⚠️ İkinci katman: Payload'ın kendi talebini gezen denetim
-
-İlk denetim kaynak dosyaları TARIYOR: `'@/components/…#Ad'` biçiminde
-yazılmış her dizgeyi bulup haritada arıyor. Yaşanan arızayı yakalar ama bir
-varsayıma dayanır — bileşen yolunun kaynakta düz bir dizge olarak
-yazıldığına.
-
-İkinci denetim varsayımı kaldırıyor: **sanitize edilmiş yapılandırmayı**
-geziyor ve her `components` girdisini haritadaki anahtarlarla karşılaştırıyor.
-Yol nasıl üretilmiş olursa olsun — `{ path }` nesnesi, yardımcıdan dönen
-değer, döngüyle kurulan alan — kayıtsızsa görünür.
-
-⚠️ Marka panelinde arıza tam olarak bu yüzden sessizdi: on renk alanı
-`renkAlanlari()` yardımcısıyla ÜRETİLİYOR. Panel çözemediği bileşen için
-hata atmıyor, hiçbir şey basmıyor — sekmenin başlığı duruyor, içeriği yok.
-
-⚠️ Yakaladığı doğrulandı: dört satır haritadan çıkarıldı ve test hem
-sayfayı hem **yerini** gösterdi:
+Caddy günlüğü:
 
 ```
-@/components/marka/RenkAlani#RenkAlani
-  ← config.globals[2].fields[0].tabs[1].fields[0].fields[0].admin.components.Field
-  … (açık tema on alan, koyu tema on alan)
-@/components/marka/PaletPaneli#AcikPaletPaneli
-  ← config.globals[2].fields[0].tabs[1].fields[1].admin.components.Field
+"uri":"/harita", "Sec-Fetch-Dest":["worker"], error: "reading: context canceled"
 ```
 
-Yani bildirilen belirtinin tamamı: iki renk sekmesi de boş, yalnızca başlık.
+Konsol: `Failed to load module script: non-JavaScript MIME type of text/html`
 
-⚠️ Harita DOSYA OLARAK okunuyor, içe aktarılmıyor. `importMap.js` bütün
-panel bileşenlerini içe aktarıyor; testte yüklemek `.css` içe aktarımlarını
-da sürüklüyor ve denetimi kütüphanelerin paketleme ayrıntılarına bağlıyordu.
-Değerli olan taraf zaten TALEP tarafı.
+### Kök sebep — ölçülerek bulundu, tahmin edilmedi
+
+MapLibre GL JS **v6** worker'ını artık ayrı bir dosyadan yüklüyor (v5'te
+gömülüydü) ve adresini `import.meta.url`den türetiyor:
+
+```js
+function di() {
+  let e = import.meta.url
+  if (!/^https?:/.test(e)) return ''            // ← boş dizge
+  return new URL('./maplibre-gl-worker.mjs', e).href
+}
+```
+
+Turbopack paketlemede `import.meta.url` yerine bir **dosya yolu** koyuyor.
+Derlenmiş çıktıdan birebir:
+
+```js
+ck = { get url() { return `file://${…/maplibre-gl.mjs}` } }
+```
+
+`file://…` ifadesi `/^https?:/` testini geçmiyor → adres **boş dizge** →
+
+```js
+new Worker('', { type: 'module' })
+```
+
+Boş adres belgenin kendi adresine çözülüyor: tarayıcı worker olarak
+**`/harita` sayfasının kendisini** istiyor, sunucu HTML dönüyor, tarayıcı
+MIME türünü reddediyor, worker hiç başlamıyor. MapLibre worker olmadan tek
+bir karo bile çizemez.
+
+⚠️ Kaynak kod DOĞRUYDU. Kırılan şey paketlemeydi — bu yüzden kaynağa bakan
+hiçbir denetim yakalayamazdı.
+
+### ⚠️ Turbopack'in kendi kopyası kullanılamıyor
+
+Turbopack worker dosyasını `.next/static/media/` altına atıyor — ama ham
+kopya olarak: içindeki `import "./maplibre-gl-shared.mjs"` satırı olduğu
+gibi duruyor ve orada o adla bir dosya yok (yanındaki kopyanın adı karma
+içeriyor). Worker yüklense bile ilk satırında 404 alırdı.
+
+### Çözüm
+
+`scripts/maplibre-worker-hazirla.mjs` **iki dosyayı birden**
+`public/maplibre/<sürüm>/` altına kopyalıyor; bileşen modül düzeyinde
+`setWorkerUrl(\`/maplibre/${getVersion()}/maplibre-gl-worker.mjs\`)`
+çağırıyor.
+
+- ⚠️ **İki dosya birden**, çünkü worker'ın göreli içe aktarımı yanındaki
+  dosyaya düşmeli.
+- ⚠️ **Sürüm adreste**, çünkü `public/` içerik karması taşımıyor;
+  yükseltmeden sonra önbellekteki eski worker yeni ana paketle konuşamazdı.
+- ⚠️ **Sürüm `getVersion()`den**, elle yazılmıyor — bir `pnpm update`
+  sonrası adres sessizce 404'e düşerdi.
+- ⚠️ Kopyalar **depoya girmiyor** (`.gitignore`), `pnpm build`/`pnpm dev`
+  üretiyor. Commit edilseydi bir yükseltmeden sonra bayat kalırdı.
+
+Yan bulgu: `setWorkerUrl` hiç çağrılmadığında küçültücü `WORKER_URL ||`
+dalını tümden atıyordu. Çağrı eklendiği anda geri geldi — derlenmiş
+çıktıda doğrulandı.
+
+### ⚠️ Yakalayan kapı: `scripts/harita-worker-duman.mjs`
+
+Üç şeyi **ölçüyor**, varsayımda bulunmuyor:
+
+1. Derlenmiş çıktı worker adresini gerçekten atıyor mu
+2. O adres sunucudan **JavaScript** olarak mı geliyor (HTML değil)
+3. Worker'ın kendi içe aktarımı da JavaScript olarak mı geliyor
+
+CI'da, istemci JS ölçümü için zaten ayakta olan üretim sunucusuna karşı
+koşuyor.
+
+⚠️ Yakaladığı **doğrulandı**: `setWorkerUrl` çağrısı geri çıkarılıp yeniden
+derlendi, betik çıkış kodu 1 ile düştü:
+
+```
+✗ Yerel derleme çıktısının (.next) hiçbir yerinde WORKER_URL ataması yok.
+  setWorkerUrl çağrısı paketlemede düşmüş olabilir — harita üretimde çizmez.
+```
+
+⚠️ Betik **tam adresi değil ATAMAYI** arıyor. Adres kodda
+`` `/maplibre/${getVersion()}/…` `` biçiminde kuruluyor ve küçültücü sürümü
+bir değişkene alıyor; çözülmüş dizgeyi arayan bir denetim **çalışan**
+derlemede kırmızı verirdi — ve o yanlış alarm ilk hafta kapatılırdı.
+
+### Üretim imajında doğrulandı
+
+Dev sunucuda değil, gerçek imajda:
+
+```
+$ docker run --rm … ls /uygulama/public/maplibre/6.1.0/
+maplibre-gl-shared.mjs   479327
+maplibre-gl-worker.mjs    19108
+
+$ curl -o /dev/null -w "%{http_code} %{content_type}" …/maplibre-gl-worker.mjs
+200 application/javascript; charset=UTF-8
+```
+
+### ⚠️ Satıcı kopyaları lint dışı
+
+480 kB'lık küçültülmüş dosyalar `eslint .` kapsamına girince 19 hata +
+1057 uyarı çıkardı: kapıyı bizim yazmadığımız kod kapatıyordu.
+`public/maplibre/**` yok sayılıyor.
+
+### ⚠️ Koruma testi kendi kurduğu tuzağa düştü — ilk CI koşusunda
+
+İlk hâli `public/maplibre/<sürüm>/` dizininin VARLIĞINI şart koşuyordu.
+Yerelde geçti (önceki derlemeden kalmıştı), CI'da düştü: iş akışı
+`pnpm test`i `pnpm build`ten ÖNCE koşuyor ve kopyalar henüz yok.
+
+Test kopyaya değil KAYNAĞA bakacak biçimde yazıldı: worker'ın
+`node_modules`taki hâlinden göreli içe aktarımları çıkarıp kopyalama
+listesinin hepsini kapsadığını doğruluyor. Hem her zaman çalışıyor hem de
+daha erken uyarıyor — worker yarın yeni bir dosyaya bağımlı olursa liste
+eksik kaldığı ANDA görünüyor. Kopyanın gerçekten yerinde olduğunu zaten
+duman testi ölçüyor, derlemeden sonra.
+
+⚠️ Ders: bir testin ön koşulu yerelde artık dosyalardan sağlanıyorsa, o
+test aslında bir şey kanıtlamıyor.
+
+---
+
+<!-- ARSIV-SONU: Bu satır dosyanın SON satırı olmalıdır. Yeni kayıt
+     eklemeyin; `docs/ilerleme/YYYY-AA-GG-kisa-ad.md` açın. Bu nöbetçiyi
+     `src/lib/dokuman/ilerleme.test.ts` denetliyor. -->

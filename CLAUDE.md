@@ -273,6 +273,22 @@ karardan geliyor — bkz. docs/SENDEN-BEKLENENLER.md.
               ⚠️ AI arama varsayılan KAPALI: anahtar + KVKK metni bekliyor
 - [~] Faz 5  — Çorlu Live zaman serisi → talimat gereği ATLANDI
 
+## İlerleme kaydı
+Her PR kendi kaydını **ayrı dosyaya** yazar:
+`docs/ilerleme/YYYY-AA-GG-kisa-ad.md`
+
+⚠️ `docs/ILERLEME.md` ARŞİVDİR — okunur, yazılmaz. 17 Ağustos 2026'ya
+kadarki tarihçe orada.
+
+⚠️ Sebep: dosya her PR'da çakışıyordu. Aynı satır aralığına iki farklı
+ekleme yapan iki dal git'te daima çakışır — kaydı dosyanın başına almak
+bunu çözmez, yalnızca yerini değiştirir. Elle tutulan bir dizin de yok;
+sıralamayı dosya adı taşıyor. Kural `src/lib/dokuman/ilerleme.test.ts`
+ile denetleniyor.
+
+⚠️ Aynı sebeple `src/migrations/index.ts` depoda tutulmuyor. Payload ona
+ihtiyaç duymuyor (göçleri dizinden okuyor); göçmen imajında ölçüldü.
+
 ## İlgili dokümanlar
 - ASLIHANGYD-PROJE-PLANI.md          genel plan, hukuk, altyapı
 - BAL-KUPU-VE-PORTFOY-YONETIMI.md    Faz 2B modül şartnamesi
