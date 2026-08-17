@@ -14,6 +14,10 @@ export default tseslint.config(
       'src/payload-types.ts',
       'src/migrations/**',
       'next-env.d.ts',
+      // ⚠️ MapLibre worker kopyaları — satıcı kodu, `pnpm build` üretiyor.
+      // Küçültülmüş 480 kB'lık dosyalar lint'e girdiğinde 19 hata + 1057
+      // uyarı çıkarıyor ve kapıyı bizim yazmadığımız kod kapatıyordu.
+      'public/maplibre/**',
     ],
   },
 

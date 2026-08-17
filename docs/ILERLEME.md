@@ -5145,68 +5145,143 @@ bozar; video LCP'yi ölçülemez hâle getirir.
 
 ---
 
-## F paketi — Menü yönetimi (16 Ağustos 2026)
+## ⚠️⚠️ HARİTA ÜRETİMDE TAMAMEN KIRIKTI — DÖRT KAPI DA YEŞİLDİ (17 Ağustos 2026)
 
-Danışman Ol ve Harita artık üst menüde ve ikisi de panelden açılıp
-kapanabiliyor. Menü sırası da panelden ayarlanıyor.
+`pnpm typecheck && lint && test && build` dördü de temizdi. Harita hiçbir
+şey çizmiyordu.
 
-### Üç ayrı karar, üç ayrı yer
+### Belirti
 
-| Soru | Nerede | Kim karar verir |
-|---|---|---|
-| Menüde ne var? | kod (`UST_MENU_YAPISI`) | uygulama |
-| Hangisi görünür? | Ayarlar → Site Bölümleri | Aslıhan (yayın kararı) |
-| Hangi sırada? | Ayarlar → Menü Düzeni | Aslıhan (editoryal tercih) |
+Ağ sekmesi:
 
-⚠️ Serbest bir "menü yöneticisi" (ad ve adres elle yazılan) üçünü tek yerde
-toplardı — ve ilk yanlış yazılan adreste menü sessizce 404'e bağlanırdı.
+```
+harita    (pending)   script   Other   0.0 kB
+```
 
-### ⚠️ Menü Düzeni ekranı SIRALAR, TANIMLAMAZ
+Caddy günlüğü:
 
-Bu, ekranın bütün tasarımını belirleyen kural. Somut karşılıkları:
+```
+"uri":"/harita", "Sec-Fetch-Dest":["worker"], error: "reading: context canceled"
+```
 
-1. **Listede olmayan başlık kaybolmaz** — menünün sonuna iner. Koda yeni
-   bir giriş eklendiğinde ya da bir satır yanlışlıkla silindiğinde sayfa
-   erişilemez olmasın diye.
-2. **Tanınmayan anahtar yok sayılır** — kaldırılmış bir girişin kaydı
-   menüye boş öğe basmamalı.
-3. **Tekrar eden anahtar kaydedilmez.** Çizim tarafı ikinciyi zaten
-   atlıyor ama panelde "ekledim, görünmedi" en kötü geri bildirim; hata
-   sebebiyle birlikte söyleniyor.
+Konsol: `Failed to load module script: non-JavaScript MIME type of text/html`
 
-⚠️ Bir başlığı tamamen kaldırmak için Site Bölümleri'nden kapatmak
-gerekiyor — yalnızca menüden düşürmek "kapattım ama Google hâlâ
-gösteriyor" durumunu üretirdi.
+### Kök sebep — ölçülerek bulundu, tahmin edilmedi
 
-### ⚠️ Sıralama anahtarı adrese ya da ada bağlı DEĞİL
+MapLibre GL JS **v6** worker'ını artık ayrı bir dosyadan yüklüyor (v5'te
+gömülüydü) ve adresini `import.meta.url`den türetiyor:
 
-Panelde saklanan şey kalıcı anahtar (`portfoy`, `harita`, …). "Hakkımızda"
-yeniden adlandırıldığında ya da `/portfoy` taşındığında Aslıhan'ın kurduğu
-sıra bozulmamalı.
+```js
+function di() {
+  let e = import.meta.url
+  if (!/^https?:/.test(e)) return ''            // ← boş dizge
+  return new URL('./maplibre-gl-worker.mjs', e).href
+}
+```
 
-### ⚠️ Önce süz, sonra diz
+Turbopack paketlemede `import.meta.url` yerine bir **dosya yolu** koyuyor.
+Derlenmiş çıktıdan birebir:
 
-`menuyuSirala(menuyuSuz(...))`. Ters sırada çalıştırılsaydı "listede yoksa
-sona ekle" kuralı **kapalı bir öğeyi menüye geri koyabilirdi**. Test bu
-sıranın sonucunu kilitliyor.
+```js
+ck = { get url() { return `file://${…/maplibre-gl.mjs}` } }
+```
 
-### Harita da kapatılabilir bir bölüm oldu
+`file://…` ifadesi `/^https?:/` testini geçmiyor → adres **boş dizge** →
 
-Yeni bölüm anahtarı `harita`, **varsayılan açık** — bugün yayında olan bir
-sayfanın bu sistem eklendi diye kaybolması gerileme olurdu.
+```js
+new Worker('', { type: 'module' })
+```
 
-Kapatma gerekçesi teknik olabilir: MapTiler anahtarı bitmiş ya da kota
-dolmuş. O durumda sayfayı bozuk bırakmaktansa kapatmak dürüst davranış —
-ve kapatınca menüden, altbilgiden ve site haritasından birlikte kalkıyor,
-`/harita` 404 dönüyor.
+Boş adres belgenin kendi adresine çözülüyor: tarayıcı worker olarak
+**`/harita` sayfasının kendisini** istiyor, sunucu HTML dönüyor, tarayıcı
+MIME türünü reddediyor, worker hiç başlamıyor. MapLibre worker olmadan tek
+bir karo bile çizemez.
 
-⚠️ Kapı sayfanın **en başında**: harita ilan, mahalle ve POI'yi birden
-okuyor; kapıyı aşağı koymak kapalı bir bölüm için üç sorgu çalıştırmak
-olurdu.
+⚠️ Kaynak kod DOĞRUYDU. Kırılan şey paketlemeydi — bu yüzden kaynağa bakan
+hiçbir denetim yakalayamazdı.
 
-### ⚠️ Endeks'in ikinci kapısı sıralamadan sonra da duruyor
+### ⚠️ Turbopack'in kendi kopyası kullanılamıyor
 
-SiteSections açık olsa bile veri eşiği (katman başına 8 gözlem, 6 ay
-geçmiş — CLAUDE.md 6c) sağlanmadıysa Endeks menüde görünmüyor. Sıralama
-eklenirken en kolay hata süzülmüş listeyi bırakıp ham yapıyı dizmek
-olurdu; testle kapatıldı.
+Turbopack worker dosyasını `.next/static/media/` altına atıyor — ama ham
+kopya olarak: içindeki `import "./maplibre-gl-shared.mjs"` satırı olduğu
+gibi duruyor ve orada o adla bir dosya yok (yanındaki kopyanın adı karma
+içeriyor). Worker yüklense bile ilk satırında 404 alırdı.
+
+### Çözüm
+
+`scripts/maplibre-worker-hazirla.mjs` **iki dosyayı birden**
+`public/maplibre/<sürüm>/` altına kopyalıyor; bileşen modül düzeyinde
+`setWorkerUrl(\`/maplibre/${getVersion()}/maplibre-gl-worker.mjs\`)`
+çağırıyor.
+
+- ⚠️ **İki dosya birden**, çünkü worker'ın göreli içe aktarımı yanındaki
+  dosyaya düşmeli.
+- ⚠️ **Sürüm adreste**, çünkü `public/` içerik karması taşımıyor;
+  yükseltmeden sonra önbellekteki eski worker yeni ana paketle konuşamazdı.
+- ⚠️ **Sürüm `getVersion()`den**, elle yazılmıyor — bir `pnpm update`
+  sonrası adres sessizce 404'e düşerdi.
+- ⚠️ Kopyalar **depoya girmiyor** (`.gitignore`), `pnpm build`/`pnpm dev`
+  üretiyor. Commit edilseydi bir yükseltmeden sonra bayat kalırdı.
+
+Yan bulgu: `setWorkerUrl` hiç çağrılmadığında küçültücü `WORKER_URL ||`
+dalını tümden atıyordu. Çağrı eklendiği anda geri geldi — derlenmiş
+çıktıda doğrulandı.
+
+### ⚠️ Yakalayan kapı: `scripts/harita-worker-duman.mjs`
+
+Üç şeyi **ölçüyor**, varsayımda bulunmuyor:
+
+1. Derlenmiş çıktı worker adresini gerçekten atıyor mu
+2. O adres sunucudan **JavaScript** olarak mı geliyor (HTML değil)
+3. Worker'ın kendi içe aktarımı da JavaScript olarak mı geliyor
+
+CI'da, istemci JS ölçümü için zaten ayakta olan üretim sunucusuna karşı
+koşuyor.
+
+⚠️ Yakaladığı **doğrulandı**: `setWorkerUrl` çağrısı geri çıkarılıp yeniden
+derlendi, betik çıkış kodu 1 ile düştü:
+
+```
+✗ Yerel derleme çıktısının (.next) hiçbir yerinde WORKER_URL ataması yok.
+  setWorkerUrl çağrısı paketlemede düşmüş olabilir — harita üretimde çizmez.
+```
+
+⚠️ Betik **tam adresi değil ATAMAYI** arıyor. Adres kodda
+`` `/maplibre/${getVersion()}/…` `` biçiminde kuruluyor ve küçültücü sürümü
+bir değişkene alıyor; çözülmüş dizgeyi arayan bir denetim **çalışan**
+derlemede kırmızı verirdi — ve o yanlış alarm ilk hafta kapatılırdı.
+
+### Üretim imajında doğrulandı
+
+Dev sunucuda değil, gerçek imajda:
+
+```
+$ docker run --rm … ls /uygulama/public/maplibre/6.1.0/
+maplibre-gl-shared.mjs   479327
+maplibre-gl-worker.mjs    19108
+
+$ curl -o /dev/null -w "%{http_code} %{content_type}" …/maplibre-gl-worker.mjs
+200 application/javascript; charset=UTF-8
+```
+
+### ⚠️ Satıcı kopyaları lint dışı
+
+480 kB'lık küçültülmüş dosyalar `eslint .` kapsamına girince 19 hata +
+1057 uyarı çıkardı: kapıyı bizim yazmadığımız kod kapatıyordu.
+`public/maplibre/**` yok sayılıyor.
+
+### ⚠️ Koruma testi kendi kurduğu tuzağa düştü — ilk CI koşusunda
+
+İlk hâli `public/maplibre/<sürüm>/` dizininin VARLIĞINI şart koşuyordu.
+Yerelde geçti (önceki derlemeden kalmıştı), CI'da düştü: iş akışı
+`pnpm test`i `pnpm build`ten ÖNCE koşuyor ve kopyalar henüz yok.
+
+Test kopyaya değil KAYNAĞA bakacak biçimde yazıldı: worker'ın
+`node_modules`taki hâlinden göreli içe aktarımları çıkarıp kopyalama
+listesinin hepsini kapsadığını doğruluyor. Hem her zaman çalışıyor hem de
+daha erken uyarıyor — worker yarın yeni bir dosyaya bağımlı olursa liste
+eksik kaldığı ANDA görünüyor. Kopyanın gerçekten yerinde olduğunu zaten
+duman testi ölçüyor, derlemeden sonra.
+
+⚠️ Ders: bir testin ön koşulu yerelde artık dosyalardan sağlanıyorsa, o
+test aslında bir şey kanıtlamıyor.

@@ -132,14 +132,32 @@ describe('göç dosyaları', () => {
   })
 
   /**
-   * ⚠️ Göçler dosya adındaki damgaya göre koşuyor; `index.ts` sırası da
-   * aynı olmalı. Ters sıra şemayı yanlış durumdan geçirir.
+   * ⚠️ SIRA ARTIK YALNIZCA DOSYA ADINDAN GELİYOR.
+   *
+   * Eskiden burada `index.ts` sırasının dosya adı sırasıyla aynı olduğu
+   * denetleniyordu. O dosya depodan çıktı: Payload ona ihtiyaç duymuyor
+   * (göçleri dizinden okuyor) ve her göçte sonuna satır eklendiği için
+   * göç içeren her ikinci PR'da çakışıyordu.
+   *
+   * Bunun bedeli, sıralamanın TAMAMEN dosya adına bağlanması. Damgası
+   * bozuk ya da tekrar eden bir dosya, göçleri sessizce yanlış sırada
+   * çalıştırır — şemayı hiç geçmediği bir durumdan geçirir. Denetim o
+   * yüzden buraya taşındı.
    */
-  it('index.ts sırası dosya adı sırasıyla aynı', () => {
-    const indeks = readFileSync(path.join(DIZIN, 'index.ts'), 'utf8')
-    const indeksSirasi = [...indeks.matchAll(/name: '(\d{8}_\d{6}_[^']+)'/g)].map((m) => m[1])
-    const dosyaSirasi = gocler.map((g) => g.ad.replace(/\.ts$/, ''))
+  it('her göç dosyasının damgası benzersiz ve sıralanabilir', () => {
+    const damgalar = gocler.map((g) => g.ad.match(/^(\d{8}_\d{6})_/)?.[1] ?? null)
 
-    expect(indeksSirasi).toEqual(dosyaSirasi)
+    expect(
+      gocler.filter((_, i) => damgalar[i] === null).map((g) => g.ad),
+      'Göç dosyası adı `YYYYAAGG_SSDDss_ad.ts` kalıbında olmalı — sıralama buradan geliyor.',
+    ).toEqual([])
+
+    const dolu = damgalar.filter((d): d is string => d !== null)
+    expect(new Set(dolu).size, 'Aynı damgayı taşıyan iki göç var; sıraları belirsiz.').toBe(
+      dolu.length,
+    )
+
+    // Dizin okuması alfabetik; damga önde olduğu için bu kronolojik demek.
+    expect([...dolu].sort()).toEqual(dolu)
   })
 })

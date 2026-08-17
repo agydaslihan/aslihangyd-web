@@ -150,7 +150,7 @@ jobs:
       #
       # Ölçüm sunucuyu ayağa kaldırıp gerçekten yüklenen sayfayı okuyor;
       # `.next` manifest'lerine bakmıyor. Gerekçe betiğin başında.
-      - name: İstemci JS ölçümü
+      - name: İstemci JS ölçümü ve harita worker duman testi
         run: |
           pnpm start &
           sunucu=$!
@@ -159,6 +159,19 @@ jobs:
             sleep 1
           done
           node scripts/paket-olcumu.mjs http://127.0.0.1:3000 / /portfoy /harita
+
+          # ⚠️ HARİTA WORKER DUMAN TESTİ — bu kapı olmadan harita üretimde
+          # tamamen kırıktı ve CI yeşildi.
+          #
+          # MapLibre worker'ını ayrı bir dosyadan yükler; Turbopack
+          # paketlemesinde adres boş dizgeye düşüyor ve tarayıcı worker
+          # olarak /harita SAYFASINI istiyordu. Kaynak koda bakan hiçbir
+          # denetim bunu göremezdi — kaynak kod doğruydu.
+          #
+          # Aynı sunucu kullanılıyor: ölçüm için zaten ayaktaydı, ikinci
+          # kez kaldırmanın karşılığı yok.
+          node scripts/harita-worker-duman.mjs http://127.0.0.1:3000
+
           kill "$sunucu"
         env:
           NEXT_TELEMETRY_DISABLED: '1'
