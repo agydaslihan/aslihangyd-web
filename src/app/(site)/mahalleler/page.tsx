@@ -21,11 +21,17 @@ export default async function MahallelerSayfasi() {
 
   return (
     <div className="kapsayici py-10 sm:py-14">
-      <header className="mb-8 flex max-w-2xl flex-col gap-3">
-        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-          Çorlu mahalleleri
-        </h1>
-        <p className="text-metin-2 leading-relaxed">
+      {/*
+        ⚠️ BAŞLIK KÜÇÜLDÜ VE ORTALANDI — `h1` ETİKETİ DURUYOR.
+
+        Görsel sadelik için punto `baslik-1`den `baslik-2`ye indi ve blok
+        ortalandı. Etiket DEĞİŞMEDİ: bu sayfanın arama motoru sıralaması ve
+        ekran okuyucu gezinmesi `h1`e bağlı. "Küçük görünsün" ile "başlık
+        olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı olurdu.
+      */}
+      <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-2 text-center">
+        <h1 className="font-serif text-baslik-2 font-medium">Çorlu mahalleleri</h1>
+        <p className="text-metin-2 text-govde-kucuk leading-relaxed">
           Bir taşınmazın değerini binadan çok mahallesi belirler. Her mahallenin hangi değer
           sürücüsünden beslendiğini — sanayi, ulaşım, eğitim, sağlık — veriyle anlatıyoruz.
         </p>

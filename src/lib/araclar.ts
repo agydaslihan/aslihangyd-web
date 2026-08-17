@@ -5,11 +5,24 @@
  * bağlantılar bu listeden beslenir.
  */
 
+/**
+ * Araç kartlarında kullanılan ikon anahtarları.
+ *
+ * ⚠️ Bileşen DEĞİL anahtar tutuluyor. Bu dosya sunucu tarafında da,
+ * gezinme menüsünde de okunuyor; JSX taşısaydı istemci paketine bileşen
+ * sürükler ve `lib/` katmanının sunucu-istemci sınırını bulanıklaştırırdı.
+ * Eşleme çizim yerinde (`araclar/page.tsx`).
+ */
+export type AracIkonu =
+  'yuzde' | 'banka' | 'grafik' | 'karsilastir' | 'fis' | 'paraRaporu' | 'artis'
+
 export interface AracTanimi {
   readonly adres: string
   readonly ad: string
   readonly kisaAd: string
   readonly aciklama: string
+  /** Kart ikonu — anlamı kart başlığında, ikon dekoratif. */
+  readonly ikon: AracIkonu
   /** Vergi parametresi gerektiriyor mu — indekste rozet gösterilir. */
   readonly vergiParametresiGerekli: boolean
 }
@@ -17,6 +30,7 @@ export interface AracTanimi {
 export const ARACLAR = [
   {
     adres: '/araclar/kira-getirisi',
+    ikon: 'yuzde',
     ad: 'Kira Getiri Hesaplayıcı',
     kisaAd: 'Kira getirisi',
     aciklama:
@@ -25,6 +39,7 @@ export const ARACLAR = [
   },
   {
     adres: '/araclar/kredi',
+    ikon: 'banka',
     ad: 'Konut Kredisi Hesaplayıcı',
     kisaAd: 'Kredi',
     aciklama:
@@ -33,6 +48,7 @@ export const ARACLAR = [
   },
   {
     adres: '/araclar/yatirim-simulatoru',
+    ikon: 'grafik',
     ad: 'Yatırım Simülatörü',
     kisaAd: 'Yatırım simülatörü',
     aciklama:
@@ -41,6 +57,7 @@ export const ARACLAR = [
   },
   {
     adres: '/araclar/kira-mi-satin-alma-mi',
+    ikon: 'karsilastir',
     ad: 'Kiralasam mı, Satın Alsam mı?',
     kisaAd: 'Kira mı, satın alma mı',
     aciklama:
@@ -49,6 +66,7 @@ export const ARACLAR = [
   },
   {
     adres: '/araclar/alim-maliyeti',
+    ikon: 'fis',
     ad: 'Alım Maliyeti Hesaplayıcı',
     kisaAd: 'Alım maliyeti',
     aciklama:
@@ -57,6 +75,7 @@ export const ARACLAR = [
   },
   {
     adres: '/araclar/kira-geliri-vergisi',
+    ikon: 'paraRaporu',
     ad: 'Kira Geliri Vergi Hesaplayıcı',
     kisaAd: 'Kira geliri vergisi',
     aciklama: 'İstisna, götürü veya gerçek gider ve artan oranlı tarife. Elinize net ne kalıyor?',
@@ -64,6 +83,7 @@ export const ARACLAR = [
   },
   {
     adres: '/araclar/deger-artis-vergisi',
+    ikon: 'artis',
     ad: 'Değer Artış Kazancı Vergisi',
     kisaAd: 'Değer artış vergisi',
     aciklama:
