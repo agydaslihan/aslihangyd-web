@@ -5142,3 +5142,130 @@ gelir. Slider varken kart hero'nun altında, kendi zemininde duruyor.
 Geçiş efekti seçimi, slayt başına yükseklik ve video slayt bilinçli olarak
 yok. Sırasıyla: her efekt ek JS ve ek boyama; değişken yükseklik CLS'i
 bozar; video LCP'yi ölçülemez hâle getirir.
+
+---
+
+## ⚠️⚠️ HARİTA ÜRETİMDE TAMAMEN KIRIKTI — DÖRT KAPI DA YEŞİLDİ (17 Ağustos 2026)
+
+`pnpm typecheck && lint && test && build` dördü de temizdi. Harita hiçbir
+şey çizmiyordu.
+
+### Belirti
+
+Ağ sekmesi:
+
+```
+harita    (pending)   script   Other   0.0 kB
+```
+
+Caddy günlüğü:
+
+```
+"uri":"/harita", "Sec-Fetch-Dest":["worker"], error: "reading: context canceled"
+```
+
+Konsol: `Failed to load module script: non-JavaScript MIME type of text/html`
+
+### Kök sebep — ölçülerek bulundu, tahmin edilmedi
+
+MapLibre GL JS **v6** worker'ını artık ayrı bir dosyadan yüklüyor (v5'te
+gömülüydü) ve adresini `import.meta.url`den türetiyor:
+
+```js
+function di() {
+  let e = import.meta.url
+  if (!/^https?:/.test(e)) return ''            // ← boş dizge
+  return new URL('./maplibre-gl-worker.mjs', e).href
+}
+```
+
+Turbopack paketlemede `import.meta.url` yerine bir **dosya yolu** koyuyor.
+Derlenmiş çıktıdan birebir:
+
+```js
+ck = { get url() { return `file://${…/maplibre-gl.mjs}` } }
+```
+
+`file://…` ifadesi `/^https?:/` testini geçmiyor → adres **boş dizge** →
+
+```js
+new Worker('', { type: 'module' })
+```
+
+Boş adres belgenin kendi adresine çözülüyor: tarayıcı worker olarak
+**`/harita` sayfasının kendisini** istiyor, sunucu HTML dönüyor, tarayıcı
+MIME türünü reddediyor, worker hiç başlamıyor. MapLibre worker olmadan tek
+bir karo bile çizemez.
+
+⚠️ Kaynak kod DOĞRUYDU. Kırılan şey paketlemeydi — bu yüzden kaynağa bakan
+hiçbir denetim yakalayamazdı.
+
+### ⚠️ Turbopack'in kendi kopyası kullanılamıyor
+
+Turbopack worker dosyasını `.next/static/media/` altına atıyor — ama ham
+kopya olarak: içindeki `import "./maplibre-gl-shared.mjs"` satırı olduğu
+gibi duruyor ve orada o adla bir dosya yok (yanındaki kopyanın adı karma
+içeriyor). Worker yüklense bile ilk satırında 404 alırdı.
+
+### Çözüm
+
+`scripts/maplibre-worker-hazirla.mjs` **iki dosyayı birden**
+`public/maplibre/<sürüm>/` altına kopyalıyor; bileşen modül düzeyinde
+`setWorkerUrl(\`/maplibre/${getVersion()}/maplibre-gl-worker.mjs\`)`
+çağırıyor.
+
+- ⚠️ **İki dosya birden**, çünkü worker'ın göreli içe aktarımı yanındaki
+  dosyaya düşmeli.
+- ⚠️ **Sürüm adreste**, çünkü `public/` içerik karması taşımıyor;
+  yükseltmeden sonra önbellekteki eski worker yeni ana paketle konuşamazdı.
+- ⚠️ **Sürüm `getVersion()`den**, elle yazılmıyor — bir `pnpm update`
+  sonrası adres sessizce 404'e düşerdi.
+- ⚠️ Kopyalar **depoya girmiyor** (`.gitignore`), `pnpm build`/`pnpm dev`
+  üretiyor. Commit edilseydi bir yükseltmeden sonra bayat kalırdı.
+
+Yan bulgu: `setWorkerUrl` hiç çağrılmadığında küçültücü `WORKER_URL ||`
+dalını tümden atıyordu. Çağrı eklendiği anda geri geldi — derlenmiş
+çıktıda doğrulandı.
+
+### ⚠️ Yakalayan kapı: `scripts/harita-worker-duman.mjs`
+
+Üç şeyi **ölçüyor**, varsayımda bulunmuyor:
+
+1. Derlenmiş çıktı worker adresini gerçekten atıyor mu
+2. O adres sunucudan **JavaScript** olarak mı geliyor (HTML değil)
+3. Worker'ın kendi içe aktarımı da JavaScript olarak mı geliyor
+
+CI'da, istemci JS ölçümü için zaten ayakta olan üretim sunucusuna karşı
+koşuyor.
+
+⚠️ Yakaladığı **doğrulandı**: `setWorkerUrl` çağrısı geri çıkarılıp yeniden
+derlendi, betik çıkış kodu 1 ile düştü:
+
+```
+✗ Yerel derleme çıktısının (.next) hiçbir yerinde WORKER_URL ataması yok.
+  setWorkerUrl çağrısı paketlemede düşmüş olabilir — harita üretimde çizmez.
+```
+
+⚠️ Betik **tam adresi değil ATAMAYI** arıyor. Adres kodda
+`` `/maplibre/${getVersion()}/…` `` biçiminde kuruluyor ve küçültücü sürümü
+bir değişkene alıyor; çözülmüş dizgeyi arayan bir denetim **çalışan**
+derlemede kırmızı verirdi — ve o yanlış alarm ilk hafta kapatılırdı.
+
+### Üretim imajında doğrulandı
+
+Dev sunucuda değil, gerçek imajda:
+
+```
+$ docker run --rm … ls /uygulama/public/maplibre/6.1.0/
+maplibre-gl-shared.mjs   479327
+maplibre-gl-worker.mjs    19108
+
+$ curl -o /dev/null -w "%{http_code} %{content_type}" …/maplibre-gl-worker.mjs
+200 application/javascript; charset=UTF-8
+```
+
+### ⚠️ Satıcı kopyaları lint dışı
+
+480 kB'lık küçültülmüş dosyalar `eslint .` kapsamına girince 19 hata +
+1057 uyarı çıkardı: kapıyı bizim yazmadığımız kod kapatıyordu.
+`public/maplibre/**` yok sayılıyor.

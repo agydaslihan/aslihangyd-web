@@ -39,3 +39,12 @@ next-env.d.ts
 # diskte kalmış bir `origin.key` bulunabilir ve bir özel anahtarın depoya
 # sızma ihtimalini açık bırakmanın hiçbir faydası yok.
 docker/certs/
+
+# MapLibre worker kopyaları — `pnpm build`/`pnpm dev` üretir
+#
+# ⚠️ Depoda TUTULMUYOR: yarım megabaytlık satıcı kodu ve sürümü
+# `node_modules`taki maplibre-gl ile birlikte değişmeli. Commit edilseydi
+# bir `pnpm update` sonrası worker eski sürümde kalır ve ana paketle
+# konuşamazdı. Kopyalayan betik `scripts/maplibre-worker-hazirla.mjs`,
+# eksikliğini yakalayan `scripts/harita-worker-duman.mjs`.
+/public/maplibre/
