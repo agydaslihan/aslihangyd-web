@@ -44,5 +44,14 @@
     "next.config.ts",
     ".next/dev/types/**/*.ts"
   ],
-  "exclude": ["node_modules", ".next", "dist", "build"]
+  // ⚠️ `src/migrations/index.ts` ÜRETİLEN ve KULLANILMAYAN bir dosya:
+  // Payload `migrate:create` sırasında yazıyor, göçleri bulmak için ise
+  // dizini okuyor. Depoda tutulmuyor (bkz. .gitignore ve
+  // src/lib/gocIndeksi.test.ts).
+  //
+  // Tip kontrolü dışında bırakılmasının somut gerekçesi: dal değiştirince
+  // diskte kalan eski bir kopya, artık var olmayan bir göç dosyasını içe
+  // aktarıyor ve `tsc` "Cannot find module" ile düşüyor. İzlenmeyen bir
+  // ÜRETİLMİŞ dosyanın kapıyı kapatması, kapıyı anlamsızlaştırır.
+  "exclude": ["node_modules", ".next", "dist", "build", "src/migrations/index.ts"]
 }

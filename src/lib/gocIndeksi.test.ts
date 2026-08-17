@@ -63,7 +63,19 @@ describe('göç indeksi', () => {
     try {
       cikti = execFileSync(
         'git',
-        ['grep', '-l', '-e', "from '@/migrations'", '-e', "from './migrations'", '--', 'src'],
+        [
+          'grep',
+          '-l',
+          '-e',
+          "from '@/migrations'",
+          '-e',
+          "from './migrations'",
+          '--',
+          'src',
+          // ⚠️ Testin kendisi aradığı dizgeyi içeriyor; dışlanmazsa daima
+          // kendini bulur ve denetim hiçbir zaman yeşil olmaz.
+          ':(exclude)src/**/*.test.ts',
+        ],
         { cwd: KOK, encoding: 'utf8' },
       ).trim()
     } catch (hata) {

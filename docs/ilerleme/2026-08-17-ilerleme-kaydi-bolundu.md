@@ -79,3 +79,30 @@ nitekim "ILERLEME.md'yi güncelle" alışkanlığı tam da böyle yerleşmişti.
 ⚠️ Üçüncü denetim ilk yazıldığında hep kırmızıydı: `git grep` eşleşme
 bulamayınca 1 ile çıkıyor ve `execFileSync` bunu hata sayıyor. Aranan sonuç
 tam olarak "eşleşme yok" olduğu için o çıkış kodu yakalanıyor.
+
+## ⚠️ İndeksi izlemeden çıkarmanın iki yan etkisi çıktı — ikisi de kapatıldı
+
+**1. `src/lib/depo.test.ts` haklı olarak kırmızı verdi.** O test "src içinde
+git tarafından yok sayılan dosya yok" diyor ve sebebi gerçek: 7 Ağustos'ta
+`src/components/medya/` sessizce depoya girmemiş, dört kapı da temiz
+geçmişti.
+
+Kural **gevşetilmedi**. Gerekçeli muafiyet mekanizmasına yazıldı, çünkü
+kuralın gerekçesi "çalışma anında gereken dosya sessizce eksik kalmasın" —
+ve bu dosya çalışma anında gerekmiyor.
+
+**2. Diskte kalan eski bir kopya tip kontrolünü düşürdü.** Dal değiştirince
+izlenmeyen dosya yerinde kalıyor ve artık var olmayan bir göçü içe
+aktarıyordu:
+
+```
+src/migrations/index.ts(22,64): error TS2307:
+  Cannot find module './20260816_203141_marka_baslik_eylemi'
+```
+
+Dosya `tsconfig.json` içinde tip kontrolü dışına alındı. İzlenmeyen bir
+ÜRETİLMİŞ dosyanın kapıyı kapatması, kapıyı anlamsızlaştırır.
+
+⚠️ Üçüncü küçük tuzak: `gocIndeksi.test.ts` içindeki `git grep` aradığı
+dizgeyi kendi kaynağında buluyordu ve denetim hiçbir zaman yeşil
+olamıyordu. Test dosyaları aramadan dışlandı.
