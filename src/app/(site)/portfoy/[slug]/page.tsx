@@ -326,6 +326,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
                 {telefon ? (
                   <Buton
                     href={`tel:${telefon.replace(/\s/g, '')}`}
+                    data-gozlem="telefon_tikla"
                     dis
                     gorunum="ikincil"
                     boyut="buyuk"
@@ -456,6 +457,7 @@ function MobilEylemCubugu({
         {telefon ? (
           <Buton
             href={`tel:${telefon.replace(/\s/g, '')}`}
+            data-gozlem="telefon_tikla"
             dis
             gorunum="ikincil"
             boyut="buyuk"

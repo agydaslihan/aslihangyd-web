@@ -8,6 +8,7 @@ import { aiAramaAcikMi } from '@/lib/arama/motor'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { SiraOgesi, YataySira } from '@/components/ilan/YataySira'
+import { OlayBildir } from '@/components/olcum/OlayBildir'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { KilitliKart } from '@/components/ui/KilitliKart'
@@ -150,18 +151,27 @@ export default async function PortfoySayfasi({
               <DahaFazla toplam={sonuc.toplam} goster={goster} parametreler={parametreler} />
             </>
           ) : (
-            <BosDurum
-              baslik="Bu kriterlere uyan taşınmaz yok"
-              neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
-              eylem={
-                <div className="flex flex-col gap-2 sm:flex-row">
-                  <Buton href="/portfoy" gorunum="ikincil">
-                    Filtreleri temizle
-                  </Buton>
-                  <Buton href="/iletisim">Aradığınızı anlatın</Buton>
-                </div>
-              }
-            />
+            <>
+              {/*
+                ⭐ Sonuçsuz arama, portföy BOŞLUĞUNU gösteriyor: ziyaretçinin
+                aradığı şey var ama bizde yok. Panelde en değerli sinyallerden
+                biri — hangi filtrelerin boş döndüğü, hangi ilanı almak
+                gerektiğini söylüyor.
+              */}
+              <OlayBildir ad="sonucsuz_arama" />
+              <BosDurum
+                baslik="Bu kriterlere uyan taşınmaz yok"
+                neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
+                eylem={
+                  <div className="flex flex-col gap-2 sm:flex-row">
+                    <Buton href="/portfoy" gorunum="ikincil">
+                      Filtreleri temizle
+                    </Buton>
+                    <Buton href="/iletisim">Aradığınızı anlatın</Buton>
+                  </div>
+                }
+              />
+            </>
           )}
         </div>
       </div>

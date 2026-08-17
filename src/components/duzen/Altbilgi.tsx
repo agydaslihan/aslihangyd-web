@@ -208,6 +208,7 @@ export async function Altbilgi() {
                 <li>
                   <a
                     href={`tel:${telefon.replace(/\s/g, '')}`}
+                    data-gozlem="telefon_tikla"
                     className="hover:text-notr-50 inline-flex min-h-9 items-center gap-2 transition-colors"
                   >
                     <TelefonIkon width={15} height={15} className="shrink-0" />

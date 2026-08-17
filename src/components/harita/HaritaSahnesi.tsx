@@ -1,6 +1,8 @@
 'use client'
 
 import dynamic from 'next/dynamic'
+
+import { gozlemOlayi } from '@/lib/olcum/istemci'
 import { useMemo, useState } from 'react'
 
 import type { HaritaNoktasi, MahalleGeometrisi } from '@/components/harita/Harita3B'
@@ -151,6 +153,7 @@ export function HaritaSahnesi({
   ).length
 
   function katmanDegistir(anahtar: string) {
+    gozlemOlayi('harita_katmani', anahtar)
     setAcikKatmanlar((onceki) => {
       const yeni = new Set(onceki)
       if (yeni.has(anahtar)) yeni.delete(anahtar)

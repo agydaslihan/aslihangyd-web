@@ -1,8 +1,9 @@
 'use client'
 
-import { useMemo, useState } from 'react'
+import { useEffect, useMemo, useRef, useState } from 'react'
 
 import { SayiAlani, sayiyaCevir } from '@/components/hesaplayici/Alanlar'
+import { gozlemOlayi } from '@/lib/olcum/istemci'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat } from '@/components/ui/Feragat'
 import { BilgiIkon, OkIkon, WhatsappIkon } from '@/components/ui/Ikon'
@@ -57,6 +58,48 @@ export function DegerlemeSihirbazi({
 
   const secilenMahalle = mahalleler.find((mahalle) => mahalle.slug === mahalleSlug) ?? null
 
+  /**
+   * ⚠️ ÖLÇÜM, ARACIN DAVRANIŞINI DEĞİŞTİRMİYOR.
+   *
+   * `gozlemOlayi` onay yoksa hiçbir şey yapmıyor (fonksiyon var olmuyor) ve
+   * hiçbir dalda hesaplamaya girmiyor. Aracın çıktısı ölçüm açık ya da
+   * kapalıyken birebir aynı — panelde görünmek için sonucu değiştiren bir
+   * ölçüm, ölçüm değil müdahaledir.
+   *
+   * ⚠️ Neden alan alan: bu form çok adımlı bir sihirbaz değil, canlı
+   * hesaplayan tek sayfa. "Hangi adımda bırakıldı" sorusunun buradaki
+   * karşılığı "hangi alana kadar dolduruldu" — gerekçe
+   * `lib/gozlem/tipler.ts` içinde.
+   */
+  const doldurulanlar = useRef<Set<string>>(new Set())
+  const sonAlan = useRef<string | null>(null)
+  const tamamlandi = useRef(false)
+
+  /**
+   * ⚠️ Alan listesi etkinin İÇİNDE kuruluyor.
+   *
+   * Dışarıda kurulsaydı her render'da yeni bir dizi olur ve bağımlılık
+   * listesine girmesi gerekirdi — bu da etkiyi her render'da koşturur.
+   * Bağımlılıkları tek tek yazıp diziyi dışarıda bırakmak ise lint
+   * uyarısı üretiyordu; ikisinin de doğru cevabı diziyi içeri almak.
+   */
+  useEffect(() => {
+    const alanlar: readonly [string, string][] = [
+      ['mahalle', mahalleSlug],
+      ['m2', m2],
+      ['kat', kat],
+      ['binaYasi', binaYasi],
+      ['durum', durum],
+    ]
+
+    for (const [anahtar, deger] of alanlar) {
+      if (deger === '' || doldurulanlar.current.has(anahtar)) continue
+      doldurulanlar.current.add(anahtar)
+      sonAlan.current = anahtar
+      gozlemOlayi('degerleme_alani', anahtar)
+    }
+  }, [mahalleSlug, m2, kat, binaYasi, durum])
+
   const sonuc = useMemo(
     () =>
       degerlemeYap(
@@ -72,6 +115,28 @@ export function DegerlemeSihirbazi({
       ),
     [secilenMahalle, m2, kat, binaYasi, durum, katsayilar],
   )
+
+  useEffect(() => {
+    if (sonuc.durum === 'hesaplandi' && !tamamlandi.current) {
+      tamamlandi.current = true
+      gozlemOlayi('degerleme_tamamlandi')
+    }
+  }, [sonuc.durum])
+
+  /**
+   * ⚠️ "Bırakıldı" olayı sayfa kapanırken gönderiliyor, alan değişiminde
+   * değil: aksi hâlde her tuş vuruşu bir "bırakma" sayılırdı. Sonuç
+   * görüldüyse hiç gönderilmiyor — o artık bir tamamlama.
+   */
+  useEffect(() => {
+    const kapanis = () => {
+      if (tamamlandi.current) return
+      if (sonAlan.current === null) return
+      gozlemOlayi('degerleme_birakildi', sonAlan.current)
+    }
+    window.addEventListener('pagehide', kapanis)
+    return () => window.removeEventListener('pagehide', kapanis)
+  }, [])
 
   return (
     <div className="grid gap-8 lg:grid-cols-[24rem_minmax(0,1fr)] lg:gap-12">

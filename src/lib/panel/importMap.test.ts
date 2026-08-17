@@ -188,6 +188,19 @@ describe('yapılandırmadaki her bileşen çalışma anında çözülüyor', () 
     }
 
     for (const [anahtar, deger] of Object.entries(dugum as Record<string, unknown>)) {
+      /**
+       * ⚠️ ÖZEL GÖRÜNÜMLER `components` ALTINDA DEĞİL.
+       *
+       * `admin.components.views.x` girdisi bileşeni doğrudan `Component`
+       * anahtarında taşıyor. İlk hâli yalnızca `components` haritalarını
+       * geziyordu ve yeni eklenen "Gözlemlenebilirlik" görünümü haritada
+       * olmadığı hâlde test YEŞİL verdi — marka panelini kıran arızanın
+       * birebir aynısı, bir seviye yukarıda.
+       */
+      if (anahtar === 'Component' && typeof deger === 'string') {
+        bulunan.push({ yol: deger, yer: `${yer}.Component` })
+      }
+
       if (anahtar === 'components' && deger !== null && typeof deger === 'object') {
         for (const [rol, bilesen] of Object.entries(deger as Record<string, unknown>)) {
           for (const aday of Array.isArray(bilesen) ? bilesen : [bilesen]) {

@@ -43,6 +43,10 @@ const MUAF: Record<string, string> = {
   NEXT_PUBLIC_SITE_ADRESI: 'SITE_ADRESI için derleme zamanı yedeği; ikisi birlikte belgeleniyor.',
   GITHUB_ACTIONS: 'GitHub Actions koşumu tarafından verilir; .env ile ilgisi yok.',
   GITHUB_STEP_SUMMARY: 'GitHub Actions koşumu tarafından verilir; .env ile ilgisi yok.',
+  NEXT_RUNTIME:
+    'Next kendisi veriyor ("nodejs" | "edge"). ⚠️ compose ile GEÇİRİLMEMELİ: elle ' +
+    'ayarlanırsa Edge derlemesi kendini Node sanar ve `instrumentation.ts` zamanlayıcıyı ' +
+    'iki bağlamda kurar. Belgelenecek bir yapılandırma değil, çalışma zamanı bilgisi.',
 }
 
 function kaynakDosyalari(dizin: string, biriktir: string[] = []): string[] {

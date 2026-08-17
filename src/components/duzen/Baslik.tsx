@@ -316,6 +316,7 @@ function MobilMenu({
         {whatsappAdresi ? (
           <a
             href={whatsappAdresi}
+            data-gozlem="whatsapp_tikla"
             target="_blank"
             rel="noopener noreferrer"
             className="border-kenar-guclu rounded-buton mt-3 flex min-h-13 w-full items-center justify-center gap-2 border-[0.5px] font-medium"
