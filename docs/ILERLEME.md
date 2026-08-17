@@ -5145,98 +5145,143 @@ bozar; video LCP'yi ölçülemez hâle getirir.
 
 ---
 
-## D paketi — metin düzenlemeleri ve mahalle silüetleri (16 Ağustos 2026)
+## ⚠️⚠️ HARİTA ÜRETİMDE TAMAMEN KIRIKTI — DÖRT KAPI DA YEŞİLDİ (17 Ağustos 2026)
 
-### D1 · Başlık eylemi CMS'e taşındı
+`pnpm typecheck && lint && test && build` dördü de temizdi. Harita hiçbir
+şey çizmiyordu.
 
-"Evimi değerlendir" → **"Değerleme isteyin"**, ve metin artık kodda değil
-"Marka ve Görünüm" globalinde (`baslikEylemMetni` + `baslikEylemAdresi`).
+### Belirti
 
-⚠️ `lib/gezinme.ts`teki sabit **silinmedi, YEDEĞE dönüştü.** Marka sesi
-içeriktir ama butonun varlığı işlevdir: veritabanı okunamasa da başlıktaki
-eylem görünmeli. Metin boşsa eylem tümden yedeğe düşüyor — yarım değil.
-
-### D2 · Araçlar sayfası
-
-Başlık altındaki üç satırlık paragraf kaldırıldı: kartların her biri zaten
-ne yaptığını yazıyordu, üstteki metin aynı şeyi üçüncü kez söylüyor ve
-kullanıcıyı araçlara ulaşmadan önce bir metin duvarıyla karşılıyordu.
-⚠️ `h1` kaldı.
-
-Yedi araca ikon eklendi (Tabler yolları, elle taşındı — dosyanın başındaki
-"paket yerine elle SVG" gerekçesinin aynısı). Marka renginde, yumuşak
-zeminli daire içinde.
-
-⚠️ İkonlar **dekoratif** (`aria-hidden`): anlam kart başlığında. İkon tek
-başına hiçbir bilgi taşımıyor.
-
-⚠️ `lib/araclar.ts` bileşen DEĞİL **anahtar** tutuyor; eşleme çizim yerinde.
-O dosya gezinme menüsünde de okunuyor, JSX taşısaydı istemci paketine
-bileşen sürükler ve `lib/` katmanının sunucu-istemci sınırını
-bulanıklaştırırdı.
-
-### D3 / D4 · Başlıklar küçüldü ve ortalandı
-
-`/mahalleler` ve `/portfoy` başlıkları `baslik-1` → `baslik-2`, blok
-ortalandı, açıklama küçültüldü.
-
-⚠️ **`h1` etiketi durdu.** "Küçük görünsün" ile "başlık olmasın" ayrı
-şeyler; ikincisi sessiz bir SEO kaybı olurdu.
-
-### D5 · Mahalle kartlarında gerçek sınır silüeti
-
-26 kartın 26'sında aynı konum ikonu duruyordu. Artık her kart o mahallenin
-**gerçek poligonundan** üretilmiş bir SVG taşıyor — dolgu pudra gülü,
-kenar terracotta.
-
-Gerçek Çorlu verisiyle ölçüm:
+Ağ sekmesi:
 
 ```
-26 mahalle · ham 4.504 → sade 990 nokta (%78 azalma)
-kart başına ortalama 377 bayt · üretilemeyen: 0
-en büyük: Yenice 590 → 89 nokta, 871 bayt
-en küçük: Alipaşa  23 → 12 nokta, 121 bayt
+harita    (pending)   script   Other   0.0 kB
 ```
 
-⚠️ **Douglas-Peucker, nokta atlama DEĞİL.** "Her n'inciyi al" keskin
-köşeleri rastgele siler ve şekli tanınmaz hâle getirir; Douglas-Peucker en
-çok sapan noktayı korur, yani şeklin karakterini taşıyan köşeler kalır.
-
-⚠️ **Enlem ters çevriliyor.** Coğrafyada enlem yukarı, SVG'de y aşağı
-artar. Çevrilmezse her mahalle dikey aynada çizilir — tanınır ama YANLIŞ,
-ve yanlışlığı ancak haritayla yan yana koyunca fark edilir. Bir test bunu
-kilitliyor.
-
-⚠️ **Oran korunuyor.** Kutuya germek her mahalleyi kareye yayardı ve
-şekiller birbirine benzerdi — silüetin bütün amacı ayırt edilebilirlik.
-
-⚠️ Sınırı olmayan mahallede eski konum ikonu **yedek olarak kalıyor**; OSM
-kapsaması eksiksiz değil, kart boş kalamaz.
-
-⚠️ Silüet sunucuda üretiliyor: poligonlar yüzlerce noktalı, ham koordinat
-göndermek kart başına kilobaytlar demekti.
-
-### ⚠️⚠️ Bu iş sırasında ÜRETİM DAĞITIMINI KIRACAK bir göç hatası bulundu
-
-Yeni göç üretilince `pnpm payload migrate` kırmızı verdi:
+Caddy günlüğü:
 
 ```
-column "mahalle_yaklasik" of relation "ilgi_noktalari" already exists
+"uri":"/harita", "Sec-Fetch-Dest":["worker"], error: "reading: context canceled"
 ```
 
-`migrate:create` yeni göçe #58'in sütununu da eklemişti. Sebep: **iki göç
-paralel dallarda üretildi.** `migrate:create` yeni göçü bir öncekinin
-`.json` şema fotoğrafına göre çıkarıyor; `hero_slider` fotoğrafı #58
-birleşmeden önce alınmıştı ve `mahalle_yaklasik`i bilmiyordu. Diff onu
-"eksik" sanıp yeniden ekledi.
+Konsol: `Failed to load module script: non-JavaScript MIME type of text/html`
 
-Üretimde ne olurdu: göçler sırayla koşarken poi sütunu ekler, sonra bu göç
-aynısını eklemeye çalışır ve **§5.3'ün 3. adımı yarıda durur** — site yeni
-şemayla eşleşmeyen bir kodla açılırdı.
+### Kök sebep — ölçülerek bulundu, tahmin edilmedi
 
-Düzeltme: üretilen SQL elle budandı. ⚠️ Bu göçün `.json` fotoğrafı DOĞRU
-(gerçek güncel şemanın tamamı), yani zincir buradan itibaren onarıldı.
+MapLibre GL JS **v6** worker'ını artık ayrı bir dosyadan yüklüyor (v5'te
+gömülüydü) ve adresini `import.meta.url`den türetiyor:
 
-**Sıfırdan doğrulama:** boş bir veritabanı kurulup 22 göçün tamamı
-sırayla koşturuldu — hepsi geçti. Üretim dağıtımının yapacağı şey birebir
-bu.
+```js
+function di() {
+  let e = import.meta.url
+  if (!/^https?:/.test(e)) return ''            // ← boş dizge
+  return new URL('./maplibre-gl-worker.mjs', e).href
+}
+```
+
+Turbopack paketlemede `import.meta.url` yerine bir **dosya yolu** koyuyor.
+Derlenmiş çıktıdan birebir:
+
+```js
+ck = { get url() { return `file://${…/maplibre-gl.mjs}` } }
+```
+
+`file://…` ifadesi `/^https?:/` testini geçmiyor → adres **boş dizge** →
+
+```js
+new Worker('', { type: 'module' })
+```
+
+Boş adres belgenin kendi adresine çözülüyor: tarayıcı worker olarak
+**`/harita` sayfasının kendisini** istiyor, sunucu HTML dönüyor, tarayıcı
+MIME türünü reddediyor, worker hiç başlamıyor. MapLibre worker olmadan tek
+bir karo bile çizemez.
+
+⚠️ Kaynak kod DOĞRUYDU. Kırılan şey paketlemeydi — bu yüzden kaynağa bakan
+hiçbir denetim yakalayamazdı.
+
+### ⚠️ Turbopack'in kendi kopyası kullanılamıyor
+
+Turbopack worker dosyasını `.next/static/media/` altına atıyor — ama ham
+kopya olarak: içindeki `import "./maplibre-gl-shared.mjs"` satırı olduğu
+gibi duruyor ve orada o adla bir dosya yok (yanındaki kopyanın adı karma
+içeriyor). Worker yüklense bile ilk satırında 404 alırdı.
+
+### Çözüm
+
+`scripts/maplibre-worker-hazirla.mjs` **iki dosyayı birden**
+`public/maplibre/<sürüm>/` altına kopyalıyor; bileşen modül düzeyinde
+`setWorkerUrl(\`/maplibre/${getVersion()}/maplibre-gl-worker.mjs\`)`
+çağırıyor.
+
+- ⚠️ **İki dosya birden**, çünkü worker'ın göreli içe aktarımı yanındaki
+  dosyaya düşmeli.
+- ⚠️ **Sürüm adreste**, çünkü `public/` içerik karması taşımıyor;
+  yükseltmeden sonra önbellekteki eski worker yeni ana paketle konuşamazdı.
+- ⚠️ **Sürüm `getVersion()`den**, elle yazılmıyor — bir `pnpm update`
+  sonrası adres sessizce 404'e düşerdi.
+- ⚠️ Kopyalar **depoya girmiyor** (`.gitignore`), `pnpm build`/`pnpm dev`
+  üretiyor. Commit edilseydi bir yükseltmeden sonra bayat kalırdı.
+
+Yan bulgu: `setWorkerUrl` hiç çağrılmadığında küçültücü `WORKER_URL ||`
+dalını tümden atıyordu. Çağrı eklendiği anda geri geldi — derlenmiş
+çıktıda doğrulandı.
+
+### ⚠️ Yakalayan kapı: `scripts/harita-worker-duman.mjs`
+
+Üç şeyi **ölçüyor**, varsayımda bulunmuyor:
+
+1. Derlenmiş çıktı worker adresini gerçekten atıyor mu
+2. O adres sunucudan **JavaScript** olarak mı geliyor (HTML değil)
+3. Worker'ın kendi içe aktarımı da JavaScript olarak mı geliyor
+
+CI'da, istemci JS ölçümü için zaten ayakta olan üretim sunucusuna karşı
+koşuyor.
+
+⚠️ Yakaladığı **doğrulandı**: `setWorkerUrl` çağrısı geri çıkarılıp yeniden
+derlendi, betik çıkış kodu 1 ile düştü:
+
+```
+✗ Yerel derleme çıktısının (.next) hiçbir yerinde WORKER_URL ataması yok.
+  setWorkerUrl çağrısı paketlemede düşmüş olabilir — harita üretimde çizmez.
+```
+
+⚠️ Betik **tam adresi değil ATAMAYI** arıyor. Adres kodda
+`` `/maplibre/${getVersion()}/…` `` biçiminde kuruluyor ve küçültücü sürümü
+bir değişkene alıyor; çözülmüş dizgeyi arayan bir denetim **çalışan**
+derlemede kırmızı verirdi — ve o yanlış alarm ilk hafta kapatılırdı.
+
+### Üretim imajında doğrulandı
+
+Dev sunucuda değil, gerçek imajda:
+
+```
+$ docker run --rm … ls /uygulama/public/maplibre/6.1.0/
+maplibre-gl-shared.mjs   479327
+maplibre-gl-worker.mjs    19108
+
+$ curl -o /dev/null -w "%{http_code} %{content_type}" …/maplibre-gl-worker.mjs
+200 application/javascript; charset=UTF-8
+```
+
+### ⚠️ Satıcı kopyaları lint dışı
+
+480 kB'lık küçültülmüş dosyalar `eslint .` kapsamına girince 19 hata +
+1057 uyarı çıkardı: kapıyı bizim yazmadığımız kod kapatıyordu.
+`public/maplibre/**` yok sayılıyor.
+
+### ⚠️ Koruma testi kendi kurduğu tuzağa düştü — ilk CI koşusunda
+
+İlk hâli `public/maplibre/<sürüm>/` dizininin VARLIĞINI şart koşuyordu.
+Yerelde geçti (önceki derlemeden kalmıştı), CI'da düştü: iş akışı
+`pnpm test`i `pnpm build`ten ÖNCE koşuyor ve kopyalar henüz yok.
+
+Test kopyaya değil KAYNAĞA bakacak biçimde yazıldı: worker'ın
+`node_modules`taki hâlinden göreli içe aktarımları çıkarıp kopyalama
+listesinin hepsini kapsadığını doğruluyor. Hem her zaman çalışıyor hem de
+daha erken uyarıyor — worker yarın yeni bir dosyaya bağımlı olursa liste
+eksik kaldığı ANDA görünüyor. Kopyanın gerçekten yerinde olduğunu zaten
+duman testi ölçüyor, derlemeden sonra.
+
+⚠️ Ders: bir testin ön koşulu yerelde artık dosyalardan sağlanıyorsa, o
+test aslında bir şey kanıtlamıyor.
