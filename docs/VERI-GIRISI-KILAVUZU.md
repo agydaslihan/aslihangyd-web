@@ -732,6 +732,109 @@ Test portföyden bağımsızdır — ilan sayısı sonucu etkilemez.
 
 ---
 
+## Drone videoları — nereye yüklenir, nasıl link verilir
+
+**Süre:** video başına 5 dakika · **Yer:** Mahalleler veya Portföy kaydı → Medya sekmesi
+
+### ⚠️ ÖNCE ŞUNU OKUYUN: Google Drive ÇALIŞMAZ
+
+Videoyu Drive'a yükleyip paylaşım linkini vermek **işe yaramaz** ve bu bir
+eksiklik değil, bilinçli bir karar:
+
+- Drive paylaşım adresi video dosyası değil **web sayfası** döndürüyor;
+  oynatıcı onu çalamaz.
+- Drive'ın bant genişliği kotası var: video izlenmeye başlayınca gün
+  içinde kesilebilir.
+
+Aynı sebeplerle **çalışmayanlar:** Dropbox, WeTransfer, OneDrive, iCloud.
+Vimeo gerçek bir video servisi ama bu sitede desteklenmiyor.
+
+**Çalışanlar:** YouTube (şimdilik) ve Bunny Stream (kalıcı çözüm).
+
+⚠️ Panel bunu artık **kaydetmenize izin vermiyor**: desteklenmeyen bir link
+yapıştırırsanız kaydet düğmesi hata verir ve sebebini yazar.
+
+### YouTube ile yayınlama (şimdilik önerilen)
+
+**1. Videoyu YouTube'a yükleyin.**
+
+- youtube.com → sağ üstte kamera simgesi → **Video yükle**
+- Görünürlük: **Herkese açık** veya **Liste dışı** — ikisi de çalışır.
+  - *Liste dışı*, videonun YouTube aramasında ve kanalınızda görünmemesi
+    demek; linki olan izleyebilir. Sitede sorunsuz oynar.
+  - ⚠️ **Özel (Private) SEÇMEYİN** — özel videolar siteye gömülemez,
+    ziyaretçi "Video kullanılamıyor" görür.
+- Başlık ve açıklama serbest; sitede kullanılmıyor.
+
+**2. Linki kopyalayın.** Videonun altındaki **Paylaş** düğmesi en kolayı;
+adres çubuğundaki adres de olur. Şu biçimlerin hepsi kabul edilir:
+
+```
+https://www.youtube.com/watch?v=XXXXXXXXXXX
+https://youtu.be/XXXXXXXXXXX
+https://www.youtube.com/embed/XXXXXXXXXXX
+```
+
+**3. Panele girin.**
+
+- Mahalle için: **Mahalleler** → ilgili mahalle → **Medya** sekmesi
+- İlan için: **Portföy** → ilgili ilan → **Medya** sekmesi
+- **Video kaynağı** = `YouTube (şimdilik önerilen)`
+- **YouTube video adresi** = kopyaladığınız link
+- **Kaydet**
+
+**4. Ne göreceksiniz.** Alanların altında **Video durumu** kutusu:
+
+| Kutu | Anlamı |
+| --- | --- |
+| Yeşil çizgi — "YouTube videosu hazır" | Her şey tamam, sitede görünüyor |
+| Kırmızı çizgi | Link okunamadı ya da desteklenmeyen servis; kutu ne yapılacağını yazar |
+| Sarı çizgi | Alan boş bırakılmış |
+
+### Kapak görseli (isteğe bağlı ama önerilir)
+
+**Video kapak görseli** alanına bir fotoğraf yükleyin. Boş bırakırsanız
+YouTube'un kendi kapağı kullanılır.
+
+Kendi kapağınızı yüklemek neden daha iyi:
+
+- YouTube'un otomatik kapağı videonun rastgele bir karesi olabiliyor
+- ⚠️ Bu görsel sayfanın **en büyük görseli**; sayfa hızını doğrudan
+  etkiliyor. Yatay, 1600 piksel genişlik civarı yeterli.
+
+⚠️ Video kapağı görünene kadar YouTube'a **hiçbir istek gitmiyor** —
+kapak bizim sunucumuzdan geçiyor ve oynatıcı ancak ziyaretçi dokununca
+yükleniyor. Bu hem hız hem KVKK gereği; değiştirmeyin.
+
+### Bunny Stream'e geçiş (hesap geldiğinde)
+
+Kalıcı çözüm Bunny Stream. Geçiş **kayıt kayıt** yapılabiliyor; hepsini
+birden değiştirmek gerekmiyor:
+
+1. Videoyu Bunny paneline yükleyin
+2. Bunny'nin verdiği **video kimliğini** kopyalayın (8-4-4-4-12 haneli,
+   örn. `0123abcd-45ef-6789-abcd-0123456789ef`)
+3. Panelde **Video kaynağı** = `Bunny Stream`
+4. **Bunny Stream video kimliği** alanına kimliği yapıştırın
+   ⚠️ Tam adres değil, yalnızca kimlik.
+
+⚠️ Bunny sunucu tarafında yapılandırılmadıysa (`.env` içindeki
+`BUNNY_STREAM_LIBRARY_ID` ve `BUNNY_STREAM_CDN_HOSTNAME` boşsa) video
+görünmez. Durum kutusu bunu söylüyor. O hâlde kaynağı YouTube'da bırakın.
+
+### Video bir türlü görünmüyor
+
+| Belirti | Sebep | Çözüm |
+| --- | --- | --- |
+| Sayfada video bölümü hiç yok | Kaynak "Video yok" ya da alan boş | Kaynağı seçin, linki girin |
+| Kaydet hata veriyor | Desteklenmeyen link ya da okunamayan adres | Hatanın yazdığını yapın |
+| "Video kullanılamıyor" yazıyor | YouTube'da görünürlük **Özel** | *Liste dışı* ya da *Herkese açık* yapın |
+| Durum kutusu sarı | Alan boş kalmış | Linki girin |
+
+⚠️ Sitede teknik hata mesajı **görünmez** — bir ziyaretçi Bunny'yi
+yapılandıramaz, ona söylenecek bir şey yok. Video çözülemiyorsa bölüm hiç
+çizilmiyor. Teşhis yalnızca panelde, Video durumu kutusunda.
+
 ## Bittikten sonra
 
 Bu yedi adım bitince siteye şu eklenmiş olur:

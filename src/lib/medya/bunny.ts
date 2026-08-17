@@ -49,11 +49,16 @@ export function bunnyAyarlari(): { kutuphaneId: string; alanAdi: string } | null
  * Bunny video kimlikleri UUID biçiminde. Doğrulama bilinçli: CMS'e
  * yapıştırılan bir tam adres ya da boşluklu bir metin, adres kurulumunu
  * sessizce bozar ve ziyaretçi boş bir çerçeve görür.
+ *
+ * ⚠️ Denetim `video.ts` içinde tanımlı ve buradan yeniden dışa aktarılıyor.
+ * Sebebi tersi yön: `video.ts` panel bileşeninde de kullanılıyor ve bu
+ * dosyayı içe aktarsaydı `ayar()` üzerinden sunucu yapılandırma adlarını
+ * istemci paketine taşırdı. İki kopya düzenli ifade tutmak ise ilk
+ * değişiklikte ayrışırdı.
  */
-export function gecerliVideoKimligi(deger: string | null | undefined): deger is string {
-  if (typeof deger !== 'string') return false
-  return /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(deger.trim())
-}
+import { gecerliBunnyBicimiMi } from './video'
+
+export { gecerliBunnyBicimiMi as gecerliVideoKimligi }
 
 /**
  * Gömme (iframe) adresi.
@@ -80,7 +85,7 @@ export function gecerliVideoKimligi(deger: string | null | undefined): deger is 
  */
 export function bunnyGommeAdresi(videoId: string, otomatikOynat = false): string | null {
   const ayar = bunnyAyarlari()
-  if (ayar === null || !gecerliVideoKimligi(videoId)) return null
+  if (ayar === null || !gecerliBunnyBicimiMi(videoId)) return null
 
   const adres = new URL(`https://iframe.mediadelivery.net/embed/${ayar.kutuphaneId}/${videoId}`)
   adres.searchParams.set('autoplay', otomatikOynat ? 'true' : 'false')
@@ -98,6 +103,6 @@ export function bunnyGommeAdresi(videoId: string, otomatikOynat = false): string
  */
 export function bunnyKapakAdresi(videoId: string): string | null {
   const ayar = bunnyAyarlari()
-  if (ayar === null || !gecerliVideoKimligi(videoId)) return null
+  if (ayar === null || !gecerliBunnyBicimiMi(videoId)) return null
   return `https://${ayar.alanAdi}/${videoId}/thumbnail.jpg`
 }

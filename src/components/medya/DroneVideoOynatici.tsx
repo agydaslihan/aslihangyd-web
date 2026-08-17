@@ -20,9 +20,11 @@ import { useState } from 'react'
  * Bu yüzden önce yalnızca kapak görseli var; iframe kullanıcı oynat'a
  * bastığında oluşuyor.
  *
- * ⚠️ Kapak `next/image` DEĞİL, düz `img`: kapak Bunny CDN'inde ve onu
- * kendi sunucumuzdan geçirip yeniden boyutlandırmak, CDN kullanmanın
- * amacını ortadan kaldırırdı.
+ * ⚠️ Kapak `next/image` DEĞİL, düz `img`. Bunny kapağı CDN'de duruyor ve
+ * onu kendi sunucumuzdan geçirip yeniden boyutlandırmak CDN kullanmanın
+ * amacını ortadan kaldırırdı. YouTube kapağı ise ZATEN kendi sunucumuzdan
+ * geliyor (`/api/video-kapak/youtube/…`): tıklamadan önce Google'a istek
+ * gitmesin diye — gerekçesi `lib/medya/video.ts` içinde.
  *
  * ⚠️ ADRESLERİ BU BİLEŞEN KURMUYOR — sunucudan prop olarak alıyor.
  * Bunny kimlikleri çalışma zamanında sunucuda okunuyor (`DroneVideo`).
@@ -36,6 +38,7 @@ export function DroneVideoOynatici({
   gomme,
   kapak,
   baslik,
+  saglayici,
 }: {
   /**
    * Gömme adresi — `autoplay=true`.
@@ -47,6 +50,13 @@ export function DroneVideoOynatici({
   gomme: string
   kapak: string | null
   baslik: string
+  /**
+   * Hangi servis — yalnızca ziyaretçiye ne söyleneceğini belirliyor.
+   *
+   * ⚠️ Üçüncü tarafın adını yazmak dürüstlük: oynat'a basmak ziyaretçinin
+   * verisini o servise açıyor ve bunu tıklamadan önce bilmek hakkı.
+   */
+  saglayici?: 'bunny' | 'youtube'
 }) {
   const [oynatiliyor, setOynatiliyor] = useState(false)
 
@@ -93,7 +103,9 @@ export function DroneVideoOynatici({
 
       {/* ⚠️ Renk tek taşıyıcı değil: metin de var (WCAG 1.4.1). */}
       <span className="bg-zemin/85 text-metin-2 absolute right-0 bottom-0 left-0 px-3 py-2 text-left text-mikro">
-        Videoyu oynatmak için dokunun — oynatıcı ancak o zaman yüklenir.
+        {saglayici === 'youtube'
+          ? 'Videoyu oynatmak için dokunun — oynatıcı YouTube’dan ancak o zaman yüklenir.'
+          : 'Videoyu oynatmak için dokunun — oynatıcı ancak o zaman yüklenir.'}
       </span>
     </button>
   )

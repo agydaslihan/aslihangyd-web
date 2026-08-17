@@ -21,6 +21,7 @@ import { StrikethroughFeatureClient as StrikethroughFeatureClient_e70f5e05f09f93
 import { UnderlineFeatureClient as UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
+import { VideoDurumu as VideoDurumu_1e58a0690421ccebdda95f319e7a0509 } from '@/components/medya/VideoDurumu'
 import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/components/panel/TalepEslesmeleri'
 import { GorselButceRozeti as GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0 } from '@/components/panel/GorselButceRozeti'
 import { MarkaOzeti as MarkaOzeti_39442ca5242594bbd935166eabf0a217 } from '@/components/marka/MarkaOzeti'
@@ -73,6 +74,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#UnderlineFeatureClient": UnderlineFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#BoldFeatureClient": BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
+  "@/components/medya/VideoDurumu#VideoDurumu": VideoDurumu_1e58a0690421ccebdda95f319e7a0509,
   "@/components/panel/TalepEslesmeleri#default": default_1e93637515c2cbbab351072f38d704e3,
   "@/components/panel/GorselButceRozeti#GorselButceRozeti": GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0,
   "@/components/marka/MarkaOzeti#MarkaOzeti": MarkaOzeti_39442ca5242594bbd935166eabf0a217,
