@@ -3,8 +3,17 @@ import Link from 'next/link'
 
 import { Rozet } from '@/components/ui/Rozet'
 import { Feragat } from '@/components/ui/Feragat'
-import { OkIkon } from '@/components/ui/Ikon'
-import { ARACLAR } from '@/lib/araclar'
+import {
+  ArtisIkon,
+  BankaIkon,
+  CizgiGrafikIkon,
+  FisIkon,
+  KarsilastirIkon,
+  OkIkon,
+  ParaRaporuIkon,
+  YuzdeIkon,
+} from '@/components/ui/Ikon'
+import { ARACLAR, type AracIkonu as AracIkonAnahtari } from '@/lib/araclar'
 import { BOLUMLER } from '@/lib/siteBolumleri'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { mutlakAdres } from '@/lib/site'
@@ -42,15 +51,20 @@ export default async function AraclarSayfasi() {
 
   return (
     <div className="kapsayici py-10 sm:py-14">
-      <header className="mb-8 flex max-w-2xl flex-col gap-3">
+      {/*
+        ⚠️ BAŞLIK ALTINDAKİ UZUN PARAGRAF KALDIRILDI.
+
+        Kartların her biri zaten ne yaptığını yazıyor; üstteki paragraf
+        aynı şeyi üçüncü kez söylüyordu ve kullanıcıyı araçlara ulaşmadan
+        önce bir metin duvarıyla karşılıyordu.
+
+        ⚠️ `h1` KALDI. Sayfanın SEO'su ve ekran okuyucu gezinmesi ona bağlı;
+        görsel sadelik için metin kısaldı, etiket durdu.
+      */}
+      <header className="mb-8">
         <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
           Yatırımcı araçları
         </h1>
-        <p className="text-metin-2 leading-relaxed">
-          Bir gayrimenkul kararının arkasında birkaç rakam vardır: kaç yılda kendini öder, gerçekte
-          kaça mal olur, elinize net ne kalır. Bu araçlar o rakamları hesaplar ve nasıl
-          hesapladığını açıkça gösterir.
-        </p>
       </header>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
@@ -63,11 +77,21 @@ export default async function AraclarSayfasi() {
               className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col gap-2 border-[0.5px] p-5 transition-shadow sm:p-6"
             >
               <div className="flex items-start justify-between gap-3">
-                <h2 className="text-baslik-3 leading-snug">
-                  <Link href={arac.adres} className="after:absolute after:inset-0">
-                    {arac.ad}
-                  </Link>
-                </h2>
+                <div className="flex items-start gap-3">
+                  {/*
+                    ⚠️ İkon DEKORATİF: `aria-hidden` ve anlam başlıkta.
+                    Marka rengi (`vurgu`) kullanılıyor; yumuşak zeminli
+                    daire ikonu kart yüzeyinden ayırıyor.
+                  */}
+                  <span className="bg-vurgu-zemin text-vurgu mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full">
+                    <AracIkonu tur={arac.ikon} width={18} height={18} />
+                  </span>
+                  <h2 className="text-baslik-3 leading-snug">
+                    <Link href={arac.adres} className="after:absolute after:inset-0">
+                      {arac.ad}
+                    </Link>
+                  </h2>
+                </div>
                 <OkIkon
                   width={18}
                   height={18}
@@ -101,4 +125,33 @@ export default async function AraclarSayfasi() {
       </div>
     </div>
   )
+}
+
+/**
+ * Anahtar → ikon eşlemesi.
+ *
+ * ⚠️ Eşleme BURADA, `lib/araclar.ts` içinde değil. O dosya gezinme
+ * menüsünde de okunuyor; JSX taşısaydı istemci paketine bileşen sürükler
+ * ve `lib/` katmanının sunucu-istemci sınırını bulanıklaştırırdı.
+ */
+function AracIkonu({
+  tur,
+  ...ozellikler
+}: { tur: AracIkonAnahtari } & React.SVGProps<SVGSVGElement>) {
+  switch (tur) {
+    case 'yuzde':
+      return <YuzdeIkon {...ozellikler} />
+    case 'banka':
+      return <BankaIkon {...ozellikler} />
+    case 'grafik':
+      return <CizgiGrafikIkon {...ozellikler} />
+    case 'karsilastir':
+      return <KarsilastirIkon {...ozellikler} />
+    case 'fis':
+      return <FisIkon {...ozellikler} />
+    case 'paraRaporu':
+      return <ParaRaporuIkon {...ozellikler} />
+    case 'artis':
+      return <ArtisIkon {...ozellikler} />
+  }
 }

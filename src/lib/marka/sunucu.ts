@@ -3,6 +3,8 @@ import 'server-only'
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
+import { BASLIK_EYLEMI } from '@/lib/gezinme'
+
 import { paletiDegerlendir } from './kontrastKapisi'
 import { medyayiCoz } from './varliklar'
 import { varsayilanPalet, YUVALAR, type Palet } from './yuvalar'
@@ -31,6 +33,8 @@ import { varsayilanPalet, YUVALAR, type Palet } from './yuvalar'
 export interface MarkaAyarlari {
   siteAdi: string | null
   slogan: string | null
+  /** Başlıktaki dolu eylem butonu — boşsa `gezinme.ts` yedeği kullanılır. */
+  baslikEylemi: { ad: string; adres: string } | null
   logo: { url: string; alt: string; en: number | null; boy: number | null } | null
   logoKoyu: { url: string; alt: string; en: number | null; boy: number | null } | null
   ogGorseli: { url: string; en: number | null; boy: number | null } | null
@@ -85,9 +89,23 @@ export async function markaAyarlari(): Promise<MarkaAyarlari> {
     const siteAdi = typeof marka.siteAdi === 'string' ? marka.siteAdi.trim() : ''
     const slogan = typeof marka.slogan === 'string' ? marka.slogan.trim() : ''
 
+    const eylemMetni =
+      typeof marka.baslikEylemMetni === 'string' ? marka.baslikEylemMetni.trim() : ''
+    const eylemAdresi =
+      typeof marka.baslikEylemAdresi === 'string' ? marka.baslikEylemAdresi.trim() : ''
+
     return {
       siteAdi: siteAdi === '' ? null : siteAdi,
       slogan: slogan === '' ? null : slogan,
+      /**
+       * ⚠️ Metin boşsa eylem TÜMDEN yedeğe düşüyor — yarım değil.
+       * Metni girip adresi boş bırakan biri için adres yedeği devreye
+       * giriyor; ikisi de boşsa `gezinme.ts` kullanılıyor.
+       */
+      baslikEylemi:
+        eylemMetni === ''
+          ? null
+          : { ad: eylemMetni, adres: eylemAdresi === '' ? BASLIK_EYLEMI.adres : eylemAdresi },
       logo: gorseliCoz(marka.logo),
       logoKoyu: gorseliCoz(marka.logoKoyu),
       ogGorseli: gorseliCoz(marka.ogGorseli),
@@ -103,6 +121,7 @@ export async function markaAyarlari(): Promise<MarkaAyarlari> {
     return {
       siteAdi: null,
       slogan: null,
+      baslikEylemi: null,
       logo: null,
       logoKoyu: null,
       ogGorseli: null,

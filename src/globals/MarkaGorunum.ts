@@ -196,6 +196,32 @@ export const MarkaGorunum: GlobalConfig = {
               },
             },
             {
+              /**
+               * ⚠️ BAŞLIK EYLEMİ KODA GÖMÜLÜ DEĞİL.
+               *
+               * "Evimi değerlendir" metni koda yazılıydı ve değiştirmek
+               * için dağıtım gerekiyordu. Marka sesi içeriktir, kod değil:
+               * Aslıhan denemek istediğinde imaj derlenmesini beklememeli.
+               *
+               * Boş bırakılırsa `lib/gezinme.ts`teki yedek kullanılıyor —
+               * site metinsiz kalmıyor.
+               */
+              name: 'baslikEylemMetni',
+              type: 'text',
+              label: 'Başlıktaki eylem butonunun metni',
+              admin: {
+                description:
+                  'Sağ üstteki dolu buton. Boşsa "Değerleme isteyin" kullanılır. ' +
+                  'Kısa tutun — buton tek satırda kalmalı.',
+              },
+            },
+            {
+              name: 'baslikEylemAdresi',
+              type: 'text',
+              label: 'Eylem butonunun adresi',
+              admin: { description: 'Boşsa /degerleme kullanılır.' },
+            },
+            {
               name: 'markaOzeti',
               type: 'ui',
               label: 'Durum',

@@ -45,7 +45,7 @@ export default async function DanismanOlSayfasi() {
             ⚠️ Bakır buton BİLİNÇLİ OLARAK YOK.
 
             Şartname bu blokta bakır buton istiyordu, ama bakır kuralı iki
-            eylemle sınırlı: "Evimi değerlendir" ve "Erişim talep et".
+            eylemle sınırlı: "Değerleme isteyin" ve "Erişim talep et".
             Üçüncü bir yerde kullanmak ikisini birden sıradanlaştırırdı —
             ve kural zaten "nadir olduğu için işe yarıyor" diyor. Burada
             sayfa içi bir çapa yeterli: form zaten hemen aşağıda.
