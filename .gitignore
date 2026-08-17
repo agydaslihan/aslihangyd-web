@@ -48,3 +48,17 @@ docker/certs/
 # konuşamazdı. Kopyalayan betik `scripts/maplibre-worker-hazirla.mjs`,
 # eksikliğini yakalayan `scripts/harita-worker-duman.mjs`.
 /public/maplibre/
+
+# Payload göç dizini — ÜRETİLEN dosya, depoda tutulmuyor
+#
+# ⚠️ Her göç bu dosyanın SONUNA bir satır ekliyordu ve her PR'da
+# çakışıyordu. Dosya kaldırılabildi çünkü Payload ona İHTİYAÇ DUYMUYOR:
+# göçleri `migrationDir` altındaki dizini okuyarak buluyor.
+#
+# ⚠️ Varsayılmadı, ÖLÇÜLDÜ: gerçek göçmen imajında (`--target gocmen`)
+# dosya silinip `pnpm payload migrate:status` koşuldu; yirmi göçü de
+# eksiksiz listeledi.
+#
+# `payload migrate:create` dosyayı yeniden üretmeye devam ediyor; sorun
+# değil, git'e girmiyor. Kuralı `src/lib/gocIndeksi.test.ts` denetliyor.
+/src/migrations/index.ts

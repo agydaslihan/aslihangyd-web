@@ -1,7 +1,31 @@
-# İlerleme Kaydı
+# İlerleme Kaydı — ARŞİV
 
 Bu dosya oturumlar arası hafızadır. **Yeni bir oturuma başlarken önce bunu oku.**
-Her faz sonunda güncellenir: ne yapıldı, hangi karar neden verildi, ne eksik kaldı.
+Ne yapıldı, hangi karar neden verildi, ne eksik kaldı.
+
+> ## ⚠️ BU DOSYAYA ARTIK EKLEME YAPILMIYOR
+>
+> **Yeni kayıtlar `docs/ilerleme/` altına, PR başına AYRI bir dosyaya yazılır:**
+> `docs/ilerleme/YYYY-AA-GG-kisa-ad.md`
+>
+> Buradaki içerik 17 Ağustos 2026'ya kadarki tarihçedir ve olduğu gibi
+> duruyor — okumaya devam edin, yazmayın.
+>
+> **Neden:** bu dosya her PR'da çakışıyordu. Sebebi içeriği değil ŞEKLİYDİ:
+> her dal aynı yere, dosyanın sonuna ekliyordu. Aynı satır aralığına iki
+> farklı ekleme yapan iki dal, git'in üç yollu birleştirmesinde daima
+> çakışır. Dört PR'lık bir turda bu, her turda tekrarlayan elle iş demekti.
+>
+> ⚠️ Kaydı dosyanın BAŞINA eklemek bunu çözmez — yalnızca çakışmanın yerini
+> değiştirir. Git satır aralığına bakar, dosyadaki konuma değil: 1. satıra
+> ekleyen iki dal da tıpkı sona ekleyen ikisi gibi çakışır.
+>
+> Çakışmayı gerçekten ortadan kaldıran tek şey, iki dalın AYNI DOSYAYA
+> dokunmaması. Bu yüzden her kayıt kendi dosyasında.
+>
+> ⚠️ Elle tutulan bir dizin (indeks) de eklenmedi — o da her PR'da bir satır
+> alacağı için çakışmayı geri getirirdi. Dizin, dosya adlarının kendisi:
+> tarih önde olduğu için listeleme zaten kronolojik.
 
 ---
 
@@ -5285,3 +5309,9 @@ duman testi ölçüyor, derlemeden sonra.
 
 ⚠️ Ders: bir testin ön koşulu yerelde artık dosyalardan sağlanıyorsa, o
 test aslında bir şey kanıtlamıyor.
+
+---
+
+<!-- ARSIV-SONU: Bu satır dosyanın SON satırı olmalıdır. Yeni kayıt
+     eklemeyin; `docs/ilerleme/YYYY-AA-GG-kisa-ad.md` açın. Bu nöbetçiyi
+     `src/lib/dokuman/ilerleme.test.ts` denetliyor. -->

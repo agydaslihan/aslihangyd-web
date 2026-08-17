@@ -43,6 +43,17 @@ const BEKLENEN_DISARIDA: Record<string, string> = {
     "(Caddy artık Let's Encrypt kullanıyor), ama eski kurulumlarda dosya " +
     'diskte kalmış olabilir. Depoya girerse origin sunucunun kimliği taklit ' +
     'edilebilir hale gelir (CLAUDE.md kural 7).',
+
+  'src/migrations/index.ts':
+    'Payload ÜRETİYOR: her `migrate:create` dosyanın sonuna bir satır ekliyor ' +
+    've göç içeren her ikinci PR çakışıyordu (docs/ILERLEME.md ile aynı ' +
+    'hastalık). ⚠️ Bu muafiyet yukarıdaki kuralı gevşetmiyor, çünkü kuralın ' +
+    'gerekçesi "çalışma anında gereken dosya sessizce eksik kalmasın" — bu ' +
+    'dosya çalışma anında GEREKMİYOR: Payload göçleri `migrationDir` ' +
+    'dizinini okuyarak buluyor. ⚠️ Varsayılmadı, ölçüldü: göçmen imajının ' +
+    'içinde (`docker build --target gocmen`) dosya silinip ' +
+    '`payload migrate:status` koşuldu, yirmi göçü de eksiksiz listeledi. ' +
+    'Kimsenin onu içe aktarmadığını `src/lib/gocIndeksi.test.ts` denetliyor.',
 }
 
 describe('depo bütünlüğü', () => {
