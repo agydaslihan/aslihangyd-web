@@ -6,7 +6,14 @@
 import type { AllPaintProperties } from 'maplibre-gl'
 
 import { stiliCoz, type StilSonucu } from '@/lib/harita/stil'
-import { GeolocateControl, MapLibreMap, NavigationControl, ScaleControl } from 'maplibre-gl'
+import {
+  GeolocateControl,
+  getVersion,
+  MapLibreMap,
+  NavigationControl,
+  ScaleControl,
+  setWorkerUrl,
+} from 'maplibre-gl'
 import { useEffect, useRef, useState } from 'react'
 
 import { CORLU_MERKEZ, VARSAYILAN_YAKINLIK } from '@/lib/harita/ayarlar'
@@ -14,6 +21,36 @@ import { haritaRenkleri } from '@/lib/harita/jetonlar'
 import { cokgenUret, SUTUN_YARICAPI_M, type Konum } from '@/lib/harita/sutunlar'
 
 import 'maplibre-gl/dist/maplibre-gl.css'
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ WORKER ADRESİ ELLE VERİLİYOR — HARİTA BUNSUZ ÜRETİMDE TAMAMEN KIRIK.
+ *
+ * MapLibre v6 worker'ını ayrı bir dosyadan yükler ve adresini
+ * `import.meta.url`den türetir. Turbopack paketlemede oraya bir DOSYA yolu
+ * koyuyor (derlenmiş çıktıdan birebir: ``ck={get url(){return `file://…`}}``),
+ * kütüphanenin `/^https?:/` kontrolü düşüyor ve adres BOŞ DİZGE oluyor.
+ *
+ * `new Worker('')` boş adresi belgenin kendi adresine çözer: tarayıcı
+ * worker olarak `/harita` SAYFASINI istedi, sunucu HTML döndü ve tarayıcı
+ * "non-JavaScript MIME type of text/html" diyerek reddetti. Worker hiç
+ * başlamadı; MapLibre worker olmadan tek bir karo çizemez.
+ *
+ * Dosyalar `scripts/maplibre-worker-hazirla.mjs` ile `public/maplibre/`
+ * altına kopyalanıyor. Sürüm adreste, çünkü `public/` içerik karması
+ * taşımaz ve yükseltmeden sonra önbellekteki eski worker yeni ana paketle
+ * konuşamazdı.
+ *
+ * ⚠️ Adres `getVersion()`den kuruluyor: kütüphanenin kendi sürümü. Elle
+ * yazılsaydı bir `pnpm update` sonrası sessizce 404'e düşerdi.
+ *
+ * ⚠️ Modül düzeyinde, harita kurulmadan ÖNCE çalışmalı. `useEffect`
+ * içine alınsaydı ilk haritada geç kalabilirdi.
+ *
+ * Doğrulama: `scripts/harita-worker-duman.mjs` + `src/lib/harita/worker.test.ts`
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+setWorkerUrl(`/maplibre/${getVersion()}/maplibre-gl-worker.mjs`)
 
 /**
  * 3B Çorlu haritası.

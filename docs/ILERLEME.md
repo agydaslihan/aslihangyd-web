@@ -5145,87 +5145,143 @@ bozar; video LCP'yi ölçülemez hâle getirir.
 
 ---
 
-## E paketi — /hakkimizda CMS'ten yönetiliyor (16 Ağustos 2026)
+## ⚠️⚠️ HARİTA ÜRETİMDE TAMAMEN KIRIKTI — DÖRT KAPI DA YEŞİLDİ (17 Ağustos 2026)
 
-Yeni global: **Hakkımızda Sayfası**. Giriş cümlesi, zengin metin, portre ve
-ek görseller panelden yönetiliyor.
+`pnpm typecheck && lint && test && build` dördü de temizdi. Harita hiçbir
+şey çizmiyordu.
 
-### ⚠️ Editör SINIRLI ve bu bilinçli
+### Belirti
 
-Açık: başlık (h2/h3), kalın, italik, madde/numaralı liste, bağlantı.
-Kapalı: renk, punto, hizalama, tablo, gömülü HTML, alıntı.
-
-Serbest bir editör tasarımı iki haftada bozar — marka panelinde yuva
-sayısını on ile sınırlamanın gerekçesinin aynısı. Ayrıca **punto ve renk
-açılırsa kontrast kapısının dışında bir metin katmanı doğar**: panelde
-ölçülmeyen, sitede okunmayan.
-
-⚠️ `h1` editörde YOK. Sayfanın `h1`i başlıkta ve tek olmalı; ikinci bir
-`h1` ekran okuyucu gezinmesini ve SEO'yu bozar.
-
-### ⚠️ Yasal bilgiler buraya taşınmadı
-
-Yetki belgesi, MERSİS ve vergi bilgileri `KurumsalBilgiler`den otomatik
-gelmeye devam ediyor. İki yerde tutulsaydı biri güncellenip diğeri
-unutulur ve sayfa kendi kendisiyle çelişirdi.
-
-### ⚠️ Eski içerik orphan bırakılmadı
-
-Sayfa daha önce `Sayfalar` koleksiyonundaki `hakkimizda` kaydından
-besleniyordu. Global boşsa o kayda düşülüyor — oraya metin girilmişse
-geçişte sessizce kaybolmasın diye. Yedek, taşınma tamamlanınca
-kaldırılabilir.
-
-⚠️ Boş bir zengin metin alanı "dolu" görünebiliyor: lexical hiç yazı
-yazılmasa da tek boş paragraflı bir kök döndürüyor. Öyle bir değeri içerik
-saymak boş durumun hiç görünmemesine yol açardı — `doluIcerik` bunu
-süzüyor.
-
-### Yerleşim
-
-Portre metnin YANINDA, üstünde değil: metnin ilk satırı sayfanın en çok
-okunan yeri ve bir fotoğraf onu aşağı iterdi. Mobilde alt alta düşüyor.
-Ek görseller sayfanın altında, `loading="lazy"`.
-
-### ⚠️⚠️ Göç tuzağına İKİNCİ kez düşüldü — artık test var
-
-E paketinin göçü de `mahalle_yaklasik` sütununu yeniden eklemeye çalıştı.
-Sebep aynı: main'deki son şema fotoğrafı (`hero_slider`) #58 birleşmeden
-önce alınmış ve o sütunu bilmiyor. D paketindeki düzeltme henüz main'de
-olmadığı için tuzak tekrarlandı.
-
-Elle budandı — ve bu sefer **statik bir test yazıldı**
-(`src/lib/gocler.test.ts`):
-
-- aynı sütun iki göçte eklenmiyor
-- aynı tablo iki göçte oluşturulmuyor
-- `index.ts` sırası dosya adı sırasıyla aynı
-
-⚠️ Testin yakaladığı doğrulandı: hata geri konup koşturuldu, iki göçü de
-adıyla gösterip kırmızı verdi.
-
-⚠️ Bu test SQL ayrıştırmıyor, DESEN arıyor. Amaç eksiksiz doğrulama değil;
-tam olarak yaşanan arızayı bir daha yaşamamak. İki kez düşülen bir tuzak,
-üçüncüsünü hak etmiyor.
-
-### ⚠️ Göç testi `src/migrations/` içinde DURAMAZ
-
-İlk hâli oradaydı ve **`pnpm payload migrate` komutunu tümden kırdı**:
+Ağ sekmesi:
 
 ```
-TypeError: Cannot read properties of undefined (reading 'config')
-    at src/migrations/migrations.test.ts:61
+harita    (pending)   script   Other   0.0 kB
 ```
 
-Payload göç dizinindeki **her** dosyayı içe aktarıyor; `.test.ts` ayrımı
-yapmıyor. Test yüklenince vitest koşum bağlamı dışında `describe()`
-çağrılıyor ve komut ölüyor.
+Caddy günlüğü:
 
-Yani göçleri koruyacak test, göç adımının kendisini imkânsız hâle
-getiriyordu — CLAUDE.md §5.3'ün koşulsuz zorunlu adımını. Dosya
-`src/lib/gocler.test.ts` altına taşındı; göç dizinine yalnızca **okumak**
-için bakıyor.
+```
+"uri":"/harita", "Sec-Fetch-Dest":["worker"], error: "reading: context canceled"
+```
 
-⚠️ Bu, testin kendisinin bir üretim arızası ürettiği ikinci durum. Ders
-aynı: bir dizinin sahibi bir çerçeveyse (Payload burada), o dizine
-çerçevenin beklemediği dosya konmaz.
+Konsol: `Failed to load module script: non-JavaScript MIME type of text/html`
+
+### Kök sebep — ölçülerek bulundu, tahmin edilmedi
+
+MapLibre GL JS **v6** worker'ını artık ayrı bir dosyadan yüklüyor (v5'te
+gömülüydü) ve adresini `import.meta.url`den türetiyor:
+
+```js
+function di() {
+  let e = import.meta.url
+  if (!/^https?:/.test(e)) return ''            // ← boş dizge
+  return new URL('./maplibre-gl-worker.mjs', e).href
+}
+```
+
+Turbopack paketlemede `import.meta.url` yerine bir **dosya yolu** koyuyor.
+Derlenmiş çıktıdan birebir:
+
+```js
+ck = { get url() { return `file://${…/maplibre-gl.mjs}` } }
+```
+
+`file://…` ifadesi `/^https?:/` testini geçmiyor → adres **boş dizge** →
+
+```js
+new Worker('', { type: 'module' })
+```
+
+Boş adres belgenin kendi adresine çözülüyor: tarayıcı worker olarak
+**`/harita` sayfasının kendisini** istiyor, sunucu HTML dönüyor, tarayıcı
+MIME türünü reddediyor, worker hiç başlamıyor. MapLibre worker olmadan tek
+bir karo bile çizemez.
+
+⚠️ Kaynak kod DOĞRUYDU. Kırılan şey paketlemeydi — bu yüzden kaynağa bakan
+hiçbir denetim yakalayamazdı.
+
+### ⚠️ Turbopack'in kendi kopyası kullanılamıyor
+
+Turbopack worker dosyasını `.next/static/media/` altına atıyor — ama ham
+kopya olarak: içindeki `import "./maplibre-gl-shared.mjs"` satırı olduğu
+gibi duruyor ve orada o adla bir dosya yok (yanındaki kopyanın adı karma
+içeriyor). Worker yüklense bile ilk satırında 404 alırdı.
+
+### Çözüm
+
+`scripts/maplibre-worker-hazirla.mjs` **iki dosyayı birden**
+`public/maplibre/<sürüm>/` altına kopyalıyor; bileşen modül düzeyinde
+`setWorkerUrl(\`/maplibre/${getVersion()}/maplibre-gl-worker.mjs\`)`
+çağırıyor.
+
+- ⚠️ **İki dosya birden**, çünkü worker'ın göreli içe aktarımı yanındaki
+  dosyaya düşmeli.
+- ⚠️ **Sürüm adreste**, çünkü `public/` içerik karması taşımıyor;
+  yükseltmeden sonra önbellekteki eski worker yeni ana paketle konuşamazdı.
+- ⚠️ **Sürüm `getVersion()`den**, elle yazılmıyor — bir `pnpm update`
+  sonrası adres sessizce 404'e düşerdi.
+- ⚠️ Kopyalar **depoya girmiyor** (`.gitignore`), `pnpm build`/`pnpm dev`
+  üretiyor. Commit edilseydi bir yükseltmeden sonra bayat kalırdı.
+
+Yan bulgu: `setWorkerUrl` hiç çağrılmadığında küçültücü `WORKER_URL ||`
+dalını tümden atıyordu. Çağrı eklendiği anda geri geldi — derlenmiş
+çıktıda doğrulandı.
+
+### ⚠️ Yakalayan kapı: `scripts/harita-worker-duman.mjs`
+
+Üç şeyi **ölçüyor**, varsayımda bulunmuyor:
+
+1. Derlenmiş çıktı worker adresini gerçekten atıyor mu
+2. O adres sunucudan **JavaScript** olarak mı geliyor (HTML değil)
+3. Worker'ın kendi içe aktarımı da JavaScript olarak mı geliyor
+
+CI'da, istemci JS ölçümü için zaten ayakta olan üretim sunucusuna karşı
+koşuyor.
+
+⚠️ Yakaladığı **doğrulandı**: `setWorkerUrl` çağrısı geri çıkarılıp yeniden
+derlendi, betik çıkış kodu 1 ile düştü:
+
+```
+✗ Yerel derleme çıktısının (.next) hiçbir yerinde WORKER_URL ataması yok.
+  setWorkerUrl çağrısı paketlemede düşmüş olabilir — harita üretimde çizmez.
+```
+
+⚠️ Betik **tam adresi değil ATAMAYI** arıyor. Adres kodda
+`` `/maplibre/${getVersion()}/…` `` biçiminde kuruluyor ve küçültücü sürümü
+bir değişkene alıyor; çözülmüş dizgeyi arayan bir denetim **çalışan**
+derlemede kırmızı verirdi — ve o yanlış alarm ilk hafta kapatılırdı.
+
+### Üretim imajında doğrulandı
+
+Dev sunucuda değil, gerçek imajda:
+
+```
+$ docker run --rm … ls /uygulama/public/maplibre/6.1.0/
+maplibre-gl-shared.mjs   479327
+maplibre-gl-worker.mjs    19108
+
+$ curl -o /dev/null -w "%{http_code} %{content_type}" …/maplibre-gl-worker.mjs
+200 application/javascript; charset=UTF-8
+```
+
+### ⚠️ Satıcı kopyaları lint dışı
+
+480 kB'lık küçültülmüş dosyalar `eslint .` kapsamına girince 19 hata +
+1057 uyarı çıkardı: kapıyı bizim yazmadığımız kod kapatıyordu.
+`public/maplibre/**` yok sayılıyor.
+
+### ⚠️ Koruma testi kendi kurduğu tuzağa düştü — ilk CI koşusunda
+
+İlk hâli `public/maplibre/<sürüm>/` dizininin VARLIĞINI şart koşuyordu.
+Yerelde geçti (önceki derlemeden kalmıştı), CI'da düştü: iş akışı
+`pnpm test`i `pnpm build`ten ÖNCE koşuyor ve kopyalar henüz yok.
+
+Test kopyaya değil KAYNAĞA bakacak biçimde yazıldı: worker'ın
+`node_modules`taki hâlinden göreli içe aktarımları çıkarıp kopyalama
+listesinin hepsini kapsadığını doğruluyor. Hem her zaman çalışıyor hem de
+daha erken uyarıyor — worker yarın yeni bir dosyaya bağımlı olursa liste
+eksik kaldığı ANDA görünüyor. Kopyanın gerçekten yerinde olduğunu zaten
+duman testi ölçüyor, derlemeden sonra.
+
+⚠️ Ders: bir testin ön koşulu yerelde artık dosyalardan sağlanıyorsa, o
+test aslında bir şey kanıtlamıyor.
