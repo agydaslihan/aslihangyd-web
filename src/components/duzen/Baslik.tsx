@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, type RefObject } from 'react'
 
 import { TemaAnahtari } from '@/components/duzen/TemaAnahtari'
 import { KapatIkon, MenuIkon, WhatsappIkon } from '@/components/ui/Ikon'
@@ -47,6 +47,8 @@ export function Baslik({
   const eylem = marka.baslikEylemi ?? BASLIK_EYLEMI
 
   const [acik, setAcik] = useState(false)
+  /** Kapanışta odak buraya döner — klavye kullanıcısı yerini kaybetmesin. */
+  const dugmeRef = useRef<HTMLButtonElement>(null)
   const [acikMega, setAcikMega] = useState<string | null>(null)
   const [kaydirildi, setKaydirildi] = useState(false)
   const yol = usePathname()
@@ -66,7 +68,12 @@ export function Baslik({
     if (!acik) return
 
     const kapat = (olay: KeyboardEvent) => {
-      if (olay.key === 'Escape') setAcik(false)
+      if (olay.key !== 'Escape') return
+      setAcik(false)
+      // ⚠️ Odak açan düğmeye dönmeli: aksi hâlde Escape'ten sonra odak
+      // gövdeye düşer ve klavye kullanıcısı menüye baştan gezinmek zorunda
+      // kalır.
+      dugmeRef.current?.focus()
     }
     document.addEventListener('keydown', kapat)
     document.body.style.overflow = 'hidden'
@@ -94,80 +101,111 @@ export function Baslik({
   const whatsappAdresi = whatsappBaglantisi(whatsapp, whatsappMesaji())
 
   return (
-    <header
-      data-yazdirma="gizle"
-      onMouseLeave={() => setAcikMega(null)}
-      className={sinif(
-        'bg-zemin/92 sticky top-0 z-40 backdrop-blur-md transition-shadow',
-        // ⚠️ Kenarlık yerine gölge: yapışkan başlıkta sabit bir çizgi
-        // sayfanın üstünü ikiye böler ve "uygulama" hissi verir. Gölge
-        // yalnızca içerik altına kaydığında beliriyor.
-        kaydirildi ? 'shadow-kart' : '',
-      )}
-    >
-      <div className="kapsayici flex h-18 items-center justify-between gap-6">
-        <Link
-          href="/"
-          className="flex items-center"
-          aria-label={`${marka?.siteAdi ?? SITE_ADI} ana sayfa`}
-        >
-          {/* ⚠️ Logo yoksa metin yedeği devreye giriyor — site logosuz kırılmaz. */}
-          <MarkaLogosu
-            marka={marka}
-            sinif="h-9 w-auto"
-            metinSinifi="font-serif text-baslik-3 tracking-tight whitespace-nowrap"
-            vurguSinifi="text-vurgu"
-          />
-        </Link>
-
-        {/* ── Masaüstü gezinme ── */}
-        <nav aria-label="Ana gezinme" className="hidden lg:block">
-          <ul className="flex items-center gap-1">
-            {menu.map((oge) => (
-              <li
-                key={oge.adres}
-                className="relative"
-                onMouseEnter={() => setAcikMega(oge.mega ? oge.adres : null)}
-              >
-                <MenuBaglantisi oge={oge} aktif={yolAktifMi(yol, oge.adres)} />
-
-                {oge.mega && oge.mega.length > 0 && acikMega === oge.adres ? (
-                  <MegaMenu ogeler={oge.mega} onKapat={() => setAcikMega(null)} />
-                ) : null}
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <div className="flex items-center gap-2">
-          <TemaAnahtari />
-
-          {/* ⚠️ Dolu adaçayı — şartnamedeki iki eylemden biri. Üçüncü bir
-              yerde kullanılırsa disiplin testi kırılır. */}
+    <>
+      <header
+        data-yazdirma="gizle"
+        onMouseLeave={() => setAcikMega(null)}
+        className={sinif(
+          'bg-zemin/92 sticky top-0 z-40 backdrop-blur-md transition-shadow',
+          // ⚠️ Kenarlık yerine gölge: yapışkan başlıkta sabit bir çizgi
+          // sayfanın üstünü ikiye böler ve "uygulama" hissi verir. Gölge
+          // yalnızca içerik altına kaydığında beliriyor.
+          kaydirildi ? 'shadow-kart' : '',
+        )}
+      >
+        <div className="kapsayici flex h-18 items-center justify-between gap-6">
           <Link
-            href={eylem.adres}
-            className="bg-aksan hover:bg-aksan-koyu rounded-buton hidden min-h-11 items-center px-5 text-govde-kucuk font-medium text-white transition-colors lg:inline-flex"
+            href="/"
+            className="flex items-center"
+            aria-label={`${marka?.siteAdi ?? SITE_ADI} ana sayfa`}
           >
-            {eylem.ad}
+            {/* ⚠️ Logo yoksa metin yedeği devreye giriyor — site logosuz kırılmaz. */}
+            <MarkaLogosu
+              marka={marka}
+              sinif="h-9 w-auto"
+              metinSinifi="font-serif text-baslik-3 tracking-tight whitespace-nowrap"
+              vurguSinifi="text-vurgu"
+            />
           </Link>
 
-          <button
-            type="button"
-            onClick={() => setAcik((onceki) => !onceki)}
-            aria-expanded={acik}
-            aria-controls="mobil-gezinme"
-            className="hover:bg-yuzey-2 rounded-buton -mr-2 inline-flex size-11 items-center justify-center lg:hidden"
-          >
-            {acik ? <KapatIkon /> : <MenuIkon />}
-            <span className="yalnizca-okuyucu">{acik ? 'Menüyü kapat' : 'Menüyü aç'}</span>
-          </button>
-        </div>
-      </div>
+          {/* ── Masaüstü gezinme ── */}
+          <nav aria-label="Ana gezinme" className="hidden lg:block">
+            <ul className="flex items-center gap-1">
+              {menu.map((oge) => (
+                <li
+                  key={oge.adres}
+                  className="relative"
+                  onMouseEnter={() => setAcikMega(oge.mega ? oge.adres : null)}
+                >
+                  <MenuBaglantisi oge={oge} aktif={yolAktifMi(yol, oge.adres)} />
 
+                  {oge.mega && oge.mega.length > 0 && acikMega === oge.adres ? (
+                    <MegaMenu ogeler={oge.mega} onKapat={() => setAcikMega(null)} />
+                  ) : null}
+                </li>
+              ))}
+            </ul>
+          </nav>
+
+          <div className="flex items-center gap-2">
+            <TemaAnahtari />
+
+            {/* ⚠️ Dolu adaçayı — şartnamedeki iki eylemden biri. Üçüncü bir
+              yerde kullanılırsa disiplin testi kırılır. */}
+            <Link
+              href={eylem.adres}
+              className="bg-aksan hover:bg-aksan-koyu rounded-buton hidden min-h-11 items-center px-5 text-govde-kucuk font-medium text-white transition-colors lg:inline-flex"
+            >
+              {eylem.ad}
+            </Link>
+
+            <button
+              ref={dugmeRef}
+              type="button"
+              onClick={() => setAcik((onceki) => !onceki)}
+              aria-expanded={acik}
+              aria-controls="mobil-gezinme"
+              className="hover:bg-yuzey-2 rounded-buton -mr-2 inline-flex size-11 items-center justify-center lg:hidden"
+            >
+              {acik ? <KapatIkon /> : <MenuIkon />}
+              <span className="yalnizca-okuyucu">{acik ? 'Menüyü kapat' : 'Menüyü aç'}</span>
+            </button>
+          </div>
+        </div>
+      </header>
+
+      {/*
+        ⚠️ PANEL HEADER'IN DIŞINDA — VE BU BİR DÜZELTME, TERCİH DEĞİL.
+
+        Panel `position: fixed`. Header ise `backdrop-blur-md` taşıyor, yani
+        `backdrop-filter` uyguluyor — ve `backdrop-filter` uygulayan bir
+        öğe, `fixed` konumlu TORUNLARI için İÇEREN BLOK oluyor (`filter`
+        ve `transform` ile aynı davranış).
+
+        Panel header'ın içindeyken `top-18 bottom-0` görüntü alanına değil
+        72 piksellik HEADER kutusuna göre çözülüyordu:
+
+            top: 72px, bottom: 0, içeren blok yüksekliği 72px  →  yükseklik 0
+
+        Yani düğme çalışıyor, durum değişiyor, panel DOM'a giriyor ve
+        yüksekliği sıfır olduğu için görünmüyordu. Mobil ziyaretçi sitede
+        hiçbir yere gidemiyordu.
+
+        ⚠️ Header'dan `backdrop-blur` kaldırmak da çözerdi ama yanlış
+        çözüm olurdu: bulanıklık yapışkan başlığın okunurluğunu sağlıyor.
+        Doğru olan, `fixed` paneli o içeren bloğun dışına çıkarmak.
+      */}
       {acik ? (
-        <MobilMenu menu={menu} yol={yol} whatsappAdresi={whatsappAdresi} eylem={eylem} />
+        <MobilMenu
+          menu={menu}
+          yol={yol}
+          whatsappAdresi={whatsappAdresi}
+          eylem={eylem}
+          onKapat={() => setAcik(false)}
+          acanDugme={dugmeRef}
+        />
       ) : null}
-    </header>
+    </>
   )
 }
 
@@ -262,17 +300,101 @@ function MobilMenu({
   yol,
   whatsappAdresi,
   eylem,
+  onKapat,
+  acanDugme,
 }: {
   menu: readonly UstMenuOgesi[]
   yol: string | null
   whatsappAdresi: string | null
   eylem: { ad: string; adres: string }
+  onKapat: () => void
+  acanDugme: RefObject<HTMLButtonElement | null>
 }) {
+  const panelRef = useRef<HTMLDivElement>(null)
+
+  /**
+   * ⚠️ ODAK TUZAĞI — açık bir örtü menüsünde zorunlu.
+   *
+   * Panel görüntü alanının tamamını kaplıyor ve arkasındaki sayfa
+   * `overflow: hidden` ile kilitli. Odak tuzağı olmasaydı Tab tuşu
+   * ziyaretçiyi GÖRÜNMEYEN bağlantılar arasında dolaştırırdı: ekran
+   * okuyucu "portföy bağlantısı" der, ekranda menü vardır ve o bağlantı
+   * görünmez. Klavye kullanıcısı için menü kapalıya eşdeğer olurdu.
+   *
+   * ⚠️ Odak açılışta panele TAŞINIYOR. Taşınmasaydı odak hâlâ düğmede
+   * kalır ve Tab, menünün ilk bağlantısına değil sayfanın başına giderdi.
+   */
+  useEffect(() => {
+    const panel = panelRef.current
+    if (panel === null) return
+
+    // ⚠️ Temizlikte kullanılacak düğüm ETKİNİN İÇİNDE kopyalanıyor: temizlik
+    // çalıştığında `ref.current` çoktan değişmiş olabilir.
+    const acan = acanDugme.current
+
+    const odaklanabilirler = (): HTMLElement[] =>
+      Array.from(panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')).filter(
+        (dugum) => dugum.offsetParent !== null || dugum === document.activeElement,
+      )
+
+    odaklanabilirler()[0]?.focus()
+
+    const tuzak = (olay: KeyboardEvent) => {
+      if (olay.key !== 'Tab') return
+
+      const liste = odaklanabilirler()
+      if (liste.length === 0) return
+
+      const ilk = liste[0]
+      const son = liste[liste.length - 1]
+      if (ilk === undefined || son === undefined) return
+
+      // ⚠️ Sarma iki yönde de gerekli: Shift+Tab ilk öğeden sona dönmeli.
+      if (olay.shiftKey && document.activeElement === ilk) {
+        olay.preventDefault()
+        son.focus()
+      } else if (!olay.shiftKey && document.activeElement === son) {
+        olay.preventDefault()
+        ilk.focus()
+      }
+    }
+
+    document.addEventListener('keydown', tuzak)
+    return () => {
+      document.removeEventListener('keydown', tuzak)
+      // Kapanışta odak açan düğmeye döner.
+      acan?.focus()
+    }
+  }, [acanDugme])
+
   return (
     <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label="Site menüsü"
       id="mobil-gezinme"
       className="border-kenar bg-zemin fixed inset-x-0 top-18 bottom-0 z-40 overflow-y-auto border-t-[0.5px] lg:hidden"
     >
+      {/*
+        ⚠️ KAPATMA DÜĞMESİ PANELİN İÇİNDE OLMAK ZORUNDA.
+        
+        Başlıktaki X düğmesi panelin DIŞINDA kaldı ve odak tuzağı Tab'ı panel
+        içinde döndürüyor: klavye kullanıcısı o düğmeye artık ulaşamaz.
+        Escape bir çıkış yolu ama tek çıkış yolu olamaz — dokunmatik ekran
+        okuyucu kullanan biri Escape tuşuna basamaz.
+      */}
+      <div className="kapsayici flex justify-end pt-3">
+        <button
+          type="button"
+          onClick={onKapat}
+          className="hover:bg-yuzey-2 rounded-buton text-metin-2 inline-flex min-h-11 items-center gap-2 px-3 text-govde-kucuk"
+        >
+          <KapatIkon />
+          Menüyü kapat
+        </button>
+      </div>
+
       <nav aria-label="Mobil gezinme" className="kapsayici py-4">
         <ul className="flex flex-col">
           {menu.map((oge) => (
