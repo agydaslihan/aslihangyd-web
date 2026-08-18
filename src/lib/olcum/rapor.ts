@@ -3,7 +3,7 @@ import 'server-only'
 import config from '@payload-config'
 import { getPayload, type Where } from 'payload'
 
-import { gunAnahtari } from './tampon'
+import { BOSALTMA_ARALIGI_MS, gunAnahtari, tamponuOku } from './tampon'
 import { olayTanimi, YUKSEK_NIYETLI_OLAYLAR } from './sozluk'
 import { DEGERLEME_ALANLARI, fiyatBandiEtiketi, type Katman } from './tipler'
 
@@ -118,6 +118,32 @@ export interface Rapor {
   hataOrani: number | null
   /** Hiç veri yok mu — panel boş durumu bunu kullanıyor. */
   bos: boolean
+  /**
+   * Ölçümün çalışıp çalışmadığını gösteren tanı bilgisi.
+   *
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BOŞ PANEL İKİ ŞEY ANLAMINA GELEBİLİR VE İKİSİ ÇOK FARKLI:
+   *
+   *   1. Henüz ziyaretçi yok  → normal, beklenecek
+   *   2. Sayaçlar yazılmıyor  → arıza, müdahale gerek
+   *
+   * Panel bunu ayırt edemezse soru her seferinde insana gelir ve cevabı
+   * ancak sunucuya bağlanan biri verebilir. Bu alanlar cevabı ekrana
+   * taşıyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  tani: {
+    /** Veritabanına en son ne zaman yazıldı. */
+    sonYazma: string | null
+    /** Kaç günlük kayıt var. */
+    gunKaydi: number
+    /** Henüz yazılmamış, bellekte bekleyen istek sayısı. */
+    bekleyenIstek: number
+    /** Bekleyen olay sayısı (Katman B). */
+    bekleyenOlay: number
+    /** Yazma aralığı (saniye) — "ne kadar beklemeliyim" sorusunun cevabı. */
+    yazmaAraligiSn: number
+  }
 }
 
 /* ── Yardımcılar ─────────────────────────────────────────────────────── */
@@ -522,7 +548,40 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
     teknik,
     cihazlar: siralaVeKes(cihazHaritasi, 4),
     hataOrani: ziyaretci > 0 ? Math.round((toplamHata / ziyaretci) * 1000) / 10 : null,
-    bos: tum.length === 0,
+    bos: ziyaretci === 0 && tum.length === 0,
+    tani: taniyiTopla(gunler.docs),
+  }
+}
+
+/**
+ * Tanı bilgisini toplar.
+ *
+ * ⚠️ Bellekteki tampon DA okunuyor — ve asıl değerli kısım bu. Veritabanı
+ * boşken tamponda bekleyen bir sayı görmek, "ölçüm çalışıyor, henüz
+ * yazılmadı" demenin tek doğrudan yolu. Yalnızca son yazma zamanına
+ * bakılsaydı, hiç yazılmamış bir sistemle bozuk bir sistem aynı görünürdü.
+ *
+ * ⚠️ Bu okuma yalnızca AYNI SÜREÇTE anlamlı: panel de sayaçlar da aynı
+ * Node sürecinde yaşıyor. Uygulama bir gün yatay ölçeklenirse bu sayı
+ * yalnızca paneli çizen kopyayı gösterir — o gün geldiğinde burası da
+ * Redis'e taşınmalı (bkz. `tampon.ts`).
+ */
+function taniyiTopla(satirlar: unknown[]): Rapor['tani'] {
+  const tampon = tamponuOku()
+
+  let sonYazma: string | null = null
+  for (const ham of satirlar) {
+    const guncelleme = (ham as { updatedAt?: unknown }).updatedAt
+    if (typeof guncelleme !== 'string') continue
+    if (sonYazma === null || guncelleme > sonYazma) sonYazma = guncelleme
+  }
+
+  return {
+    sonYazma,
+    gunKaydi: satirlar.length,
+    bekleyenIstek: tampon?.toplamIstek ?? 0,
+    bekleyenOlay: tampon === undefined ? 0 : [...tampon.olay.values()].reduce((t, s) => t + s, 0),
+    yazmaAraligiSn: Math.round(BOSALTMA_ARALIGI_MS / 1000),
   }
 }
 

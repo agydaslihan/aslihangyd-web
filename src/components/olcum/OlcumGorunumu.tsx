@@ -54,156 +54,155 @@ export default async function GozlemGorunumu({ user }: AdminViewServerProps) {
         </p>
       </header>
 
-      {rapor.bos ? (
-        <Kutu>
-          <h2 style={baslik}>Henüz ölçüm yok</h2>
-          <p style={metin}>
-            Sayaçlar bellekte toplanıp dakikada bir yazılıyor. Site yeni yayına alındıysa ilk
-            satırın görünmesi bir dakika sürer.
-          </p>
-        </Kutu>
-      ) : null}
+      {rapor.bos ? <BosDurum tani={rapor.tani} /> : null}
 
-      <OnaySeridi oran={rapor.onayOrani} />
+      {rapor.bos ? null : <OnaySeridi oran={rapor.onayOrani} />}
 
-      {/* ── 3.1 ── */}
-      <Kutu>
-        <h2 style={baslik}>Bu hafta ne oldu?</h2>
-        <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
-          <Ozet etiket="Sayfa görüntüleme" ozet={rapor.ziyaretci} />
-          <Ozet etiket="Yüksek niyetli olay" ozet={rapor.yuksekNiyet} />
-          <Ozet etiket="Gelen talep" ozet={rapor.lead} />
-          <div>
-            <p style={kucuk}>Dönüşüm</p>
-            <p style={buyukSayi}>{rapor.donusumYuzde === null ? '—' : `%${rapor.donusumYuzde}`}</p>
-            <p style={kucuk}>
-              {rapor.donusumYuzde === null
-                ? 'Örneklem küçük, oran hesaplanmadı'
-                : 'Talep / sayfa görüntüleme'}
-            </p>
-          </div>
-        </div>
-      </Kutu>
-
-      {/* ── 3.2 — en değerli bölüm ── */}
-      <Kutu>
-        <h2 style={baslik}>Ziyaretçi nerede kayboluyor?</h2>
-        <p style={{ ...kucuk, marginBottom: '.5rem' }}>Bu ekranın en değerli bölümü.</p>
-        <p style={metin}>
-          Aşamalar arası düşüş. <strong>En büyük düşüş kırmızı</strong> — düzeltilecek yer orası.
-        </p>
-        <p style={{ ...kucuk, marginBottom: '.75rem' }}>
-          ⚠️ Bu huni <strong>toplulaştırılmıştır</strong>: aynı ziyaretçinin sayfa dizisi takip
-          edilmiyor. Aşamalar ayrı ayrı sayılan toplamlardır, birbirinin alt kümesi değil.
-        </p>
-        <Huni asamalar={rapor.huni} />
-      </Kutu>
-
-      {/* ── 3.3 ── */}
-      <Kutu>
-        <h2 style={baslik}>Hangi içerik lead getiriyor?</h2>
-        <p style={metin}>
-          Sıralama tıklamaya göre <strong>değil</strong>, lead başına görüntülemeye göre. 500
-          görüntülemeyle hiç lead getirmeyen sayfa, 20 görüntülemeyle üç lead getirenden daha az
-          değerlidir.
-        </p>
-        <Tablo
-          basliklar={['Sayfa', 'Görüntüleme (A)', 'Lead', 'Lead başına görüntüleme']}
-          satirlar={rapor.sayfalar.map((satir) => [
-            satir.rota,
-            String(satir.goruntuleme),
-            String(satir.lead),
-            satir.leadBasinaGoruntuleme === null
-              ? '— (lead yok)'
-              : String(satir.leadBasinaGoruntuleme),
-          ])}
-        />
-      </Kutu>
-
-      {/* ── 3.4 ── */}
-      <Kutu>
-        <h2 style={baslik}>Değerleme akışı nerede bırakılıyor?</h2>
-        <p style={metin}>
-          ⚠️ Bu form <strong>çok adımlı bir sihirbaz değil</strong>: tek sayfada beş alanı olan ve
-          canlı hesaplayan bir araç. Bu yüzden ölçü birimi &quot;adım&quot; değil{' '}
-          <strong>alan</strong> — hangi alana kadar doldurup vazgeçildiği.
-        </p>
-        <Huni asamalar={rapor.degerlemeHunisi} />
-      </Kutu>
-
-      {/* ── 3.5 ── */}
-      <Kutu>
-        <h2 style={baslik}>Ziyaretçi ne arıyor?</h2>
-        <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(3, 1fr)' }}>
-          <Liste baslik="En çok kullanılan filtreler" katman="B" satirlar={rapor.filtreler} />
-          <Liste baslik="Aranan fiyat aralıkları" katman="B" satirlar={rapor.fiyatBantlari} />
-          <Liste baslik="En çok bakılan mahalleler" katman="A" satirlar={rapor.mahalleler} />
-        </div>
-        <div
-          style={{
-            marginTop: '1rem',
-            padding: '.75rem',
-            background: 'var(--theme-warning-100)',
-            borderRadius: '.25rem',
-          }}
-        >
-          <p style={{ ...metin, margin: 0 }}>
-            <strong>Sonuç bulunamayan arama: {rapor.sonucsuzArama}</strong> — portföy boşluğunu
-            gösterir. Ziyaretçi aradığını bulamadı; bu sayı yükseliyorsa eksik olan ilan tipini
-            yukarıdaki filtre listesi söylüyor.
-          </p>
-        </div>
-      </Kutu>
-
-      {/* ── 3.6 ── */}
-      <Kutu>
-        <h2 style={baslik}>Nereden geliyorlar?</h2>
-        <p style={kucuk}>
-          ⚠️ Yalnızca yönlendiren <strong>alan adı</strong> saklanıyor, tam adres değil.
-        </p>
-        <Tablo
-          basliklar={['Kaynak', 'Sayfa görüntüleme (A)', 'Lead']}
-          satirlar={rapor.kaynaklar.map((satir) => [
-            satir.ad,
-            String(satir.ziyaretci),
-            String(satir.lead),
-          ])}
-        />
-        <div style={{ marginTop: '1rem' }}>
-          <Liste baslik="UTM kampanya kaynakları" katman="A" satirlar={rapor.utmKaynaklar} />
-        </div>
-      </Kutu>
-
-      {/* ── 3.7 ── */}
-      <Kutu>
-        <h2 style={baslik}>Teknik sağlık</h2>
-        <p style={kucuk}>
-          Süreler sunucunun isteği karşılama süresidir (Katman A); tarayıcıdaki toplam yükleme
-          süresi değil.
-        </p>
-        <Tablo
-          basliklar={['Sayfa', 'Ortalama', 'En yavaş', 'Görüntüleme', 'Hata']}
-          satirlar={rapor.teknik.map((satir) => [
-            satir.rota,
-            `${satir.ortalamaMs} ms`,
-            `${satir.enYavasMs} ms`,
-            String(satir.goruntuleme),
-            String(satir.hata),
-          ])}
-        />
-        <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
-          <div>
-            <p style={kucuk}>Hata oranı</p>
-            <p style={buyukSayi}>{rapor.hataOrani === null ? '—' : `%${rapor.hataOrani}`}</p>
-          </div>
-          {rapor.cihazlar.map((cihaz) => (
-            <div key={cihaz.ad}>
-              <p style={kucuk}>{cihaz.ad === 'mobil' ? 'Mobil' : 'Masaüstü'}</p>
-              <p style={buyukSayi}>{cihaz.adet}</p>
+      {rapor.bos ? null : (
+        <>
+          {/* ── 3.1 ── */}
+          <Kutu>
+            <h2 style={baslik}>Bu hafta ne oldu?</h2>
+            <div style={{ display: 'grid', gap: '1rem', gridTemplateColumns: 'repeat(4, 1fr)' }}>
+              <Ozet etiket="Sayfa görüntüleme" ozet={rapor.ziyaretci} />
+              <Ozet etiket="Yüksek niyetli olay" ozet={rapor.yuksekNiyet} />
+              <Ozet etiket="Gelen talep" ozet={rapor.lead} />
+              <div>
+                <p style={kucuk}>Dönüşüm</p>
+                <p style={buyukSayi}>
+                  {rapor.donusumYuzde === null ? '—' : `%${rapor.donusumYuzde}`}
+                </p>
+                <p style={kucuk}>
+                  {rapor.donusumYuzde === null
+                    ? 'Örneklem küçük, oran hesaplanmadı'
+                    : 'Talep / sayfa görüntüleme'}
+                </p>
+              </div>
             </div>
-          ))}
-        </div>
-      </Kutu>
+          </Kutu>
+
+          {/* ── 3.2 — en değerli bölüm ── */}
+          <Kutu>
+            <h2 style={baslik}>Ziyaretçi nerede kayboluyor?</h2>
+            <p style={{ ...kucuk, marginBottom: '.5rem' }}>Bu ekranın en değerli bölümü.</p>
+            <p style={metin}>
+              Aşamalar arası düşüş. <strong>En büyük düşüş kırmızı</strong> — düzeltilecek yer
+              orası.
+            </p>
+            <p style={{ ...kucuk, marginBottom: '.75rem' }}>
+              ⚠️ Bu huni <strong>toplulaştırılmıştır</strong>: aynı ziyaretçinin sayfa dizisi takip
+              edilmiyor. Aşamalar ayrı ayrı sayılan toplamlardır, birbirinin alt kümesi değil.
+            </p>
+            <Huni asamalar={rapor.huni} />
+          </Kutu>
+
+          {/* ── 3.3 ── */}
+          <Kutu>
+            <h2 style={baslik}>Hangi içerik lead getiriyor?</h2>
+            <p style={metin}>
+              Sıralama tıklamaya göre <strong>değil</strong>, lead başına görüntülemeye göre. 500
+              görüntülemeyle hiç lead getirmeyen sayfa, 20 görüntülemeyle üç lead getirenden daha az
+              değerlidir.
+            </p>
+            <Tablo
+              basliklar={['Sayfa', 'Görüntüleme (A)', 'Lead', 'Lead başına görüntüleme']}
+              satirlar={rapor.sayfalar.map((satir) => [
+                satir.rota,
+                String(satir.goruntuleme),
+                String(satir.lead),
+                satir.leadBasinaGoruntuleme === null
+                  ? '— (lead yok)'
+                  : String(satir.leadBasinaGoruntuleme),
+              ])}
+            />
+          </Kutu>
+
+          {/* ── 3.4 ── */}
+          <Kutu>
+            <h2 style={baslik}>Değerleme akışı nerede bırakılıyor?</h2>
+            <p style={metin}>
+              ⚠️ Bu form <strong>çok adımlı bir sihirbaz değil</strong>: tek sayfada beş alanı olan
+              ve canlı hesaplayan bir araç. Bu yüzden ölçü birimi &quot;adım&quot; değil{' '}
+              <strong>alan</strong> — hangi alana kadar doldurup vazgeçildiği.
+            </p>
+            <Huni asamalar={rapor.degerlemeHunisi} />
+          </Kutu>
+
+          {/* ── 3.5 ── */}
+          <Kutu>
+            <h2 style={baslik}>Ziyaretçi ne arıyor?</h2>
+            <div style={{ display: 'grid', gap: '1.5rem', gridTemplateColumns: 'repeat(3, 1fr)' }}>
+              <Liste baslik="En çok kullanılan filtreler" katman="B" satirlar={rapor.filtreler} />
+              <Liste baslik="Aranan fiyat aralıkları" katman="B" satirlar={rapor.fiyatBantlari} />
+              <Liste baslik="En çok bakılan mahalleler" katman="A" satirlar={rapor.mahalleler} />
+            </div>
+            <div
+              style={{
+                marginTop: '1rem',
+                padding: '.75rem',
+                background: 'var(--theme-warning-100)',
+                borderRadius: '.25rem',
+              }}
+            >
+              <p style={{ ...metin, margin: 0 }}>
+                <strong>Sonuç bulunamayan arama: {rapor.sonucsuzArama}</strong> — portföy boşluğunu
+                gösterir. Ziyaretçi aradığını bulamadı; bu sayı yükseliyorsa eksik olan ilan tipini
+                yukarıdaki filtre listesi söylüyor.
+              </p>
+            </div>
+          </Kutu>
+
+          {/* ── 3.6 ── */}
+          <Kutu>
+            <h2 style={baslik}>Nereden geliyorlar?</h2>
+            <p style={kucuk}>
+              ⚠️ Yalnızca yönlendiren <strong>alan adı</strong> saklanıyor, tam adres değil.
+            </p>
+            <Tablo
+              basliklar={['Kaynak', 'Sayfa görüntüleme (A)', 'Lead']}
+              satirlar={rapor.kaynaklar.map((satir) => [
+                satir.ad,
+                String(satir.ziyaretci),
+                String(satir.lead),
+              ])}
+            />
+            <div style={{ marginTop: '1rem' }}>
+              <Liste baslik="UTM kampanya kaynakları" katman="A" satirlar={rapor.utmKaynaklar} />
+            </div>
+          </Kutu>
+
+          {/* ── 3.7 ── */}
+          <Kutu>
+            <h2 style={baslik}>Teknik sağlık</h2>
+            <p style={kucuk}>
+              Süreler sunucunun isteği karşılama süresidir (Katman A); tarayıcıdaki toplam yükleme
+              süresi değil.
+            </p>
+            <Tablo
+              basliklar={['Sayfa', 'Ortalama', 'En yavaş', 'Görüntüleme', 'Hata']}
+              satirlar={rapor.teknik.map((satir) => [
+                satir.rota,
+                `${satir.ortalamaMs} ms`,
+                `${satir.enYavasMs} ms`,
+                String(satir.goruntuleme),
+                String(satir.hata),
+              ])}
+            />
+            <div style={{ display: 'flex', gap: '2rem', marginTop: '1rem' }}>
+              <div>
+                <p style={kucuk}>Hata oranı</p>
+                <p style={buyukSayi}>{rapor.hataOrani === null ? '—' : `%${rapor.hataOrani}`}</p>
+              </div>
+              {rapor.cihazlar.map((cihaz) => (
+                <div key={cihaz.ad}>
+                  <p style={kucuk}>{cihaz.ad === 'mobil' ? 'Mobil' : 'Masaüstü'}</p>
+                  <p style={buyukSayi}>{cihaz.adet}</p>
+                </div>
+              ))}
+            </div>
+          </Kutu>
+        </>
+      )}
 
       <Kutu>
         <h2 style={baslik}>Bu ekran neyi ölçmüyor?</h2>
@@ -249,6 +248,93 @@ const baslik = { fontSize: '1.1rem', margin: '0 0 .5rem' } as const
 const metin = { fontSize: '.875rem', lineHeight: 1.6, margin: '0 0 .5rem' } as const
 const kucuk = { fontSize: '.75rem', opacity: 0.7, margin: 0 } as const
 const buyukSayi = { fontSize: '1.5rem', fontWeight: 600, margin: '.15rem 0' } as const
+
+/**
+ * Boş durum — "çalışmıyor mu, veri mi yok" sorusunu ekranda cevaplıyor.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BOŞ SAYFA BİR CEVAP DEĞİL, BİR SORU DOĞURUR.
+ *
+ * Panel ilk açıldığında boş geldi ve akla gelen ilk soru "bozuk mu?" oldu.
+ * O soruyu yanıtlamak için sunucuya bağlanıp tabloya bakmak gerekti —
+ * yani panelin var olma sebebiyle çelişen bir iş.
+ *
+ * Artık ekranın kendisi ayırt ediyor:
+ *
+ *   · bellekte bekleyen sayaç varsa  → ölçüm ÇALIŞIYOR, henüz yazılmadı
+ *   · son yazma zamanı varsa         → yazma da çalışıyor, o gün trafik yok
+ *   · ikisi de boşsa                 → gerçekten hiç ziyaret olmamış
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+function BosDurum({ tani }: { tani: Rapor['tani'] }) {
+  const calisiyor = tani.bekleyenIstek > 0 || tani.sonYazma !== null
+
+  return (
+    <Kutu>
+      <h2 style={baslik}>Henüz veri toplanmadı</h2>
+      <p style={metin}>
+        Sayaçlar bellekte toplanıp <strong>{tani.yazmaAraligiSn} saniyede bir</strong> yazılıyor;
+        ilk kayıtlar birkaç ziyaret sonra görünür. Site yeni yayına alındıysa bir tur beklemek
+        yeterli.
+      </p>
+
+      <div
+        style={{
+          marginTop: '.75rem',
+          padding: '.75rem 1rem',
+          borderRadius: '.25rem',
+          background: 'var(--theme-elevation-50)',
+          fontSize: '.8125rem',
+          lineHeight: 1.6,
+        }}
+      >
+        <p style={{ margin: '0 0 .4rem' }}>
+          <strong>
+            {calisiyor
+              ? 'Ölçüm çalışıyor — bu ekran boş çünkü henüz sayılacak ziyaret yok.'
+              : 'Henüz hiçbir ziyaret sayılmadı.'}
+          </strong>
+        </p>
+        <ul style={{ margin: 0, paddingLeft: '1.1rem' }}>
+          <li>
+            Bellekte bekleyen (henüz yazılmamış): <strong>{tani.bekleyenIstek}</strong> sayfa
+            görüntüleme, <strong>{tani.bekleyenOlay}</strong> olay
+          </li>
+          <li>
+            Son yazma:{' '}
+            <strong>{tani.sonYazma === null ? 'hiç yazılmadı' : zamanYaz(tani.sonYazma)}</strong>
+          </li>
+          <li>
+            Kayıtlı gün sayısı: <strong>{tani.gunKaydi}</strong>
+          </li>
+        </ul>
+        {calisiyor ? null : (
+          <p style={{ margin: '.5rem 0 0' }}>
+            ⚠️ Bu üç satır da sıfırsa ve sitede gezinmenize rağmen değişmiyorsa ölçüm katmanı
+            çalışmıyor olabilir. Sayfayı yenileyip tekrar bakın; hâlâ sıfırsa bildirin.
+          </p>
+        )}
+      </div>
+    </Kutu>
+  )
+}
+
+/**
+ * Zamanı okunur yazar.
+ *
+ * ⚠️ Europe/Istanbul: "son yazma 09:12" diyen bir satır, okuyanın saatiyle
+ * aynı olmalı. UTC gösterilseydi üç saatlik fark "bir şey yazılmıyor"
+ * izlenimi verirdi.
+ */
+function zamanYaz(iso: string): string {
+  const tarih = new Date(iso)
+  if (Number.isNaN(tarih.getTime())) return iso
+  return new Intl.DateTimeFormat('tr-TR', {
+    timeZone: 'Europe/Istanbul',
+    dateStyle: 'short',
+    timeStyle: 'short',
+  }).format(tarih)
+}
 
 function Kutu({ children }: { children: React.ReactNode }) {
   return (
