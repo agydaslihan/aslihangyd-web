@@ -41,6 +41,7 @@ import { HeroSlider } from '@/globals/HeroSlider'
 import { MarkaGorunum } from '@/globals/MarkaGorunum'
 import { MenuDuzeni } from '@/globals/MenuDuzeni'
 import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
+import { AlanSagligi } from '@/globals/AlanSagligi'
 import { AltbilgiAyarlari } from '@/globals/AltbilgiAyarlari'
 import { SayfaIcerikleri } from '@/globals/SayfaIcerikleri'
 import { SiteBolumleri } from '@/globals/SiteBolumleri'
@@ -240,6 +241,7 @@ export default buildConfig({
     DegerlemeAyarlari,
     EndeksAyarlari,
     BakimDurumu,
+    AlanSagligi,
     GooglePlacesKullanimi,
   ],
 

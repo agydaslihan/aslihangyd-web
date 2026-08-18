@@ -11,8 +11,13 @@ import { gecerliGorevMi, GOREV_KAYDI, gorevTanimi } from './gorevler'
  * yasal etiketi olmalı.
  */
 describe('bakım görev kaydı', () => {
-  it('dört görev tanımlı', () => {
+  it('beş görev tanımlı', () => {
     expect(GOREV_KAYDI.map((gorev) => gorev.anahtar)).toEqual([
+      /**
+       * ⚠️ Alan adı kontrolü listenin BAŞINDA: site erişilemezse diğer
+       * görevlerin sonucunu okuyacak panel de yok.
+       */
+      'alan-sagligi',
       'eids-kaldir',
       'eids-uyar',
       'kvkk-sil',

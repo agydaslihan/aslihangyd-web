@@ -27,7 +27,8 @@ import { YETKI_UYARI_ESIGI_GUN } from '@/lib/eids'
  * her gece 500 dönerdi; işletmecinin en olası tepkisi cron satırını
  * susturmak olurdu ve EİDS kontrolü de onunla birlikte susardı.
  */
-export type GorevAnahtari = 'eids-kaldir' | 'eids-uyar' | 'kvkk-sil' | 'olcum-ayrinti-sil'
+export type GorevAnahtari =
+  'eids-kaldir' | 'eids-uyar' | 'kvkk-sil' | 'olcum-ayrinti-sil' | 'alan-sagligi'
 
 export interface GorevKunyesi {
   anahtar: GorevAnahtari
@@ -45,6 +46,26 @@ export interface GorevKunyesi {
 }
 
 export const GOREV_KUNYELERI: readonly GorevKunyesi[] = [
+  {
+    /**
+     * ⚠️ LİSTENİN BAŞINDA — ve bu sıra bilinçli.
+     *
+     * Alan adı düşerse site kimseye açılmaz; o durumda EİDS uyarısını
+     * okuyacak bir panel de yoktur. Erişilebilirlik, yasal uyarıların
+     * önünde gelir çünkü diğer her şeyin ön koşuludur.
+     */
+    anahtar: 'alan-sagligi',
+    ad: 'Alan adı sağlığı — durum, bitiş tarihi ve dış DNS',
+    siklik: 'Her gün 05:10 (Europe/Istanbul)',
+    calismazsaSonuc:
+      'Alan adı bir kayıt kuruluşu işlemi yüzünden DNS’ten düşerse (clientHold, ' +
+      'serverHold, süre dolması) site HERKESE erişilemez olur ve bunu hiçbir sunucu ' +
+      'izlemesi göremez — sunucu sağlıklıdır, istek hiç gelmez. 18 Ağustos 2026’da tam ' +
+      'olarak bu yaşandı ve site saatlerce kapalı kaldı. Bu görev, dışarıdan bakan tek ' +
+      'kontroldür. ⚠️ Yasal ihlal doğurmaz ama sitenin var olmaması, yasal uyarıyı ' +
+      'okuyacak yerin de olmaması demektir.',
+    yasal: false,
+  },
   {
     anahtar: 'eids-kaldir',
     ad: 'EİDS — yetkisi dolan ilanları yayından kaldır',

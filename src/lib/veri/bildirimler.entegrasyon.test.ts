@@ -154,8 +154,19 @@ describe('EİDS sayımı', () => {
 
     expect(bildirim).toBeDefined()
     expect(bildirim?.oncelik).toBe('yasal')
-    // Bu bildirim listenin en üstünde olmalı; altına düşerse görünmez olur.
-    expect(anahtarlar(bildirimler)[0]).toBe('eids-dolmus-yayinda')
+
+    /**
+     * ⚠️ Bu bildirim YASAL önceliklilerin en üstünde olmalı; altına düşerse
+     * görünmez olur.
+     *
+     * Eskiden listenin mutlak ilk sırası kontrol ediliyordu. 18 Ağustos
+     * 2026'da `erisim` önceliği eklendi ve o kontrol kırıldı — haklı
+     * olarak: site erişilemezse yasal uyarıyı okuyacak panel de yok.
+     * Denetim mutlak sıradan KENDİ SINIFI içindeki sıraya çevrildi;
+     * "yasal uyarılar arasında ilk" iddiası hâlâ korunuyor.
+     */
+    const yasalAnahtarlar = bildirimler.filter((b) => b.oncelik === 'yasal').map((b) => b.anahtar)
+    expect(yasalAnahtarlar[0]).toBe('eids-dolmus-yayinda')
 
     // Temizlik: sonraki testler bu kaydın gölgesinde koşmasın.
     await payload.db.updateOne({

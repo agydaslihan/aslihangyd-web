@@ -733,6 +733,8 @@ kimse fark etmez — sessiz aksama bu işin en tehlikeli hali.
 | `eids-kaldir` | Yetki belgesi süresi dolmuş yayındaki ilanları `yetki_bitti` durumuna çeker | **Her gün 03:10** | ✅ evet |
 | `kvkk-sil` | Saklama süresi dolmuş talep ve danışman başvurularını siler | **Her gün 03:40** | ✅ evet |
 | `eids-uyar` | 15 gün içinde yetkisi bitecek ilanları raporlar | Her gün 08:10 | ✗ hayır |
+| `alan-sagligi` | Alan adının kayıt kuruluşu durumunu, bitiş tarihini ve dışarıdan çözülüp çözülmediğini kontrol eder | Her gün 05:10 | ✗ hayır |
+| `olcum-ayrinti-sil` | 90 günden eski ölçüm olay ayrıntılarını temizler | Her gün 04:10 | ✗ hayır |
 
 Kaydın kaynağı `src/lib/bakim/gorevler.ts` içindeki `GOREV_KAYDI`. Sıklık
 ve "çalışmazsa ne olur" metinleri orada duruyor; buradaki tablo onun
@@ -765,6 +767,20 @@ Saklama süresi dolmuş kişisel veri silinmeden kalır. KVKK md. 7 ve md. 12
 kapsamında ihlal; veri sahibinin başvurusu ya da denetim halinde yaptırım
 riski. Gecikme her gün büyür, kendiliğinden düzelmez. Bu görev de geriye
 dönük telafi eder.
+
+**`alan-sagligi` çalışmazsa — SİTE SESSİZCE KAPANABİLİR**
+
+Alan adı bir kayıt kuruluşu işlemi yüzünden DNS'ten düşerse (`clientHold`,
+`serverHold`, süre dolması) site **herkese** erişilemez olur ve bunu
+**hiçbir sunucu izlemesi göremez**: sunucu sağlıklıdır, Cloudflare
+sağlıklıdır, istek hiç gelmez.
+
+18 Ağustos 2026'da tam olarak bu yaşandı ve site saatlerce kapalı kaldı.
+Bu görev, dışarıdan bakan tek kontroldür.
+
+⚠️ Yasal ihlal doğurmaz — ama sitenin var olmaması, yasal uyarıyı
+okuyacak panelin de olmaması demektir. Bu yüzden panel şeridinde
+**yasal uyarıların da üstünde** görünür.
 
 **`eids-uyar` çalışmazsa — ticari kayıp, yasal ihlal yok**
 
@@ -847,6 +863,13 @@ MAILTO=""
 
 # KVKK — saklama süresi dolan kişisel verileri sil. YASAL, günlük.
 40 3 * * *  deploy  /srv/aslihangyd/app/scripts/bakim.sh kvkk-sil >> /srv/aslihangyd/logs/bakim.log 2>&1
+
+# Ölçüm — 90 günden eski olay ayrıntılarını temizle.
+10 4 * * *  deploy  /srv/aslihangyd/app/scripts/bakim.sh olcum-ayrinti-sil >> /srv/aslihangyd/logs/bakim.log 2>&1
+
+# Alan adı sağlığı — kayıt kuruluşu durumu, bitiş tarihi, dış DNS.
+# ⚠️ Günde BİR kez: kayıt otoritesine gereksiz yük bindirmeyin.
+10 5 * * *  deploy  /srv/aslihangyd/app/scripts/bakim.sh alan-sagligi >> /srv/aslihangyd/logs/bakim.log 2>&1
 
 # EİDS — yaklaşan yetki bitişlerini raporla. Mesai saatinde, okunsun diye.
 10 8 * * *  deploy  /srv/aslihangyd/app/scripts/bakim.sh eids-uyar >> /srv/aslihangyd/logs/bakim.log 2>&1
@@ -1183,6 +1206,119 @@ değişkenin dolu olması önemli. Daha sağlamı için aylık bir hatırlatıc�
 kurun ve yukarıdaki `openssl` komutunu çalıştırın.
 
 ---
+
+## 8c. ⚠️ Site açılmıyor ama sunucu 200 dönüyor
+
+**18 Ağustos 2026'da yaşandı:** site saatlerce açılmadı. Sunucu sağlıklıydı,
+Cloudflare sağlıklıydı, `/api/saglik` 200 dönüyordu. Sorun kayıt
+kuruluşundaydı — alan adına `clientHold` konmuştu — ve hiçbir izleme
+bunu yakalamadı.
+
+⚠️ **Neden hiçbir izleme görmedi:** alan adı DNS'ten düştüğünde sunucuya
+**hiç istek gelmez**. Sunucuyu izleyen her kontrol "her şey yolunda" der,
+çünkü kendi tarafından bakıyordur. Bu bölüm dışarıdan bakmayı anlatıyor.
+
+### Önce panele bakın
+
+Panel ana ekranındaki bildirim şeridinde **"Erişim"** etiketli kırmızı bir
+satır varsa cevap oradadır. Ayrıntı: **Ayarlar → Alan Adı Sağlığı**.
+
+Şerit boşsa ve site yine açılmıyorsa aşağıdaki zinciri elle yürüyün.
+
+### Zincir: nereden kopmuş?
+
+Sırayla ilerleyin; ilk başarısız adım sorunun yeridir.
+
+**1. Alan adı DNS'te var mı — dışarıdan sorun**
+
+```bash
+dig +short aslihangyd.com @1.1.1.1
+dig +short aslihangyd.com @8.8.8.8
+```
+
+⚠️ **Kendi makinenizin DNS'ini kullanmayın.** Yerel çözümleyici önbellekten
+cevap verip düşmüş bir alan adını "çalışıyor" gösterebilir. `@1.1.1.1`
+kısmı bu yüzden zorunlu.
+
+- **Adres dönüyorsa** → DNS sağlam, 4. adıma geçin.
+- **Boş dönüyorsa** → alan adı DNS'ten düşmüş. 2. adım.
+
+**2. Kayıt kuruluşu ne diyor — WHOIS/RDAP**
+
+```bash
+whois aslihangyd.com | grep -i "status\|expiry\|expiration"
+```
+
+`whois` kurulu değilse (sunucuda genellikle değildir) RDAP yeterli ve
+daha okunaklı:
+
+```bash
+curl -s https://rdap.org/domain/aslihangyd.com \
+  | python3 -c "import sys,json; d=json.load(sys.stdin); print('durum:', d.get('status')); print([e for e in d.get('events',[]) if e.get('eventAction')=='expiration'])"
+```
+
+**Durum satırı nasıl okunur:**
+
+| Durum | Anlamı | Ne yapmalı |
+| --- | --- | --- |
+| `ok` / `active` | Normal | Sorun burada değil |
+| `clientTransferProhibited` | Olağan koruma | Sorun değil |
+| ⚠️ `clientHold` | **Kayıt kuruluşu alan adını DNS'ten düşürmüş** | Hemen kayıt kuruluşuna |
+| ⚠️ `serverHold` | Kayıt otoritesi düşürmüş | Hemen kayıt kuruluşuna |
+| ⚠️ `redemptionPeriod` | Süre dolmuş, kurtarma penceresi | Derhal yenileyin — pencere kapanırsa alan serbest kalır |
+| ⚠️ `pendingDelete` | Silinme sırasında | Acil; bu aşamadan sonra üçüncü kişiler kaydedebilir |
+| ⚠️ `inactive` | Ad sunucusu tanımlı değil | Nameserver kayıtlarını girin |
+| `pendingTransfer` | Devir işleniyor | Siz talep etmediyseniz **hemen** kayıt kuruluşuna |
+
+**3. Ad sunucuları doğru mu**
+
+```bash
+dig +short NS aslihangyd.com @1.1.1.1
+```
+
+Cloudflare kullanıyorsanız `*.ns.cloudflare.com` dönmeli. Boş ya da farklı
+dönüyorsa kayıt kuruluşundaki nameserver kaydı bozulmuş.
+
+**4. DNS sağlamsa: Cloudflare mı, origin mi?**
+
+```bash
+# Cloudflare üzerinden
+curl -sS -o /dev/null -w "%{http_code}\n" https://aslihangyd.com
+
+# Origin'e doğrudan (Cloudflare'i atlayarak)
+curl -sS -o /dev/null -w "%{http_code}\n" --resolve aslihangyd.com:443:<ORIGIN_IP> https://aslihangyd.com
+```
+
+- İkisi de 200 → sorun sizde değil, ziyaretçinin ağında olabilir.
+- Cloudflare hata, origin 200 → Cloudflare tarafı (SSL modu, kural, kesinti).
+- İkisi de hata → uygulama tarafı; `docker compose ps` ve `logs`.
+
+### Kime başvurulur
+
+| Bulgu | Muhatap | Aciliyet |
+| --- | --- | --- |
+| `clientHold`, `serverHold` | **Kayıt kuruluşu (domain sağlayıcınız)** | Hemen — site kapalı |
+| `redemptionPeriod`, süre dolmuş | Kayıt kuruluşu | Hemen — pencere kapanırsa alan kaybedilir |
+| `pendingTransfer` (istenmeyen) | Kayıt kuruluşu + hesap güvenliği | Hemen — devir girişimi olabilir |
+| Nameserver kaydı yanlış | Kayıt kuruluşu | Yüksek |
+| DNS var, Cloudflare hata | Cloudflare paneli / durum sayfası | Yüksek |
+| DNS ve Cloudflare sağlam, origin hata | Sunucu tarafı — §9'a bakın | Orta |
+
+⚠️ **`clientHold` genellikle ödemeden ya da doğrulanmamış iletişim
+bilgisinden gelir.** ICANN, alan adı sahibinin e-posta adresini doğrulamasını
+zorunlu tutuyor; doğrulanmazsa kayıt kuruluşu alan adını askıya alabiliyor.
+Kayıt kuruluşu hesabınızdaki e-postanın **okuduğunuz** bir adres olduğundan
+emin olun.
+
+### Elle kontrol
+
+Bakım görevinin yaptığı işin aynısını hiçbir şey yazmadan koşturmak için:
+
+```bash
+cd /srv/aslihangyd/app && pnpm payload run scripts/alan-denetim.mjs
+```
+
+Çıktı durum, bitiş tarihi ve iki dış çözümleyicinin sonucunu birlikte verir.
 
 ## 9. Sık karşılaşılan durumlar
 
