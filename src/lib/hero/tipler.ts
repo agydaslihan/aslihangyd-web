@@ -30,7 +30,11 @@ export interface HeroSlayti {
   gorselAlt: string
   gorselEn: number | null
   gorselBoy: number | null
-  baslik: string
+  /**
+   * ⚠️ `null` olabilir: yalnızca fotoğraf gösteren slaytlar geçerli.
+   * O durumda `gorselAlt` boş olamaz — erişilebilirlik kapısı.
+   */
+  baslik: string | null
   altBaslik: string | null
   butonMetni: string | null
   butonLink: string | null

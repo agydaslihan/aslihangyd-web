@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { SayfaBasligi } from '@/components/icerik/SayfaIcerik'
+import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
 import { BosDurum } from '@/components/ui/BosDurum'
@@ -17,6 +19,8 @@ export const metadata: Metadata = {
 }
 
 export default async function MahallelerSayfasi() {
+  const icerik = await sayfaIcerigi('mahalleler')
+
   const mahalleler = await mahalleleriGetir()
 
   return (
@@ -30,11 +34,18 @@ export default async function MahallelerSayfasi() {
         olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı olurdu.
       */}
       <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-2 text-center">
-        <h1 className="font-serif text-baslik-2 font-medium">Çorlu mahalleleri</h1>
-        <p className="text-metin-2 text-govde-kucuk leading-relaxed">
-          Bir taşınmazın değerini binadan çok mahallesi belirler. Her mahallenin hangi değer
-          sürücüsünden beslendiğini — sanayi, ulaşım, eğitim, sağlık — veriyle anlatıyoruz.
-        </p>
+        <SayfaBasligi
+          icerik={icerik}
+          varsayilanBaslik="Çorlu mahalleleri"
+          h1Sinifi="font-serif text-baslik-2 font-medium"
+          aciklamaSinifi="text-metin-2 text-govde-kucuk leading-relaxed"
+          varsayilanAciklama={
+            <p className="text-metin-2 text-govde-kucuk leading-relaxed">
+              Bir taşınmazın değerini binadan çok mahallesi belirler. Her mahallenin hangi değer
+              sürücüsünden beslendiğini — sanayi, ulaşım, eğitim, sağlık — veriyle anlatıyoruz.
+            </p>
+          }
+        />
       </header>
 
       {mahalleler.length > 0 ? (

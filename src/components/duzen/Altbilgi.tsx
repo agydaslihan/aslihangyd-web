@@ -3,6 +3,7 @@ import type { ReactNode } from 'react'
 
 import { CerezTercihleriBaglantisi } from '@/components/cerez/CerezBanneri'
 import { MarkaLogosu } from '@/components/marka/MarkaLogosu'
+import { altbilgiAyarlariniGetir } from '@/lib/veri/altbilgiAyarlari'
 import { DisBaglantiIkon, PostaIkon, TelefonIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { markaAyarlari } from '@/lib/marka/sunucu'
@@ -41,12 +42,27 @@ import { acikBolumTanimlari } from '@/lib/veri/siteBolumleri'
  * Kapalı site bölümleri buradan kendiliğinden düşer: bağlantı listesi
  * `acikBolumTanimlari()` üzerinden geliyor.
  */
+/**
+ * Platform anahtarı → görünen ad.
+ *
+ * ⚠️ Ham anahtar ("x", "linkedin") gösterilmiyor: kullanıcıya görünen her
+ * şey Türkçe ve düzgün yazılmış olmalı (CLAUDE.md dil kuralı).
+ */
+const SOSYAL_ETIKET: Record<string, string> = {
+  instagram: 'Instagram',
+  youtube: 'YouTube',
+  facebook: 'Facebook',
+  linkedin: 'LinkedIn',
+  x: 'X',
+}
+
 export async function Altbilgi() {
-  const [kurumsal, baglantilar, acikBolumler, marka] = await Promise.all([
+  const [kurumsal, baglantilar, acikBolumler, marka, ayarlar] = await Promise.all([
     kurumsalBilgileriGetir(),
     altbilgiBaglantilariniGetir(),
     acikBolumTanimlari(),
     markaAyarlari(),
+    altbilgiAyarlariniGetir(),
   ])
 
   /**
@@ -56,6 +72,23 @@ export async function Altbilgi() {
    * bulunmayanlar (örn. "Danışman ol") ekleniyor. Böylece bir bölümü
    * kapatmak/açmak burada ayrıca hatırlanacak bir iş olmuyor.
    */
+  /**
+   * Sosyal medya hesapları.
+   *
+   * ⚠️ Kaynağı `KurumsalBilgiler` ve orada sürükleyerek sıralanabiliyor;
+   * burada yalnızca çiziliyor. Ayrı bir liste açmak, aynı bilgiyi iki
+   * yerde tutmak olurdu.
+   *
+   * ⚠️ Adresi olmayan hesap düşürülüyor: tıklanınca hiçbir yere gitmeyen
+   * bir bağlantı, olmayan bağlantıdan kötüdür.
+   */
+  const sosyalHesaplar = (kurumsal?.sosyalMedya ?? [])
+    .filter((hesap) => typeof hesap?.adres === 'string' && hesap.adres.trim() !== '')
+    .map((hesap) => ({
+      adres: hesap.adres,
+      etiket: SOSYAL_ETIKET[hesap.platform] ?? hesap.platform,
+    }))
+
   const acikAdresler = new Set(acikBolumler.map((bolum) => bolum.adres))
   const kontrolluAdresler = new Set(BOLUMLER.flatMap((bolum) => [bolum.adres, ...bolum.rotalar]))
 
@@ -111,7 +144,7 @@ export async function Altbilgi() {
       <div className="kapsayici py-14 lg:py-20">
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {/* ── Kurumsal ── */}
-          <Sutun baslik="Kurumsal">
+          <Sutun baslik={ayarlar.kurumsalBasligi}>
             <div className="mb-3 flex flex-col gap-2">
               {/* ⚠️ Aksan GOLD DEĞİL. Gold üzerinde okunur görünse bile
                   "gold asla metin rengi değildir" kuralı mutlak: istisna
@@ -129,10 +162,36 @@ export async function Altbilgi() {
                 metinSinifi="font-serif text-baslik-3 text-notr-50"
                 vurguSinifi="text-notr-300"
               />
-              <p className="text-notr-300 text-govde-kucuk">
-                Çorlu ve çevresinde gayrimenkul danışmanlığı. Kararlarınızı hisle değil, rakamla
-                verin.
+              <p className="text-notr-300 text-govde-kucuk whitespace-pre-line">
+                {ayarlar.tanitimMetni}
               </p>
+
+              {/*
+                Sosyal medya hesapları — ⚠️ kaynağı `KurumsalBilgiler`.
+                Buraya ikinci bir liste konsaydı iki yerde tutulur, biri
+                güncellenip diğeri unutulurdu.
+              */}
+              {sosyalHesaplar.length > 0 ? (
+                <div className="mt-2 flex flex-col gap-2">
+                  <h2 className="text-notr-50 text-eyebrow font-medium uppercase">
+                    {ayarlar.sosyalBasligi}
+                  </h2>
+                  <ul className="flex flex-wrap gap-x-4 gap-y-1">
+                    {sosyalHesaplar.map((hesap) => (
+                      <li key={hesap.adres}>
+                        <a
+                          href={hesap.adres}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="text-notr-300 hover:text-notr-50 inline-flex min-h-9 items-center text-govde-kucuk underline-offset-2 transition-colors hover:underline"
+                        >
+                          {hesap.etiket}
+                        </a>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              ) : null}
             </div>
 
             <BaglantiListesi baglantilar={baglantilar.kurumsal} />
@@ -153,7 +212,7 @@ export async function Altbilgi() {
           </Sutun>
 
           {/* ── Portföy ── */}
-          <Sutun baslik="Portföy">
+          <Sutun baslik={ayarlar.portfoyBasligi}>
             <ul className="text-notr-300 text-govde-kucuk flex flex-col">
               {portfoySayfalari.map((sayfa) => (
                 <li key={sayfa.adres}>
@@ -177,12 +236,12 @@ export async function Altbilgi() {
           </Sutun>
 
           {/* ── Faydalı bağlantılar ── */}
-          <Sutun baslik="Faydalı bağlantılar">
+          <Sutun baslik={ayarlar.faydaliBasligi}>
             <BaglantiListesi baglantilar={baglantilar.faydali} />
           </Sutun>
 
           {/* ── Hukuksal metinler ── */}
-          <Sutun baslik="Hukuksal metinler">
+          <Sutun baslik={ayarlar.hukuksalBasligi}>
             <ul className="text-notr-300 text-govde-kucuk flex flex-col">
               {HUKUKI_SAYFALAR.map((sayfa) => (
                 <li key={sayfa.adres}>
@@ -202,7 +261,7 @@ export async function Altbilgi() {
           </Sutun>
 
           {/* ── İletişim ── */}
-          <Sutun baslik="İletişim">
+          <Sutun baslik={ayarlar.iletisimBasligi}>
             <ul className="text-notr-300 text-govde-kucuk flex flex-col">
               {telefon ? (
                 <li>

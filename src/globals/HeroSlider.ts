@@ -56,6 +56,40 @@ export const HeroSlider: GlobalConfig = {
           relationTo: 'medya',
           label: 'Görsel',
           required: true,
+          /**
+           * ⚠️ METİNSİZ SLAYTTA ALT METİN ZORUNLU — erişilebilirlik kapısı.
+           *
+           * Başlık varsa ekran okuyucu en azından o cümleyi okuyor ve
+           * görsel dekoratif sayılabiliyor. Başlık YOKSA slaytta okunacak
+           * hiçbir şey kalmıyor: ekran okuyucu kullanan ziyaretçi boş bir
+           * slayt görür. Alt metin o durumda tek bilgi taşıyıcısı.
+           */
+          validate: (
+            deger: unknown,
+            { siblingData }: { siblingData?: Record<string, unknown> },
+          ) => {
+            if (deger === null || deger === undefined || deger === '') {
+              return 'Görsel zorunlu.'
+            }
+
+            const baslik = siblingData?.baslik
+            const baslikVar = typeof baslik === 'string' && baslik.trim() !== ''
+            if (baslikVar) return true
+
+            const gorsel = deger as { alt?: unknown } | string
+            // İlişki henüz çözülmemişse (yalnızca kimlik) doğrulama
+            // yapılamıyor; kayıt engellenmez, uyarı alan açıklamasında.
+            if (typeof gorsel !== 'object' || gorsel === null) return true
+
+            const alt = gorsel.alt
+            if (typeof alt === 'string' && alt.trim() !== '') return true
+
+            return (
+              'Başlıksız slaytta görselin ALT METNİ zorunlu: slaytta okunacak başka hiçbir şey ' +
+              'yok ve ekran okuyucu kullanan ziyaretçi boş bir slayt görür. Medya kaydını açıp ' +
+              'alt metni yazın.'
+            )
+          },
           admin: {
             description:
               'Yatay, en az 1920 piksel geniş. Medya kaydında "Kullanım: Hero" seçerseniz ' +
@@ -63,10 +97,21 @@ export const HeroSlider: GlobalConfig = {
           },
         },
         {
+          /**
+           * ⚠️ ZORUNLU DEĞİL — bilinçli.
+           *
+           * Bazı slaytlar yalnızca fotoğraf olsun isteniyor. Başlığı zorunlu
+           * tutmak, metin istemeyen bir slayt için uydurma bir cümle
+           * yazdırırdı ve o cümle ekranda kalırdı.
+           */
           name: 'baslik',
           type: 'text',
-          label: 'Başlık',
-          required: true,
+          label: 'Başlık (isteğe bağlı)',
+          admin: {
+            description:
+              'Boş bırakırsanız slaytta hiç metin görünmez — yalnızca fotoğraf. ' +
+              '⚠️ O durumda görselin alt metni ZORUNLU olur.',
+          },
         },
         {
           name: 'altBaslik',
@@ -105,6 +150,12 @@ export const HeroSlider: GlobalConfig = {
               admin: { width: '50%' },
             },
             {
+              /**
+               * ⚠️ Metinsiz slaytta karartmaya gerek YOK ve varsayılan 0'a
+               * düşmüyor — çünkü varsayılan, metinli slaytların çoğunluğuna
+               * göre ayarlı. Metin yazılmayan slaytta bunu sıfırlamak
+               * Aslıhan'ın işi ve alan açıklaması bunu söylüyor.
+               */
               name: 'overlayKoyulugu',
               type: 'number',
               label: 'Karartma (%)',
@@ -116,7 +167,8 @@ export const HeroSlider: GlobalConfig = {
                 step: 5,
                 description:
                   'Görselin üstündeki koyu perde. ⚠️ Metnin okunabilmesi buna bağlı: açık ' +
-                  'renkli bir fotoğrafta düşük karartma başlığı okunmaz yapar.',
+                  'renkli bir fotoğrafta düşük karartma başlığı okunmaz yapar. ' +
+                  'Başlık ve buton yazmadıysanız 0 yapın — karartacak metin yok.',
               },
             },
           ],

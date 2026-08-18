@@ -114,6 +114,8 @@ export interface Config {
   globals: {
     'kurumsal-bilgiler': KurumsalBilgiler;
     hakkimizda: Hakkimizda;
+    'sayfa-icerikleri': SayfaIcerikleri;
+    'altbilgi-ayarlari': AltbilgiAyarlari;
     'hero-slider': HeroSlider;
     'marka-gorunum': MarkaGorunum;
     'site-bolumleri': SiteBolumleri;
@@ -128,6 +130,8 @@ export interface Config {
   globalsSelect: {
     'kurumsal-bilgiler': KurumsalBilgilerSelect<false> | KurumsalBilgilerSelect<true>;
     hakkimizda: HakkimizdaSelect<false> | HakkimizdaSelect<true>;
+    'sayfa-icerikleri': SayfaIcerikleriSelect<false> | SayfaIcerikleriSelect<true>;
+    'altbilgi-ayarlari': AltbilgiAyarlariSelect<false> | AltbilgiAyarlariSelect<true>;
     'hero-slider': HeroSliderSelect<false> | HeroSliderSelect<true>;
     'marka-gorunum': MarkaGorunumSelect<false> | MarkaGorunumSelect<true>;
     'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
@@ -1881,6 +1885,173 @@ export interface Hakkimizda {
   createdAt?: string | null;
 }
 /**
+ * Sayfaların başlık ve açıklama metinleri. Boş bıraktığınız her alanda mevcut metin görünmeye devam eder; hiçbir alan zorunlu değil.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sayfa-icerikleri".
+ */
+export interface SayfaIcerikleri {
+  id: number;
+  iletisim?: {
+    /**
+     * Boş bırakırsanız mevcut başlık kullanılır: "İletişim". Sayfadaki tek h1 budur.
+     */
+    baslik?: string | null;
+    /**
+     * İletişim sayfasında başlığın hemen altında görünür. Boşsa mevcut metin kalır.
+     */
+    altBaslik?: string | null;
+    /**
+     * Sayfanın gövdesine eklenir. Boş bırakabilirsiniz — o zaman hiç görünmez, sayfa mevcut hâliyle çalışır.
+     */
+    icerik?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+    /**
+     * Metnin altında ızgara olarak görünür. ⚠️ Medya kaydında kullanım türünü seçerseniz panel size ziyaretçiye inecek gerçek boyutu ve bütçe durumunu gösterir.
+     */
+    gorseller?:
+      | {
+          gorsel: number | Medya;
+          /**
+           * Boşsa altyazı gösterilmez.
+           */
+          aciklama?: string | null;
+          id?: string | null;
+        }[]
+      | null;
+  };
+  degerleme?: {
+    /**
+     * Boş bırakırsanız mevcut başlık kullanılır: "Evinizin değerini öğrenin". Sayfadaki tek h1 budur.
+     */
+    baslik?: string | null;
+    /**
+     * Değerleme sayfasında başlığın hemen altında görünür. Boşsa mevcut metin kalır.
+     */
+    altBaslik?: string | null;
+    /**
+     * Sayfanın gövdesine eklenir. Boş bırakabilirsiniz — o zaman hiç görünmez, sayfa mevcut hâliyle çalışır.
+     */
+    icerik?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  araclar?: {
+    /**
+     * Boş bırakırsanız mevcut başlık kullanılır: "Hesaplayıcılar". Sayfadaki tek h1 budur.
+     */
+    baslik?: string | null;
+    /**
+     * Araçlar sayfasında başlığın hemen altında görünür. Boşsa mevcut metin kalır.
+     */
+    altBaslik?: string | null;
+    /**
+     * Sayfanın gövdesine eklenir. Boş bırakabilirsiniz — o zaman hiç görünmez, sayfa mevcut hâliyle çalışır.
+     */
+    icerik?: {
+      root: {
+        type: string;
+        children: {
+          type: any;
+          version: number;
+          [k: string]: unknown;
+        }[];
+        direction: ('ltr' | 'rtl') | null;
+        format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+        indent: number;
+        version: number;
+      };
+      [k: string]: unknown;
+    } | null;
+  };
+  portfoy?: {
+    /**
+     * Boş bırakırsanız mevcut başlık kullanılır: "Portföy". Sayfadaki tek h1 budur.
+     */
+    baslik?: string | null;
+    /**
+     * Portföy sayfasında başlığın hemen altında görünür. Boşsa mevcut metin kalır.
+     */
+    altBaslik?: string | null;
+  };
+  mahalleler?: {
+    /**
+     * Boş bırakırsanız mevcut başlık kullanılır: "Çorlu mahalleleri". Sayfadaki tek h1 budur.
+     */
+    baslik?: string | null;
+    /**
+     * Mahalleler sayfasında başlığın hemen altında görünür. Boşsa mevcut metin kalır.
+     */
+    altBaslik?: string | null;
+  };
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Altbilgideki tanıtım metni ve sütun başlıkları. Logo "Marka ve Görünüm"den, sosyal medya hesapları "Kurumsal Bilgiler"den geliyor. ⚠️ Yetki belgesi numarası ve yatırım tavsiyesi feragati yasal zorunluluktur; buradan değiştirilemez.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "altbilgi-ayarlari".
+ */
+export interface AltbilgiAyarlari {
+  id: number;
+  /**
+   * Altbilgide logonun hemen altında görünür. Boş bırakırsanız mevcut metin kalır: "Çorlu ve çevresinde gayrimenkul danışmanlığı. Kararlarınızı hisle değil, rakamla verin."
+   */
+  tanitimMetni?: string | null;
+  /**
+   * Boşsa "Kurumsal".
+   */
+  kurumsalBasligi?: string | null;
+  /**
+   * Boşsa "Portföy".
+   */
+  portfoyBasligi?: string | null;
+  /**
+   * Boşsa "Faydalı bağlantılar".
+   */
+  faydaliBasligi?: string | null;
+  /**
+   * Boşsa "Hukuksal metinler".
+   */
+  hukuksalBasligi?: string | null;
+  /**
+   * Boşsa "İletişim".
+   */
+  iletisimBasligi?: string | null;
+  /**
+   * Hesapların üstünde görünür. Boşsa "Bizi takip edin". ⚠️ Hesapların kendisi Kurumsal Bilgiler → İletişim sekmesinde; oradan sürükleyerek sıralayabilirsiniz.
+   */
+  sosyalBasligi?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Ana sayfanın en üstündeki alan. Hiç slayt eklemezseniz mevcut metin hero’su görünmeye devam eder — site slayt olmadan da düzgün çalışır.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1897,7 +2068,10 @@ export interface HeroSlider {
          * Yatay, en az 1920 piksel geniş. Medya kaydında "Kullanım: Hero" seçerseniz panel size ziyaretçiye inecek gerçek boyutu ve bütçe durumunu gösterir.
          */
         gorsel: number | Medya;
-        baslik: string;
+        /**
+         * Boş bırakırsanız slaytta hiç metin görünmez — yalnızca fotoğraf. ⚠️ O durumda görselin alt metni ZORUNLU olur.
+         */
+        baslik?: string | null;
         altBaslik?: string | null;
         /**
          * Boşsa buton hiç çıkmaz.
@@ -1909,7 +2083,7 @@ export interface HeroSlider {
         butonLink?: string | null;
         metinHizasi?: ('sol' | 'orta') | null;
         /**
-         * Görselin üstündeki koyu perde. ⚠️ Metnin okunabilmesi buna bağlı: açık renkli bir fotoğrafta düşük karartma başlığı okunmaz yapar.
+         * Görselin üstündeki koyu perde. ⚠️ Metnin okunabilmesi buna bağlı: açık renkli bir fotoğrafta düşük karartma başlığı okunmaz yapar. Başlık ve buton yazmadıysanız 0 yapın — karartacak metin yok.
          */
         overlayKoyulugu?: number | null;
         /**
@@ -2191,6 +2365,42 @@ export interface DanismanOl {
     | {
         baslik: string;
         metin?: string | null;
+        /**
+         * Maddenin üstünde kare olarak görünür. Boşsa madde yalnızca metinle çizilir — mevcut tasarımın aynısı. ⚠️ Kare kırpılıyor; 400×400 piksel yeterli.
+         */
+        gorsel?: (number | null) | Medya;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Sayfanın en üstündeki koyu bandın arka planı. Boşsa mevcut düz koyu bant kalır. ⚠️ Sayfanın en büyük görseli budur ve LCP'yi belirler: yatay, en az 1600 piksel. Medya kaydında kullanım türünü seçerseniz panel bütçe durumunu gösterir.
+   */
+  heroGorseli?: (number | null) | Medya;
+  /**
+   * Formdan hemen önce görünür; boşsa mevcut metin kalır. ⚠️ Çalışma koşulu, komisyon oranı ya da taahhüt YAZMAYIN — bunlar sözleşme konusu ve görüşmede yazılı olarak paylaşılıyor (CLAUDE.md kural 3).
+   */
+  formUstuMetin?: {
+    root: {
+      type: string;
+      children: {
+        type: any;
+        version: number;
+        [k: string]: unknown;
+      }[];
+      direction: ('ltr' | 'rtl') | null;
+      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+      indent: number;
+      version: number;
+    };
+    [k: string]: unknown;
+  } | null;
+  /**
+   * Maddelerin altında ızgara olarak görünür. Boşsa hiç çizilmez.
+   */
+  ekGorseller?:
+    | {
+        gorsel: number | Medya;
+        aciklama?: string | null;
         id?: string | null;
       }[]
     | null;
@@ -2382,6 +2592,71 @@ export interface HakkimizdaSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "sayfa-icerikleri_select".
+ */
+export interface SayfaIcerikleriSelect<T extends boolean = true> {
+  iletisim?:
+    | T
+    | {
+        baslik?: T;
+        altBaslik?: T;
+        icerik?: T;
+        gorseller?:
+          | T
+          | {
+              gorsel?: T;
+              aciklama?: T;
+              id?: T;
+            };
+      };
+  degerleme?:
+    | T
+    | {
+        baslik?: T;
+        altBaslik?: T;
+        icerik?: T;
+      };
+  araclar?:
+    | T
+    | {
+        baslik?: T;
+        altBaslik?: T;
+        icerik?: T;
+      };
+  portfoy?:
+    | T
+    | {
+        baslik?: T;
+        altBaslik?: T;
+      };
+  mahalleler?:
+    | T
+    | {
+        baslik?: T;
+        altBaslik?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "altbilgi-ayarlari_select".
+ */
+export interface AltbilgiAyarlariSelect<T extends boolean = true> {
+  tanitimMetni?: T;
+  kurumsalBasligi?: T;
+  portfoyBasligi?: T;
+  faydaliBasligi?: T;
+  hukuksalBasligi?: T;
+  iletisimBasligi?: T;
+  sosyalBasligi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "hero-slider_select".
  */
 export interface HeroSliderSelect<T extends boolean = true> {
@@ -2515,6 +2790,16 @@ export interface DanismanOlSelect<T extends boolean = true> {
     | {
         baslik?: T;
         metin?: T;
+        gorsel?: T;
+        id?: T;
+      };
+  heroGorseli?: T;
+  formUstuMetin?: T;
+  ekGorseller?:
+    | T
+    | {
+        gorsel?: T;
+        aciklama?: T;
         id?: T;
       };
   updatedAt?: T;
