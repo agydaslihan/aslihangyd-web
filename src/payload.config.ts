@@ -41,6 +41,8 @@ import { HeroSlider } from '@/globals/HeroSlider'
 import { MarkaGorunum } from '@/globals/MarkaGorunum'
 import { MenuDuzeni } from '@/globals/MenuDuzeni'
 import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
+import { AltbilgiAyarlari } from '@/globals/AltbilgiAyarlari'
+import { SayfaIcerikleri } from '@/globals/SayfaIcerikleri'
 import { SiteBolumleri } from '@/globals/SiteBolumleri'
 
 const dirname = path.dirname(fileURLToPath(import.meta.url))
@@ -227,6 +229,8 @@ export default buildConfig({
   globals: [
     KurumsalBilgiler,
     Hakkimizda,
+    SayfaIcerikleri,
+    AltbilgiAyarlari,
     HeroSlider,
     MarkaGorunum,
     SiteBolumleri,

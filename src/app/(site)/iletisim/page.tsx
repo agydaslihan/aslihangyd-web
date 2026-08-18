@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { SayfaBasligi, SayfaGovdesi } from '@/components/icerik/SayfaIcerik'
+import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 
 import { TalepFormu } from '@/components/talep/TalepFormu'
 import { Buton } from '@/components/ui/Buton'
@@ -31,6 +33,8 @@ export default async function IletisimSayfasi({
 }: {
   searchParams: Promise<Record<string, string | string[] | undefined>>
 }) {
+  const icerik = await sayfaIcerigi('iletisim')
+
   const parametreler = await searchParams
   const kurumsal = await kurumsalBilgileriGetir()
 
@@ -49,12 +53,20 @@ export default async function IletisimSayfasi({
   return (
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-10 flex max-w-2xl flex-col gap-3">
-        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">İletişim</h1>
-        <p className="text-metin-2 leading-relaxed">
-          Alım, satım, kiralama veya değerleme — hangisi olursa olsun önce sizi dinliyoruz. Formu
-          doldurmak zorunda değilsiniz; WhatsApp genellikle en hızlı yol.
-        </p>
+        <SayfaBasligi
+          icerik={icerik}
+          varsayilanBaslik="İletişim"
+          varsayilanAciklama={
+            <p className="text-metin-2 leading-relaxed">
+              Alım, satım, kiralama veya değerleme — hangisi olursa olsun önce sizi dinliyoruz.
+              Formu doldurmak zorunda değilsiniz; WhatsApp genellikle en hızlı yol.
+            </p>
+          }
+        />
       </header>
+
+      {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
+      <SayfaGovdesi icerik={icerik} />
 
       <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
         <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-8">

@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { SayfaBasligi, SayfaGovdesi } from '@/components/icerik/SayfaIcerik'
+import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 
 import { DegerlemeSihirbazi } from '@/components/degerleme/DegerlemeSihirbazi'
 import { BosDurum } from '@/components/ui/BosDurum'
@@ -18,6 +20,8 @@ export const metadata: Metadata = {
 }
 
 export default async function DegerlemeSayfasi() {
+  const icerik = await sayfaIcerigi('degerleme')
+
   const [mahalleler, katsayilar, kurumsal] = await Promise.all([
     mahalleleriGetir(),
     degerlemeKatsayilariniGetir(),
@@ -36,16 +40,22 @@ export default async function DegerlemeSayfasi() {
   return (
     <div className="kapsayici py-10 sm:py-14">
       <header className="mb-8 flex max-w-2xl flex-col gap-3">
-        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-          Evim ne eder?
-        </h1>
-        <p className="text-metin-2 leading-relaxed">
-          Satmayı düşünmeseniz bile bilmek işinize yarar. Birkaç bilgi girin, tahmini değer
-          aralığını ve nasıl hesapladığımızı görün.{' '}
-          <strong className="font-medium">Hiçbir iletişim bilgisi istemiyoruz</strong> — sonucu
-          doğrudan göreceksiniz.
-        </p>
+        <SayfaBasligi
+          icerik={icerik}
+          varsayilanBaslik="Evim ne eder?"
+          varsayilanAciklama={
+            <p className="text-metin-2 leading-relaxed">
+              Satmayı düşünmeseniz bile bilmek işinize yarar. Birkaç bilgi girin, tahmini değer
+              aralığını ve nasıl hesapladığımızı görün.{' '}
+              <strong className="font-medium">Hiçbir iletişim bilgisi istemiyoruz</strong> — sonucu
+              doğrudan göreceksiniz.
+            </p>
+          }
+        />
       </header>
+
+      {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
+      <SayfaGovdesi icerik={icerik} />
 
       {mahalleler.length === 0 ? (
         <BosDurum

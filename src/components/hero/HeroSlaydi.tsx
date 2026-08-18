@@ -23,6 +23,17 @@ import { HERO_ORANI, overlayOpakligi, type HeroSlayti } from '@/lib/hero/tipler'
 export function HeroSlaydi({ slayt, oncelikli }: { slayt: HeroSlayti; oncelikli: boolean }) {
   const ortali = slayt.metinHizasi === 'orta'
 
+  /**
+   * ⚠️ Slaytta gösterilecek metin var mı.
+   *
+   * Başlık, alt başlık ve butonun üçü de isteğe bağlı. Üçü de boşsa slayt
+   * yalnızca bir fotoğraf: ne metin katmanı ne karartma çiziliyor.
+   */
+  const metinVar =
+    slayt.baslik !== null ||
+    (slayt.altBaslik !== null && slayt.altBaslik !== '') ||
+    (Boolean(slayt.butonMetni) && Boolean(slayt.butonLink))
+
   return (
     <div className="relative h-full w-full">
       <Image
@@ -43,36 +54,54 @@ export function HeroSlaydi({ slayt, oncelikli }: { slayt: HeroSlayti; oncelikli:
         ⚠️ Karartma perdesi metnin okunabilirliğinin tek taşıyıcısı değil:
         metin ayrıca gölgeli ve koyu bant jetonunu kullanıyor. Perde sıfıra
         çekilse bile başlık tamamen kaybolmuyor.
+
+        ⚠️ METİN YOKSA PERDE DE ÇİZİLMİYOR. Karartma metnin okunabilmesi
+        için var; okunacak metin olmayan bir slaytta fotoğrafı karartmak
+        yalnızca fotoğrafı bozar. Şartnamenin şartı da bu.
       */}
-      <div
-        aria-hidden="true"
-        className="absolute inset-0 bg-black"
-        style={{ opacity: overlayOpakligi(slayt.overlayKoyulugu) }}
-      />
+      {metinVar ? (
+        <div
+          aria-hidden="true"
+          className="absolute inset-0 bg-black"
+          style={{ opacity: overlayOpakligi(slayt.overlayKoyulugu) }}
+        />
+      ) : null}
 
-      <div className="absolute inset-0 flex items-center">
-        <div className="kapsayici w-full">
-          <div className={ortali ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
-            <h1 className="text-koyu-bant-metin font-serif text-baslik-1-mobil font-medium drop-shadow-sm sm:text-baslik-1">
-              {slayt.baslik}
-            </h1>
+      {/*
+        ⚠️ Metin katmanı da yalnızca metin varken çiziliyor.
+        
+        Boş bir `<h1>` basmak ekran okuyucuda "başlık, boş" diye okunur ve
+        sayfanın başlık hiyerarşisine boş bir düğüm ekler. Fotoğrafın kendi
+        alt metni o durumda tek ve yeterli bilgi taşıyıcısı — panelde
+        zorunlu tutulmasının sebebi bu.
+      */}
+      {metinVar ? (
+        <div className="absolute inset-0 flex items-center">
+          <div className="kapsayici w-full">
+            <div className={ortali ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
+              {slayt.baslik !== null ? (
+                <h1 className="text-koyu-bant-metin font-serif text-baslik-1-mobil font-medium drop-shadow-sm sm:text-baslik-1">
+                  {slayt.baslik}
+                </h1>
+              ) : null}
 
-            {slayt.altBaslik ? (
-              <p className="text-koyu-bant-metin mt-5 max-w-2xl text-baslik-3 leading-relaxed opacity-90 drop-shadow-sm">
-                {slayt.altBaslik}
-              </p>
-            ) : null}
+              {slayt.altBaslik ? (
+                <p className="text-koyu-bant-metin mt-5 max-w-2xl text-baslik-3 leading-relaxed opacity-90 drop-shadow-sm">
+                  {slayt.altBaslik}
+                </p>
+              ) : null}
 
-            {slayt.butonMetni && slayt.butonLink ? (
-              <div className={`mt-7 ${ortali ? 'flex justify-center' : ''}`}>
-                <Buton href={slayt.butonLink} gorunum="acikBant">
-                  {slayt.butonMetni}
-                </Buton>
-              </div>
-            ) : null}
+              {slayt.butonMetni && slayt.butonLink ? (
+                <div className={`mt-7 ${ortali ? 'flex justify-center' : ''}`}>
+                  <Buton href={slayt.butonLink} gorunum="acikBant">
+                    {slayt.butonMetni}
+                  </Buton>
+                </div>
+              ) : null}
+            </div>
           </div>
         </div>
-      </div>
+      ) : null}
     </div>
   )
 }

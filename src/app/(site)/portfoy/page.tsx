@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { SayfaBasligi } from '@/components/icerik/SayfaIcerik'
+import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 import { Suspense } from 'react'
 
 import { AkilliArama } from '@/components/ilan/AkilliArama'
@@ -39,6 +41,8 @@ export default async function PortfoySayfasi({
 }: {
   searchParams: Promise<AramaParametreleri>
 }) {
+  const icerik = await sayfaIcerigi('portfoy')
+
   const parametreler = await searchParams
   const filtre = parametreleriCoz(parametreler)
 
@@ -97,11 +101,18 @@ export default async function PortfoySayfasi({
         olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı olurdu.
       */}
       <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-2 text-center">
-        <h1 className="text-baslik-2">Portföy</h1>
-        <p className="text-metin-2 text-govde-kucuk leading-relaxed">
-          Çorlu ve çevresindeki taşınmazlarımız. Her ilanda kira çarpanı ve amortisman süresini
-          hesaplayıp gösteriyoruz; kira verisi olmayan ilanlarda bu alanları boş bırakıyoruz.
-        </p>
+        <SayfaBasligi
+          icerik={icerik}
+          varsayilanBaslik="Portföy"
+          h1Sinifi="text-baslik-2"
+          aciklamaSinifi="text-metin-2 text-govde-kucuk leading-relaxed"
+          varsayilanAciklama={
+            <p className="text-metin-2 text-govde-kucuk leading-relaxed">
+              Çorlu ve çevresindeki taşınmazlarımız. Her ilanda kira çarpanı ve amortisman süresini
+              hesaplayıp gösteriyoruz; kira verisi olmayan ilanlarda bu alanları boş bırakıyoruz.
+            </p>
+          }
+        />
       </header>
 
       {siralar.length > 0 ? (

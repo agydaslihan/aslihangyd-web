@@ -236,8 +236,39 @@ describe('yedek davranış', () => {
     expect(sayfa).toContain('<Kahraman')
   })
 
-  it('görselsiz ya da başlıksız slayt yarım çizilmiyor', () => {
-    expect(oku('lib/hero/sunucu.ts')).toContain('if (url === null || baslik === null) return null')
+  it('görselsiz slayt çizilmiyor', () => {
+    expect(oku('lib/hero/sunucu.ts')).toContain('if (url === null) return null')
+  })
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BAŞLIKSIZ SLAYT ARTIK GEÇERLİ — AMA SESSİZ OLAMAZ.
+   *
+   * Yalnızca fotoğraf gösteren slayt istendi ve makul. Ama başlık da alt
+   * metin de yoksa slaytta okunacak HİÇBİR ŞEY kalmıyor: ekran okuyucu
+   * kullanan ziyaretçi boş bir slayt görür.
+   *
+   * İki kapı birden: panelde kaydetme doğrulaması ve sunucuda çözümleme.
+   * Panel kapısı tek başına yetmez — eski kayıtlar ve elle düzenlenen veri
+   * oradan geçmiyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('metinsiz slaytta alt metin zorunlu', () => {
+    expect(oku('lib/hero/sunucu.ts')).toContain(
+      "if (baslik === null && gorselAlt.trim() === '') return null",
+    )
+    expect(oku('globals/HeroSlider.ts')).toContain('ALT METNİ zorunlu')
+  })
+
+  /**
+   * ⚠️ Metin yoksa karartma da çizilmiyor: karartma metnin okunabilmesi
+   * için var, okunacak metin olmayan slaytta yalnızca fotoğrafı bozar.
+   */
+  it('metinsiz slaytta karartma ve metin katmanı çizilmiyor', () => {
+    const slayt = oku('components/hero/HeroSlaydi.tsx')
+    expect(slayt).toContain('const metinVar =')
+    // Perde ve metin katmanı aynı koşula bağlı.
+    expect(slayt.match(/\{metinVar \? \(/g)).toHaveLength(2)
   })
 })
 

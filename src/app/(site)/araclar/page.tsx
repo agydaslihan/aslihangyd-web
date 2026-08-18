@@ -1,4 +1,6 @@
 import type { Metadata } from 'next'
+import { SayfaBasligi, SayfaGovdesi } from '@/components/icerik/SayfaIcerik'
+import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 import Link from 'next/link'
 
 import { Rozet } from '@/components/ui/Rozet'
@@ -29,6 +31,8 @@ export const metadata: Metadata = {
 }
 
 export default async function AraclarSayfasi() {
+  const icerik = await sayfaIcerigi('araclar')
+
   const [parametreler, bolumDurumlari] = await Promise.all([
     vergiParametreleriniGetir(),
     bolumDurumlariniGetir(),
@@ -62,10 +66,11 @@ export default async function AraclarSayfasi() {
         görsel sadelik için metin kısaldı, etiket durdu.
       */}
       <header className="mb-8">
-        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-          Yatırımcı araçları
-        </h1>
+        <SayfaBasligi icerik={icerik} varsayilanBaslik="Yatırımcı araçları" />
       </header>
+
+      {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
+      <SayfaGovdesi icerik={icerik} />
 
       <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
         {gorunenAraclar.map((arac) => {

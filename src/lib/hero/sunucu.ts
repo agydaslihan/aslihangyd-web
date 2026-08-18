@@ -39,17 +39,28 @@ function slaytiCoz(ham: HamSlayt, sira: number): HeroSlayti | null {
 
   const url = typeof gorsel?.url === 'string' ? gorsel.url : null
   const baslik = metin(ham.baslik)
+  const gorselAlt = typeof gorsel?.alt === 'string' ? gorsel.alt : ''
 
-  // ⚠️ Görselsiz ya da başlıksız slayt ATLANIR, yarım çizilmez. Yarım bir
-  // hero, olmayan bir hero'dan kötü görünür.
-  if (url === null || baslik === null) return null
+  // ⚠️ GÖRSELSİZ slayt ATLANIR: slaytın kendisi görseldir.
+  if (url === null) return null
+
+  /**
+   * ⚠️ BAŞLIKSIZ SLAYT ARTIK ATLANMIYOR — ama alt metni yoksa atlanıyor.
+   *
+   * Yalnızca fotoğraf gösteren slayt geçerli bir istek. Ama başlık da alt
+   * metin de yoksa slaytta okunacak HİÇBİR ŞEY kalmıyor: ekran okuyucu
+   * kullanan ziyaretçi boş bir slayt görür. Panelde kaydetme doğrulaması
+   * bunu engelliyor; burası eski kayıtlar ve elle düzenlenmiş veri için
+   * ikinci kapı.
+   */
+  if (baslik === null && gorselAlt.trim() === '') return null
 
   const overlayHam = typeof ham.overlayKoyulugu === 'number' ? ham.overlayKoyulugu : 45
 
   return {
     anahtar: typeof ham.id === 'string' || typeof ham.id === 'number' ? String(ham.id) : `s${sira}`,
     gorselUrl: url,
-    gorselAlt: typeof gorsel?.alt === 'string' ? gorsel.alt : '',
+    gorselAlt,
     gorselEn: typeof gorsel?.width === 'number' ? gorsel.width : null,
     gorselBoy: typeof gorsel?.height === 'number' ? gorsel.height : null,
     baslik,
