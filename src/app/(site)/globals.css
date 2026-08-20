@@ -295,12 +295,18 @@
   --color-bilgi-zemin: var(--color-notr-100);
 
   /* ══════════════════════════════════════════════════════════════════════
-     TİPOGRAFİ — Manrope + Plus Jakarta Sans
+     TİPOGRAFİ — başlık Plus Jakarta Sans, gövde ve veri Manrope
 
      ⚠️ İKİSİ DE SANS. Önceki sistemde başlık serifti (Source Serif 4);
      Aurora'da hiyerarşi biçimden değil ÖLÇEKTEN geliyor: 72px başlık
      yanında 17px gövde. Bu yüzden `--font-serif` jetonu da gitti —
      sans bir fontu "serif" diye adlandırmak sessizce yanlış olurdu.
+
+     ⚠️ ROL DAĞILIMI ÖLÇÜMLE BELİRLENDİ, tercihle değil. Düz `n` ve
+     yuvarlak `o` genişliği: Manrope 57,3/57,4 (geometrik), Plus Jakarta
+     Sans 57,3/65,5 (hümanist). 72px'de geometrik oran "teknoloji
+     girişimi" hissi veriyor; marka "zarif, sıcak" istiyor. Gerekçenin
+     tamamı `app/(site)/layout.tsx` içinde.
 
      ⚠️ Alt küme kendi boru hattımızdan (`pnpm font:altkume`):
        Manrope             28.296 bayt

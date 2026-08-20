@@ -5,6 +5,7 @@ import { govdeFontuAdresi } from '@/lib/yazi/onyukleme'
 import type React from 'react'
 
 import { Analitik } from '@/components/analitik/Analitik'
+import { HareketAltyapisi } from '@/components/hareket/HareketAltyapisi'
 import { KatmanB } from '@/components/olcum/KatmanB'
 import { CerezBanneri } from '@/components/cerez/CerezBanneri'
 import { Altbilgi } from '@/components/duzen/Altbilgi'
@@ -28,10 +29,10 @@ import './globals.css'
 
 /**
  * Tipografi ikilisi:
- * - Plus Jakarta Sans — arayüz ve gövde. 17px'de açık harf boşluğu,
- *   yüksek x-yüksekliği; tabular figürleri var.
- * - Manrope — başlıklar. 72px'de dar ve geometrik duruyor; Aurora'nın
- *   oversized başlık ölçeğini taşıyan aile bu.
+ * - Manrope — gövde, arayüz ve VERİ. Tabular rakamları sütunda geniş ve
+ *   net; bu site kira çarpanı, m² fiyatı ve gözlem sayısıyla dolu.
+ * - Plus Jakarta Sans — başlıklar. Hümanist oranları (yuvarlak harfler
+ *   düz harflerden geniş) 72px'de sıcaklık taşıyor.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ KENDİ BARINDIRDIĞIMIZ TÜRKÇE ALT KÜMELERİ — `next/font/google` DEĞİL.
@@ -57,18 +58,39 @@ import './globals.css'
  * ─────────────────────────────────────────────────────────────────────────
  */
 /**
- * ⚠️ GÖVDE FONTU PLUS JAKARTA SANS, BAŞLIK FONTU MANROPE.
+ * ⚠️ BAŞLIK PLUS JAKARTA SANS, GÖVDE VE VERİ MANROPE.
  *
+ * ─────────────────────────────────────────────────────────────────────
  * Şartname "birincil Manrope, ikincil Plus Jakarta Sans" diyor ama hangi
- * ailenin hangi işi yapacağını söylemiyor. Karar ölçüye göre verildi:
- * Manrope'un dar ve geometrik büyük puntoları 72px'de karakter taşıyor,
- * Plus Jakarta Sans ise 17px gövdede daha okunur (daha açık harf boşluğu,
- * daha yüksek x-yüksekliği). Ters kurulum başlığı sıradanlaştırır.
+ * ailenin hangi işi yapacağını söylemiyor. İlk kurulum tersti (başlık
+ * Manrope) ve ÖLÇÜM onu çürüttü:
  *
- * ⚠️ İkisi de SANS — hiyerarşi biçimden değil ölçekten geliyor.
+ *   Harf oranları — düz `n` ve yuvarlak `o` genişliği:
+ *     Manrope           57,3% / 57,4%  → neredeyse eşit: GEOMETRİK
+ *     Plus Jakarta Sans 57,3% / 65,5%  → yuvarlaklar geniş: HÜMANİST
+ *
+ * 72px'de bu fark karakter oluyor: eşit genişlikli geometrik harfler
+ * "teknoloji girişimi" hissi verir, markanın istediği "zarif, sıcak,
+ * feminen" değil. Hümanist oran kaligrafik köke daha yakın.
+ *
+ * ⚠️ Büyük harf yüksekliği de aynı yönü gösteriyor: 72px'de Manrope 51,8
+ * px, Plus Jakarta Sans 53,6 px — aynı punto değerinde başlık daha iri
+ * okunuyor.
+ *
+ * ⚠️ ESKİ GEREKÇEM YANLIŞTI: "Plus Jakarta Sans gövdede daha okunur, daha
+ * yüksek x-yüksekliği" demiştim. Ölçüm: 17px'de x-yüksekliği Manrope 9,18
+ * px, Plus Jakarta Sans 9,11 px. Fark yok denecek kadar küçük; o gerekçe
+ * ayakta durmuyordu.
+ *
+ * ⚠️ TABULAR RAKAM İKİSİNDE DE VAR. Site gövdede `tabular-nums`
+ * uyguluyor ve `tnum` özelliği iki ailede de rakamları eşitliyor
+ * (Manrope 0,620 em, Plus Jakarta Sans 0,600 em). Yani "hangisinin
+ * tabular'ı iyi" diye bir fark yok; Manrope'un rakamları bir tık geniş,
+ * bu da sütun hâlinde biraz daha rahat okunuyor.
+ * ─────────────────────────────────────────────────────────────────────
  */
 const yaziGovde = localFont({
-  src: '../../fonts/plus-jakarta-sans-turkce.woff2',
+  src: '../../fonts/manrope-turkce.woff2',
   weight: '400 500',
   style: 'normal',
   variable: '--yazi-govde',
@@ -81,7 +103,7 @@ const yaziGovde = localFont({
 })
 
 const yaziBaslik = localFont({
-  src: '../../fonts/manrope-turkce.woff2',
+  src: '../../fonts/plus-jakarta-sans-turkce.woff2',
   weight: '400 500',
   style: 'normal',
   variable: '--yazi-baslik',
@@ -324,6 +346,12 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <Analitik />
         {/* Katman B ölçümü — onay yoksa kodu istemciye hiç inmiyor. */}
         <KatmanB />
+        {/*
+          Hareket altyapısı: hiçbir şey çizmez, yalnızca hareket kodunun
+          NE ZAMAN ve İNİP İNMEYECEĞİNE karar verir. `prefers-reduced-motion`
+          açıksa tek bir `import()` bile çağrılmıyor.
+        */}
+        <HareketAltyapisi />
       </body>
     </html>
   )

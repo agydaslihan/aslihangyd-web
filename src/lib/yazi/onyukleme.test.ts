@@ -50,7 +50,7 @@ describe('gövde fontu ön yüklemesi', () => {
         'Ön yükleme sessizce ölür; lib/yazi/onyukleme.ts güncellenmeli.',
     ).not.toBeNull()
 
-    expect(adres).toMatch(/^\/_next\/static\/media\/plus_jakarta_sans_turkce[\w.-]*\.woff2$/)
+    expect(adres).toMatch(/^\/_next\/static\/media\/manrope_turkce[\w.-]*\.woff2$/)
   })
 
   /**

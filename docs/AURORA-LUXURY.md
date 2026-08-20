@@ -88,16 +88,22 @@ kapalıyken de doğru olmasını sağlıyor.
 
 | Aile | Rol | Alt küme |
 | --- | --- | --- |
-| Manrope | Başlıklar (`--font-baslik`) | 28.296 bayt |
-| Plus Jakarta Sans | Gövde ve arayüz (`--font-sans`) | 29.236 bayt |
+| Plus Jakarta Sans | Başlıklar (`--font-baslik`) | 29.236 bayt |
+| Manrope | Gövde, arayüz ve veri (`--font-sans`) | 28.296 bayt |
 
 Toplam **57.532 bayt** — önceki çift (Inter + Source Serif 4) 105.468 baytdı.
 Alt küme kendi boru hattımızla üretiliyor (`pnpm font:altkume`), karakter
 listesi `src/lib/tipografi/alfabe.ts`.
 
-⚠️ **Hangi ailenin hangi işi yaptığı şartnamede yazmıyordu.** Manrope 72px'de
-dar ve geometrik duruyor; Plus Jakarta Sans 17px gövdede daha okunur (açık
-harf boşluğu, yüksek x-yüksekliği). Ters kurulum başlığı sıradanlaştırır.
+⚠️ **Hangi ailenin hangi işi yaptığı şartnamede yazmıyordu; ölçümle
+belirlendi.** Düz `n` / yuvarlak `o` genişliği: Manrope %57,3 / %57,4
+(geometrik), Plus Jakarta Sans %57,3 / %65,5 (hümanist). 72px'de geometrik
+oran "teknoloji girişimi" hissi veriyor. Büyük harf yüksekliği de aynı
+yönde: 72px'de Manrope 51,8 px, Plus Jakarta Sans 53,6 px.
+
+⚠️ **Tabular rakam ikisinde de var** — `tnum` özelliği iki ailede de
+rakamları eşitliyor (Manrope 0,620 em, Plus Jakarta Sans 0,600 em). Veri
+gövdesi Manrope'ta: rakamları bir tık geniş ve sütunda daha rahat okunuyor.
 
 ⚠️ İkisi de sans. `--font-serif` jetonu kaldırıldı — sans bir fontu "serif"
 diye adlandırmak sessizce yanlış olurdu.

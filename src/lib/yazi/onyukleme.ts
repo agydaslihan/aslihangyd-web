@@ -12,7 +12,7 @@ import path from 'node:path'
  * Üretilen sayfalarda tek bir `<link rel="preload" as="font">` yoktu.
  * `next/font/local` `preload: true` ile çağrılıyor (varsayılan da öyle),
  * derleme çıktısındaki dosya adı Next'in ön yükleme işaretini taşıyor
- * (`plus_jakarta_sans_turkce-s.p.0-….woff2`) ve `next-font-manifest.json` her sayfa
+ * (`manrope_turkce-s.p.0-….woff2`) ve `next-font-manifest.json` her sayfa
  * için doğru dosyaları listeliyor.
  *
  * Sebep ölçümle bulundu — Next'in çalışma zamanına sonda konup istek
@@ -37,7 +37,7 @@ import path from 'node:path'
  * bir kolumuz yok.
  * ─────────────────────────────────────────────────────────────────────────
  *
- * ⚠️ YALNIZCA GÖVDE FONTU (Plus Jakarta Sans) ÖN YÜKLENİYOR, İKİSİ BİRDEN DEĞİL.
+ * ⚠️ YALNIZCA GÖVDE FONTU (Manrope) ÖN YÜKLENİYOR, İKİSİ BİRDEN DEĞİL.
  *
  * İki font ~57,5 kB ediyor ve mobilde ön yükleme, LCP görseliyle aynı bant
  * genişliği için yarışıyor. Metin LCP'sini geciktiren de gövde fontu:
@@ -51,8 +51,8 @@ import path from 'node:path'
  * yakalar.
  */
 
-/** Kaynak dosya adından türeyen önek: `src/fonts/plus-jakarta-sans-turkce.woff2`. */
-const GOVDE_FONTU_ONEKI = 'plus_jakarta_sans_turkce'
+/** Kaynak dosya adından türeyen önek: `src/fonts/manrope-turkce.woff2`. */
+const GOVDE_FONTU_ONEKI = 'manrope_turkce'
 
 /** Modül ömrü boyunca bir kez okunuyor; her istekte disk okuması olmaz. */
 let cozulmus: { adres: string | null } | null = null
