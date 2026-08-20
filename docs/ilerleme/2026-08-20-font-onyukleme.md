@@ -167,3 +167,48 @@ boyanabiliyor.
 
 Üç koşuluk iki örneklem, gerileme ilan etmek için yeterli değilmiş.
 Aradaki fark ağırlıklı olarak CI makinesinin koşu-koşu değişkenliği.
+
+
+---
+
+## Düzeltme sonrası ölçüm ve asıl cevap
+
+`loading="lazy"` LCP görselinden kalktı (rapordaki öğe artık tembel değil).
+Kazanç ölçüldü: mobil `/mahalleler` **3,5 s → 3,4 s**. Yani gerçek ama küçük.
+
+Bu noktada "neden hiçbir müdahale mobil LCP'yi kıpırdatmıyor" sorusunun
+cevabı çıktı. Lighthouse raporunun ham metrikleri:
+
+| Metrik | Değer |
+| --- | --- |
+| `observedFirstContentfulPaint` | **194 ms** |
+| `observedLargestContentfulPaint` | **194 ms** |
+| `observedLoad` | 229 ms |
+| `largestContentfulPaint` (raporlanan) | **3.441 ms** |
+
+⚠️ **Sayfa 194 ms'de boyanıyor.** 3,4 s bir ÖLÇÜM değil, bir MODEL:
+
+```
+throttlingMethod: "simulate"
+rttMs: 150 · requestLatencyMs: 562,5 · throughput: ~1,5 Mbps
+cpuSlowdownMultiplier: 4
+```
+
+Yani Lighthouse sayfayı hızlı bir makinede yükleyip sonucu yavaş bir 4G
+telefona **yansıtıyor**. İstek başına 562 ms gecikme varsayımıyla, kritik
+zincirdeki her tur yaklaşık yarım saniye ekliyor. 3,4 s ≈ beş-altı ardışık
+tur.
+
+### Bunun pratik anlamı
+
+- Font ön yüklemesinin neden işe yaramadığı anlaşıldı: ön yükleme de bir
+  istek ve o modelde o da 562 ms'lik gecikmeye tabi.
+- Bu modelde kaldıraç **mikro-optimizasyon değil, kritik istek zincirini
+  kısaltmak**: HTML → CSS → font/görsel sırasındaki tur sayısı.
+- Laboratuvarda daha fazla kovalamak düşük getirili. Doğru sıradaki adım
+  **alan verisi** (gerçek ziyaretçilerden Core Web Vitals) — sitede zaten
+  bir gözlemlenebilirlik altyapısı var ve bu ölçüm oraya eklenebilir.
+
+⚠️ Bu, hedeflerin (LCP < 2,5 s) yanlış olduğu anlamına gelmiyor. Yalnızca
+hedefin **hangi sayıyla** ölçüleceğini netleştiriyor: simülasyon değil,
+gerçek ziyaretçi.
