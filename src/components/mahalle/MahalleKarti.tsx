@@ -94,7 +94,12 @@ export function MahalleKarti({
   return (
     <article
       data-yukselen
-      className="group border-kenar bg-yuzey rounded-kart hover:shadow-kalkik relative flex h-full flex-col overflow-hidden border-[0.5px] transition-[box-shadow,transform] duration-[200ms] ease-[var(--cikis)]"
+      /**
+       * ⚠️ Altın kenarlık hover'da beliriyor — ilan kartıyla aynı kural ve
+       * aynı gerekçe: duran hâlde sınır nötr, altın yalnızca sıcaklık
+       * ekliyor ve hiçbir bilgi taşımıyor (açık zeminde 2,28:1).
+       */
+      className="group border-kenar bg-yuzey rounded-kart hover:shadow-kalkik hover:border-gold-cizgi relative flex h-full flex-col overflow-hidden border-[0.5px] transition-[box-shadow,transform,border-color] duration-[200ms] ease-[var(--cikis)]"
     >
       <div className="zoom-kabi bg-vurgu-zemin relative aspect-16/10 overflow-hidden">
         {gorsel?.url ? (
@@ -147,7 +152,10 @@ export function MahalleKarti({
             olduğu için kafa karıştırırdı. */}
         {skor !== null ? (
           <div className="pointer-events-none absolute top-3 right-3 z-10">
-            <div className="border-kenar bg-yuzey/95 shadow-kart flex items-baseline gap-1 rounded-full border-[0.5px] px-3 py-1.5 backdrop-blur-[2px]">
+            {/* ⚠️ `cam` sınıfı: rozet fotoğrafın üstünde duruyor ve mobilde
+                otomatik olarak düz renge düşüyor. Elle yazılmış
+                `backdrop-blur-[2px]` mobil kapısını atlıyordu. */}
+            <div className="cam shadow-kart flex items-baseline gap-1 rounded-rozet px-3 py-1.5">
               {/* ⚠️ Etiketsiz bir "72 /100" ekran okuyucuda anlamsız.
                   Görsel olarak yer kaplamadan bağlamı veriyor. */}
               <span className="sr-only">Yatırım skoru: </span>

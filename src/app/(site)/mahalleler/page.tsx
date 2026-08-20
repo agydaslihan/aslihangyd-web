@@ -9,7 +9,7 @@ import { Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Feragat } from '@/components/ui/Feragat'
 import { Buton } from '@/components/ui/Buton'
-import { KonumIkon } from '@/components/ui/Ikon'
+import { KonumIkon, OkIkon } from '@/components/ui/Ikon'
 import { mutlakAdres } from '@/lib/site'
 import { IZGARA_MIN_YUKSEKLIK } from '@/lib/duzen/iskelet'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
@@ -71,6 +71,21 @@ export default async function MahallelerSayfasi() {
             </p>
           }
         />
+
+        {/*
+          ⚠️ KARŞILAŞTIRMA ÇAĞRISI BANDA ALINDI.
+
+          Sayfanın en ayırt edici aracı karşılaştırma ve altbilgiye yakın
+          bir bağlantı olarak duruyordu; ziyaretçi kartları gezip çıkıyor,
+          aracın varlığını hiç görmüyordu. Bant, sayfanın ne sunduğunu
+          söylediği yer.
+        */}
+        <div className="mt-8">
+          <Buton href="/mahalleler/karsilastir" gorunum="ikincil">
+            Mahalleleri karşılaştır
+            <OkIkon width={16} height={16} />
+          </Buton>
+        </div>
       </SayfaVitrini>
 
       <div className="kapsayici py-12 sm:py-16">

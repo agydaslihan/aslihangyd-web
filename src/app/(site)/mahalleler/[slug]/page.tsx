@@ -99,7 +99,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             <Sahne>
               <section aria-labelledby="skor">
                 <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-                  <h2 id="skor" className="font-sans text-baslik-3 font-medium">
+                  <h2 id="skor" className="font-baslik text-baslik-3 font-medium">
                     Yatırım skoru
                   </h2>
                   <Link
@@ -127,7 +127,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             {/* 3 ── Temel rakamlar */}
             <Sahne>
               <section aria-labelledby="rakamlar">
-                <h2 id="rakamlar" className="mb-4 font-sans text-baslik-3 font-medium">
+                <h2 id="rakamlar" className="mb-4 font-baslik text-baslik-3 font-medium">
                   Temel rakamlar
                 </h2>
 
@@ -201,7 +201,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             {/* 4 ── Fiyat trendi */}
             <Sahne>
               <section aria-labelledby="trend">
-                <h2 id="trend" className="mb-4 font-sans text-baslik-3 font-medium">
+                <h2 id="trend" className="mb-4 font-baslik text-baslik-3 font-medium">
                   Fiyat trendi
                 </h2>
                 <YakindaBolumu
@@ -216,7 +216,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             {/* 5 ── Konum ve çevre */}
             <Sahne>
               <section aria-labelledby="harita">
-                <h2 id="harita" className="mb-4 font-sans text-baslik-3 font-medium">
+                <h2 id="harita" className="mb-4 font-baslik text-baslik-3 font-medium">
                   Konum ve çevre
                 </h2>
 
@@ -253,7 +253,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             {/* 6 ── 360° tur */}
             <Sahne>
               <section aria-labelledby="tur">
-                <h2 id="tur" className="mb-4 font-sans text-baslik-3 font-medium">
+                <h2 id="tur" className="mb-4 font-baslik text-baslik-3 font-medium">
                   360° sokak turu
                 </h2>
                 {mahalle.sanalTurUrl ? (
@@ -298,7 +298,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
                 {mahalle.sikSorulanlar && mahalle.sikSorulanlar.length > 0 ? (
                   <div className="mt-10">
-                    <h3 className="mb-4 font-sans text-baslik-3 font-medium">
+                    <h3 className="mb-4 font-baslik text-baslik-3 font-medium">
                       Sık sorulan sorular
                     </h3>
                     <div className="border-kenar divide-kenar divide-y rounded-kart border-[0.5px]">
@@ -326,8 +326,13 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
           {/* Yan panel */}
           <aside className="lg:sticky lg:top-24 lg:self-start">
-            <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
-              <h2 className="font-sans text-govde font-medium">
+            {/*
+              ⚠️ Yan panel CAM: sayfa boyunca ekranda kalıyor ve altından
+              içerik geçiyor. Portföy filtresinde verilen kararın aynısı —
+              opak bir kutu, panelin sayfadan koptuğu hissini veriyordu.
+            */}
+            <div className="cam rounded-buyuk p-5">
+              <h2 className="font-baslik text-govde font-medium">
                 {mahalle.ad} Mahallesi&apos;nde ev sahibi misiniz?
               </h2>
               <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
@@ -349,7 +354,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             </div>
 
             {mahalle.nufus ? (
-              <dl className="border-kenar bg-yuzey rounded-kart mt-4 border-[0.5px] p-5">
+              <dl className="cam rounded-buyuk mt-4 p-5">
                 <dt className="text-metin-3 text-mikro font-medium">Nüfus</dt>
                 <dd className="rakam mt-1 text-baslik-3 font-medium">{sayiYaz(mahalle.nufus)}</dd>
               </dl>
