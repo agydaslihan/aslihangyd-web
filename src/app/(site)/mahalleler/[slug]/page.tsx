@@ -273,7 +273,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
               <section aria-labelledby="neden">
                 <h2
                   id="neden"
-                  className="mb-4 font-sans font-serif text-baslik-2-mobil font-medium"
+                  className="mb-4 font-sans font-baslik text-baslik-2-mobil font-medium"
                 >
                   Neden {mahalle.ad} Mahallesi?
                 </h2>
@@ -461,7 +461,7 @@ function MahalleKahramani({ mahalle }: { mahalle: Mahalleler }) {
             </nav>
 
             <h1
-              className={`font-serif text-baslik-1-mobil font-medium sm:text-baslik-1 ${poster?.url ? 'text-white' : ''}`}
+              className={`font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1 ${poster?.url ? 'text-white' : ''}`}
             >
               {mahalle.ad} Mahallesi
             </h1>

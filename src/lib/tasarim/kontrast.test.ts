@@ -6,6 +6,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   AA_BILESEN,
+  AA_BUYUK_METIN,
   AA_METIN,
   bagilParlaklik,
   hexCoz,
@@ -98,43 +99,51 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
    */
   {
     on: '--color-metin',
-    arka: '--color-pudra-zemin',
+    arka: '--color-bant-zemin',
     asgari: AA_METIN,
     nerede: 'pudra bant metni',
   },
   {
     on: '--color-metin-3',
-    arka: '--color-pudra-zemin',
+    arka: '--color-bant-zemin',
     asgari: AA_METIN,
     nerede: 'pudra bantta yardımcı metin',
   },
   {
     on: '--color-vurgu',
-    arka: '--color-pudra-zemin',
+    arka: '--color-bant-zemin',
     asgari: AA_METIN,
     nerede: 'pudra bantta terracotta başlık',
   },
   {
     on: '--color-aksan-metin',
-    arka: '--color-pudra-zemin',
+    arka: '--color-bant-zemin',
     asgari: AA_METIN,
     nerede: 'hero eyebrow — pudra gülü zeminde',
   },
+  /**
+   * ⚠️ DOLU ALTIN BANDIN ÜZERİ BEYAZ DEĞİL MÜREKKEP — ÖLÇÜM DEĞİŞTİRDİ.
+   *
+   * Önceki palette bu bant terracotta'ydı ve üzerine beyaz yazılıyordu
+   * (4,99:1). Altın üzerinde beyaz 2,36:1 — ağır ihlal; mürekkep 7,20:1.
+   * Renk değişince bandın metni de değişmek zorundaydı; bu çift o kararı
+   * ölçüye bağlıyor.
+   */
   {
-    on: BEYAZ,
-    arka: '--color-terracotta-yuzey',
+    on: '--color-vurgu-uzeri',
+    arka: '--color-dolu-vurgu',
     asgari: AA_METIN,
-    nerede: 'DOLU terracotta bant — üzerine daima beyaz',
+    nerede: 'DOLU altın bant — üzerine daima mürekkep',
   },
   /**
    * ⚠️ Bu çift TERS YÖNÜ DE kapsıyor: `acikBant` butonu beyaz zemin üzerine
-   * `kakao-yuzey` metin kullanıyor. WCAG kontrast oranı simetriktir
+   * `koyu-bant` metin kullanıyor. WCAG kontrast oranı simetriktir
    * (L1/L2 sıralaması sabit), yani ayrı bir çift eklemek aynı sayıyı ikinci
    * kez ölçmek olurdu.
    */
   {
     on: BEYAZ,
-    arka: '--color-kakao-yuzey',
+    arka: '--color-koyu-bant',
     asgari: AA_METIN,
     nerede: 'WhatsApp butonu, şerit, hero açık bant butonu (ters yön)',
   },
@@ -185,10 +194,26 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
     nerede: 'dolu eylem butonu, hover',
   },
   {
-    on: '--color-aksan',
+    on: '--color-koyu-bant-vurgu',
+    arka: '--color-koyu-bant',
+    asgari: AA_METIN,
+    nerede: 'mürekkep bantta altın eyebrow',
+  },
+
+  /**
+   * ⚠️ SINIRI ARTIK DOLGU DEĞİL KENARLIK TAŞIYOR.
+   *
+   * Altın dolgu sayfadan yalnızca 2,28:1 ayrışıyor ve WCAG 1.4.11 bileşen
+   * sınırı için 3:1 istiyor. Şartnamenin istediği rengi bu yüzden
+   * bırakmak yerine butona kenarlık kondu (`--color-aksan-kenar`, 4,21:1).
+   * Marka panelinden başka bir renk seçilirse kenarlık dolgudan
+   * TÜRETİLİYOR — gerekçe `lib/marka/ctaKenari.ts`.
+   */
+  {
+    on: '--color-aksan-kenar',
     arka: '--color-zemin',
     asgari: AA_BILESEN,
-    nerede: 'dolu buton zeminin kendisi sayfadan ayrışmalı',
+    nerede: 'dolu buton sınırı sayfadan ayrışmalı',
   },
 
   /**
@@ -203,12 +228,16 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
    * Jeton eklendi ve ölçüsü buraya bağlandı: jeton eklemenin bedeli,
    * ölçülmeyi kabul etmektir.
    */
-  {
-    on: '--color-vurgu-uzeri',
-    arka: '--color-vurgu',
-    asgari: AA_METIN,
-    nerede: 'dolu vurgu butonu — AI arama "Ara"',
-  },
+  /**
+   * ⚠️ "DOLU VURGU BUTONU" ÇİFTİ KALDIRILDI — ÇÜNKÜ ARTIK ÖYLE BİR BUTON YOK.
+   *
+   * AI arama düğmesi `bg-vurgu` kullanıyordu: metin jetonunu dolu zemin
+   * olarak. Aurora'da `vurgu` gold-700, yani koyu bir kahve; üzerindeki
+   * mürekkep metin 2,81:1 veriyordu. Düğme mürekkep butona çevrildi
+   * (16,46:1) ve `vurgu-uzeri` yalnızca dolu altın bantta kaldı.
+   *
+   * Ölçülmeyen bir çift bırakmıyoruz: o kombinasyon artık sitede yok.
+   */
 
   // ── Gold: dekoratif ────────────────────────────────────────────────────
   //
@@ -237,7 +266,7 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
    * değişmiyorsa üzerindeki metin de değişmemeli. Kontrast testi yakaladı.
    */
   {
-    on: '--color-kakao-900',
+    on: '--color-notr-900',
     arka: '--color-gold-zemin',
     asgari: AA_METIN,
     nerede: 'gold dolu rozet — üzerine daima koyu kakao',
@@ -254,28 +283,28 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
   //
   // Rampa basamakları temaya göre değişmediği için bu ölçümler iki temada
   // da aynı sonucu verir — ama listede durmaları şart: biri değişirse
-  // (örn. altbilgi kakao-800'e çekilirse) kapı kırılsın.
+  // (örn. altbilgi notr-800'e çekilirse) kapı kırılsın.
   {
     on: '--color-notr-50',
-    arka: '--color-kakao-900',
+    arka: '--color-notr-900',
     asgari: AA_METIN,
     nerede: 'altbilgi başlıkları ve üst şerit metni',
   },
   {
     on: '--color-notr-300',
-    arka: '--color-kakao-900',
+    arka: '--color-notr-900',
     asgari: AA_METIN,
     nerede: 'altbilgi bağlantıları',
   },
   {
     on: '--color-notr-400',
-    arka: '--color-kakao-900',
+    arka: '--color-notr-900',
     asgari: AA_METIN,
     nerede: 'altbilgi künyesi, feragat metni, adres',
   },
   {
     on: '--color-gold-400',
-    arka: '--color-kakao-900',
+    arka: '--color-notr-900',
     asgari: AA_BILESEN,
     nerede: 'altbilgi üst çizgisi ve logo aksanı',
   },
@@ -293,19 +322,19 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
    */
   {
     on: '--color-uyari-koyu-bant',
-    arka: '--color-kakao-900',
+    arka: '--color-notr-900',
     asgari: AA_METIN,
     nerede: 'altbilgi uyarı metni — "yetki belgesi girilmedi"',
   },
   {
-    on: '--color-adacayi-300',
-    arka: '--color-kakao-900',
+    on: '--color-gold-300',
+    arka: '--color-notr-900',
     asgari: AA_METIN,
     nerede: 'koyu kakao bölümlerdeki eyebrow etiketi (hero, gizli portföy)',
   },
   {
-    on: '--color-kakao-700',
-    arka: '--color-kakao-900',
+    on: '--color-notr-700',
+    arka: '--color-notr-900',
     asgari: 1.5,
     nerede: 'altbilgi künye ayracı — yalnızca görünür olmalı, bilgi taşımaz',
   },
@@ -428,19 +457,19 @@ describe('jeton çözümleyici', () => {
   it('koyu tema açık temayı geçersiz kılar, rampaya dokunmaz', () => {
     const { acik, koyu } = temalariCoz(`
       @theme {
-        --color-kakao-700: #1d4270;
-        --color-kakao-300: #a3bfd9;
-        --color-vurgu: var(--color-kakao-700);
+        --color-notr-700: #1d4270;
+        --color-notr-300: #a3bfd9;
+        --color-vurgu: var(--color-notr-700);
       }
       :root[data-tema='koyu'] {
         @theme {
-          --color-vurgu: var(--color-kakao-300);
+          --color-vurgu: var(--color-notr-300);
         }
       }
     `)
     expect(acik.get('--color-vurgu')).toBe('#1d4270')
     expect(koyu.get('--color-vurgu')).toBe('#a3bfd9')
-    expect(koyu.get('--color-kakao-700')).toBe('#1d4270')
+    expect(koyu.get('--color-notr-700')).toBe('#1d4270')
   })
 
   it('tanımsız jetona başvuru hata verir', () => {
@@ -479,30 +508,26 @@ describe.each([
 })
 
 /** Sistemdeki bütün rampalar — eksiksizlik ve monotonluk burada sınanıyor. */
-const RAMPALAR = ['kakao', 'terracotta', 'adacayi', 'gold', 'notr'] as const
+const RAMPALAR = ['gold', 'notr'] as const
 
 describe('palet bütünlüğü', () => {
   /**
    * ⚠️ TABAN RENKLER PAZARLIĞA KAPALI.
    *
-   * Bu yedi değer 15 Ağustos 2026'da Aslıhan tarafından verildi (bohem /
-   * pudra paleti). Rampaların geri kalanı türetilmiştir ama BU basamaklar
-   * birebir korunur — türetme algoritması değişse bile paletin kimliği
-   * değişmemeli.
+   * Bu beş değer Aurora Luxury şartnamesinde (§2) verildi. Rampaların
+   * geri kalanı türetilmiştir ama BU basamaklar birebir korunur — türetme
+   * algoritması değişse bile paletin kimliği değişmemeli.
    *
-   * ⚠️ Terracotta rampası İKİ çapa taşıyor (200 ve 600) ve ikisi de
-   * burada. Tek çapadan türetseydik pudra gülü #E4C3B9 çıkıyordu; yakın
-   * ama verilen renk değil.
+   * ⚠️ Şartnamedeki "kartlar #FFFFFF" bir rampa basamağı değil, anlamsal
+   * jeton (`--color-yuzey`) ve aşağıda ayrıca ölçülüyor.
    */
   it('dokümandaki taban renkler birebir korunur', () => {
     const taban: Record<string, string> = {
-      '--color-notr-50': '#fbfaf7', // kırık beyaz — ANA ZEMİN
-      '--color-notr-100': '#f2ebe3', // krem
-      '--color-terracotta-200': '#e8cfc8', // pudra gülü
-      '--color-terracotta-600': '#a85a42', // terracotta
-      '--color-adacayi-600': '#4f7c6a', // adaçayı
-      '--color-gold-400': '#c9a96e', // soft gold
-      '--color-kakao-900': '#3d2b2f', // koyu kakao — METİN
+      '--color-notr-50': '#fcfbf8', // arka plan — ANA ZEMİN
+      '--color-notr-100': '#f5f0e8', // sıcak bej
+      '--color-notr-200': '#ece7df', // kenarlıklar
+      '--color-notr-900': '#1c1c1c', // ana metin — MÜREKKEP
+      '--color-gold-400': '#c7a36b', // altın
     }
 
     for (const [ad, deger] of Object.entries(taban)) {
@@ -572,13 +597,17 @@ describe('palet bütünlüğü', () => {
   })
 
   /**
-   * ⚠️ GOLD ASLA METİN RENGİ DEĞİL — dokümanın en net kuralı.
+   * ⚠️ ALTININ AÇIK BASAMAKLARI METİN OLAMAZ — KURAL DEĞİŞTİ, EŞİK DEĞİL.
    *
-   * Ölçüm: gold-400 kırık beyaz üzerinde 2,06:1. Bu bir "zayıf kontrast"
-   * değil, ağır ihlal. Test rengin metin rolü taşıyan bir jetona
-   * bağlanmadığını denetliyor; kullanım tarafını disiplin.test.ts kovuyor.
+   * Önceki palette kural mutlaktı: "gold asla metin rengi değil". Aurora'da
+   * altın TEK marka rengi; bağlantı ve başlık aksanı ondan geliyor. Ama
+   * ölçüm hâlâ aynı şeyi söylüyor: gold-400 açık zeminde 2,28:1.
+   *
+   * Kural bu yüzden basamağa bağlandı: AÇIK temada metin jetonları
+   * yalnızca 600 ve daha koyu basamaklara bağlanabilir. Koyu temada tam
+   * tersi — orada zemin mürekkep, metin açık basamaklardan gelir.
    */
-  it('gold hiçbir metin jetonuna bağlı değil', () => {
+  it('altın metin jetonları yalnızca doğru uçtaki basamaklara bağlı', () => {
     const metinJetonlari = [
       '--color-metin',
       '--color-metin-2',
@@ -587,106 +616,86 @@ describe('palet bütünlüğü', () => {
       '--color-aksan-metin',
     ]
 
-    for (const [temaAdi, harita] of [
-      ['açık', temalar.acik],
-      ['koyu', temalar.koyu],
-    ] as const) {
-      const goldDegerleri = new Set(
-        [...harita.entries()]
-          .filter(([ad]) => /^--color-gold-\d+$/.test(ad))
-          .map(([, deger]) => deger),
-      )
+    const basamak = (harita: typeof temalar.acik, deger: string): number | null => {
+      for (const [ad, d] of harita.entries()) {
+        const eslesme = /^--color-gold-(\d+)$/.exec(ad)
+        if (eslesme && d === deger) return Number(eslesme[1])
+      }
+      return null
+    }
 
-      for (const ad of metinJetonlari) {
-        expect(goldDegerleri.has(jeton(harita, ad)), `${ad} (${temaAdi}) gold'a bağlanmış`).toBe(
-          false,
-        )
+    for (const ad of metinJetonlari) {
+      const acik = basamak(temalar.acik, jeton(temalar.acik, ad))
+      if (acik !== null) {
+        expect(acik, `${ad} (açık) altının açık ucuna bağlanmış`).toBeGreaterThanOrEqual(600)
+      }
+
+      const koyu = basamak(temalar.koyu, jeton(temalar.koyu, ad))
+      if (koyu !== null) {
+        expect(koyu, `${ad} (koyu) altının koyu ucuna bağlanmış`).toBeLessThanOrEqual(400)
       }
     }
   })
 
   /**
-   * ⚠️ Adaçayının DOLU ZEMİN değeri metin jetonu olarak kullanılamaz.
+   * ⚠️ DOLU EYLEM ZEMİNİ METİN JETONU OLAMAZ.
    *
-   * Kırık beyaz üzerinde 4,38:1 — AA'nın altında. Doküman bunu açıkça
-   * yazıyor ve koyulaştırılmış bir varyant istiyor; bu test ikisinin
-   * karışmadığını güvenceye alıyor.
+   * `--color-aksan` (gold-400) açık zeminde 2,28:1 — metin olarak
+   * görünmez. Bu test dolu zemin ile metin varyantının karışmadığını ve
+   * metin varyantının paletin ÜÇ açık yüzeyinde de AA'yı geçtiğini
+   * güvenceye alıyor. Üçüncü yüzey (sıcak bej) şartnamenin önerdiği
+   * #8A6B2E'yi eleyen ölçümün ta kendisi: orada 4,38 veriyordu.
    */
-  it('adaçayı dolu zemin değeri metin rengi olarak kullanılmıyor', () => {
+  it('dolu altın zemin değeri metin rengi olarak kullanılmıyor', () => {
     const doluZemin = jeton(temalar.acik, '--color-aksan')
     expect(jeton(temalar.acik, '--color-aksan-metin')).not.toBe(doluZemin)
 
-    // Ve koyulaştırılmış varyant gerçekten AA'yı geçmeli.
-    const oran = kontrastOrani(
-      jeton(temalar.acik, '--color-aksan-metin'),
-      jeton(temalar.acik, '--color-zemin'),
-    )
-    expect(
-      oraniYuvarla(oran),
-      'adaçayı metin varyantı kırık beyaz üzerinde',
-    ).toBeGreaterThanOrEqual(AA_METIN)
-
-    /**
-     * ⚠️ ÖLÇÜT ZEMİNİ DEĞİŞTİ VE BU BİR GEVŞETME DEĞİL.
-     *
-     * Eski palette adaçayı-600 kırık beyaz (#F7F6F2) üzerinde 4,38 veriyor
-     * ve AA'nın altında kalıyordu; test tam olarak bunu iddia ediyordu.
-     * Yeni kırık beyaz (#FBFAF7) bir tık daha açık ve aynı yeşil orada
-     * 4,54'e çıkıyor — yani eski iddia artık YANLIŞ.
-     *
-     * Ama ayrı jeton gerekçesi ortadan kalkmadı, yer değiştirdi: KREM
-     * (yuzey-2) üzerinde adaçayı-600 hâlâ 4,01, pudra üzerinde 3,20. Krem
-     * bu palette gerçek bir metin zemini — bölüm ayrımları onun üzerinde.
-     * Taşınan şey ölçüt zemini; eşik değil.
-     */
-    const doluOran = kontrastOrani(doluZemin, jeton(temalar.acik, '--color-yuzey-2'))
-    expect(
-      oraniYuvarla(doluOran),
-      'dolu adaçayı zemin, krem üzerinde metin olarak AA geçmemeli',
-    ).toBeLessThan(AA_METIN)
-  })
-
-  /**
-   * ⚠️ TERRACOTTA'NIN RAMPA DEĞERİ METİN DEĞİL.
-   *
-   * Aslıhan bunu önceden sordu: "terracotta metin olarak sınırda olabilir."
-   * Ölçüm haklı çıkardı — kırık beyazda 4,78 ile kıl payı geçiyor ama
-   * paletin kendi kullanım kuralı başlıkları KREM ve PUDRA zeminlere
-   * koyuyor ve orada 4,22 / 3,37'ye düşüyor.
-   *
-   * Bu test iki şeyi birden bağlıyor: `--color-vurgu` rampanın 600
-   * basamağı OLMAMALI, ve koyulaştırılmış hâli üç zeminde de geçmeli.
-   */
-  it('terracotta dolu zemin değeri metin rengi olarak kullanılmıyor', () => {
-    const doluZemin = jeton(temalar.acik, '--color-terracotta-600')
-    expect(jeton(temalar.acik, '--color-vurgu')).not.toBe(doluZemin)
-
-    for (const zemin of ['--color-zemin', '--color-yuzey-2', '--color-pudra-zemin']) {
-      const oran = kontrastOrani(jeton(temalar.acik, '--color-vurgu'), jeton(temalar.acik, zemin))
-      expect(oraniYuvarla(oran), `vurgu / ${zemin}`).toBeGreaterThanOrEqual(AA_METIN)
+    for (const zemin of ['--color-zemin', '--color-yuzey', '--color-yuzey-2']) {
+      const oran = kontrastOrani(
+        jeton(temalar.acik, '--color-aksan-metin'),
+        jeton(temalar.acik, zemin),
+      )
+      expect(oraniYuvarla(oran), `aksan-metin / ${zemin}`).toBeGreaterThanOrEqual(AA_METIN)
     }
 
-    // Rampa değeri pudra üzerinde AA'yı geçmiyor olmalı — ayrı jetonun sebebi.
-    const doluOran = kontrastOrani(doluZemin, jeton(temalar.acik, '--color-pudra-zemin'))
+    // Dolu zemin metin olarak kullanılsaydı geçmezdi — ayrı jetonun sebebi.
+    const doluOran = kontrastOrani(doluZemin, jeton(temalar.acik, '--color-zemin'))
     expect(
       oraniYuvarla(doluOran),
-      'terracotta-600 pudra üzerinde metin olarak AA geçmemeli',
+      'dolu altın zemin, sayfa zemininde metin olarak AA geçmemeli',
     ).toBeLessThan(AA_METIN)
   })
 
   /**
-   * ⚠️ PUDRA GÜLÜ VE KREM ASLA METİN DEĞİL.
+   * ⚠️ BAŞLIK VARYANTI BÜYÜK METİN EŞİĞİNİ GEÇİYOR, NORMALİNİ GEÇMİYOR.
    *
-   * Gold için yazılan kuralın aynısı. İkisi de zemin renkleri; açık temada
-   * bir metin jetonuna bağlanmaları kırık beyaz üzerinde 1,41 ve 1,13
-   * verirdi — "zayıf kontrast" değil, görünmezlik.
+   * `--color-vurgu-baslik` yalnızca ≥24px başlıklarda kullanılıyor ve
+   * eşiği 3:1. Şartnamenin önerdiği #A8854A da geçiyordu (bejde 3,02) ama
+   * payı 0,02'ydi; bir basamak koyusu 3,84 veriyor. Test ikisini birden
+   * bağlıyor: eşiği geçmeli, ama normal metin eşiğini geçmediği için
+   * gövde metninde kullanılamayacağı da ölçülü kalmalı.
+   */
+  it('altın başlık varyantı büyük metin eşiğini geçiyor', () => {
+    for (const zemin of ['--color-zemin', '--color-yuzey', '--color-yuzey-2']) {
+      const oran = kontrastOrani(
+        jeton(temalar.acik, '--color-vurgu-baslik'),
+        jeton(temalar.acik, zemin),
+      )
+      expect(oraniYuvarla(oran), `vurgu-baslik / ${zemin}`).toBeGreaterThanOrEqual(AA_BUYUK_METIN)
+    }
+  })
+
+  /**
+   * ⚠️ BEJ VE ALTIN TİNTLER ASLA METİN DEĞİL.
+   *
+   * İkisi de zemin rengi; açık temada bir metin jetonuna bağlanmaları
+   * 1,09 ve 1,19 verirdi — "zayıf kontrast" değil, görünmezlik.
    *
    * ⚠️ KOYU TEMA BİLİNÇLİ OLARAK DIŞARIDA. Orada rol tersine dönüyor:
-   * açık temanın zemini koyu temanın metni oluyor ve `--color-vurgu`
-   * gerçekten pudra basamağına bağlanıyor (kakao üzerinde 8,95). Kural
-   * "bu renk metin olamaz" değil, "AÇIK zeminde metin olamaz".
+   * açık temanın zemini koyu temanın metni oluyor. Kural "bu renk metin
+   * olamaz" değil, "AÇIK zeminde metin olamaz".
    */
-  it('pudra ve krem açık temada hiçbir metin jetonuna bağlı değil', () => {
+  it('bej ve altın tint açık temada hiçbir metin jetonuna bağlı değil', () => {
     const metinJetonlari = [
       '--color-metin',
       '--color-metin-2',
@@ -696,8 +705,10 @@ describe('palet bütünlüğü', () => {
     ]
 
     const zeminDegerleri = new Set([
-      jeton(temalar.acik, '--color-terracotta-200'),
       jeton(temalar.acik, '--color-notr-100'),
+      jeton(temalar.acik, '--color-gold-50'),
+      jeton(temalar.acik, '--color-gold-100'),
+      jeton(temalar.acik, '--color-gold-200'),
     ])
 
     for (const ad of metinJetonlari) {

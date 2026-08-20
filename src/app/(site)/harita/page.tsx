@@ -9,7 +9,7 @@ import {
 } from '@/components/harita/HaritaSahnesi'
 import { paraKisaYaz } from '@/lib/bicimlendirme'
 import { haritaStilAdresi } from '@/lib/harita/sunucu'
-import { kabaMerkez, type Konum } from '@/lib/harita/sutunlar'
+import { mahalleyiHaritaVerisineCevir } from '@/lib/harita/mahalleVerisi'
 import { mutlakAdres } from '@/lib/site'
 import { ilanlariGetir } from '@/lib/veri/ilanlar'
 import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
@@ -58,35 +58,8 @@ export default async function HaritaSayfasi() {
   ])
 
   /* ── Mahalleler ───────────────────────────────────────────────────── */
-  const sayisal = (deger: unknown): number | null =>
-    typeof deger === 'number' && Number.isFinite(deger) ? deger : null
 
-  const mahalleler: MahalleVerisi[] = mahalleKayitlari.map((mahalle) => {
-    const sinir = geometriCoz(mahalle.sinir)
-
-    /**
-     * ⚠️ Merkezi bilinmeyen mahalle için SÜTUN ÇİZİLMEZ — ama mahalle
-     * listeden düşmez. Tahmini bir koordinat uydurmak yanlış yerde duran
-     * bir sütun demek olurdu (CLAUDE.md kural 2); mahalleyi tümden yok
-     * saymak ise panelin, listenin ve rakamların da kaybolmasına yol
-     * açıyordu. Konum eksikliği haritanın sorunu, mahallenin değil.
-     */
-    const merkez = noktaCoz(mahalle.merkez) ?? kabaMerkez(sinir)
-
-    return {
-      slug: mahalle.slug,
-      ad: mahalle.ad,
-      merkez,
-      sinir,
-      satisM2: sayisal(mahalle.ortalamaM2Satis),
-      kira: sayisal(mahalle.ortalamaKira),
-      kiraCarpani: sayisal(mahalle.kiraCarpani),
-      yatirimSkoru: sayisal(mahalle.yatirimSkoru?.toplam),
-      degisim12Ay: sayisal(mahalle.degisim12Ay),
-      gozlemSayisi: sayisal(mahalle.gozlemSayisi),
-      verilerinTarihi: mahalle.verilerinTarihi ?? null,
-    }
-  })
+  const mahalleler: MahalleVerisi[] = mahalleKayitlari.map(mahalleyiHaritaVerisineCevir)
 
   /* ── Noktalar ─────────────────────────────────────────────────────── */
   const noktalar: HaritaNoktasi[] = []
@@ -141,7 +114,7 @@ export default async function HaritaSayfasi() {
     {
       anahtar: KATMAN_OKUL_SAGLIK,
       etiket: 'Okul / sağlık',
-      renk: 'var(--color-kakao-500)',
+      renk: 'var(--color-notr-500)',
       adet: say(KATMAN_OKUL_SAGLIK),
     },
     {
@@ -174,38 +147,4 @@ export default async function HaritaSayfasi() {
       </div>
     </>
   )
-}
-
-/** Payload `point` alanı `[boylam, enlem]` dizisi olarak gelir. */
-function noktaCoz(ham: unknown): Konum | null {
-  if (!Array.isArray(ham) || ham.length < 2) return null
-  const [boylam, enlem] = ham
-  if (typeof boylam !== 'number' || typeof enlem !== 'number') return null
-  if (!Number.isFinite(boylam) || !Number.isFinite(enlem)) return null
-  return [boylam, enlem]
-}
-
-/**
- * CMS'e yapıştırılan GeoJSON'u geometriye çevirir.
- *
- * geojson.io tam bir `FeatureCollection` üretir; kullanıcıdan sadece
- * geometriyi ayıklamasını beklemek gereksiz bir engel olurdu, bu yüzden
- * her iki biçimi de kabul ediyoruz.
- */
-function geometriCoz(ham: unknown): GeoJSON.Geometry | null {
-  if (typeof ham !== 'object' || ham === null) return null
-  const veri = ham as Record<string, unknown>
-
-  if (veri.type === 'FeatureCollection' && Array.isArray(veri.features)) {
-    const ilk = veri.features[0] as Record<string, unknown> | undefined
-    return (ilk?.geometry as GeoJSON.Geometry) ?? null
-  }
-  if (veri.type === 'Feature') {
-    return (veri.geometry as GeoJSON.Geometry) ?? null
-  }
-  if (veri.type === 'Polygon' || veri.type === 'MultiPolygon') {
-    return veri as unknown as GeoJSON.Geometry
-  }
-
-  return null
 }

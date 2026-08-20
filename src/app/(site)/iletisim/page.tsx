@@ -59,7 +59,7 @@ export default async function IletisimSayfasi({
         <SayfaBasligi
           icerik={icerik}
           varsayilanBaslik="İletişim"
-          h1Sinifi="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1"
+          h1Sinifi="text-metin mt-4 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1"
           aciklamaSinifi="text-metin-2 mt-5 text-govde leading-relaxed"
           varsayilanAciklama={
             <p className="text-metin-2 mt-5 text-govde leading-relaxed">

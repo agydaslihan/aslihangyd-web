@@ -2,6 +2,7 @@ import type { ReactNode } from 'react'
 
 import { Sahne } from '@/components/hareket/Sahne'
 import { Eyebrow } from '@/components/ui/Bolum'
+import { Manyetik } from '@/components/hareket/Manyetik'
 import { Buton } from '@/components/ui/Buton'
 import { DogrulanmisIkon } from '@/components/ui/Ikon'
 
@@ -70,7 +71,7 @@ export function VitrinHero({
             </Sahne>
 
             <Sahne gecikme={60}>
-              <h1 className="text-metin mt-5 font-serif text-baslik-1-mobil leading-[1.05] font-medium sm:text-baslik-1">
+              <h1 className="text-metin mt-5 font-baslik text-baslik-1-mobil leading-[1.05] font-medium sm:text-baslik-1">
                 {baslik}{' '}
                 {/* ⚠️ Vurgu gold AMA `--color-gold-400` DEĞİL: o, krem zemin
                     üzerinde 1,5:1 ile okunmaz ve "gold asla metin rengi
@@ -96,10 +97,19 @@ export function VitrinHero({
                     Vitrinin birincil eylemi portföye götürmek — o iki eylemden
                     biri değil. Dolu kakao aynı görsel ağırlığı veriyor,
                     nadirliği harcamadan. */}
-                <Buton href={birincilEylem.adres} gorunum="kakao" boyut="buyuk" sinifAdi="group">
-                  {birincilEylem.ad}
-                  <OkIkonu />
-                </Buton>
+                {/*
+                  ⚠️ Manyetik çekim YALNIZCA BİRİNCİL EYLEMDE. İki düğme de
+                  imleci takip etseydi ikisi birden "önemli" olur ve
+                  hiyerarşi kaybolurdu — dolu buton kuralının hareket
+                  karşılığı. Dokunmatikte ve az hareket tercihinde
+                  sarmalayıcı hiçbir dinleyici takmıyor.
+                */}
+                <Manyetik>
+                  <Buton href={birincilEylem.adres} gorunum="koyu" boyut="buyuk" sinifAdi="group">
+                    {birincilEylem.ad}
+                    <OkIkonu />
+                  </Buton>
+                </Manyetik>
 
                 <Buton href={ikincilEylem.adres} gorunum="ikincil" boyut="buyuk" sinifAdi="group">
                   {ikincilEylem.ad}

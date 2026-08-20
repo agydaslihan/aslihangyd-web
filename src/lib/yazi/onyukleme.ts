@@ -12,7 +12,7 @@ import path from 'node:path'
  * Üretilen sayfalarda tek bir `<link rel="preload" as="font">` yoktu.
  * `next/font/local` `preload: true` ile çağrılıyor (varsayılan da öyle),
  * derleme çıktısındaki dosya adı Next'in ön yükleme işaretini taşıyor
- * (`inter_turkce-s.p.0-….woff2`) ve `next-font-manifest.json` her sayfa
+ * (`manrope_turkce-s.p.0-….woff2`) ve `next-font-manifest.json` her sayfa
  * için doğru dosyaları listeliyor.
  *
  * Sebep ölçümle bulundu — Next'in çalışma zamanına sonda konup istek
@@ -37,11 +37,11 @@ import path from 'node:path'
  * bir kolumuz yok.
  * ─────────────────────────────────────────────────────────────────────────
  *
- * ⚠️ YALNIZCA GÖVDE FONTU (Inter) ÖN YÜKLENİYOR, İKİSİ BİRDEN DEĞİL.
+ * ⚠️ YALNIZCA GÖVDE FONTU (Manrope) ÖN YÜKLENİYOR, İKİSİ BİRDEN DEĞİL.
  *
- * İki font ~105 kB ediyor ve mobilde ön yükleme, LCP görseliyle aynı bant
+ * İki font ~57,5 kB ediyor ve mobilde ön yükleme, LCP görseliyle aynı bant
  * genişliği için yarışıyor. Metin LCP'sini geciktiren de gövde fontu:
- * başlıklar daha küçük alan kaplıyor. Serif font `@font-face` üzerinden
+ * başlıklar daha küçük alan kaplıyor. Başlık fontu `@font-face` üzerinden
  * normal sırasında iniyor ve `display: swap` sayesinde metin zaten yedek
  * fontla boyanıyor.
  *
@@ -51,8 +51,8 @@ import path from 'node:path'
  * yakalar.
  */
 
-/** Kaynak dosya adından türeyen önek: `src/fonts/inter-turkce.woff2`. */
-const GOVDE_FONTU_ONEKI = 'inter_turkce'
+/** Kaynak dosya adından türeyen önek: `src/fonts/manrope-turkce.woff2`. */
+const GOVDE_FONTU_ONEKI = 'manrope_turkce'
 
 /** Modül ömrü boyunca bir kez okunuyor; her istekte disk okuması olmaz. */
 let cozulmus: { adres: string | null } | null = null

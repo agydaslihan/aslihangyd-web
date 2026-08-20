@@ -11,6 +11,7 @@ import { AltbilgiBaglantilari } from '@/collections/AltbilgiBaglantilari'
 import { DanismanBasvurulari } from '@/collections/DanismanBasvurulari'
 import { Degerlemeler } from '@/collections/Degerlemeler'
 import { SIHIRBAZ_YOLU } from '@/components/sihirbaz/yol'
+import { ANASAYFA_YOLU } from '@/components/anasayfa/yol'
 import { OLCUM_YOLU } from '@/components/olcum/yol'
 import { SOSYAL_YOLU } from '@/components/sosyal/yol'
 import { GOZLEM_ICE_AKTARMA_YOLU } from '@/components/gozlem/yol'
@@ -112,6 +113,18 @@ export default buildConfig({
           path: OLCUM_YOLU,
         },
 
+        /**
+         * Ana sayfa bölümlerinin veri durumu.
+         *
+         * ⚠️ Verisi olmayan bölüm sayfada hiç çizilmiyor; bu ekran "neden
+         * görünmüyor" sorusunun tek cevabı. Sayfanın okuduğu fonksiyonun
+         * aynısını okuyor.
+         */
+        anaSayfaBolumleri: {
+          Component: '@/components/anasayfa/AnaSayfaGorunumu#default',
+          path: ANASAYFA_YOLU,
+        },
+
         sosyalMateryal: {
           Component: '@/components/sosyal/SosyalGorunumu#default',
           path: SOSYAL_YOLU,
@@ -201,6 +214,7 @@ export default buildConfig({
         '@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi',
         '@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi',
         '@/components/olcum/OlcumNavBaglantisi#OlcumNavBaglantisi',
+        '@/components/anasayfa/AnaSayfaNavBaglantisi#AnaSayfaNavBaglantisi',
         '@/components/mahalleVerisi/MahalleVerisiNavBaglantisi#MahalleVerisiNavBaglantisi',
         '@/components/osm/OsmNavBaglantisi#OsmNavBaglantisi',
         '@/components/google/GoogleNavBaglantisi#GoogleNavBaglantisi',

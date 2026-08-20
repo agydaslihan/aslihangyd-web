@@ -71,7 +71,7 @@ export function MahalleSecici({
                 className={sinif(
                   'inline-flex min-h-11 items-center rounded-full border-[0.5px] px-4 text-govde-kucuk transition-colors',
                   isaretli
-                    ? 'border-vurgu bg-kakao-yuzey font-medium text-koyu-bant-metin'
+                    ? 'border-vurgu bg-koyu-bant font-medium text-koyu-bant-metin'
                     : 'border-kenar hover:border-vurgu hover:text-vurgu',
                   kapali && 'cursor-not-allowed opacity-40 hover:border-kenar hover:text-metin',
                 )}

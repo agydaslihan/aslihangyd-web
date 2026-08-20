@@ -252,11 +252,18 @@ describe('yedek davranış', () => {
    * Aslıhan sitenin yeni yüzünü hiç görmeyecekti.
    * ─────────────────────────────────────────────────────────────────────
    */
-  it('sayfa hero’su vitrin ve koşulsuz çiziliyor', () => {
+  it('sayfa hero’su sinematik vitrin ve koşulsuz çiziliyor', () => {
     const sayfa = oku('app/(site)/page.tsx')
-    expect(sayfa).toContain('<VitrinHero')
-    // Slider bandı koşullu; vitrin değil.
-    expect(sayfa).toContain('heroSlaytVar ? (')
+    expect(sayfa).toContain('<SinematikHero')
+
+    /**
+     * ⚠️ SLIDER ARTIK İKİNCİ SLAYTTAN İTİBAREN ÇİZİLİYOR.
+     *
+     * Aurora'da hero'nun tam ekran zemini ilk slaydın görseli. Slider bandı
+     * eskisi gibi "slayt varsa" koşuluna bağlı kalsaydı aynı fotoğraf
+     * sayfada iki kez görünürdü — biri tam ekran, biri bant içinde.
+     */
+    expect(sayfa).toContain('hero.slaytlar.length > 1 ? (')
   })
 
   /**

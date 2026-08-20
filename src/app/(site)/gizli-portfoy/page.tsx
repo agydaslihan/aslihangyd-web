@@ -35,7 +35,7 @@ export default async function GizliPortfoySayfasi() {
       <SayfaVitrini>
         <Eyebrow>Off-market</Eyebrow>
 
-        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin mt-4 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
           Yayınlanmayan portföy
         </h1>
 
@@ -115,7 +115,7 @@ export default async function GizliPortfoySayfasi() {
 
       <Bolum zemin="yuzey">
         <div className="max-w-2xl">
-          <h2 className="font-serif text-baslik-2-mobil font-medium">Erişim nasıl açılıyor?</h2>
+          <h2 className="font-baslik text-baslik-2-mobil font-medium">Erişim nasıl açılıyor?</h2>
           <ol className="text-metin-2 mt-4 flex flex-col gap-3 text-govde leading-relaxed">
             <li className="flex gap-3">
               <span className="bg-vurgu-zemin text-vurgu rakam flex size-6 shrink-0 items-center justify-center rounded-full text-mikro font-medium">

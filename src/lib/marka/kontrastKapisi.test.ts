@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import { kontrastOrani } from '@/lib/tasarim/kontrast'
 
+import { ctaKenari } from './ctaKenari'
 import {
   alternatifOner,
   gecerliHex,
@@ -82,21 +83,34 @@ describe('kontrast kapısı — geçmeyen paletler', () => {
   })
 
   it('metin ile zemin aynı olursa kapı kapanır', () => {
-    const palet: Palet = { ...varsayilanPalet('acik'), metin: '#fbfaf7' }
+    const palet: Palet = { ...varsayilanPalet('acik'), metin: '#fcfbf8' }
     expect(paletiDegerlendir(palet).gecti).toBe(false)
   })
 
-  it('soluk buton zemini bileşen eşiğinde takılır', () => {
-    // Beyaza yakın buton, açık zeminde 3:1 bileşen eşiğini geçemez.
+  /**
+   * ⚠️ BU TEST TERSİNE ÇEVRİLDİ VE SEBEBİ AURORA.
+   *
+   * Eskiden soluk bir buton zemini kapıda TAKILIRDI: dolgunun kendisi
+   * zeminden 3:1 ayrışmak zorundaydı (WCAG 1.4.11). Aurora'nın eylem rengi
+   * altın ve altın bu eşiği geçmiyor (2,28:1) — yani kural, şartnamenin
+   * istediği rengi yasaklıyordu.
+   *
+   * Kural gevşetilmedi, TAŞIYICISI DEĞİŞTİ: sınırı artık dolgu değil,
+   * dolgudan türetilen kenarlık taşıyor (`ctaKenari.ts`). Kapı bu yüzden
+   * soluk butonu geçiriyor; erişilebilirlik kenarlıkta ölçülüyor.
+   */
+  it('soluk buton zemini artık kapıda takılmıyor — sınırı kenarlık taşıyor', () => {
     const palet: Palet = {
       ...varsayilanPalet('acik'),
       butonZemin: '#f0efe9',
       butonMetin: '#2a2a2a',
     }
     const sonuc = paletiDegerlendir(palet)
-    const kalan = sonuc.kalanlar.find((c) => c.etiket === 'Buton zemini / Ana arka plan')
-    expect(kalan).toBeDefined()
-    expect(kalan?.esik).toBe(3)
+    expect(sonuc.kalanlar.map((c) => c.etiket)).not.toContain('Buton zemini / Ana arka plan')
+
+    // ⚠️ Ama sınır gerçekten kuruluyor: türetilen kenarlık eşiği geçiyor.
+    const kenar = ctaKenari(palet.butonZemin ?? '', palet.zemin ?? '')
+    expect(kontrastOrani(kenar, palet.zemin ?? '')).toBeGreaterThanOrEqual(3)
   })
 
   /**

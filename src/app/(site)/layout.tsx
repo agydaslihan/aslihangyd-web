@@ -5,6 +5,9 @@ import { govdeFontuAdresi } from '@/lib/yazi/onyukleme'
 import type React from 'react'
 
 import { Analitik } from '@/components/analitik/Analitik'
+import { HareketAltyapisi } from '@/components/hareket/HareketAltyapisi'
+import { ImlecKatmani } from '@/components/hareket/ImlecKatmani'
+import { YuzenWhatsapp } from '@/components/duzen/YuzenWhatsapp'
 import { KatmanB } from '@/components/olcum/KatmanB'
 import { CerezBanneri } from '@/components/cerez/CerezBanneri'
 import { Altbilgi } from '@/components/duzen/Altbilgi'
@@ -20,17 +23,19 @@ import {
   kurumsalBilgileriGetir,
   whatsappNumarasi,
 } from '@/lib/kurumsal'
+import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { cerezOnayiniOku } from '@/lib/kvkk/sunucu'
 import { markaAyarlari, paletCss } from '@/lib/marka/sunucu'
-import { SITE_ACIKLAMASI, SITE_ADI, SITE_ADRESI } from '@/lib/site'
+import { SITE_ACIKLAMASI, SITE_ADI, SITE_ADRESI, whatsappMesaji } from '@/lib/site'
 
 import './globals.css'
 
 /**
  * Tipografi ikilisi:
- * - Inter — arayüz ve gövde. Rakam okunurluğu yüksek, tabular figürleri var.
- * - Source Serif 4 — başlıklar. Editoryal ağırlık katıyor ve siteyi
- *   "her yerdeki Inter sitesi" görünümünden ayırıyor.
+ * - Manrope — gövde, arayüz ve VERİ. Tabular rakamları sütunda geniş ve
+ *   net; bu site kira çarpanı, m² fiyatı ve gözlem sayısıyla dolu.
+ * - Plus Jakarta Sans — başlıklar. Hümanist oranları (yuvarlak harfler
+ *   düz harflerden geniş) 72px'de sıcaklık taşıyor.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ KENDİ BARINDIRDIĞIMIZ TÜRKÇE ALT KÜMELERİ — `next/font/google` DEĞİL.
@@ -55,31 +60,59 @@ import './globals.css'
  * font arasındaki ölçü farkı Next tarafından dengeleniyor, CLS 0 kalıyor.
  * ─────────────────────────────────────────────────────────────────────────
  */
-const yaziArayuz = localFont({
-  src: '../../fonts/inter-turkce.woff2',
+/**
+ * ⚠️ BAŞLIK PLUS JAKARTA SANS, GÖVDE VE VERİ MANROPE.
+ *
+ * ─────────────────────────────────────────────────────────────────────
+ * Şartname "birincil Manrope, ikincil Plus Jakarta Sans" diyor ama hangi
+ * ailenin hangi işi yapacağını söylemiyor. İlk kurulum tersti (başlık
+ * Manrope) ve ÖLÇÜM onu çürüttü:
+ *
+ *   Harf oranları — düz `n` ve yuvarlak `o` genişliği:
+ *     Manrope           57,3% / 57,4%  → neredeyse eşit: GEOMETRİK
+ *     Plus Jakarta Sans 57,3% / 65,5%  → yuvarlaklar geniş: HÜMANİST
+ *
+ * 72px'de bu fark karakter oluyor: eşit genişlikli geometrik harfler
+ * "teknoloji girişimi" hissi verir, markanın istediği "zarif, sıcak,
+ * feminen" değil. Hümanist oran kaligrafik köke daha yakın.
+ *
+ * ⚠️ Büyük harf yüksekliği de aynı yönü gösteriyor: 72px'de Manrope 51,8
+ * px, Plus Jakarta Sans 53,6 px — aynı punto değerinde başlık daha iri
+ * okunuyor.
+ *
+ * ⚠️ ESKİ GEREKÇEM YANLIŞTI: "Plus Jakarta Sans gövdede daha okunur, daha
+ * yüksek x-yüksekliği" demiştim. Ölçüm: 17px'de x-yüksekliği Manrope 9,18
+ * px, Plus Jakarta Sans 9,11 px. Fark yok denecek kadar küçük; o gerekçe
+ * ayakta durmuyordu.
+ *
+ * ⚠️ TABULAR RAKAM İKİSİNDE DE VAR. Site gövdede `tabular-nums`
+ * uyguluyor ve `tnum` özelliği iki ailede de rakamları eşitliyor
+ * (Manrope 0,620 em, Plus Jakarta Sans 0,600 em). Yani "hangisinin
+ * tabular'ı iyi" diye bir fark yok; Manrope'un rakamları bir tık geniş,
+ * bu da sütun hâlinde biraz daha rahat okunuyor.
+ * ─────────────────────────────────────────────────────────────────────
+ */
+const yaziGovde = localFont({
+  src: '../../fonts/manrope-turkce.woff2',
   weight: '400 500',
   style: 'normal',
-  variable: '--yazi-arayuz',
+  variable: '--yazi-govde',
   display: 'swap',
   // ⚠️ Yedek zinciri: alt kümede olmayan bir karakter geldiğinde tarayıcı
-  // "tofu" (boş kutu) yerine sistem fontuna düşsün. Alt küme 136 karakter
-  // kapsıyor; CMS'ten emoji, Kiril ya da matematik simgesi gelirse bu
-  // zincir devreye girer.
+  // "tofu" (boş kutu) yerine sistem fontuna düşsün. CMS'ten emoji, Kiril
+  // ya da matematik simgesi gelirse bu zincir devreye girer.
   fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
   adjustFontFallback: 'Arial',
 })
 
 const yaziBaslik = localFont({
-  src: '../../fonts/source-serif-4-turkce.woff2',
+  src: '../../fonts/plus-jakarta-sans-turkce.woff2',
   weight: '400 500',
   style: 'normal',
   variable: '--yazi-baslik',
   display: 'swap',
-  // ⚠️ Source Serif 4'te `‑` (U+2011, bölünmez tire) YOK — fontun kendisinde
-  // bulunmuyor, alt kümeyle ilgisi değil. Bir başlıkta geçerse buradaki
-  // serif yedeğine düşer ve okunur kalır.
-  fallback: ['Georgia', 'Cambria', 'Times New Roman', 'serif'],
-  adjustFontFallback: 'Times New Roman',
+  fallback: ['system-ui', 'Segoe UI', 'Roboto', 'Helvetica Neue', 'Arial', 'sans-serif'],
+  adjustFontFallback: 'Arial',
 })
 
 /**
@@ -161,15 +194,15 @@ export const viewport: Viewport = {
    * görmüyordu.
    *
    * ⚠️ Bohem palete geçerken ikisi de yeniden yazıldı: kırık beyaz
-   * #FBFAF7 ve koyu kakao #3D2B2F. Testi olmasaydı aynı hata ikinci kez
+   * #FCFBF8 ve mürekkep #1C1C1C. Testi olmasaydı aynı hata ikinci kez
    * olurdu — palet değişikliği bu dosyayı hiç açtırmıyor.
    *
    * Artık `disiplin.test.ts` bu iki değerin `--color-notr-50` ve
-   * `--color-kakao-900` ile birebir aynı olduğunu denetliyor.
+   * `--color-notr-900` ile birebir aynı olduğunu denetliyor.
    */
   themeColor: [
-    { media: '(prefers-color-scheme: light)', color: '#fbfaf7' },
-    { media: '(prefers-color-scheme: dark)', color: '#3d2b2f' },
+    { media: '(prefers-color-scheme: light)', color: '#fcfbf8' },
+    { media: '(prefers-color-scheme: dark)', color: '#1c1c1c' },
   ],
 }
 
@@ -225,7 +258,7 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const menu = menuyuSirala(menuyuSuz(UST_MENU_YAPISI, acikAnahtarlar), await menuSirasiniGetir())
 
   return (
-    <html lang="tr" className={`${yaziArayuz.variable} ${yaziBaslik.variable}`}>
+    <html lang="tr" className={`${yaziGovde.variable} ${yaziBaslik.variable}`}>
       <head>
         {/*
           ⚠️ GÖVDE FONTU ÖN YÜKLEMESİ — NEXT'İN BASMADIĞI `<link>`.
@@ -316,6 +349,18 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
         <Analitik />
         {/* Katman B ölçümü — onay yoksa kodu istemciye hiç inmiyor. */}
         <KatmanB />
+        {/*
+          Hareket altyapısı: hiçbir şey çizmez, yalnızca hareket kodunun
+          NE ZAMAN ve İNİP İNMEYECEĞİNE karar verir. `prefers-reduced-motion`
+          açıksa tek bir `import()` bile çağrılmıyor.
+        */}
+        <HareketAltyapisi />
+        <ImlecKatmani />
+        {/*
+          Yüzen WhatsApp — şartname §5. Numara yoksa hiç çizilmiyor;
+          ilk ekranda görünmüyor, ziyaretçi kaydırmaya başlayınca beliriyor.
+        */}
+        <YuzenWhatsapp adres={whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())} />
       </body>
     </html>
   )

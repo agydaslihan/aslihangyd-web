@@ -254,7 +254,7 @@ export function FiltrePaneli({
       <noscript>
         <button
           type="submit"
-          className="bg-kakao-yuzey rounded-buton min-h-11 w-full px-5 text-govde-kucuk font-medium text-koyu-bant-metin"
+          className="bg-koyu-bant rounded-buton min-h-11 w-full px-5 text-govde-kucuk font-medium text-koyu-bant-metin"
         >
           Filtrele
         </button>
@@ -273,7 +273,7 @@ export function FiltrePaneli({
         >
           Filtreler
           {aktifler.length > 0 ? (
-            <span className="bg-kakao-yuzey rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-koyu-bant-metin">
+            <span className="bg-koyu-bant rakam inline-flex size-5 items-center justify-center rounded-full text-mikro text-koyu-bant-metin">
               {aktifler.length}
             </span>
           ) : null}
@@ -324,7 +324,7 @@ export function FiltrePaneli({
                 <button
                   type="button"
                   onClick={() => setMobilAcik(false)}
-                  className="bg-kakao-yuzey rounded-buton min-h-13 w-full font-medium text-koyu-bant-metin"
+                  className="bg-koyu-bant rounded-buton min-h-13 w-full font-medium text-koyu-bant-metin"
                 >
                   Uygula (<span className="rakam">{sonucSayisi}</span>)
                 </button>

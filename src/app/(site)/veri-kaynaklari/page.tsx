@@ -78,7 +78,7 @@ export default async function VeriKaynaklariSayfasi() {
     <>
       <SayfaVitrini>
         <Eyebrow>Şeffaflık</Eyebrow>
-        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin mt-4 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
           Veri kaynakları ve lisanslar
         </h1>
         <p className="text-metin-2 mt-5 text-govde leading-relaxed">

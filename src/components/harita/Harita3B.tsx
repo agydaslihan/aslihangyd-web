@@ -5,6 +5,15 @@
 // `MapLibreMap` takma adıyla alınıyor.
 import type { AllPaintProperties } from 'maplibre-gl'
 
+import {
+  KATMAN_BINA,
+  KATMAN_MAHALLE_CIZGI,
+  KATMAN_MAHALLE_DOLGU,
+  KATMAN_MAHALLE_ETIKET,
+  KATMAN_MAHALLE_KESIK,
+  KATMAN_SUTUN,
+  KATMAN_SUTUN_ETIKET,
+} from '@/lib/harita/katmanAnahtarlari'
 import { stiliCoz, type StilSonucu } from '@/lib/harita/stil'
 import {
   GeolocateControl,
@@ -164,14 +173,6 @@ const KAYNAK_SUTUN = 'sutunlar'
 const KAYNAK_MAHALLE = 'mahalleler'
 const KAYNAK_NOKTA = 'noktalar'
 
-const KATMAN_SUTUN = 'fiyat-sutunlari'
-const KATMAN_SUTUN_ETIKET = 'fiyat-sutunlari-etiket'
-const KATMAN_MAHALLE_DOLGU = 'mahalle-dolgu'
-const KATMAN_MAHALLE_CIZGI = 'mahalle-sinirlari'
-const KATMAN_MAHALLE_KESIK = 'mahalle-sinirlari-veriyok'
-const KATMAN_MAHALLE_ETIKET = 'mahalle-etiket'
-const KATMAN_BINA = 'binalar'
-
 /**
  * "Hiçbir mahalle seçili değil" nöbetçisi.
  *
@@ -193,12 +194,16 @@ const KATMAN_BINA = 'binalar'
  */
 const HICBIR_SLUG = '\u0000'
 
-/** Katman anahtarları — panelle bu dosya arasındaki sözleşme. */
-export const KATMAN_ANAHTARLARI = {
-  sutunlar: KATMAN_SUTUN,
-  sinirlar: KATMAN_MAHALLE_CIZGI,
-  binalar: KATMAN_BINA,
-} as const
+/**
+ * ⚠️ Katman anahtarları ARTIK BU DOSYADA DEĞİL.
+ *
+ * Yalnızca iki dizgi sabiti için bu modülü import etmek, `maplibre-gl`in
+ * tamamını (443 kB gzip) çağıranın paketine sokuyordu. Sabitler
+ * `lib/harita/katmanAnahtarlari.ts` içinde ve orası hiçbir şeye bağlı
+ * değil. Yeniden dışa aktarım, mevcut çağrı yerlerini bozmadan tek kaynağı
+ * koruyor.
+ */
+export { KATMAN_ANAHTARLARI } from '@/lib/harita/katmanAnahtarlari'
 
 export function Harita3B({
   stilAdresi,

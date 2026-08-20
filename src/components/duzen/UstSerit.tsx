@@ -14,7 +14,7 @@ import { whatsappMesaji } from '@/lib/site'
  * antrasite — ikincisi koyu kakao üzerinde okunmazdı. Aynı tuzağa gold
  * rozetinde düşülmüştü; kontrast testi yakalamıştı.
  *
- * Ölçüm: kırık beyaz (notr-50) kakao-900 üzerinde 12,69:1.
+ * Ölçüm: kırık beyaz (notr-50) notr-900 üzerinde 12,69:1.
  * Çiftler `kontrast.test.ts` içinde sabit renk olarak sınanıyor.
  *
  * ⚠️ Şerit MOBİLDE GİZLİ. 12px'lik bir bilgi çubuğu telefonda hem dokunma
@@ -37,7 +37,7 @@ export function UstSerit({
   if (telefon === null && eposta === null && whatsappAdresi === null) return null
 
   return (
-    <div data-yazdirma="gizle" className="bg-kakao-900 hidden lg:block">
+    <div data-yazdirma="gizle" className="bg-notr-900 hidden lg:block">
       <div className="kapsayici flex h-9 items-center justify-end gap-6">
         {telefon ? (
           <a

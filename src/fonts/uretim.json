@@ -1,10 +1,10 @@
 {
   "aciklama": "pnpm font:altkume tarafından üretildi — elle düzenlemeyin. Ayrıntı: src/fonts/OKUBENI.md",
-  "uretimTarihi": "2026-08-08",
+  "uretimTarihi": "2026-08-20",
   "alfabeKarakterSayisi": 193,
   "alfabeOzeti": "e35c4f66c66069767b9db949e0aef56a38b0ab10dac5e884d0b24ba40008588f",
   "dosyalar": [
-    "Inter v20 — sha256:ce79bded8e2ab04ece4dc1a898d75f08202365f4ba102289b0a6b38db3c53a89",
-    "Source Serif 4 v14 — sha256:453ad8d3617d7285bd0d6958047d798a5ad9a1aff51611b4b98b09885e59187d"
+    "Manrope v20 — sha256:44f515698efb56e7e1b29a416d0e8f1ed9e31c243a1a8287a2534cf3c4cb76ef",
+    "Plus Jakarta Sans v12 — sha256:14a783218dce447e6b9e97ae4b5ef2359377b7789b493f8b73e105da644395f0"
   ]
 }

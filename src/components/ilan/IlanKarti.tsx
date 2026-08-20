@@ -76,7 +76,10 @@ export function IlanKarti({
       )}
     >
       {/* ── Görsel ── */}
-      <div className="bg-yuzey-2 relative aspect-[4/3] overflow-hidden">
+      {/* ⚠️ `zoom-kabi`: hover'da görsel 1,04 ölçekleniyor — `transform`
+          üzerinden, yani düzen hesabı yok (CLS 0). Kural yalnızca
+          `hover: hover` cihazlarda geçerli; dokunmatikte hiç kurulmuyor. */}
+      <div className="zoom-kabi bg-yuzey-2 relative aspect-[4/3] overflow-hidden">
         {kapak?.url ? (
           <Image
             src={kapak.url}

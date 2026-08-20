@@ -47,7 +47,7 @@ export default async function EndeksSayfasi() {
     <>
       <SayfaVitrini>
         <Eyebrow>Aylık seri</Eyebrow>
-        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin mt-4 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
           Çorlu Konut İstenen Fiyat Endeksi
         </h1>
         <p className="text-metin-2 mt-5 text-govde leading-relaxed">
@@ -150,7 +150,7 @@ export default async function EndeksSayfasi() {
 
       <Bolum zemin="yuzey">
         <div className="max-w-2xl">
-          <h2 className="font-serif text-baslik-2-mobil font-medium">
+          <h2 className="font-baslik text-baslik-2-mobil font-medium">
             Veriyi kullanmak isterseniz
           </h2>
           <p className="text-metin-2 mt-3 leading-relaxed">

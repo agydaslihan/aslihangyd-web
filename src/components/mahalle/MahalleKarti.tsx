@@ -96,7 +96,7 @@ export function MahalleKarti({
       data-yukselen
       className="group border-kenar bg-yuzey rounded-kart hover:shadow-kalkik relative flex h-full flex-col overflow-hidden border-[0.5px] transition-[box-shadow,transform] duration-[200ms] ease-[var(--cikis)]"
     >
-      <div className="bg-vurgu-zemin relative aspect-16/10 overflow-hidden">
+      <div className="zoom-kabi bg-vurgu-zemin relative aspect-16/10 overflow-hidden">
         {gorsel?.url ? (
           <Image
             src={gorsel.url}
@@ -127,7 +127,7 @@ export function MahalleKarti({
           >
             <path
               d={siluet.yol}
-              className="fill-pudra-zemin stroke-vurgu"
+              className="fill-bant-zemin stroke-vurgu"
               strokeWidth={1.5}
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
@@ -151,7 +151,7 @@ export function MahalleKarti({
               {/* ⚠️ Etiketsiz bir "72 /100" ekran okuyucuda anlamsız.
                   Görsel olarak yer kaplamadan bağlamı veriyor. */}
               <span className="sr-only">Yatırım skoru: </span>
-              <span className="text-metin font-serif text-govde font-medium">{skor}</span>
+              <span className="text-metin font-baslik text-govde font-medium">{skor}</span>
               <span className="text-metin-3 text-mikro">/100</span>
             </div>
           </div>

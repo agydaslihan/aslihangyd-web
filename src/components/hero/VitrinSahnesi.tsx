@@ -80,7 +80,7 @@ export function VitrinSahnesi({ ilan }: { ilan: Ilanlar | null }) {
             className="absolute inset-x-0 bottom-0 h-2/5"
             style={{
               background:
-                'linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-kakao-900) 78%, transparent))',
+                'linear-gradient(to bottom, transparent, color-mix(in oklab, var(--color-notr-900) 78%, transparent))',
             }}
           />
 
@@ -92,7 +92,7 @@ export function VitrinSahnesi({ ilan }: { ilan: Ilanlar | null }) {
               </p>
             ) : null}
             {fiyat !== null ? (
-              <p className="mt-1 font-serif text-baslik-2 font-medium text-[color:var(--color-notr-50)]">
+              <p className="mt-1 font-baslik text-baslik-2 font-medium text-[color:var(--color-notr-50)]">
                 {fiyat}
               </p>
             ) : null}
@@ -120,7 +120,7 @@ export function VitrinSahnesi({ ilan }: { ilan: Ilanlar | null }) {
           style={{ transform: 'translateZ(72px)' }}
         >
           <p className="text-metin-3 text-mikro uppercase">Kira çarpanı</p>
-          <p className="text-metin font-serif text-baslik-3 font-medium">{carpan}</p>
+          <p className="text-metin font-baslik text-baslik-3 font-medium">{carpan}</p>
         </div>
       ) : null}
     </EgilenKart>

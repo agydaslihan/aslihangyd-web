@@ -137,7 +137,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               ) : null}
             </div>
 
-            <h1 className="mt-3 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+            <h1 className="mt-3 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
               {ilan.baslik}
             </h1>
 
@@ -472,7 +472,12 @@ function MobilEylemCubugu({
   return (
     <div
       data-yazdirma="gizle"
-      className="border-kenar bg-zemin/95 fixed inset-x-0 bottom-0 z-30 border-t-[0.5px] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] backdrop-blur-md lg:hidden"
+      /* ⚠️ `cam` sınıfı, `backdrop-blur-md` DEĞİL — ve burada fark özellikle
+         büyük: bu çubuk `lg:hidden`, yani YALNIZCA MOBİLDE görünüyor. Geniş
+         yarıçaplı bir bulanıklık, tam genişlikte ve sabit bir yüzeyde, her
+         kaydırma karesinde arkasını yeniden işlemek demekti. `.cam` mobilde
+         düz renge düşüyor, masaüstünde zaten çizilmiyor. */
+      className="border-kenar cam fixed inset-x-0 bottom-0 z-30 border-t-[0.5px] p-3 pb-[calc(0.75rem+env(safe-area-inset-bottom))] lg:hidden"
     >
       <div className="kapsayici flex gap-2">
         {whatsapp ? (

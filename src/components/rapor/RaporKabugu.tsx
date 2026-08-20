@@ -70,7 +70,7 @@ export function RaporKabugu({
         </div>
 
         <header className="border-kenar border-b-[0.5px] pb-5">
-          <h1 className="font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">{baslik}</h1>
+          <h1 className="font-baslik text-baslik-2-mobil font-medium sm:text-baslik-2">{baslik}</h1>
           <p className="text-metin-2 mt-2 leading-relaxed">{altBaslik}</p>
           <p className="text-metin-3 text-mikro mt-3">
             Rapor tarihi: {tarihiYaz(uretimTarihi)} · aslihangyd.com

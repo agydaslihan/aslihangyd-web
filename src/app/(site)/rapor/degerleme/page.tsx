@@ -127,7 +127,7 @@ export default async function DegerlemeRaporu({
     >
       <RaporBolumu baslik="Tahmini değer aralığı">
         <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
-          <p className="rakam font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">
+          <p className="rakam font-baslik text-baslik-2-mobil font-medium sm:text-baslik-2">
             {paraYaz(veri.altDeger)} – {paraYaz(veri.ustDeger)}
           </p>
           <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">

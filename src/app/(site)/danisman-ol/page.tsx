@@ -47,7 +47,7 @@ export default async function DanismanOlSayfasi() {
         ⚠️ Karartma katmanı görsel VARKEN ekleniyor: metin beyaz ve açık
         renkli bir fotoğrafta okunmaz hâle gelirdi (WCAG 1.4.3).
       */}
-      <section className="bg-kakao-yuzey rounded-buyuk relative overflow-hidden px-6 py-10 text-koyu-bant-metin sm:px-10 sm:py-12">
+      <section className="bg-koyu-bant rounded-buyuk relative overflow-hidden px-6 py-10 text-koyu-bant-metin sm:px-10 sm:py-12">
         {icerik.heroGorseli !== null ? (
           <>
             {/* eslint-disable-next-line @next/next/no-img-element -- medya kaydı zaten AVIF/WebP üretiyor. */}
@@ -58,7 +58,7 @@ export default async function DanismanOlSayfasi() {
               height={icerik.heroGorseli.boy ?? undefined}
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <span aria-hidden="true" className="bg-kakao-yuzey/75 absolute inset-0" />
+            <span aria-hidden="true" className="bg-koyu-bant/75 absolute inset-0" />
           </>
         ) : null}
 

@@ -276,18 +276,18 @@ describe('font ağırlığı 500 ile sınırlı', () => {
   })
 })
 
-describe('adaçayı ve gold kuralı', () => {
+describe('altın kuralları', () => {
   /**
-   * Dolu bakır zemine izin verilen dosyalar.
+   * Dolu altın zemine izin verilen dosyalar.
    *
    * ⚠️ BU LİSTEYE EKLEME YAPMAK TASARIM KARARIDIR.
    *
-   * Dolu adaçayı zemin yalnızca ASIL EYLEMDE kullanılır: "Evimi
-   * değerlendir" ve "Erişim talep et". Üçüncü bir yerde kullanıldığı anda
-   * ikisi de sıradanlaşır ve kural işlevini kaybeder. Yeni bir satır
-   * eklemeden önce sorulacak soru: bu gerçekten o iki eylemden biri mi?
+   * Dolu altın zemin yalnızca ASIL EYLEMDE kullanılır: "Evimi değerlendir"
+   * ve "Erişim talep et". Üçüncü bir yerde kullanıldığı anda ikisi de
+   * sıradanlaşır ve kural işlevini kaybeder.
    *
-   * ⚠️ Kural bakırdan devralındı. Renk değişti, nadirlik gerekçesi aynı.
+   * ⚠️ Kural bakırdan adaçayına, oradan altına geçti. Renk üç kez değişti,
+   * nadirlik gerekçesi hiç değişmedi.
    */
   const IZINLI_DOLU_AKSAN = new Set([
     // Görünümün kendisi burada tanımlanır; başka yerde sınıf yazılmaz.
@@ -302,10 +302,10 @@ describe('adaçayı ve gold kuralı', () => {
     'components/duzen/Baslik.tsx',
   ])
 
-  /** `bg-adacayi-500` … `bg-adacayi-800` ve `bg-aksan` — dolu zemin. */
-  const DOLU_AKSAN = /\bbg-(adacayi-[5-8]00|aksan)\b/g
+  /** `bg-gold-300` … `bg-gold-900` ve `bg-aksan` — dolu altın zemin. */
+  const DOLU_AKSAN = /\bbg-(gold-[3-9]00|aksan)\b/g
 
-  it('dolu adaçayı zemin yalnızca izinli dosyalarda geçiyor', () => {
+  it('dolu altın zemin yalnızca izinli dosyalarda geçiyor', () => {
     const ihlaller = hepsi
       .filter((dosya) => !IZINLI_DOLU_AKSAN.has(dosya.yol))
       .flatMap((dosya) => {
@@ -313,18 +313,22 @@ describe('adaçayı ve gold kuralı', () => {
         return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
       })
 
-    expect(ihlaller, 'dolu adaçayı iki eylem dışında kullanılmış').toEqual([])
+    expect(ihlaller, 'dolu altın iki eylem dışında kullanılmış').toEqual([])
   })
 
   /**
-   * ⚠️ GOLD ASLA METİN RENGİ DEĞİL.
+   * ⚠️ `text-gold-*` SINIFI DOĞRUDAN YAZILMAZ.
    *
-   * Kırık beyaz üzerinde 2,06:1 — ağır ihlal. Kontrast testi jetonun
-   * bağlantısını denetliyor; bu test KULLANIMI kovalıyor. İkisi ayrı
-   * kapılar: biri "gold bir metin jetonuna bağlanmış mı", diğeri "bir
-   * bileşende text-gold-* yazılmış mı".
+   * Altın Aurora'da metin olabilir ama YALNIZCA ölçülmüş koyu
+   * basamaklarda ve yalnızca anlamsal bir jeton üzerinden (`text-vurgu`,
+   * `text-aksan-metin`, `text-koyu-bant-vurgu`). Rampa basamağını
+   * doğrudan yazmak, o basamağın hangi zeminde ölçüldüğünü bilmeden
+   * yazmaktır: gold-400 açık zeminde 2,28:1.
+   *
+   * Kontrast testi jetonun bağlantısını denetliyor; bu test KULLANIMI
+   * kovalıyor. İkisi ayrı kapılar.
    */
-  it('gold metin rengi olarak kullanılmıyor', () => {
+  it('altın rampası doğrudan metin rengi olarak yazılmıyor', () => {
     const METIN_GOLD = /\btext-gold(-\d+)?\b/g
     const ihlaller = hepsi.flatMap((dosya) => {
       const bulunan = yorumsuz(dosya.icerik).match(METIN_GOLD) ?? []
@@ -333,48 +337,47 @@ describe('adaçayı ve gold kuralı', () => {
 
     expect(
       ihlaller,
-      'gold metin rengi olamaz (kırık beyaz üzerinde 2,06:1). ' +
-        'Anlam taşıyan bir öğe gerekiyorsa --color-gold-guclu kullanın.',
+      'Altın rampası doğrudan metin olamaz (gold-400 açık zeminde 2,28:1). ' +
+        'Metin için text-vurgu / text-aksan-metin, koyu bantta ' +
+        'text-koyu-bant-vurgu, anlam taşıyan öğe için --color-gold-guclu.',
     ).toEqual([])
   })
 
   /**
-   * ⚠️ DOLU TERRACOTTA BANT SINIFI TEK YERDE TANIMLI.
+   * ⚠️ DOLU ALTIN BANT SINIFI TEK YERDE TANIMLI.
    *
-   * Terracotta paletin ana vurgusu ve adaçayı gibi "iki eyleme" kısıtlı
-   * değil — ama dolu bant zemini yine de her yerde yazılabilir bir sınıf
-   * olmamalı. Bir bileşen `bg-terracotta-yuzey` yazdığı anda üzerindeki
-   * metnin tam beyaz olması gerektiğini de bilmek zorunda kalıyor (%80
-   * beyaz orada 3,82:1 veriyor ve AA'yı geçmiyor).
+   * Bir bileşen `bg-dolu-vurgu` yazdığı anda üzerindeki metnin MÜREKKEP
+   * olması gerektiğini de bilmek zorunda kalıyor — beyaz orada 2,36:1
+   * veriyor. Önceki palette bant terracotta'ydı ve doğru cevap beyazdı;
+   * yani bu bilgi renkle birlikte değişiyor ve bantla birlikte taşınmalı.
    *
-   * Kural: bantı `<Bolum zemin="terracotta">` kurar. Sınıfın kendisi
-   * yalnızca `Bolum.tsx` içinde yazılır; kontrast bilgisi de orada.
+   * Kural: bantı `<Bolum zemin="altin">` kurar.
    */
-  it('dolu terracotta zemin sınıfı yalnızca Bolum içinde yazılıyor', () => {
+  it('dolu altın zemin sınıfı yalnızca Bolum içinde yazılıyor', () => {
     const IZINLI = new Set(['components/ui/Bolum.tsx', 'app/(site)/stil-rehberi/page.tsx'])
     const ihlaller = hepsi
       .filter((dosya) => !IZINLI.has(dosya.yol))
       .flatMap((dosya) => {
-        const bulunan = yorumsuz(dosya.icerik).match(/\bbg-terracotta-yuzey\b/g) ?? []
+        const bulunan = yorumsuz(dosya.icerik).match(/\bbg-dolu-vurgu\b/g) ?? []
         return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
       })
 
     expect(
       ihlaller,
-      'Dolu terracotta bant `<Bolum zemin="terracotta">` ile kurulur. ' +
-        'Sınıfı doğrudan yazmak, üzerindeki metnin tam beyaz olması ' +
+      'Dolu altın bant `<Bolum zemin="altin">` ile kurulur. ' +
+        'Sınıfı doğrudan yazmak, üzerindeki metnin mürekkep olması ' +
         'gerektiği bilgisini bantla birlikte taşımaz.',
     ).toEqual([])
   })
 
   /**
-   * ⚠️ PUDRA VE KREM METİN SINIFI OLARAK KULLANILMIYOR.
+   * ⚠️ BEJ VE ALTIN TİNT METİN SINIFI OLARAK KULLANILMIYOR.
    *
-   * `text-gold-*` kuralının aynısı, aynı sebeple: ikisi de zemin rengi.
+   * Altın rampası kuralının aynısı, aynı sebeple: üçü de zemin rengi.
    * Kontrast testi jetonun BAĞLANTISINI denetliyor; bu test KULLANIMI.
    */
-  it('pudra ve krem metin rengi olarak kullanılmıyor', () => {
-    const METIN_ZEMIN = /\btext-(pudra-zemin|terracotta-(100|200)|notr-100)\b/g
+  it('bej ve altın tint metin rengi olarak kullanılmıyor', () => {
+    const METIN_ZEMIN = /\btext-(bant-zemin|gold-(50|100|200)|notr-100)\b/g
     const ihlaller = hepsi.flatMap((dosya) => {
       const bulunan = yorumsuz(dosya.icerik).match(METIN_ZEMIN) ?? []
       return bulunan.map((sinif) => `${dosya.yol}: ${sinif}`)
@@ -382,12 +385,12 @@ describe('adaçayı ve gold kuralı', () => {
 
     expect(
       ihlaller,
-      'Pudra gülü ve krem yalnızca zemindir (kırık beyaz üzerinde 1,41:1 ve ' +
-        '1,13:1). Açık zeminde metin gerekiyorsa --color-vurgu kullanın.',
+      'Sıcak bej ve altın tintler yalnızca zemindir (sayfa zemininde ' +
+        '1,09:1 ve 1,19:1). Açık zeminde metin gerekiyorsa --color-vurgu.',
     ).toEqual([])
   })
 
-  it('adaçayı buton görünümü sayılabilir kadar az çağrılıyor', () => {
+  it('altın buton görünümü sayılabilir kadar az çağrılıyor', () => {
     const cagrilar = hepsi.flatMap((dosya) => {
       if (dosya.yol === 'components/ui/Buton.tsx') return []
       const bulunan = yorumsuz(dosya.icerik).match(/gorunum="aksan"/g) ?? []
@@ -396,12 +399,10 @@ describe('adaçayı ve gold kuralı', () => {
 
     /**
      * Üst sınır 4: iki eylem × (ana sayfa + kendi sayfası) kadar yer
-     * tutuyor. Stil rehberi de bunun içinde. Sınır aşıldığında adaçayı
+     * tutuyor. Stil rehberi de bunun içinde. Sınır aşıldığında altın
      * seyrekliğini kaybetmiş demektir.
      */
-    expect(cagrilar.length, `adaçayı buton çağrıları: ${cagrilar.join(', ')}`).toBeLessThanOrEqual(
-      4,
-    )
+    expect(cagrilar.length, `altın buton çağrıları: ${cagrilar.join(', ')}`).toBeLessThanOrEqual(4)
   })
 })
 
@@ -436,7 +437,7 @@ describe('sosyal medya görseli onaylı palete bağlı', () => {
    * muhafız testi, koruduğu şeyin kaynağına bağlanmalı.
    */
   const IZINLI = new Set(
-    ['--color-kakao-900', '--color-notr-50', '--color-kakao-300', '--color-kakao-700'].map((ad) =>
+    ['--color-notr-900', '--color-notr-50', '--color-notr-300', '--color-notr-700'].map((ad) =>
       jeton(
         temalariCoz(readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')).acik,
         ad,
@@ -453,14 +454,14 @@ describe('sosyal medya görseli onaylı palete bağlı', () => {
     expect(
       kacak,
       `Onaylı palette olmayan renk: ${kacak.join(', ')}. ` +
-        'Görsel ile site aynı laciverti kullanmalı.',
+        'Görsel ile site aynı nötr rampayı kullanmalı.',
     ).toEqual([])
   })
 
   /**
-   * ⚠️ Aksan kuralı — pazarlığa kapalı. Dolu adaçayı yalnızca "Evimi değerlendir"
-   * ve "Erişim talep et" eylemlerinde kullanılır; bir ilan görseli
-   * bunların hiçbiri değil.
+   * ⚠️ Aksan kuralı — pazarlığa kapalı. Dolu altın yalnızca "Evimi
+   * değerlendir" ve "Erişim talep et" eylemlerinde kullanılır; bir ilan
+   * görseli bunların hiçbiri değil.
    */
   it('bakır kullanmaz', () => {
     const kaynak = readFileSync(path.join(KOK, ROTA), 'utf8')

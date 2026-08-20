@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 
 import { BASLIK_EYLEMI } from '@/lib/gezinme'
 
+import { ctaKenari } from './ctaKenari'
 import { paletiDegerlendir } from './kontrastKapisi'
 import { medyayiCoz } from './varliklar'
 import { varsayilanPalet, YUVALAR, type Palet } from './yuvalar'
@@ -141,14 +142,31 @@ export async function markaAyarlari(): Promise<MarkaAyarlari> {
  * doğrulandı" demek, savunmayı tek bir noktaya bağlamaktır.
  */
 export function paletCss(acik: Palet, koyu: Palet): string {
-  const satirlar = (palet: Palet): string =>
-    YUVALAR.map((yuva) => {
+  const gecerli = (deger: string | undefined): boolean => /^#[0-9a-f]{6}$/i.test(deger ?? '')
+
+  const satirlar = (palet: Palet): string => {
+    const jetonlar = YUVALAR.map((yuva) => {
       const deger = palet[yuva.anahtar]
-      if (!/^#[0-9a-f]{6}$/i.test(deger ?? '')) return ''
+      if (!gecerli(deger)) return ''
       return `${yuva.jeton}:${deger};`
     })
       .filter((satir) => satir !== '')
       .join('')
+
+    /**
+     * ⚠️ CTA KENARLIĞI YUVA DEĞİL, TÜRETİLMİŞ DEĞER.
+     *
+     * On birinci bir yuva açmak yerine hesaplanıyor çünkü bu bir tercih
+     * değil bir zorunluluk: dolu butonun sınırı sayfadan 3:1 ayrışmak
+     * zorunda (WCAG 1.4.11) ve altın zemin bunu tek başına sağlamıyor
+     * (2,28:1). Panelde ayrı bir renk kutusu olsaydı yanlış doldurulabilir
+     * ya da boş bırakılabilirdi. Gerekçesi `ctaKenari.ts` içinde.
+     */
+    const buton = palet.butonZemin ?? ''
+    const zemin = palet.zemin ?? ''
+    if (!gecerli(buton) || !gecerli(zemin)) return jetonlar
+    return `${jetonlar}--color-aksan-kenar:${ctaKenari(buton, zemin)};`
+  }
 
   return `:root{${satirlar(acik)}}:root[data-tema='koyu']{${satirlar(koyu)}}`
 }
