@@ -102,10 +102,42 @@ döndü, geri konunca yeşile.
 
 ---
 
+## 5. ⚠️ Sahne geçişi ilk ekranı gizliyordu — LCP gerilemesi
+
+Kart ızgaraları sahneye alınınca CI Lighthouse `/portfoy` sayfasının mobil
+LCP'sini **2,8 s → 3,6 s** gösterdi (bir koşuda 4,1 s). Sebep animasyonun
+maliyeti değil, **sırası**:
+
+- LCP, öğenin **boyandığı** anı ölçüyor.
+- `bekliyor` durumu `opacity: 0` demek — boyanmamış sayılıyor.
+- Bu durumu **JavaScript** veriyor: öğe ancak paket inip hidrasyon bitip
+  gözlemci tetikledikten **sonra** görünür oluyor.
+
+Yani ilk ekrandaki bir görsel, sırf giriş animasyonu yüzünden saniyelerce
+"boyanmamış" sayılıyordu. Ölçüm bir sapma değildi — ziyaretçi de onu
+gerçekten geç görüyordu.
+
+Kaydırarak gelinen içerikte sorun yok: kullanıcı oraya varana kadar
+JavaScript çoktan inmiş oluyor.
+
+### Çözüm
+
+`Sahne` artık gizlemeden önce `getBoundingClientRect()` ile bakıyor; öğe
+zaten görüş alanındaysa hiç sahneye alınmıyor.
+
+⚠️ Bu bir **tasarım kararı olarak da doğru**: ekranda zaten duran bir şeyi
+"girer gibi" göstermek, hareketin anlamını (yeni bir şey geldi) boşaltıyor.
+
+Kalıcı denetim: `src/components/hareket/sahne.test.ts` — hem bu tuzağı hem
+de "içerik animasyona bağlanmasın" kuralını bağlıyor. İkisi de ekranda
+hiçbir hata bırakmadan geçen türden.
+
+---
+
 ## Doğrulama
 
 - `pnpm typecheck` · `pnpm lint` · `pnpm build` — temiz
-- `pnpm vitest run` — 75 dosya, **1740 test** yeşil
+- `pnpm vitest run` — 76 dosya, **1745 test** yeşil
 - Üretim imajıyla 12 sayfa duman testi: hepsi 200, **her sayfada tek `<h1>`**,
   **hiçbir sayfada başlık seviyesi atlaması yok**, skor gösteren her sayfada
   feragat var
