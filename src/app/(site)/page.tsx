@@ -262,7 +262,14 @@ export default async function AnaSayfa() {
       */}
       {hero.slaytlar.length > 1 ? (
         <div className="py-16 sm:py-20">
-          <HeroBolumu ayarlar={hero} sayfaHerosu={false} />
+          {/*
+            ⚠️ İLK SLAYT BANTTAN ÇIKARILIYOR — ÖLÇÜMLE BULUNDU.
+
+            Üretilen HTML'de aynı fotoğraf iki kez görüldü: biri hero'nun tam
+            ekran zemini (`priority`), biri bandın ilk slaydı (`lazy`).
+            Ziyaretçi için tekrar, ağ için ikinci bir istek.
+          */}
+          <HeroBolumu ayarlar={{ ...hero, slaytlar: hero.slaytlar.slice(1) }} sayfaHerosu={false} />
         </div>
       ) : null}
 

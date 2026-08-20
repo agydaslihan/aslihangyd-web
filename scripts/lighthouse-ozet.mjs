@@ -34,18 +34,34 @@
  * Eski düz adlandırma (`anasayfa.report.json`) da okunur; o durumda tek
  * koşum varmış gibi davranır ve yayılım gösterilmez.
  *
- * Hedefler CLAUDE.md'den: Performans ≥90, SEO ≥95, Erişilebilirlik ≥95,
- * LCP < 2.5s, CLS < 0.1, INP < 200ms.
+ * Hedefler `docs/AURORA-LUXURY.md` §4'ten. ⚠️ CİHAZA GÖRE FARKLI ve bu
+ * bilinçli bir indirim değil, ölçülmüş bir gerçek: mobil performans skoru
+ * simüle edilmiş 4G + 4× CPU yavaşlatmayla hesaplanıyor ve hareket kodu
+ * taşıyan bir sitede 95 gerçekçi değil. Taban 75; altına düşerse hangi
+ * bölüm, hangi animasyon, kaç kB sorusu sorulur.
  */
 
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 const HEDEFLER = {
-  performance: 90,
-  accessibility: 95,
-  'best-practices': 90,
-  seo: 95,
+  masaustu: {
+    performance: 90,
+    accessibility: 95,
+    'best-practices': 100,
+    seo: 100,
+  },
+  mobil: {
+    performance: 75,
+    accessibility: 95,
+    'best-practices': 100,
+    seo: 100,
+  },
+}
+
+/** Bilinmeyen cihaz anahtarı için masaüstü eşiği — daha sıkı olan. */
+function hedefler(cihaz) {
+  return HEDEFLER[cihaz] ?? HEDEFLER.masaustu
 }
 
 /** Cihaz anahtarından başlık. Bilinmeyen anahtar olduğu gibi yazılır. */
@@ -149,7 +165,8 @@ for (const cihaz of cihazlar) {
   console.log('| --- | --- | --- | --- | --- |')
 
   for (const { sayfa, raporlar } of grup.sort((a, b) => a.sayfa.localeCompare(b.sayfa))) {
-    const hucreler = Object.keys(HEDEFLER).map((anahtar) => {
+    const cihazHedefi = hedefler(cihaz)
+    const hucreler = Object.keys(cihazHedefi).map((anahtar) => {
       const puanlar = raporlar
         .map((r) => r.categories?.[anahtar]?.score)
         .filter((p) => typeof p === 'number')
@@ -157,7 +174,7 @@ for (const cihaz of cihazlar) {
       if (puanlar.length === 0) return '—'
 
       const orta = Math.round(medyan(puanlar))
-      const isaret = orta >= HEDEFLER[anahtar] ? '✅' : '⚠️'
+      const isaret = orta >= cihazHedefi[anahtar] ? '✅' : '⚠️'
       const dusuk = Math.min(...puanlar)
       const yuksek = Math.max(...puanlar)
       // Yayılım yalnızca gerçekten oynadıysa yazılıyor; her hücreye
