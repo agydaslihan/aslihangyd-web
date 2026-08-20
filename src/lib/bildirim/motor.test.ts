@@ -22,6 +22,7 @@ const temiz = (ek: Partial<BildirimGirdisi> = {}): BildirimGirdisi => ({
   eksikAyarlar: [],
   eskiAdliAyarlar: [],
   siteAdresindePortVar: false,
+  semaDurumu: { eksikTablolar: [], beklenenSayi: 63, hata: null },
   alanSagligi: {
     saglik: 'saglikli',
     ozet: 'Alan adı sağlıklı.',

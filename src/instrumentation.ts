@@ -9,6 +9,17 @@
 export async function register(): Promise<void> {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
+  /**
+   * ⚠️ Şema denetimi AYRI BİR MODÜLDEN dinamik olarak çağrılıyor.
+   *
+   * `@payload-config` doğrudan buradan içe aktarılınca Turbopack onu Edge
+   * paketine çözmeye çalışıyor ve derleme kırılıyor ("A Node.js module is
+   * loaded ('node:path')..."). Çalışma zamanı kontrolü yetmiyor: hata
+   * derleme anında veriliyor. Ara modül bu yüzden var.
+   */
+  const { semayiAcilistaDenetle } = await import('@/lib/sema/acilis')
+  void semayiAcilistaDenetle()
+
   const { BOSALTMA_ARALIGI_MS } = await import('@/lib/olcum/tampon')
   const { tamponuYaz } = await import('@/lib/olcum/yazici')
 

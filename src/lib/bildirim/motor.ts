@@ -24,7 +24,7 @@ import { gunFarki, gunAnahtari, type GunAnahtari } from '@/lib/tarih'
  * yaptırım. İkisini aynı görsel ağırlıkta göstermek, ikincisini
  * görünmez kılar.
  */
-export type Oncelik = 'erisim' | 'yasal' | 'onemli' | 'bilgi'
+export type Oncelik = 'erisim' | 'butunluk' | 'yasal' | 'onemli' | 'bilgi'
 
 /**
  * ⚠️ `erisim` YASALIN DA ÜSTÜNDE — 18 Ağustos 2026'da öğrenildi.
@@ -34,11 +34,23 @@ export type Oncelik = 'erisim' | 'yasal' | 'onemli' | 'bilgi'
  * diğer her şeyin ÖN KOŞULU. Yasal uyarıyla aynı seviyeye konsaydı,
  * sıralaması tesadüfe kalırdı.
  */
+/**
+ * ⚠️ `butunluk` YASALIN ÜSTÜNDE — ve gerekçesi ince.
+ *
+ * Eksik bir tablo, dağıtımın yarım kaldığı anlamına geliyor. O durumda
+ * şeritteki DİĞER uyarıların dayandığı varsayımlar da geçersiz: EİDS
+ * sayımı eksik bir tablodan okuyorsa "0 ilan" der ve sorun yokmuş gibi
+ * görünür. Yani bütünlük sorunu, yasal uyarıyı YANLIŞ gösterebilir.
+ *
+ * Erişimin altında çünkü site hâlâ açık; yasalın üstünde çünkü yasal
+ * uyarının doğruluğunu belirliyor.
+ */
 export const ONCELIK_SIRASI: Record<Oncelik, number> = {
   erisim: 0,
-  yasal: 1,
-  onemli: 2,
-  bilgi: 3,
+  butunluk: 1,
+  yasal: 2,
+  onemli: 3,
+  bilgi: 4,
 }
 
 export interface Bildirim {
@@ -140,6 +152,14 @@ export interface BildirimGirdisi {
    * şeyler ve ikincisi de bir uyarıdır.
    */
   alanSagligi: AlanSagligiGirdisi | null
+
+  /**
+   * Şema bütünlüğü — kodun beklediği ama veritabanında olmayan tablolar.
+   *
+   * ⚠️ `null` = hiç denetlenmedi. "Sorun yok" DEĞİL: denetimin çalışmamış
+   * olması da bir bilgi, çünkü tam olarak bu sessizlik yüzünden buradayız.
+   */
+  semaDurumu: { eksikTablolar: string[]; beklenenSayi: number; hata: string | null } | null
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -165,6 +185,46 @@ export const ALAN_BAYAT_SAAT = 26
 
 export function bildirimleriUret(girdi: BildirimGirdisi, simdi: Date = new Date()): Bildirim[] {
   const bildirimler: Bildirim[] = []
+
+  /* ── Şema bütünlüğü ───────────────────────────────────────────────────
+   *
+   * ⚠️ 18–20 Ağustos 2026: göç atlandı, site hiç bozulmadı ve ölü bir
+   * özellik iki gün canlı göründü. İçerik okuyucularındaki `try/catch`
+   * eksik tabloyu yakalayıp varsayılana düşüyordu — geri düşüş doğruydu
+   * ama arızayı sessizleştirdi.
+   * ─────────────────────────────────────────────────────────────────── */
+  const sema = girdi.semaDurumu
+
+  if (sema !== null && sema.eksikTablolar.length > 0) {
+    const adet = sema.eksikTablolar.length
+    // Uzun listeyi başlığa sığdırmak yerine ilk birkaçı gösteriliyor.
+    const ornekler = sema.eksikTablolar.slice(0, 3).join(', ')
+    const kalan = adet > 3 ? ` (+${adet - 3} tablo daha)` : ''
+
+    bildirimler.push({
+      anahtar: 'sema-eksik',
+      oncelik: 'butunluk',
+      baslik: `${adet} tablo eksik — göç uygulanmamış olabilir`,
+      aciklama:
+        `Kodun beklediği ${sema.beklenenSayi} tablodan ${adet} tanesi veritabanında yok: ` +
+        `${ornekler}${kalan}. ⚠️ Site açık görünüyor ama o tablolara bağlı özellikler ` +
+        'sessizce çalışmıyor. Sunucuda göç adımını çalıştırın: ' +
+        'docker compose --profile gocmen run --rm gocmen',
+      adres: '/globals/bakim-durumu',
+      adresEtiketi: 'Bakım durumu',
+    })
+  } else if (sema !== null && sema.hata !== null) {
+    bildirimler.push({
+      anahtar: 'sema-denetlenemedi',
+      oncelik: 'butunluk',
+      baslik: 'Şema bütünlüğü denetlenemedi',
+      aciklama:
+        `Denetim çalıştı ama sonuç alınamadı: ${sema.hata}. Eksik tablo olup olmadığı ` +
+        'bilinmiyor.',
+      adres: '/globals/bakim-durumu',
+      adresEtiketi: 'Bakım durumu',
+    })
+  }
 
   /* ── Alan adı sağlığı ─────────────────────────────────────────────────
    *
