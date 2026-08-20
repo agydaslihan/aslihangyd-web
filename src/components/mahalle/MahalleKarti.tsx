@@ -35,9 +35,26 @@ import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 export function MahalleKarti({
   mahalle,
   baslikSeviyesi = 3,
+  oncelikli = false,
 }: {
   mahalle: Mahalleler
   baslikSeviyesi?: 2 | 3
+  /**
+   * İlk boyamada görünen kartlar için `true`.
+   *
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ NEDEN VAR: `/mahalleler` SAYFASININ LCP ÖĞESİ TEMBEL BİR GÖRSELDİ.
+   *
+   * CI Lighthouse ölçümünde LCP öğesi ilk kartın kapak görseli çıktı —
+   * `loading="lazy"` ile. Yani sayfanın en büyük öğesi, tarayıcıya
+   * "acelesi yok" diye işaretlenmişti. Mobilde kart görüş alanının içinde
+   * (üst kenar 533 px, yükseklik 231 px).
+   *
+   * Tembel yükleme doğru varsayılan: 26 mahalle kartının 23'ü ekranın
+   * altında. Ama ilk birkaçı değil.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  oncelikli?: boolean
 }) {
   const Baslik = baslikSeviyesi === 2 ? 'h2' : 'h3'
   const gorsel = typeof mahalle.kapakGorseli === 'object' ? mahalle.kapakGorseli : null
@@ -86,6 +103,7 @@ export function MahalleKarti({
             alt={gorsel.alt ?? `${mahalle.ad} Mahallesi`}
             fill
             sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
+            priority={oncelikli}
             className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
             {...bulanikOzellikleri(gorsel)}
           />

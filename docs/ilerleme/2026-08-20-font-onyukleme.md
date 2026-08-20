@@ -108,3 +108,62 @@ ten önce koşuyor. Derleme çıktısına koşulsuz bağlanan bir test CI'da dai
 kırmızı olurdu — bu tuzağa MapLibre worker testinde bir kez düşülmüştü.
 Manifest yoksa modülün **çökmediği**, varsa çözümlemenin gerçekten
 **çalıştığı** doğrulanıyor.
+
+
+---
+
+## ⚠️ Ölçüm sonucu: ön yükleme LCP'yi DEĞİŞTİRMEDİ
+
+Düzeltme yayınlanıp CI Lighthouse tekrar koşturuldu. Dürüst sonuç:
+
+| Sayfa | Önce (P / LCP) | Sonra (P / LCP) |
+| --- | --- | --- |
+| Masaüstü ana sayfa | 100 / 0,8 s | 100 / 0,8 s |
+| Masaüstü mahalleler | 100 / 0,7 s | 100 / 0,7 s |
+| Masaüstü portföy | 100 / 0,8 s | 100 / 0,8 s |
+| Mobil ana sayfa | 90 / 3,5 s | 91 / 3,5 s |
+| Mobil mahalleler | 91 / 3,5 s | 91 / 3,5 s |
+| Mobil portföy | 89 / 3,6 s | 89 / 3,7 s |
+
+**Font, darboğaz değilmiş.** `@font-face` zaten render engelleyen CSS'in
+içinde ve tarayıcı onu CSS'i ayrıştırır ayrıştırmaz istiyor; ön yükleme o
+isteği yalnızca birkaç on milisaniye öne çekiyor.
+
+Düzeltme yine de duruyor: Next'in ön yüklemesinin HTML'e hiç ulaşmaması
+gerçek bir kusur, maliyeti sıfır ve testle bağlı. Ama **LCP kazancı diye
+sunulmuyor.**
+
+## Ölçüm asıl sebebi gösterdi: `/mahalleler`in LCP öğesi TEMBEL bir görsel
+
+Raporlardaki LCP öğeleri okununca şu çıktı:
+
+| Sayfa | LCP öğesi |
+| --- | --- |
+| Ana sayfa | vitrin açıklama paragrafı (metin) |
+| Portföy | vitrin açıklama paragrafı (metin) |
+| **Mahalleler** | **ilk mahalle kartının kapak görseli — `loading="lazy"`** |
+
+Yani `/mahalleler` sayfasının en büyük öğesi, tarayıcıya "acelesi yok" diye
+işaretlenmişti. Mobilde kart görüş alanının içinde: üst kenar 533 px,
+yükseklik 231 px.
+
+⚠️ Tembel yükleme yanlış değil, varsayılan olarak doğru: 26 kartın 23'ü
+ekranın altında. Kural "hepsi öncelikli olsun" değil, **"ilk ekrandakiler
+öncelikli olsun"**. İlk üç kart `priority` aldı.
+
+⚠️ Ana sayfada mahalle kartları **önceliksiz kalıyor** ve bu bilinçli: orada
+kartlar sayfanın çok altında ve öncelik vermek, gerçek LCP adayı olan vitrin
+sahnesinin bant genişliğini yerdi. Aynı ders `/portfoy` ızgarasında bir kez
+ölçülmüştü.
+
+Kalıcı denetim: `src/lib/yazi/lcp.test.ts`.
+
+## ⚠️ Önceki "gerileme" tespitim fazla kesindi — düzeltiyorum
+
+`/portfoy` mobil LCP'sinin 2,8 s → 3,6 s çıktığını söylemiştim. Daha çok
+koşu birikince tablo değişti: aynı derlemede aynı öğe için render gecikmesi
+**135 ms, 429 ms, 413 ms** çıkıyor. Yani ölçüm iki tepeli ve sayfa hızlı
+boyanabiliyor.
+
+Üç koşuluk iki örneklem, gerileme ilan etmek için yeterli değilmiş.
+Aradaki fark ağırlıklı olarak CI makinesinin koşu-koşu değişkenliği.
