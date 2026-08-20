@@ -94,7 +94,7 @@ export default async function HakkimizdaSayfasi() {
                 width={hakkimizda.portre.en ?? 640}
                 height={hakkimizda.portre.boy ?? 800}
                 sizes="(max-width: 1024px) 100vw, 18rem"
-                className="rounded-kart w-full object-cover"
+                className="rounded-buyuk w-full object-cover"
               />
               {hakkimizda.portreAltMetni ? (
                 <figcaption className="text-metin-3 mt-2 text-govde-kucuk">
@@ -117,7 +117,7 @@ export default async function HakkimizdaSayfasi() {
                   height={oge.boy ?? 750}
                   sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 33vw"
                   loading="lazy"
-                  className="rounded-kart w-full object-cover"
+                  className="rounded-buyuk w-full object-cover"
                 />
                 {oge.aciklama ? (
                   <figcaption className="text-metin-3 text-govde-kucuk">{oge.aciklama}</figcaption>
@@ -142,8 +142,16 @@ export default async function HakkimizdaSayfasi() {
             ilanını yayınlamıyoruz — bu, sistemimizde kod seviyesinde engellenmiştir.
           </p>
 
+          {/*
+            ⚠️ YASAL BİLGİLER TABLOSU CAM DEĞİL, OPAK KALDI.
+
+            Yetki belgesi numarası, MERSİS ve vergi bilgileri yasal
+            zorunluluk (kural 1). Arkası görünen bir yüzeyde okunurluk
+            zemindeki içeriğe bağlanır; bu tablo her koşulda net okunmalı.
+            Yalnızca köşe yarıçapı Aurora ölçeğine geçti.
+          */}
           {yasalSatirlar.length > 0 ? (
-            <dl className="border-kenar bg-yuzey divide-kenar rounded-kart mt-2 divide-y border-[0.5px]">
+            <dl className="border-kenar bg-yuzey divide-kenar rounded-buyuk mt-2 divide-y border-[0.5px]">
               {yasalSatirlar.map((satir) => (
                 <div
                   key={satir.etiket}
