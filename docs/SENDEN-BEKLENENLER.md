@@ -221,6 +221,18 @@ atlanan adım sonrakini sessizce çalışmaz hâle getirir.
 
 
 - [ ] **Çorlu'nun havadan çekilmiş hero görseli** (kullanım hakkı bize ait)
+      ⚠️ **Karşılığı büyüdü:** Aurora'da ana sayfanın vitrini tam ekran ve
+      zemini panelden geliyor — Hero (Ana Sayfa) slaytlarının İLKİ tam ekran
+      arka plan oluyor. Yani yüklediğin fotoğraf sayfanın en görünür yerine
+      çıkıyor. Şu an yerine sıcak gradyan çiziliyor (boş kutu değil,
+      tasarlanmış ikinci basamak).
+
+- [ ] **Koyu zemin için açık renkli logo** (altın ya da beyaz, tercihen SVG)
+      Nereye: Ayarlar → Marka ve Görünüm → Koyu tema logosu
+      ⚠️ Altbilgi iki temada da koyu. Açık zemin için hazırlanmış bir PNG'nin
+      kenarları koyu zeminde hale bırakıyor — bu, kodla düzeltilemeyecek tek
+      logo sorunu. SVG yükleme açık ve yüklenen dosya otomatik temizleniyor.
+      Boşsa ana logo, o da yoksa site adı yazıyla kullanılıyor.
       Nereye: `src/app/(site)/page.tsx` → `Kahraman` bölümünün zemini
       Olmazsa: Hero şu an düz lacivert zemin. Şartname tam genişlik görsel +
       lacivert overlay istiyor; stok fotoğraf koymadım çünkü şartnamenin
