@@ -44,7 +44,23 @@ const KARTLAR = [
 
 export function GuvenKartlari() {
   return (
-    <div className="kapsayici relative z-10 -mt-12 sm:-mt-16">
+    <section className="kapsayici relative z-10 -mt-12 sm:-mt-16">
+      {/*
+        ⚠️ GÖRÜNMEZ AMA ZORUNLU BİR `<h2>`.
+
+        Kart başlıkları `<h3>` ve sayfanın `<h1>`i vitrinde: aradaki basamak
+        boş kalınca başlık sırası atlıyor. Lighthouse bunu yakaladı
+        (`heading-order`) ve haklıydı — ekran okuyucuyla gezen biri başlık
+        listesinde h1'den h3'e düşünce arada kaçırdığı bir bölüm olduğunu
+        sanar.
+
+        Başlık görsel olarak gizli çünkü kartlar zaten kendi kendini
+        anlatıyor; görünür bir "Neden biz" başlığı düzeni bölerdi. Gizlemek
+        `display: none` DEĞİL `sr-only` ile: `display: none` başlığı ekran
+        okuyucudan da siler ve sorunu çözmez, saklar.
+      */}
+      <h2 className="sr-only">Neden Aslıhan GYD</h2>
+
       <ul className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
         {KARTLAR.map((kart, sira) => (
           <Sahne as="li" key={kart.baslik} gecikme={sira * 60}>
@@ -62,6 +78,6 @@ export function GuvenKartlari() {
           </Sahne>
         ))}
       </ul>
-    </div>
+    </section>
   )
 }
