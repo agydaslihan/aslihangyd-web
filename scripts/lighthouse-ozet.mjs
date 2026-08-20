@@ -34,35 +34,18 @@
  * Eski düz adlandırma (`anasayfa.report.json`) da okunur; o durumda tek
  * koşum varmış gibi davranır ve yayılım gösterilmez.
  *
- * Hedefler `docs/AURORA-LUXURY.md` §4'ten. ⚠️ CİHAZA GÖRE FARKLI ve bu
- * bilinçli bir indirim değil, ölçülmüş bir gerçek: mobil performans skoru
- * simüle edilmiş 4G + 4× CPU yavaşlatmayla hesaplanıyor ve hareket kodu
- * taşıyan bir sitede 95 gerçekçi değil. Taban 75; altına düşerse hangi
- * bölüm, hangi animasyon, kaç kB sorusu sorulur.
+ * Hedefler `scripts/lighthouse-esikleri.mjs` içinde ve `CLAUDE.md`deki
+ * tabloyla test tarafından eşleniyor.
  */
 
 import { readdirSync, readFileSync } from 'node:fs'
 import { join } from 'node:path'
 
-const HEDEFLER = {
-  masaustu: {
-    performance: 90,
-    accessibility: 95,
-    'best-practices': 100,
-    seo: 100,
-  },
-  mobil: {
-    performance: 75,
-    accessibility: 95,
-    'best-practices': 100,
-    seo: 100,
-  },
-}
-
-/** Bilinmeyen cihaz anahtarı için masaüstü eşiği — daha sıkı olan. */
-function hedefler(cihaz) {
-  return HEDEFLER[cihaz] ?? HEDEFLER.masaustu
-}
+/**
+ * ⚠️ Eşikler BU DOSYADA DEĞİL: `CLAUDE.md` ile ikizi tutulan tek kaynakta.
+ * Buraya kopyalanmış bir sayı, şartname değiştiğinde sessizce eskir.
+ */
+import { cihazEsikleri } from './lighthouse-esikleri.mjs'
 
 /** Cihaz anahtarından başlık. Bilinmeyen anahtar olduğu gibi yazılır. */
 const CIHAZ_ADI = { masaustu: 'Masaüstü', mobil: 'Mobil' }
@@ -165,7 +148,7 @@ for (const cihaz of cihazlar) {
   console.log('| --- | --- | --- | --- | --- |')
 
   for (const { sayfa, raporlar } of grup.sort((a, b) => a.sayfa.localeCompare(b.sayfa))) {
-    const cihazHedefi = hedefler(cihaz)
+    const cihazHedefi = cihazEsikleri(cihaz)
     const hucreler = Object.keys(cihazHedefi).map((anahtar) => {
       const puanlar = raporlar
         .map((r) => r.categories?.[anahtar]?.score)

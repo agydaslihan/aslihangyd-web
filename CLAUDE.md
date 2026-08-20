@@ -214,7 +214,25 @@ yoksa yetkisi dolan ilanı yayından kaldıran görev çalışamaz.
 
 ## Performans hedefleri
 LCP < 2.5s · CLS < 0.1 · INP < 200ms
-Lighthouse: Performance ≥90, SEO ≥95, Accessibility ≥95
+
+⚠️ Lighthouse eşikleri CİHAZA GÖRE FARKLI (Aurora Luxury §4). Mobil
+performans skoru simüle edilmiş 4G + 4× CPU yavaşlatmayla hesaplanıyor;
+hareket kodu taşıyan bir sitede 90 gerçekçi değil. 3 koşum medyanı:
+
+| Cihaz | Performans | Erişilebilirlik | En iyi uygulamalar | SEO |
+| --- | --- | --- | --- | --- |
+| Masaüstü | ≥90 | ≥95 | 100 | 100 |
+| Mobil | ≥75 | ≥95 | 100 | 100 |
+
+⚠️ Bu tablo TEK KAYNAK DEĞİL, KAYNAĞIN İKİZİ. Ölçüm betiğinin eşikleri
+`scripts/lighthouse-esikleri.mjs` içinde; `src/lib/olcum/lighthouseEsikleri.test.ts`
+ikisinin aynı kaldığını denetliyor. Buradaki sayıyı değiştiren, betiği de
+değiştirmek zorunda — yoksa test kırılır.
+
+⚠️ Mobil 75'in altına düşerse DUR ve bildir: hangi bölüm, hangi animasyon,
+kaç kB. Bir animasyon hedefi bozuyorsa animasyon değişir, hedef değil.
+
+Bundle: ana sayfa ≤320 kB gzip · hareket kodu ≤120 kB gzip
 
 ## Klasör yapısı
 src/app/(site)       genel site

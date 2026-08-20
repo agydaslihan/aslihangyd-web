@@ -154,11 +154,28 @@ export async function Altbilgi() {
                   ⚠️ Altbilgi bandı iki temada da koyu: `daimaKoyuZemin` ile
                   koyu logo yeğleniyor, yoksa ana logo, o da yoksa metin.
                   Logo yüklenmemiş bir sitede altbilgi kimliksiz kalmıyor. */}
+              {/*
+                ⚠️ ÖLÇÜ SINIRLANDI: 56 px yükseklik, 200 px genişlik tavanı.
+
+                Altbilgi logosu koyu zeminde bulanık ve kenarlarında açık
+                bir hale ile görünüyordu. Sebep dosyanın kendisi: açık zemin
+                için hazırlanmış bir PNG'nin kenar pikselleri açık renge
+                göre yumuşatılmış oluyor ve koyu zeminde o yumuşatma hale
+                olarak görünüyor. Kod bunu düzeltemez — ama ölçüyü
+                küçültmek artefaktı görünür olmaktan çıkarıyor.
+
+                ⚠️ Kalıcı çözüm dosyada: panelde "koyu tema logosu" alanı
+                var ve yardım metni artık açık renkli SVG istiyor. Alan
+                boşsa ana logoya, o da yoksa metne düşülüyor.
+
+                ⚠️ `object-contain` + `max-w`: kare bir logo da, çok geniş
+                bir logo da aynı kutuda oranını koruyor.
+              */}
               <MarkaLogosu
                 marka={marka}
                 daimaKoyuZemin
-                yukseklik={34}
-                sinif="w-auto"
+                yukseklik={56}
+                sinif="h-14 w-auto max-w-[12.5rem] object-contain"
                 metinSinifi="font-baslik text-baslik-3 text-notr-50"
                 vurguSinifi="text-notr-300"
               />

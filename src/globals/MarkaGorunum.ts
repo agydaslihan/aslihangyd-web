@@ -160,17 +160,31 @@ export const MarkaGorunum: GlobalConfig = {
               label: 'Ana logo (açık tema)',
               admin: {
                 description:
-                  'SVG tercih edilir, PNG de kabul. ⚠️ Her sayfada yükleniyor — 50 kB üstü ' +
-                  'dosyalar için panelde uyarı çıkar.',
+                  'SVG tercih edin: her boyutta keskin, dosyası küçük. PNG kullanacaksanız ' +
+                  'şeffaf arka planlı ve en az 3x çözünürlükte olsun. ' +
+                  '⚠️ Her sayfada yükleniyor — 50 kB üstü dosyalar için panelde uyarı çıkar. ' +
+                  '⚠️ Başlıkta 48 px yüksekliğinde gösteriliyor.',
               },
             },
             {
               name: 'logoKoyu',
               type: 'upload',
               relationTo: 'medya',
+              /**
+               * ⚠️ ALTBİLGİ İKİ TEMADA DA KOYU — bu alan yalnızca "koyu
+               * tema" için değil, altbilgi bandı için de kullanılıyor.
+               * Açık zemin için hazırlanmış bir PNG'nin kenar pikselleri
+               * açık renge göre yumuşatılmış oluyor ve koyu zeminde hale
+               * olarak görünüyor; koyu logo o artefaktın tek gerçek çözümü.
+               */
               label: 'Koyu tema logosu',
               admin: {
-                description: 'İsteğe bağlı. Boşsa koyu temada da ana logo kullanılır.',
+                description:
+                  'Koyu zemin için AÇIK RENKLİ (altın ya da beyaz) SVG tercih edin. ' +
+                  'PNG kullanacaksanız şeffaf arka planlı ve en az 3x çözünürlükte olsun — ' +
+                  'açık zemin için hazırlanmış bir PNG koyu zeminde kenarlarında hale bırakır. ' +
+                  '⚠️ Boşsa koyu temada ve altbilgide ANA LOGO kullanılır; o da yoksa site adı ' +
+                  'yazıyla gösterilir. Bozuk görsel hiçbir durumda gösterilmez.',
               },
             },
             {

@@ -152,6 +152,55 @@ export const Medya: CollectionConfig = {
 
   hooks: {
     /**
+     * ⚠️ SVG TEMİZLİĞİ `beforeOperation`DA — VE BU YER ÖLÇÜMLE BULUNDU.
+     *
+     * İlk kurulumda temizlik `beforeChange` içindeydi ve HİÇBİR ETKİSİ
+     * OLMADI: yüklenen dosya kaydedildi, içindeki dış referans olduğu gibi
+     * servis edildi. Sebep sıra — Payload `generateFileData`yı
+     * `beforeChange`ten ÖNCE çalıştırıp diske yazılacak tamponu orada
+     * hazırlıyor; sonradan `req.file.data`yı değiştirmek yazılan dosyayı
+     * değiştirmiyor.
+     *
+     * Deneyle görüldü: temizlenmesi gereken SVG 233 baytla, dış referansı
+     * yerinde duruyordu. `beforeOperation` dosya işlenmeden önce çalışıyor.
+     *
+     * ⚠️ SVG BİR GÖRSEL DEĞİL BİR BELGEDİR. `<img>` içinde betiği çalışmaz
+     * ama dosya kendi adresinden açıldığında tarayıcı onu XML olarak açar
+     * ve içindeki `<script>` bizim kaynağımızda çalışır.
+     *
+     * ⚠️ PAYLOAD'IN KENDİ KAPISI DA VAR ve bu kanca onun yerine geçmiyor:
+     * Payload 3.87 zararlı içerik taşıyan SVG'yi tümden REDDEDİYOR
+     * ("SVG file contains potentially harmful content"). Bu kanca onun
+     * geçirdiklerini temizliyor — örneğin uzak bir sunucuya işaret eden
+     * `<image href="https://…">`, yani logoyu ziyaretçinin IP'sini
+     * bildiren bir izleyiciye çeviren satır. Payload onu zararlı saymıyor;
+     * biz istemiyoruz.
+     */
+    beforeOperation: [
+      async ({ args, operation }) => {
+        if (operation !== 'create' && operation !== 'update') return args
+
+        const dosya = args.req?.file
+        if (!dosya?.data) return args
+
+        const { svgMi, svgTemizle } = await import('@/lib/medya/svgTemizle')
+        if (!svgMi(dosya.mimetype, dosya.name)) return args
+
+        const { icerik, kaldirilanlar } = svgTemizle(dosya.data.toString('utf8'))
+        if (kaldirilanlar.length > 0) {
+          dosya.data = Buffer.from(icerik, 'utf8')
+          dosya.size = dosya.data.byteLength
+          // ⚠️ Sessizce temizlemiyoruz: yükleyen kişi ne olduğunu bilmeli.
+          args.req.payload.logger.warn(
+            `[medya] SVG temizlendi (${dosya.name}): ${kaldirilanlar.join(', ')}`,
+          )
+        }
+
+        return args
+      },
+    ],
+
+    /**
      * ⚠️ Ölçüm `beforeChange`te yapılıyor, çünkü yalnızca burada dosyanın
      * ham içeriği (`req.file.data`) elimizde. `afterChange`te dosya diske
      * yazılmış olur ve yeniden okumak gerekirdi.
@@ -163,6 +212,10 @@ export const Medya: CollectionConfig = {
       async ({ data, req }) => {
         const dosya = req.file
         if (!dosya?.data) return data
+
+        // SVG'de bayt bütçesi ölçümü anlamsız: sharp onu rasterleştirmiyor.
+        const { svgMi } = await import('@/lib/medya/svgTemizle')
+        if (svgMi(dosya.mimetype, dosya.name)) return data
 
         const { gorselButcesiniOlc } = await import('@/lib/medya/gorselButcesi')
         const olcum = await gorselButcesiniOlc(dosya.data)

@@ -2144,11 +2144,11 @@ export interface MarkaGorunum {
    */
   slogan?: string | null;
   /**
-   * SVG tercih edilir, PNG de kabul. ⚠️ Her sayfada yükleniyor — 50 kB üstü dosyalar için panelde uyarı çıkar.
+   * SVG tercih edin: her boyutta keskin, dosyası küçük. PNG kullanacaksanız şeffaf arka planlı ve en az 3x çözünürlükte olsun. ⚠️ Her sayfada yükleniyor — 50 kB üstü dosyalar için panelde uyarı çıkar. ⚠️ Başlıkta 48 px yüksekliğinde gösteriliyor.
    */
   logo?: (number | null) | Medya;
   /**
-   * İsteğe bağlı. Boşsa koyu temada da ana logo kullanılır.
+   * Koyu zemin için AÇIK RENKLİ (altın ya da beyaz) SVG tercih edin. PNG kullanacaksanız şeffaf arka planlı ve en az 3x çözünürlükte olsun — açık zemin için hazırlanmış bir PNG koyu zeminde kenarlarında hale bırakır. ⚠️ Boşsa koyu temada ve altbilgide ANA LOGO kullanılır; o da yoksa site adı yazıyla gösterilir. Bozuk görsel hiçbir durumda gösterilmez.
    */
   logoKoyu?: (number | null) | Medya;
   /**
