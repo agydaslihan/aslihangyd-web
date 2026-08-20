@@ -1,5 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import localFont from 'next/font/local'
+
+import { govdeFontuAdresi } from '@/lib/yazi/onyukleme'
 import type React from 'react'
 
 import { Analitik } from '@/components/analitik/Analitik'
@@ -225,6 +227,31 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   return (
     <html lang="tr" className={`${yaziArayuz.variable} ${yaziBaslik.variable}`}>
       <head>
+        {/*
+          ⚠️ GÖVDE FONTU ÖN YÜKLEMESİ — NEXT'İN BASMADIĞI `<link>`.
+
+          Next fontu ön yüklemeye çalışıyor ama `<link>`i HTML `<head>`ine
+          değil RSC akışına bir ipucu olarak yazıyor (`:HL[…,"font",…]`), yani
+          istek ancak paket inip akış ayrıştırıldıktan sonra başlıyor. Ölçüm
+          ve tam gerekçe `lib/yazi/onyukleme.ts` içinde.
+
+          ⚠️ `crossOrigin` ŞART: font ön yüklemesi CORS modunda yapılır;
+          öznitelik olmadan tarayıcı dosyayı İKİ KEZ indirir (biri ön yükleme,
+          biri `@font-face`) ve ön yükleme kazanç yerine kayıp olur.
+
+          ⚠️ Adres yoksa hiçbir şey basılmıyor. Ön yükleme bir iyileştirme,
+          varlık şartı değil.
+        */}
+        {govdeFontuAdresi() !== null ? (
+          <link
+            rel="preload"
+            as="font"
+            type="font/woff2"
+            href={govdeFontuAdresi() ?? ''}
+            crossOrigin="anonymous"
+          />
+        ) : null}
+
         {/*
           ⚠️ TİTREME ÖNLEYİCİ — paint'ten ÖNCE çalışmak zorunda.
 

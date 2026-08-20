@@ -87,7 +87,11 @@ export default async function MahallelerSayfasi() {
               okunur. */}
               {mahalleler.map((mahalle, sira) => (
                 <Sahne key={mahalle.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
-                  <MahalleKarti mahalle={mahalle} baslikSeviyesi={2} />
+                  {/* ⚠️ İLK ÜÇ KART ÖNCELİKLİ. Ölçümde LCP öğesi ilk kartın kapak
+                    görseliydi ve `loading="lazy"` taşıyordu: sayfanın en büyük
+                    öğesi tarayıcıya "acelesi yok" diye işaretlenmişti. Üçü
+                    mobilde ilk ekranda; dördüncüden sonrası tembel kalıyor. */}
+                  <MahalleKarti mahalle={mahalle} baslikSeviyesi={2} oncelikli={sira < 3} />
                 </Sahne>
               ))}
             </div>
