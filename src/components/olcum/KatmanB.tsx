@@ -32,9 +32,25 @@ const OlayIzleyici = dynamic(() =>
   import('./OlayIzleyici').then((modul) => ({ default: modul.OlayIzleyici })),
 )
 
+/**
+ * Core Web Vitals alan ölçümü — aynı onay kapısının arkasında.
+ *
+ * ⚠️ AYRI BİR KAPI DEĞİL, AYNI KAPI. Ölçülen şeyin teknik bir zamanlama
+ * olması kural 8'i gevşetmiyor: kural betiğin niteliğine değil varlığına
+ * bakıyor. Onay yoksa `web-vitals` kütüphanesi hiç içe aktarılmıyor.
+ */
+const VitalIzleyici = dynamic(() =>
+  import('./VitalIzleyici').then((modul) => ({ default: modul.VitalIzleyici })),
+)
+
 export async function KatmanB() {
   const onay = await cerezOnayiniOku()
   if (!izinVarMi(onay, 'analitik')) return null
 
-  return <OlayIzleyici />
+  return (
+    <>
+      <OlayIzleyici />
+      <VitalIzleyici />
+    </>
+  )
 }

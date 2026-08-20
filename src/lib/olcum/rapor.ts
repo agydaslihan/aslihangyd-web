@@ -6,6 +6,7 @@ import { getPayload, type Where } from 'payload'
 import { BOSALTMA_ARALIGI_MS, gunAnahtari, tamponuOku } from './tampon'
 import { olayTanimi, YUKSEK_NIYETLI_OLAYLAR } from './sozluk'
 import { DEGERLEME_ALANLARI, fiyatBandiEtiketi, type Katman } from './tipler'
+import { KOVALAR, VITAL_ADLARI, gecerliVitalMi, karneDagilimi, p75, type VitalAdi } from './vital'
 
 /**
  * Panelin okuduğu rapor motoru.
@@ -36,6 +37,18 @@ import { DEGERLEME_ALANLARI, fiyatBandiEtiketi, type Katman } from './tipler'
  * hatırlanır; yanındaki not okunmaz.
  */
 export const ASGARI_ORNEKLEM = 100
+
+/**
+ * Bir vital satırında sayı göstermek için gereken asgari ölçüm.
+ *
+ * ⚠️ 100 DEĞİL 30 — bilinçli olarak daha düşük. Yatırım skoru ve endeks
+ * eşikleri yüksek çünkü onlar ziyaretçiye YAYINLANIYOR ve yatırım kararı
+ * aldırıyor. Bu sayı yalnızca panelde, kendi ekibimize görünüyor ve
+ * "sitem yavaş mı" sorusunu cevaplıyor; 30 ölçümlük bir p75 kaba ama
+ * kullanılabilir bir sinyal. Eşik yine de var: üç ölçümden p75 hesaplamak
+ * matematiksel olarak mümkün ama anlamsız.
+ */
+export const ASGARI_VITAL_ORNEK = 30
 
 export interface Deger {
   sayi: number
@@ -90,6 +103,21 @@ export interface TeknikSatiri {
   hata: number
 }
 
+/** Bir metriğin bir cihaz sınıfındaki alan ölçümü. */
+export interface VitalSatiri {
+  ad: VitalAdi
+  cihaz: 'mobil' | 'masaustu'
+  /** Yaklaşık 75. yüzdelik — histogramdan interpolasyonla. */
+  p75: number | null
+  /** p75 sınırsız kovaya düştü mü: değer "en az" olarak okunmalı. */
+  p75Asgari: boolean
+  iyiYuzde: number | null
+  ortaYuzde: number | null
+  zayifYuzde: number | null
+  /** Kaç ölçüm — az örneklemde sayı gösterilmiyor. */
+  ornek: number
+}
+
 export interface Rapor {
   /** Raporun kapsadığı gün sayısı. */
   gunSayisi: number
@@ -116,6 +144,22 @@ export interface Rapor {
   teknik: TeknikSatiri[]
   cihazlar: AdSayi[]
   hataOrani: number | null
+  /**
+   * Gerçek ziyaretçilerden ölçülen Core Web Vitals.
+   *
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ LABORATUVAR SAYISI GERÇEĞİ SÖYLEMİYORDU — BU BÖLÜM ONUN İÇİN VAR.
+   *
+   * CI'daki Lighthouse mobil LCP'yi 3,4 sn gösteriyordu ve hiçbir müdahale
+   * onu kıpırdatmadı. Raporun ham metriklerinde sebep çıktı: sayfa gerçekte
+   * 194 ms'de boyanıyor; 3,4 sn onun yavaş bir 4G telefona YANSITILMIŞ hâli
+   * (`throttlingMethod: "simulate"`, istek başına 562 ms varsayım).
+   *
+   * Hedefin (LCP < 2,5 sn) hangi sayıyla ölçüleceği belirsizdi. Burada
+   * ölçülen sayı gerçek ziyaretçilerin gerçek cihazlarından geliyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  vitaller: VitalSatiri[]
   /** Hiç veri yok mu — panel boş durumu bunu kullanıyor. */
   bos: boolean
   /**
@@ -149,6 +193,7 @@ export interface Rapor {
 /* ── Yardımcılar ─────────────────────────────────────────────────────── */
 
 interface GunSatiri {
+  vitaller: { ad: string; cihaz: string; kova: number; adet: number }[]
   gun: string
   toplamIstek: number
   onayliIstek: number
@@ -192,8 +237,69 @@ function satirlariCoz(ham: unknown[]): GunSatiri[] {
       utmKaynaklar: dizi(k.utmKaynaklar),
       cihazlar: dizi(k.cihazlar),
       olaylar: dizi(k.olaylar),
+      vitaller: dizi(k.vitaller),
     }
   })
+}
+
+/**
+ * Vital histogramlarını metrik × cihaz kırılımında toplar.
+ *
+ * ⚠️ ASGARİ ÖRNEKLEM UYGULANIYOR (`ASGARI_VITAL_ORNEK`). Üç ölçümden p75
+ * hesaplamak matematiksel olarak mümkün ama anlamsız; panelde kesin bir sayı
+ * gibi durur ve yanlış karar aldırır. Az örneklemde satır yine görünüyor —
+ * gizlemek "veri yok" sanılmasına yol açardı — ama sayı yerine örneklem
+ * sayısı gösteriliyor.
+ */
+function vitalleriTopla(satirlar: GunSatiri[]): VitalSatiri[] {
+  const histogramlar = new Map<string, number[]>()
+
+  for (const satir of satirlar) {
+    for (const kayit of satir.vitaller) {
+      if (!gecerliVitalMi(kayit.ad)) continue
+      const cihaz = kayit.cihaz === 'mobil' ? 'mobil' : 'masaustu'
+      const anahtar = `${kayit.ad}|${cihaz}`
+
+      let kovalar = histogramlar.get(anahtar)
+      if (kovalar === undefined) {
+        kovalar = new Array<number>(KOVALAR[kayit.ad].length).fill(0)
+        histogramlar.set(anahtar, kovalar)
+      }
+
+      // ⚠️ Sınır dışı kova ATILIYOR: kova sayısı değişirse (eşik güncellemesi)
+      // eski satırlar diziyi taşırıp sessizce yanlış p75 üretebilirdi.
+      const sira = kayit.kova
+      if (!Number.isInteger(sira) || sira < 0 || sira >= kovalar.length) continue
+      kovalar[sira] = (kovalar[sira] ?? 0) + sayi(kayit.adet)
+    }
+  }
+
+  const sonuc: VitalSatiri[] = []
+  for (const ad of VITAL_ADLARI) {
+    for (const cihaz of ['mobil', 'masaustu'] as const) {
+      const kovalar = histogramlar.get(`${ad}|${cihaz}`)
+      if (kovalar === undefined) continue
+
+      const dagilim = karneDagilimi(ad, kovalar)
+      if (dagilim.toplam === 0) continue
+
+      const yeterli = dagilim.toplam >= ASGARI_VITAL_ORNEK
+      const yuzdelik = yeterli ? p75(ad, kovalar) : null
+
+      sonuc.push({
+        ad,
+        cihaz,
+        p75: yuzdelik?.deger ?? null,
+        p75Asgari: yuzdelik?.asgari ?? false,
+        iyiYuzde: yeterli ? (dagilim.iyi / dagilim.toplam) * 100 : null,
+        ortaYuzde: yeterli ? (dagilim.orta / dagilim.toplam) * 100 : null,
+        zayifYuzde: yeterli ? (dagilim.zayif / dagilim.toplam) * 100 : null,
+        ornek: dagilim.toplam,
+      })
+    }
+  }
+
+  return sonuc
 }
 
 /** Olay sayacı: ad (ve istenirse ayrıntı) bazında toplam. */
@@ -548,6 +654,7 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
     teknik,
     cihazlar: siralaVeKes(cihazHaritasi, 4),
     hataOrani: ziyaretci > 0 ? Math.round((toplamHata / ziyaretci) * 1000) / 10 : null,
+    vitaller: vitalleriTopla(buHaftaSatirlari),
     bos: ziyaretci === 0 && tum.length === 0,
     tani: taniyiTopla(gunler.docs),
   }
