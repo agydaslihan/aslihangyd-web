@@ -8,6 +8,7 @@ import { IlanGalerisi } from '@/components/ilan/IlanGalerisi'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
 import { DroneVideo, videoGosterilebilirMi } from '@/components/medya/DroneVideo'
 import { SanalTur } from '@/components/medya/SanalTur'
+import { Sahne } from '@/components/hareket/Sahne'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat } from '@/components/ui/Feragat'
@@ -175,10 +176,12 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
             {/* ── Açıklama ── */}
             {ilan.aciklama ? (
-              <section className="mt-10">
-                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Açıklama</h2>
-                <ZenginMetin veri={ilan.aciklama} />
-              </section>
+              <Sahne className="mt-10">
+                <section>
+                  <h2 className="mb-3 font-sans text-baslik-3 font-medium">Açıklama</h2>
+                  <ZenginMetin veri={ilan.aciklama} />
+                </section>
+              </Sahne>
             ) : null}
 
             {/*
@@ -196,30 +199,34 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               bunnyId: ilan.droneVideoId,
               youtube: ilan.droneVideoYoutube,
             }) ? (
-              <section className="mt-10">
-                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Drone videosu</h2>
-                <DroneVideo
-                  kaynak={ilan.videoKaynagi}
-                  bunnyId={ilan.droneVideoId}
-                  youtube={ilan.droneVideoYoutube}
-                  kapakUrl={
-                    typeof ilan.droneVideoPosteri === 'object' &&
-                    ilan.droneVideoPosteri !== null &&
-                    typeof ilan.droneVideoPosteri.url === 'string'
-                      ? ilan.droneVideoPosteri.url
-                      : null
-                  }
-                  baslik={`${ilan.baslik} drone videosu`}
-                />
-              </section>
+              <Sahne className="mt-10">
+                <section>
+                  <h2 className="mb-3 font-sans text-baslik-3 font-medium">Drone videosu</h2>
+                  <DroneVideo
+                    kaynak={ilan.videoKaynagi}
+                    bunnyId={ilan.droneVideoId}
+                    youtube={ilan.droneVideoYoutube}
+                    kapakUrl={
+                      typeof ilan.droneVideoPosteri === 'object' &&
+                      ilan.droneVideoPosteri !== null &&
+                      typeof ilan.droneVideoPosteri.url === 'string'
+                        ? ilan.droneVideoPosteri.url
+                        : null
+                    }
+                    baslik={`${ilan.baslik} drone videosu`}
+                  />
+                </section>
+              </Sahne>
             ) : null}
 
             {/* ── 360° sanal tur ── */}
             {ilan.sanalTurUrl ? (
-              <section className="mt-10">
-                <h2 className="mb-3 font-sans text-baslik-3 font-medium">360° sanal tur</h2>
-                <SanalTur adres={ilan.sanalTurUrl} baslik={`${ilan.baslik} 360° turu`} />
-              </section>
+              <Sahne className="mt-10">
+                <section>
+                  <h2 className="mb-3 font-sans text-baslik-3 font-medium">360° sanal tur</h2>
+                  <SanalTur adres={ilan.sanalTurUrl} baslik={`${ilan.baslik} 360° turu`} />
+                </section>
+              </Sahne>
             ) : null}
 
             {/* ── Çevre ve erişim ──
@@ -227,28 +234,32 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
                 yoksa bölüm hiç basılmaz; ilan sayfasında boş durum kutusu
                 gürültüdür, mahalle sayfasından farklı olarak. */}
             {cevre.length > 0 ? (
-              <section className="mt-10">
-                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Çevre ve erişim</h2>
-                <CevreBolumu
-                  mesafeler={cevre}
-                  neyeGore={cevreNeyeGore}
-                  googlePlacesAcik={googlePlacesAcik}
-                />
-              </section>
+              <Sahne className="mt-10">
+                <section>
+                  <h2 className="mb-3 font-sans text-baslik-3 font-medium">Çevre ve erişim</h2>
+                  <CevreBolumu
+                    mesafeler={cevre}
+                    neyeGore={cevreNeyeGore}
+                    googlePlacesAcik={googlePlacesAcik}
+                  />
+                </section>
+              </Sahne>
             ) : null}
 
             {/* ── Öne çıkan özellikler ── */}
             {ilan.ozellikler && ilan.ozellikler.length > 0 ? (
-              <section className="mt-10">
-                <h2 className="mb-3 font-sans text-baslik-3 font-medium">Öne çıkan özellikler</h2>
-                <ul className="flex flex-wrap gap-2">
-                  {ilan.ozellikler.map((ozellik) => (
-                    <li key={ozellik.id ?? ozellik.metin}>
-                      <Rozet>{ozellik.metin}</Rozet>
-                    </li>
-                  ))}
-                </ul>
-              </section>
+              <Sahne className="mt-10">
+                <section>
+                  <h2 className="mb-3 font-sans text-baslik-3 font-medium">Öne çıkan özellikler</h2>
+                  <ul className="flex flex-wrap gap-2">
+                    {ilan.ozellikler.map((ozellik) => (
+                      <li key={ozellik.id ?? ozellik.metin}>
+                        <Rozet>{ozellik.metin}</Rozet>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              </Sahne>
             ) : null}
           </div>
 
@@ -541,20 +552,22 @@ function NitelikTablosu({ ilan }: { ilan: Ilanlar }) {
   if (dolu.length === 0) return null
 
   return (
-    <section className="mt-10">
-      <h2 className="mb-3 font-sans text-baslik-3 font-medium">Taşınmaz bilgileri</h2>
-      <dl className="border-kenar grid grid-cols-1 gap-px overflow-hidden rounded-kart border-[0.5px] bg-kenar sm:grid-cols-2">
-        {dolu.map((satir) => (
-          <div
-            key={satir.etiket}
-            className="bg-yuzey flex items-baseline justify-between gap-4 px-4 py-3"
-          >
-            <dt className="text-metin-2 text-govde-kucuk">{satir.etiket}</dt>
-            <dd className="rakam text-govde-kucuk font-medium">{satir.deger}</dd>
-          </div>
-        ))}
-      </dl>
-    </section>
+    <Sahne className="mt-10">
+      <section>
+        <h2 className="mb-3 font-sans text-baslik-3 font-medium">Taşınmaz bilgileri</h2>
+        <dl className="border-kenar grid grid-cols-1 gap-px overflow-hidden rounded-kart border-[0.5px] bg-kenar sm:grid-cols-2">
+          {dolu.map((satir) => (
+            <div
+              key={satir.etiket}
+              className="bg-yuzey flex items-baseline justify-between gap-4 px-4 py-3"
+            >
+              <dt className="text-metin-2 text-govde-kucuk">{satir.etiket}</dt>
+              <dd className="rakam text-govde-kucuk font-medium">{satir.deger}</dd>
+            </div>
+          ))}
+        </dl>
+      </section>
+    </Sahne>
   )
 }
 

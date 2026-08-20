@@ -10,6 +10,7 @@ import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
 import { EndeksSeridi } from '@/components/endeks/EndeksSeridi'
 import { GuvenSeridi } from '@/components/duzen/GuvenSeridi'
+import { Feragat } from '@/components/ui/Feragat'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
@@ -225,16 +226,23 @@ export default async function AnaSayfa() {
         />
 
         {mahalleler.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-            {/* ⚠️ Kademe 60 ms ve ÜST SINIR 5 KART (300 ms). Sabit çarpan
+          <>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+              {/* ⚠️ Kademe 60 ms ve ÜST SINIR 5 KART (300 ms). Sabit çarpan
                 altıncı kartı 360 ms geciktirirdi; kullanıcı o noktada zaten
                 kaydırıyor ve geç gelen kart "takıldı" gibi okunur. */}
-            {mahalleler.slice(0, 6).map((mahalle, sira) => (
-              <Sahne key={mahalle.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
-                <MahalleKarti mahalle={mahalle} />
-              </Sahne>
-            ))}
-          </div>
+              {mahalleler.slice(0, 6).map((mahalle, sira) => (
+                <Sahne key={mahalle.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
+                  <MahalleKarti mahalle={mahalle} />
+                </Sahne>
+              ))}
+            </div>
+
+            {/* ⚠️ KURAL 5 — kartlar yatırım skoru rozeti taşıyor; skor
+                gösterilen her yerde feragat zorunlu. Gerekçenin tamamı
+                `/mahalleler` sayfasında yazılı. */}
+            <Feragat sinifAdi="mt-6" />
+          </>
         ) : (
           <BosDurum
             baslik="Mahalle sayfaları hazırlanıyor"

@@ -54,6 +54,26 @@ export function MahalleKarti({
    */
   const siluet = gorsel?.url ? null : siluetUret(mahalle.sinir)
 
+  /**
+   * Yatırım skoru — kartın üstünde yüzen rozet.
+   *
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ SKOR YOKSA ROZET HİÇ ÇİZİLMİYOR.
+   *
+   * `toplam`, yeterli bileşen verisi yoksa kancada bilinçli olarak boş
+   * bırakılıyor (`Mahalleler.ts`). "—" ya da "0" yazan bir rozet, skorun
+   * var olduğunu ama okunamadığını ima ederdi; ikisi de yanlış. Skoru olan
+   * mahallenin rozeti var, olmayanın yok — fark görünür kalıyor.
+   *
+   * ⚠️ Bu sitenin ayırt edici rakamı bu. Kartta göstermek, ziyaretçinin
+   * mahalleleri açmadan karşılaştırabilmesi demek.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  const skor =
+    typeof mahalle.yatirimSkoru?.toplam === 'number' && Number.isFinite(mahalle.yatirimSkoru.toplam)
+      ? Math.round(mahalle.yatirimSkoru.toplam)
+      : null
+
   return (
     <article
       data-yukselen
@@ -102,6 +122,22 @@ export function MahalleKarti({
             <KonumIkon width={32} height={32} />
           </div>
         )}
+
+        {/* ⚠️ Rozet `after:absolute inset-0` ile kartı kaplayan bağlantının
+            ÜSTÜNDE duruyor ama tıklanabilir değil (`pointer-events-none`):
+            ikinci bir tıklama hedefi, kartın tamamı zaten tek bir bağlantı
+            olduğu için kafa karıştırırdı. */}
+        {skor !== null ? (
+          <div className="pointer-events-none absolute top-3 right-3 z-10">
+            <div className="border-kenar bg-yuzey/95 shadow-kart flex items-baseline gap-1 rounded-full border-[0.5px] px-3 py-1.5 backdrop-blur-[2px]">
+              {/* ⚠️ Etiketsiz bir "72 /100" ekran okuyucuda anlamsız.
+                  Görsel olarak yer kaplamadan bağlamı veriyor. */}
+              <span className="sr-only">Yatırım skoru: </span>
+              <span className="text-metin font-serif text-govde font-medium">{skor}</span>
+              <span className="text-metin-3 text-mikro">/100</span>
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex flex-1 flex-col gap-2.5 p-4 sm:p-5">

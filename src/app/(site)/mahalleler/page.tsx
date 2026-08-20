@@ -2,8 +2,11 @@ import type { Metadata } from 'next'
 import { SayfaBasligi } from '@/components/icerik/SayfaIcerik'
 import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 
+import { SayfaVitrini, VitrinOzeti } from '@/components/duzen/SayfaVitrini'
+import { Sahne } from '@/components/hareket/Sahne'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
 import { BosDurum } from '@/components/ui/BosDurum'
+import { Feragat } from '@/components/ui/Feragat'
 import { Buton } from '@/components/ui/Buton'
 import { KonumIkon } from '@/components/ui/Ikon'
 import { mutlakAdres } from '@/lib/site'
@@ -23,55 +26,95 @@ export default async function MahallelerSayfasi() {
 
   const mahalleler = await mahalleleriGetir()
 
-  return (
-    <div className="kapsayici py-10 sm:py-14">
-      {/*
-        ⚠️ BAŞLIK KÜÇÜLDÜ VE ORTALANDI — `h1` ETİKETİ DURUYOR.
+  /**
+   * ⚠️ RAKAMLAR SAYILIYOR, YAZILMIYOR (kural 2).
+   *
+   * "Mahalle" veritabanından geliyor; ortalama m² fiyatı ise ancak yeterli
+   * gözlem varsa anlamlı ve o eşik endeks motorunun işi — burada `null`
+   * geçiliyor ve hücre kendi boş durumunu gösteriyor.
+   */
+  const ozet = [
+    {
+      etiket: 'Mahalle',
+      deger: mahalleler.length > 0 ? String(mahalleler.length) : null,
+    },
+    {
+      etiket: 'Pilot bölge',
+      deger: mahalleler.length > 0 ? 'Çorlu' : null,
+    },
+  ] as const
 
-        Görsel sadelik için punto `baslik-1`den `baslik-2`ye indi ve blok
-        ortalandı. Etiket DEĞİŞMEDİ: bu sayfanın arama motoru sıralaması ve
-        ekran okuyucu gezinmesi `h1`e bağlı. "Küçük görünsün" ile "başlık
-        olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı olurdu.
+  return (
+    <>
+      {/*
+        ⚠️ BAŞLIK KÜÇÜK VE SOLDA — `h1` ETİKETİ DURUYOR.
+
+        Önceden ortalanmıştı ve sayfa doğrudan ızgarayla başlıyordu. Vitrin
+        bandı geldikten sonra ortalama, bandın sağındaki özetle çakışıyor;
+        blok sola alındı. Etiket DEĞİŞMEDİ: bu sayfanın arama motoru
+        sıralaması ve ekran okuyucu gezinmesi `h1`e bağlı. "Küçük görünsün"
+        ile "başlık olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı
+        olurdu.
       */}
-      <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-2 text-center">
+      <SayfaVitrini yan={<VitrinOzeti ogeler={ozet} />}>
+        <p className="text-aksan-metin text-eyebrow font-medium uppercase">Çorlu · Tekirdağ</p>
         <SayfaBasligi
           icerik={icerik}
           varsayilanBaslik="Çorlu mahalleleri"
-          h1Sinifi="font-serif text-baslik-2 font-medium"
-          aciklamaSinifi="text-metin-2 text-govde-kucuk leading-relaxed"
+          h1Sinifi="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1"
+          aciklamaSinifi="text-metin-2 mt-5 text-govde leading-relaxed"
           varsayilanAciklama={
-            <p className="text-metin-2 text-govde-kucuk leading-relaxed">
+            <p className="text-metin-2 mt-5 text-govde leading-relaxed">
               Bir taşınmazın değerini binadan çok mahallesi belirler. Her mahallenin hangi değer
               sürücüsünden beslendiğini — sanayi, ulaşım, eğitim, sağlık — veriyle anlatıyoruz.
             </p>
           }
         />
-      </header>
+      </SayfaVitrini>
 
-      {mahalleler.length > 0 ? (
-        <div
-          className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5 ${IZGARA_MIN_YUKSEKLIK}`}
-        >
-          {/*
+      <div className="kapsayici py-12 sm:py-16">
+        {mahalleler.length > 0 ? (
+          <>
+            <div
+              className={`grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5 ${IZGARA_MIN_YUKSEKLIK}`}
+            >
+              {/*
             ⚠️ Bu sayfada araya bölüm başlığı girmiyor: h1 doğrudan kartlara
             bağlanıyor. Kart varsayılanı h3 olduğu için seviye atlanıyordu.
           */}
-          {mahalleler.map((mahalle) => (
-            <MahalleKarti key={mahalle.id} mahalle={mahalle} baslikSeviyesi={2} />
-          ))}
-        </div>
-      ) : (
-        <BosDurum
-          baslik="Mahalle sayfaları hazırlanıyor"
-          neden="Pilot mahallelerin analiz metinleri üzerinde çalışıyoruz. Bir mahalle sayfasını yayına almadan önce, o mahalleyi gerçekten anlatan özgün bir metnin hazır olmasını bekliyoruz — yarım içerik yayınlamıyoruz."
-          ikon={<KonumIkon width={32} height={32} />}
-          eylem={
-            <Buton href="/iletisim" gorunum="ikincil">
-              Merak ettiğiniz mahalleyi sorun
-            </Buton>
-          }
-        />
-      )}
-    </div>
+              {/* ⚠️ Kademe 60 ms, üst sınır 5 (300 ms). Sabit çarpan uzun
+              listede son kartı yarım saniye geciktirir ve "takıldı" gibi
+              okunur. */}
+              {mahalleler.map((mahalle, sira) => (
+                <Sahne key={mahalle.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
+                  <MahalleKarti mahalle={mahalle} baslikSeviyesi={2} />
+                </Sahne>
+              ))}
+            </div>
+
+            {/*
+              ⚠️ KURAL 5 — YATIRIM SKORU GÖSTERİLEN HER YERDE FERAGAT ZORUNLU.
+
+              Kartlara yatırım skoru rozeti eklendi. Rozet başına feragat
+              basmak hem okunmaz hem gürültü olurdu; sayfa seviyesinde tek bir
+              ibare o sayfadaki bütün skorları kapsıyor. Kuralın amacı skorun
+              kayıtsız görünmemesi ve bu onu karşılıyor.
+            */}
+            <Feragat sinifAdi="mt-6" />
+          </>
+        ) : (
+          <BosDurum
+            baslik="Mahalle sayfaları hazırlanıyor"
+            neden="Pilot mahallelerin analiz metinleri üzerinde çalışıyoruz. Bir mahalle sayfasını yayına almadan önce, o mahalleyi gerçekten anlatan özgün bir metnin hazır olmasını bekliyoruz — yarım içerik yayınlamıyoruz."
+            ikon={<KonumIkon width={32} height={32} />}
+            eylem={
+              <Buton href="/iletisim" gorunum="ikincil">
+                Merak ettiğiniz mahalleyi sorun
+              </Buton>
+            }
+          />
+        )}
+      </div>
+    </>
   )
 }

@@ -4,6 +4,8 @@ import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 import { Suspense } from 'react'
 
 import { AkilliArama } from '@/components/ilan/AkilliArama'
+import { SayfaVitrini, VitrinOzeti } from '@/components/duzen/SayfaVitrini'
+import { Sahne } from '@/components/hareket/Sahne'
 import { FiltrePaneli } from '@/components/ilan/FiltrePaneli'
 import { Siralama } from '@/components/ilan/Siralama'
 import { aiAramaAcikMi } from '@/lib/arama/motor'
@@ -90,103 +92,132 @@ export default async function PortfoySayfasi({
    */
   const aiAramaGoster = bolumler.ai_arama && aiAramaAcikMi()
 
-  return (
-    <div className="kapsayici py-10 sm:py-14">
-      {/*
-        ⚠️ BAŞLIK KÜÇÜLDÜ VE ORTALANDI — `h1` ETİKETİ DURUYOR.
+  /**
+   * ⚠️ RAKAM SAYILIYOR, YAZILMIYOR (kural 2).
+   *
+   * Filtre uygulanmışken bandın toplamı yanıltıcı olurdu: ziyaretçi
+   * portföyün tamamını 3 sanır. Bu yüzden filtresizken toplam portföy,
+   * filtreliyken hiç rakam gösterilmiyor — sonuç sayısı zaten listenin
+   * üstünde ve `aria-live` ile duyuruluyor.
+   */
+  const ozet = filtresizMi
+    ? ([
+        { etiket: 'Yayındaki taşınmaz', deger: sonuc.toplam > 0 ? sayiYaz(sonuc.toplam) : null },
+        { etiket: 'Mahalle', deger: mahalleler.length > 0 ? String(mahalleler.length) : null },
+      ] as const)
+    : null
 
-        Görsel sadelik için punto `baslik-1`den `baslik-2`ye indi ve blok
-        ortalandı. Etiket DEĞİŞMEDİ: bu sayfanın arama motoru sıralaması ve
+  return (
+    <>
+      {/*
+        ⚠️ BAŞLIK SOLA ALINDI — `h1` ETİKETİ DURUYOR.
+
+        Önceden ortalanmıştı ve sayfa doğrudan tema sıralarıyla başlıyordu.
+        Vitrin bandı geldikten sonra ortalama, bandın sağındaki özetle
+        çakışıyor. Etiket DEĞİŞMEDİ: bu sayfanın arama motoru sıralaması ve
         ekran okuyucu gezinmesi `h1`e bağlı. "Küçük görünsün" ile "başlık
         olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı olurdu.
       */}
-      <header className="mx-auto mb-8 flex max-w-2xl flex-col gap-2 text-center">
+      <SayfaVitrini yan={ozet !== null ? <VitrinOzeti ogeler={ozet} /> : undefined}>
+        <p className="text-aksan-metin text-eyebrow font-medium uppercase">Portföy</p>
         <SayfaBasligi
           icerik={icerik}
           varsayilanBaslik="Portföy"
-          h1Sinifi="text-baslik-2"
-          aciklamaSinifi="text-metin-2 text-govde-kucuk leading-relaxed"
+          h1Sinifi="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1"
+          aciklamaSinifi="text-metin-2 mt-5 text-govde leading-relaxed"
           varsayilanAciklama={
-            <p className="text-metin-2 text-govde-kucuk leading-relaxed">
+            <p className="text-metin-2 mt-5 text-govde leading-relaxed">
               Çorlu ve çevresindeki taşınmazlarımız. Her ilanda kira çarpanı ve amortisman süresini
               hesaplayıp gösteriyoruz; kira verisi olmayan ilanlarda bu alanları boş bırakıyoruz.
             </p>
           }
         />
-      </header>
+      </SayfaVitrini>
 
-      {siralar.length > 0 ? (
-        <div className="mb-12 flex flex-col gap-10">
-          {siralar.map((sira) => (
-            <TemaBolumu key={sira.anahtar} sira={sira} />
-          ))}
-        </div>
-      ) : null}
+      <div className="kapsayici py-12 sm:py-16">
+        {siralar.length > 0 ? (
+          <div className="mb-12 flex flex-col gap-10">
+            {siralar.map((sira) => (
+              <TemaBolumu key={sira.anahtar} sira={sira} />
+            ))}
+          </div>
+        ) : null}
 
-      {/* ⚠️ İki koşul: bölüm açık VE anahtar tanımlı. Bölüm varsayılan
+        {/* ⚠️ İki koşul: bölüm açık VE anahtar tanımlı. Bölüm varsayılan
           kapalı (KVKK — aydınlatma metni bekliyor). Filtreler her
           hâlükârda çalışır; AI arama onların yerine değil yanına konuyor. */}
-      {aiAramaGoster ? <AkilliArama /> : null}
+        {aiAramaGoster ? <AkilliArama /> : null}
 
-      {/* ⚠️ İki sütun: solda yapışkan filtre paneli (280px), sağda sonuç.
+        {/* ⚠️ İki sütun: solda yapışkan filtre paneli (280px), sağda sonuç.
           Şartname §7 — dönüşümün olduğu yer burası. */}
-      <div className="grid gap-8 lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-10">
-        <Suspense fallback={<div className="iskelet h-96" />}>
-          <FiltrePaneli
-            mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
-            sonucSayisi={sonuc.toplam}
-          />
-        </Suspense>
+        <div className="grid gap-8 lg:grid-cols-[17.5rem_minmax(0,1fr)] lg:gap-10">
+          <Suspense fallback={<div className="iskelet h-96" />}>
+            <FiltrePaneli
+              mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
+              sonucSayisi={sonuc.toplam}
+            />
+          </Suspense>
 
-        <div>
-          <div className="border-kenar mb-5 flex flex-wrap items-center justify-between gap-3 border-b-[0.5px] pb-4">
-            <p className="text-metin-2 text-govde-kucuk" aria-live="polite">
-              {sonuc.toplam > 0
-                ? `${sayiYaz(sonuc.toplam)} taşınmaz listeleniyor`
-                : 'Sonuç bulunamadı'}
-            </p>
+          <div>
+            <div className="border-kenar mb-5 flex flex-wrap items-center justify-between gap-3 border-b-[0.5px] pb-4">
+              <p className="text-metin-2 text-govde-kucuk" aria-live="polite">
+                {sonuc.toplam > 0
+                  ? `${sayiYaz(sonuc.toplam)} taşınmaz listeleniyor`
+                  : 'Sonuç bulunamadı'}
+              </p>
 
-            <Suspense fallback={null}>
-              <Siralama />
-            </Suspense>
-          </div>
+              <Suspense fallback={null}>
+                <Siralama />
+              </Suspense>
+            </div>
 
-          {sonuc.ilanlar.length > 0 ? (
-            <>
-              <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:gap-5">
-                {sonuc.ilanlar.map((ilan, sira) => (
-                  <IlanKarti key={ilan.id} ilan={ilan} oncelikli={filtresizMi ? false : sira < 3} />
-                ))}
-              </div>
+            {sonuc.ilanlar.length > 0 ? (
+              <>
+                <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 lg:gap-5">
+                  {/* ⚠️ Kademe yalnızca İLK ALTI KARTTA. Sonrakiler zaten
+                    görüş alanına girdiklerinde tek tek sahneye giriyor;
+                    hepsine artan gecikme vermek listenin sonunu saniyelerce
+                    geciktirirdi. */}
+                  {sonuc.ilanlar.map((ilan, sira) => (
+                    <Sahne key={ilan.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
+                      <IlanKarti
+                        ilan={ilan}
+                        oncelikli={filtresizMi ? false : sira < 3}
+                        sinifAdi="h-full"
+                      />
+                    </Sahne>
+                  ))}
+                </div>
 
-              <DahaFazla toplam={sonuc.toplam} goster={goster} parametreler={parametreler} />
-            </>
-          ) : (
-            <>
-              {/*
+                <DahaFazla toplam={sonuc.toplam} goster={goster} parametreler={parametreler} />
+              </>
+            ) : (
+              <>
+                {/*
                 ⭐ Sonuçsuz arama, portföy BOŞLUĞUNU gösteriyor: ziyaretçinin
                 aradığı şey var ama bizde yok. Panelde en değerli sinyallerden
                 biri — hangi filtrelerin boş döndüğü, hangi ilanı almak
                 gerektiğini söylüyor.
               */}
-              <OlayBildir ad="sonucsuz_arama" />
-              <BosDurum
-                baslik="Bu kriterlere uyan taşınmaz yok"
-                neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
-                eylem={
-                  <div className="flex flex-col gap-2 sm:flex-row">
-                    <Buton href="/portfoy" gorunum="ikincil">
-                      Filtreleri temizle
-                    </Buton>
-                    <Buton href="/iletisim">Aradığınızı anlatın</Buton>
-                  </div>
-                }
-              />
-            </>
-          )}
+                <OlayBildir ad="sonucsuz_arama" />
+                <BosDurum
+                  baslik="Bu kriterlere uyan taşınmaz yok"
+                  neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
+                  eylem={
+                    <div className="flex flex-col gap-2 sm:flex-row">
+                      <Buton href="/portfoy" gorunum="ikincil">
+                        Filtreleri temizle
+                      </Buton>
+                      <Buton href="/iletisim">Aradığınızı anlatın</Buton>
+                    </div>
+                  }
+                />
+              </>
+            )}
+          </div>
         </div>
       </div>
-    </div>
+    </>
   )
 }
 
