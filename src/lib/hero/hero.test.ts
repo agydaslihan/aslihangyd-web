@@ -140,7 +140,16 @@ describe('tek slayt maliyeti', () => {
 
   it('kumanda yalnızca birden çok slaytta render ediliyor', () => {
     expect(bolum).toContain('slaytlar.length > 1')
-    expect(bolum).toContain('{cok ? <HeroKumandasi')
+    /**
+     * ⚠️ BİÇİME DEĞİL YAPIYA BAKILIYOR.
+     *
+     * Önceki hâli `'{cok ? <HeroKumandasi'` dizgesini arıyordu ve prettier
+     * prop eklendiği anda JSX'i çok satıra bölünce test CI'da kırıldı —
+     * yerelde yeşildi çünkü testler commit öncesi biçimlendirmeden ÖNCE
+     * koşmuştu. Sözleşme "şu satır şöyle yazılsın" değil, "kumanda `cok`
+     * koşuluna bağlı olsun".
+     */
+    expect(/\{cok \?\s*\(?\s*<HeroKumandasi/.test(bolum)).toBe(true)
   })
 
   /**
