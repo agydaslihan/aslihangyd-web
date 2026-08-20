@@ -922,3 +922,187 @@
 :root[data-tema='koyu'] .dark-gizle {
   display: none;
 }
+
+/* ==========================================================================
+   AURORA — GLOBAL UI KATMANI (Adım 3)
+
+   ⚠️ BU BÖLÜMDEKİ HAREKETLERİN TAMAMI CSS. Hiçbiri framer-motion, gsap ya
+   da lenis gerektirmiyor.
+
+   Sebep bütçe: `domAnimation` tek başına 52,7 kB gzip ve hareket bütçesi
+   120 kB. Hover derinliği, alt çizgi, yavaş zoom ve sayfa geçişi gibi
+   "durum değişince yumuşak geç" işleri tarayıcının derleyicisi zaten
+   yapıyor — kütüphaneye ödeme yapmak, aynı işi ikinci kez satın almak
+   olurdu. Kütüphaneler jest ve orkestrasyon gerektiren yerlerde devreye
+   girecek.
+   ========================================================================== */
+
+/* ── Sayfa geçişi — tarayıcının View Transitions API'si ─────────────────
+   ⚠️ Animasyon burada tanımlı, JS'te değil. Next gezinmeyi
+   `document.startViewTransition` içine alıyor (next.config.ts); geçişin
+   süresi ve eğrisi CSS'in işi.
+
+   ⚠️ SADECE OPAKLIK. Kayan bir sayfa geçişi düzeni oynatır ve CLS ölçümüne
+   girer; şartname 0,000 istiyor. */
+::view-transition-old(root) {
+  animation: aurora-cikis 180ms var(--cikis) both;
+}
+
+::view-transition-new(root) {
+  animation: aurora-giris 260ms var(--cikis) both;
+}
+
+@keyframes aurora-cikis {
+  to {
+    opacity: 0;
+  }
+}
+
+@keyframes aurora-giris {
+  from {
+    opacity: 0;
+  }
+}
+
+/* ── Cam yüzey ─────────────────────────────────────────────────────────
+   ⚠️ ÖNCE DÜZ RENK, SONRA CAM. Sıra bilinçli: `backdrop-filter`
+   desteklenmiyorsa ya da aşağıdaki mobil kuralıyla kapatılırsa yüzey opak
+   kalıyor. Ters kurulumda (önce cam) destek olmayan tarayıcıda yarı
+   saydam ve okunmaz bir kutu kalırdı.
+
+   ⚠️ MOBİLDE CAM KAPALI. `backdrop-filter` her karede arkasındaki katmanı
+   yeniden bulanıklaştırıyor; telefonda kaydırma sırasında ölçülebilir
+   maliyet. Şartname "ölç, gerekirse mobilde düz renge düş" diyor —
+   varsayılan düz, cam yalnızca geniş ekranda açılıyor. */
+.cam {
+  background-color: color-mix(in oklab, var(--color-yuzey) 92%, transparent);
+  border: 0.5px solid var(--color-kenar);
+}
+
+@media (min-width: 1024px) {
+  @supports (backdrop-filter: blur(1px)) {
+    .cam {
+      background-color: color-mix(in oklab, var(--color-yuzey) 72%, transparent);
+      backdrop-filter: blur(14px) saturate(1.15);
+    }
+  }
+}
+
+/* ── Bağlantı alt çizgisi ──────────────────────────────────────────────
+   ⚠️ `text-decoration` DEĞİL, arka plan gradyanı: alt çizginin kalınlığı,
+   rengi ve mesafesi denetlenebilir oluyor ve animasyon `background-size`
+   üzerinden GPU'da koşuyor.
+
+   ⚠️ Yalnızca `hover: hover` cihazlarda: dokunmatikte "hover" dokunma
+   anlamına geliyor ve çizgi parmağın altında asılı kalırdı. */
+@media (hover: hover) and (pointer: fine) {
+  .alt-cizgi {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-position: 0 100%;
+    background-repeat: no-repeat;
+    background-size: 0% 1px;
+    transition: background-size var(--sure-menu) var(--cikis);
+  }
+
+  .alt-cizgi:hover,
+  .alt-cizgi:focus-visible {
+    background-size: 100% 1px;
+  }
+}
+
+/* ── Görselde yavaş zoom ───────────────────────────────────────────────
+   ⚠️ `transform` üzerinden, `width/height` DEĞİL: ikincisi her karede
+   yeniden düzen hesaplatır ve CLS üretir.
+
+   ⚠️ Ölçek 1,04 — daha fazlası görseli yumuşatıp "büyütülmüş fotoğraf"
+   hissi veriyor. */
+@media (hover: hover) and (pointer: fine) {
+  .zoom-kabi {
+    overflow: hidden;
+  }
+
+  .zoom-kabi img {
+    transition: transform 620ms var(--cikis);
+    will-change: transform;
+  }
+
+  .zoom-kabi:hover img {
+    transform: scale(1.04);
+  }
+}
+
+/* ── İmleç ışıması ─────────────────────────────────────────────────────
+   ⚠️ Katman `pointer-events: none` ve `position: fixed`: hiçbir tıklamayı
+   yakalamıyor, hiçbir düzeni etkilemiyor.
+
+   ⚠️ Konum CSS değişkeniyle geliyor ve bileşen onu `translate3d` ile
+   uyguluyor — böylece her fare hareketi düzen değil yalnızca birleştirme
+   (compositing) tetikliyor. */
+.imlec-isigi {
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 30;
+  width: 34rem;
+  height: 34rem;
+  margin: -17rem 0 0 -17rem;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity var(--sure-katman) var(--cikis);
+  background: radial-gradient(
+    circle closest-side,
+    color-mix(in oklab, var(--color-gold-400) 22%, transparent),
+    transparent
+  );
+}
+
+.imlec-isigi[data-gorunur='evet'] {
+  opacity: 1;
+}
+
+/* ── Gezinme ışığı — bağlantı beklerken ────────────────────────────────
+   ⚠️ İLK YÜKLEMEDE YOK. Yalnızca bir bağlantıya basıldıktan sonra, bir
+   sonraki sayfa beklenirken çiziliyor (`useLinkStatus`). İlk yüklemede
+   çalışan bir yükleme animasyonu LCP'nin önüne geçerdi. */
+@keyframes aurora-gezinme {
+  from {
+    transform: scaleX(0);
+  }
+  to {
+    transform: scaleX(1);
+  }
+}
+
+.gezinme-isigi {
+  position: absolute;
+  inset-inline: 0;
+  bottom: -2px;
+  height: 2px;
+  transform-origin: left;
+  background: var(--color-gold-cizgi);
+  animation: aurora-gezinme 1.4s var(--giris-cikis) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  ::view-transition-old(root),
+  ::view-transition-new(root) {
+    animation: none !important;
+  }
+
+  .zoom-kabi img,
+  .alt-cizgi {
+    transition: none !important;
+  }
+
+  /* ⚠️ İmleç ışığı ve gezinme çizgisi tamamen kapanıyor: ikisi de tek
+     işlevi hareket olan öğeler. Bilgi taşımadıkları için kapatmak kayıp
+     üretmiyor. */
+  .imlec-isigi {
+    display: none !important;
+  }
+
+  .gezinme-isigi {
+    animation: none !important;
+    transform: scaleX(1);
+  }
+}

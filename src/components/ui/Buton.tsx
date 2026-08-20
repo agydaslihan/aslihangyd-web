@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import type { AnchorHTMLAttributes, ButtonHTMLAttributes, ReactNode } from 'react'
 
+import { BaglantiIsigi } from '@/components/hareket/BaglantiIsigi'
 import { sinif } from '@/lib/sinif'
 
 /**
@@ -78,8 +79,13 @@ const BOYUTLAR: Record<Boyut, string> = {
   buyuk: 'min-h-13 px-6 text-govde gap-2.5',
 }
 
+/**
+ * ⚠️ `relative`: içeriye basılan bağlantının yükleme çizgisi mutlak
+ * konumlanıyor (`BaglantiIsigi`). Konumlandırma bağlamı olmadan çizgi
+ * sayfanın tamamına göre yerleşir ve ekranın altında belirir.
+ */
 const TEMEL =
-  'inline-flex items-center justify-center rounded-buton font-medium ' +
+  'relative inline-flex items-center justify-center rounded-buton font-medium ' +
   'transition-[color,background-color,border-color,opacity] duration-[150ms] ' +
   'ease-[cubic-bezier(0.2,0,0,1)] whitespace-nowrap'
 
@@ -188,9 +194,17 @@ export function Buton(ozellikler: ButonOzellikleri | BaglantiOzellikleri) {
       )
     }
 
+    /**
+     * ⚠️ Yükleme çizgisi YALNIZCA İÇ BAĞLANTIDA.
+     *
+     * Dış bağlantı (`dis`) tarayıcının kendi gezinmesiyle açılıyor;
+     * `useLinkStatus` orada hiçbir zaman `pending` olmuyor ve boş bir
+     * bekleme göstergesi yanlış söz verirdi.
+     */
     return (
       <Link href={href} className={siniflar} {...baglantiOzellikleri}>
         {children}
+        <BaglantiIsigi />
       </Link>
     )
   }

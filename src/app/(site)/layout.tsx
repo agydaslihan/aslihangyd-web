@@ -6,6 +6,8 @@ import type React from 'react'
 
 import { Analitik } from '@/components/analitik/Analitik'
 import { HareketAltyapisi } from '@/components/hareket/HareketAltyapisi'
+import { ImlecKatmani } from '@/components/hareket/ImlecKatmani'
+import { YuzenWhatsapp } from '@/components/duzen/YuzenWhatsapp'
 import { KatmanB } from '@/components/olcum/KatmanB'
 import { CerezBanneri } from '@/components/cerez/CerezBanneri'
 import { Altbilgi } from '@/components/duzen/Altbilgi'
@@ -21,9 +23,10 @@ import {
   kurumsalBilgileriGetir,
   whatsappNumarasi,
 } from '@/lib/kurumsal'
+import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { cerezOnayiniOku } from '@/lib/kvkk/sunucu'
 import { markaAyarlari, paletCss } from '@/lib/marka/sunucu'
-import { SITE_ACIKLAMASI, SITE_ADI, SITE_ADRESI } from '@/lib/site'
+import { SITE_ACIKLAMASI, SITE_ADI, SITE_ADRESI, whatsappMesaji } from '@/lib/site'
 
 import './globals.css'
 
@@ -352,6 +355,12 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
           açıksa tek bir `import()` bile çağrılmıyor.
         */}
         <HareketAltyapisi />
+        <ImlecKatmani />
+        {/*
+          Yüzen WhatsApp — şartname §5. Numara yoksa hiç çizilmiyor;
+          ilk ekranda görünmüyor, ziyaretçi kaydırmaya başlayınca beliriyor.
+        */}
+        <YuzenWhatsapp adres={whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())} />
       </body>
     </html>
   )

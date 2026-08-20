@@ -157,16 +157,16 @@ export default async function TicariSayfasi() {
         )}
       </Bolum>
 
-      {/* ⚠️ Dolu terracotta bant — ana sayfadaki çağrı bandıyla aynı rol.
-          Metin TAM BEYAZ: terracotta üzerinde %75 beyaz 3,56:1 veriyor ve
-          AA'nın altında kalıyor. Gerekçenin ölçüsü Bolum.tsx içinde. */}
+      {/* ⚠️ Dolu altın bant — ana sayfadaki çağrı bandıyla aynı rol.
+          Metin rengi BANTTAN geliyor (mürekkep, 7,20:1); buraya renk sınıfı
+          yazılmıyor. Beyaz altın üzerinde 2,36:1 verirdi. */}
       <Bolum zemin="altin">
         <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
-            <h2 className="font-baslik text-baslik-1-mobil font-medium text-white sm:text-baslik-1">
+            <h2 className="font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
               Ticari taşınmazınızı mı değerlendirmek istiyorsunuz?
             </h2>
-            <p className="mt-3 text-govde leading-relaxed text-white">
+            <p className="mt-3 text-govde leading-relaxed">
               Fabrika, depo veya sanayi arsanız için gerçek piyasa karşılığını ve doğru alıcı
               profilini konuşalım. Ticari tarafta alıcı sayısı azdır ama doğru alıcıyı bulmak
               işlemin tamamını belirler.
@@ -185,7 +185,7 @@ export default async function TicariSayfasi() {
                 href={whatsapp}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="rounded-buton inline-flex min-h-13 items-center justify-center border-[0.5px] border-white/30 px-6 font-medium text-white transition-colors hover:bg-white/10"
+                className="rounded-buton inline-flex min-h-13 items-center justify-center border-[0.5px] border-[color:var(--color-vurgu-uzeri)]/35 px-6 font-medium transition-colors hover:bg-[color:var(--color-vurgu-uzeri)]/10"
               >
                 WhatsApp
               </a>

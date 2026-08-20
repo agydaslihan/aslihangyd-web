@@ -57,6 +57,31 @@ const nextConfig: NextConfig = {
   images: {
     formats: ['image/avif', 'image/webp'],
   },
+
+  /**
+   * Sayfa geçişleri — TARAYICININ KENDİ API'SİYLE.
+   *
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ ŞARTNAME §5: "View Transitions API varsa onu kullan, JS ile yapma."
+   *
+   * Bayrak açıkken Next, istemci gezinmelerini
+   * `document.startViewTransition` içine alıyor. Geçişin kendisi tarayıcıda
+   * derleyici seviyesinde çalışıyor: sıfır bayt istemci kodu, ana iş
+   * parçacığında sıfır iş.
+   *
+   * JS ile yazılmış bir sayfa geçişi bunun tersini yapardı — çıkan sayfayı
+   * DOM'da tutmak, iki ağacı birden canlandırmak ve gezinmeyi animasyon
+   * bitene kadar geciktirmek. Üstelik hareket kütüphanesi gerektirirdi.
+   *
+   * ⚠️ DESTEKLEMEYEN TARAYICIDA SESSİZCE DÜZ GEÇİŞ olur; hata yok, kayıp
+   * yok. Geçişin süresi ve eğrisi `globals.css` içindeki
+   * `::view-transition-*` kurallarında ve `prefers-reduced-motion` orada
+   * tamamen kapatıyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  experimental: {
+    viewTransition: true,
+  },
 }
 
 export default withPayload(nextConfig)

@@ -8,6 +8,7 @@ import { TemaAnahtari } from '@/components/duzen/TemaAnahtari'
 import { KapatIkon, MenuIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { BASLIK_EYLEMI, type UstMenuOgesi } from '@/lib/gezinme'
+import { BaglantiIsigi } from '@/components/hareket/BaglantiIsigi'
 import { sinif } from '@/lib/sinif'
 import { MarkaLogosu } from '@/components/marka/MarkaLogosu'
 import type { MarkaAyarlari } from '@/lib/marka/sunucu'
@@ -106,11 +107,23 @@ export function Baslik({
         data-yazdirma="gizle"
         onMouseLeave={() => setAcikMega(null)}
         className={sinif(
-          'bg-zemin/92 sticky top-0 z-40 backdrop-blur-md transition-shadow',
-          // ⚠️ Kenarlık yerine gölge: yapışkan başlıkta sabit bir çizgi
-          // sayfanın üstünü ikiye böler ve "uygulama" hissi verir. Gölge
-          // yalnızca içerik altına kaydığında beliriyor.
-          kaydirildi ? 'shadow-kart' : '',
+          'sticky top-0 z-40 transition-[background-color,box-shadow,backdrop-filter]',
+          'duration-[var(--sure-katman)] ease-[var(--cikis)]',
+          /**
+           * ⚠️ TEPEDE SAYDAM, KAYDIRINCA CAM.
+           *
+           * Şartname §5 "yapışkan saydam navbar, kaydırınca blur" istiyor.
+           * Sayfanın ilk ekranında başlık zemine karışıyor; içerik altına
+           * girmeye başlayınca cam yüzey ve gölge beliriyor.
+           *
+           * ⚠️ Kenarlık yerine gölge: yapışkan başlıkta sabit bir çizgi
+           * sayfanın üstünü ikiye böler ve "uygulama" hissi verir.
+           *
+           * ⚠️ Cam sınıfı mobilde otomatik olarak DÜZ RENGE düşüyor
+           * (globals.css `.cam`): `backdrop-filter` telefonda her karede
+           * arkasını yeniden bulanıklaştırıyor.
+           */
+          kaydirildi ? 'cam shadow-kart' : 'border-transparent bg-transparent',
         )}
       >
         <div className="kapsayici flex h-18 items-center justify-between gap-6">
@@ -150,13 +163,25 @@ export function Baslik({
           <div className="flex items-center gap-2">
             <TemaAnahtari />
 
-            {/* ⚠️ Dolu adaçayı — şartnamedeki iki eylemden biri. Üçüncü bir
-              yerde kullanılırsa disiplin testi kırılır. */}
+            {/*
+              ⚠️ Dolu altın — şartnamedeki iki eylemden biri. Üçüncü bir
+              yerde kullanılırsa disiplin testi kırılır.
+
+              ⚠️ METİN `text-white` DEĞİL, JETON — ve bu bir düzeltme.
+              Aurora'da dolu zemin altın; beyaz metin orada 2,36:1 veriyor
+              (ağır ihlal), mürekkep 7,20:1. Eski palette adaçayı zemin
+              üzerinde beyaz doğru cevaptı ve sınıf öyle kalmıştı: renk
+              değişti, metin değişmedi — sessiz erişilebilirlik hatası.
+
+              ⚠️ Kenarlık da zorunlu: altın dolgu sayfa zemininden yalnızca
+              2,28:1 ayrışıyor, WCAG 1.4.11 bileşen sınırı için 3:1 istiyor.
+            */}
             <Link
               href={eylem.adres}
-              className="bg-aksan hover:bg-aksan-koyu rounded-buton hidden min-h-11 items-center px-5 text-govde-kucuk font-medium text-white transition-colors lg:inline-flex"
+              className="bg-aksan hover:bg-aksan-koyu rounded-buton border-aksan-kenar relative hidden min-h-11 items-center border-[0.5px] px-5 text-govde-kucuk font-medium text-[color:var(--color-aksan-uzeri)] transition-colors lg:inline-flex"
             >
               {eylem.ad}
+              <BaglantiIsigi />
             </Link>
 
             <button
@@ -177,7 +202,8 @@ export function Baslik({
       {/*
         ⚠️ PANEL HEADER'IN DIŞINDA — VE BU BİR DÜZELTME, TERCİH DEĞİL.
 
-        Panel `position: fixed`. Header ise `backdrop-blur-md` taşıyor, yani
+        Panel `position: fixed`. Header ise kaydırınca `cam` sınıfını (yani
+        `backdrop-filter`) taşıyor,
         `backdrop-filter` uyguluyor — ve `backdrop-filter` uygulayan bir
         öğe, `fixed` konumlu TORUNLARI için İÇEREN BLOK oluyor (`filter`
         ve `transform` ile aynı davranış).
@@ -228,6 +254,8 @@ function MenuBaglantisi({ oge, aktif }: { oge: UstMenuOgesi; aktif: boolean }) {
       )}
     >
       {oge.ad}
+      {/* Basılan bağlantının kendi yükleme çizgisi — ilk yüklemede yok. */}
+      <BaglantiIsigi />
       {aktif ? (
         <span
           aria-hidden="true"
@@ -430,7 +458,7 @@ function MobilMenu({
 
         <Link
           href={eylem.adres}
-          className="bg-aksan rounded-buton mt-6 flex min-h-13 w-full items-center justify-center font-medium text-white"
+          className="bg-aksan border-aksan-kenar rounded-buton mt-6 flex min-h-13 w-full items-center justify-center border-[0.5px] font-medium text-[color:var(--color-aksan-uzeri)]"
         >
           {eylem.ad}
         </Link>

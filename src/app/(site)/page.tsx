@@ -628,7 +628,7 @@ function YaklasimBolumu() {
  * ve koyu zemin bunu taşıyor. İkisini de terracotta yapmak, vurguyu
  * sıradanlaştırırdı.
  *
- * ⚠️ Metin TAM BEYAZ, `text-white/80` DEĞİL. Terracotta üzerinde %80
+ * ⚠️ Metin MÜREKKEP (banttan geliyor), beyaz DEĞİL. Altın üzerinde %80
  * beyaz 3,82:1 veriyor ve AA'nın altında kalıyor; koyu kakao bantta aynı
  * yumuşatma 9,08 verdiği için sorun çıkmıyordu. Hiyerarşi burada punto ve
  * boşlukla kuruluyor.
@@ -638,10 +638,15 @@ function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
     <Bolum zemin="altin">
       <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
-          <h2 className="text-baslik-2 text-white">
-            Evinizin bugün ne ettiğini merak ediyor musunuz?
-          </h2>
-          <p className="text-govde-kucuk mt-3 text-white">
+          {/*
+            ⚠️ METİN RENGİ SINIFI YOK — bant kendi metin rengini veriyor
+            (`Bolum zemin="altin"` → `text-vurgu-uzeri`, yani mürekkep).
+            Buraya `text-white` yazmak altın üzerinde 2,36:1 üretirdi;
+            eski terracotta bantta doğru olan cevap renk değişince yanlışa
+            döndü.
+          */}
+          <h2 className="text-baslik-2">Evinizin bugün ne ettiğini merak ediyor musunuz?</h2>
+          <p className="text-govde-kucuk mt-3">
             Satmayı düşünmeseniz bile bilmek işinize yarar. Mahalle, metrekare ve bina bilgilerinizi
             paylaşın; size gerçek bir değer aralığı ve nasıl hesapladığımızı anlatalım.
           </p>
@@ -663,7 +668,7 @@ function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
               dis
               gorunum="ikincil"
               boyut="buyuk"
-              sinifAdi="!border-white/40 !text-white hover:!bg-white/10"
+              sinifAdi="!border-[color:var(--color-vurgu-uzeri)]/45 hover:!bg-[color:var(--color-vurgu-uzeri)]/10"
             >
               WhatsApp
             </Buton>
