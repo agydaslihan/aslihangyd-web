@@ -53,6 +53,34 @@ export function Sahne({
     if (window.matchMedia('(prefers-reduced-motion: reduce)').matches) return
     if (typeof IntersectionObserver === 'undefined') return
 
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ ZATEN GÖRÜNEN ÖĞE HİÇ GİZLENMİYOR — ÖLÇÜMLE ÖĞRENİLDİ.
+     *
+     * Kart ızgaraları sahneye alınınca `/portfoy` sayfasının mobil LCP'si
+     * 2,8 s'den 3,6 s'ye çıktı (bir koşuda 4,1 s). Sebep animasyonun
+     * maliyeti değil, SIRASI:
+     *
+     *   · LCP, öğenin BOYANDIĞI anı ölçüyor.
+     *   · `bekliyor` durumu `opacity: 0` demek — boyanmamış sayılıyor.
+     *   · Bu durumu JavaScript veriyor, yani öğe ancak paket inip
+     *     hidrasyon bitip gözlemci tetikledikten SONRA görünür oluyor.
+     *
+     * Yani ilk ekrandaki bir görsel, sırf giriş animasyonu yüzünden
+     * saniyelerce "boyanmamış" sayılıyordu. Ziyaretçi de onu geç görüyordu;
+     * ölçüm bir sapma değil, gerçeğin kendisiydi.
+     *
+     * Kaydırarak gelinen içerikte sorun yok: kullanıcı oraya varana kadar
+     * JavaScript çoktan inmiş oluyor.
+     *
+     * ⚠️ Bu bir tasarım kararı olarak da doğru: ekranda ZATEN duran bir şeyi
+     * "girer gibi" göstermek, hareketin anlamını (yeni bir şey geldi)
+     * boşaltıyor.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    const kutu = dugum.getBoundingClientRect()
+    if (kutu.top < window.innerHeight && kutu.bottom > 0) return
+
     dugum.dataset.sahne = 'bekliyor'
 
     const gozlemci = new IntersectionObserver(

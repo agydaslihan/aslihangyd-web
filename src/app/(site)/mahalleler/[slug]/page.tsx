@@ -10,6 +10,7 @@ import { DroneVideo, videoGosterilebilirMi } from '@/components/medya/DroneVideo
 import { SanalTur } from '@/components/medya/SanalTur'
 import { MahalleSkoru } from '@/components/skor/MahalleSkoru'
 import { YakindaBolumu } from '@/components/mahalle/YakindaBolumu'
+import { Sahne } from '@/components/hareket/Sahne'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
@@ -95,210 +96,232 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
         <div className="grid gap-12 lg:grid-cols-[minmax(0,1fr)_18rem] lg:gap-16">
           <div className="min-w-0 space-y-14">
             {/* 2 ── Yatırım skoru */}
-            <section aria-labelledby="skor">
-              <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-                <h2 id="skor" className="font-sans text-baslik-3 font-medium">
-                  Yatırım skoru
-                </h2>
-                <Link
-                  href="/yatirim-skoru-metodolojisi"
-                  className="text-vurgu text-govde-kucuk underline underline-offset-2"
-                >
-                  Nasıl hesaplanıyor?
-                </Link>
-              </div>
+            <Sahne>
+              <section aria-labelledby="skor">
+                <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
+                  <h2 id="skor" className="font-sans text-baslik-3 font-medium">
+                    Yatırım skoru
+                  </h2>
+                  <Link
+                    href="/yatirim-skoru-metodolojisi"
+                    className="text-vurgu text-govde-kucuk underline underline-offset-2"
+                  >
+                    Nasıl hesaplanıyor?
+                  </Link>
+                </div>
 
-              <MahalleSkoru
-                bilesenler={{
-                  fiyatTrendi: mahalle.yatirimSkoru?.fiyatTrendi ?? null,
-                  kiraCarpani: mahalle.yatirimSkoru?.kiraCarpaniPuani ?? null,
-                  sanayiYakinligi: mahalle.yatirimSkoru?.sanayiYakinligi ?? null,
-                  ulasim: mahalle.yatirimSkoru?.ulasim ?? null,
-                  sosyalDonati: mahalle.yatirimSkoru?.sosyalDonati ?? null,
-                  arzBaskisi: mahalle.yatirimSkoru?.arzBaskisi ?? null,
-                }}
-                hesaplanmaTarihi={tarihiYaz(mahalle.yatirimSkoru?.hesaplanmaTarihi)}
-              />
-            </section>
+                <MahalleSkoru
+                  bilesenler={{
+                    fiyatTrendi: mahalle.yatirimSkoru?.fiyatTrendi ?? null,
+                    kiraCarpani: mahalle.yatirimSkoru?.kiraCarpaniPuani ?? null,
+                    sanayiYakinligi: mahalle.yatirimSkoru?.sanayiYakinligi ?? null,
+                    ulasim: mahalle.yatirimSkoru?.ulasim ?? null,
+                    sosyalDonati: mahalle.yatirimSkoru?.sosyalDonati ?? null,
+                    arzBaskisi: mahalle.yatirimSkoru?.arzBaskisi ?? null,
+                  }}
+                  hesaplanmaTarihi={tarihiYaz(mahalle.yatirimSkoru?.hesaplanmaTarihi)}
+                />
+              </section>
+            </Sahne>
 
             {/* 3 ── Temel rakamlar */}
-            <section aria-labelledby="rakamlar">
-              <h2 id="rakamlar" className="mb-4 font-sans text-baslik-3 font-medium">
-                Temel rakamlar
-              </h2>
+            <Sahne>
+              <section aria-labelledby="rakamlar">
+                <h2 id="rakamlar" className="mb-4 font-sans text-baslik-3 font-medium">
+                  Temel rakamlar
+                </h2>
 
-              {/*
-                ⚠️ Bunlar GÖZLENMİŞ rakamlar, hesaplanmış değil — bu yüzden
-                `IstatistikKarti` ve gözlem sayısı her kartta görünüyor.
-                "Ortalama m² 42.000 TL" ile "Ortalama m² 42.000 TL (n = 3)"
-                aynı şey değildir ve ikincisini gösteren tek site biz olacağız.
-              */}
-              <IstatistikIzgarasi>
-                <IstatistikKarti
-                  etiket="Ortalama m² satış"
-                  deger={paraYaz(mahalle.ortalamaM2Satis)}
-                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
-                  bosAciklama="Yeterli gözlem birikince yayınlanacak."
-                />
-                <IstatistikKarti
-                  etiket="Ortalama aylık kira"
-                  deger={paraYaz(mahalle.ortalamaKira)}
-                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
-                  bosAciklama="Yeterli gözlem birikince yayınlanacak."
-                />
-                <IstatistikKarti
-                  etiket="Kira çarpanı"
-                  deger={carpanYaz(mahalle.kiraCarpani)}
-                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
-                  altBilgi="Kaç yıllık kira, satış fiyatına eşit"
-                  bosAciklama="Satış ve kira verisi birlikte gerekiyor."
-                />
-                <IstatistikKarti
-                  etiket="12 aylık değişim"
-                  deger={degisimYaz(mahalle.degisim12Ay)}
-                  gozlemSayisi={mahalle.gozlemSayisi ?? null}
-                  bosAciklama="En az 12 ay veri gerekiyor."
-                  ton={
-                    typeof mahalle.degisim12Ay === 'number'
-                      ? mahalle.degisim12Ay >= 0
-                        ? 'artis'
-                        : 'azalis'
-                      : 'notr'
-                  }
-                />
-              </IstatistikIzgarasi>
+                {/*
+                  ⚠️ Bunlar GÖZLENMİŞ rakamlar, hesaplanmış değil — bu yüzden
+                  `IstatistikKarti` ve gözlem sayısı her kartta görünüyor.
+                  "Ortalama m² 42.000 TL" ile "Ortalama m² 42.000 TL (n = 3)"
+                  aynı şey değildir ve ikincisini gösteren tek site biz olacağız.
+                */}
+                <IstatistikIzgarasi>
+                  <IstatistikKarti
+                    etiket="Ortalama m² satış"
+                    deger={paraYaz(mahalle.ortalamaM2Satis)}
+                    gozlemSayisi={mahalle.gozlemSayisi ?? null}
+                    bosAciklama="Yeterli gözlem birikince yayınlanacak."
+                  />
+                  <IstatistikKarti
+                    etiket="Ortalama aylık kira"
+                    deger={paraYaz(mahalle.ortalamaKira)}
+                    gozlemSayisi={mahalle.gozlemSayisi ?? null}
+                    bosAciklama="Yeterli gözlem birikince yayınlanacak."
+                  />
+                  <IstatistikKarti
+                    etiket="Kira çarpanı"
+                    deger={carpanYaz(mahalle.kiraCarpani)}
+                    gozlemSayisi={mahalle.gozlemSayisi ?? null}
+                    altBilgi="Kaç yıllık kira, satış fiyatına eşit"
+                    bosAciklama="Satış ve kira verisi birlikte gerekiyor."
+                  />
+                  <IstatistikKarti
+                    etiket="12 aylık değişim"
+                    deger={degisimYaz(mahalle.degisim12Ay)}
+                    gozlemSayisi={mahalle.gozlemSayisi ?? null}
+                    bosAciklama="En az 12 ay veri gerekiyor."
+                    ton={
+                      typeof mahalle.degisim12Ay === 'number'
+                        ? mahalle.degisim12Ay >= 0
+                          ? 'artis'
+                          : 'azalis'
+                        : 'notr'
+                    }
+                  />
+                </IstatistikIzgarasi>
 
-              <div className="mt-4 flex flex-col gap-2">
-                <VeriNotu kaynak={mahalle.veriKaynagi} tarih={tarihiYaz(mahalle.verilerinTarihi)} />
-                <Feragat ek="Rakamlar istenen fiyat gözlemlerine dayanır; gerçekleşen satış fiyatlarından farklı olabilir." />
-              </div>
+                <div className="mt-4 flex flex-col gap-2">
+                  <VeriNotu
+                    kaynak={mahalle.veriKaynagi}
+                    tarih={tarihiYaz(mahalle.verilerinTarihi)}
+                  />
+                  <Feragat ek="Rakamlar istenen fiyat gözlemlerine dayanır; gerçekleşen satış fiyatlarından farklı olabilir." />
+                </div>
 
-              {/*
-                ⚠️ Rayiç/piyasa oranı temel rakamların ALTINDA duruyor,
-                aralarında değil. İki farklı şeyi ölçen rakamları aynı
-                ızgaraya koymak, ziyaretçiye "m² fiyatı" diye rayiç bedeli
-                okutur — sitedeki en pahalı yanlış anlama bu olurdu.
-              */}
-              <h3 className="text-govde mt-8 mb-3 font-sans font-medium">Rayiç bedel ve piyasa</h3>
-              <RayicPiyasaOrani
-                rayic={rayic}
-                piyasaM2={mahalle.ortalamaM2Satis}
-                gozlemSayisi={mahalle.gozlemSayisi}
-                verilerinTarihi={mahalle.verilerinTarihi}
-              />
-            </section>
+                {/*
+                  ⚠️ Rayiç/piyasa oranı temel rakamların ALTINDA duruyor,
+                  aralarında değil. İki farklı şeyi ölçen rakamları aynı
+                  ızgaraya koymak, ziyaretçiye "m² fiyatı" diye rayiç bedeli
+                  okutur — sitedeki en pahalı yanlış anlama bu olurdu.
+                */}
+                <h3 className="text-govde mt-8 mb-3 font-sans font-medium">
+                  Rayiç bedel ve piyasa
+                </h3>
+                <RayicPiyasaOrani
+                  rayic={rayic}
+                  piyasaM2={mahalle.ortalamaM2Satis}
+                  gozlemSayisi={mahalle.gozlemSayisi}
+                  verilerinTarihi={mahalle.verilerinTarihi}
+                />
+              </section>
+            </Sahne>
 
             {/* 4 ── Fiyat trendi */}
-            <section aria-labelledby="trend">
-              <h2 id="trend" className="mb-4 font-sans text-baslik-3 font-medium">
-                Fiyat trendi
-              </h2>
-              <YakindaBolumu
-                oran="aspect-2/1 sm:aspect-3/1"
-                ikon={<GrafikIkon width={30} height={30} />}
-                baslik="Fiyat trend grafiği için veri biriktiriyoruz"
-                aciklama="Grafik, en az 6 aylık kendi gözlem verimiz oluştuğunda açılacak. Uydurma bir seri çizmek yerine beklemeyi tercih ediyoruz."
-              />
-            </section>
+            <Sahne>
+              <section aria-labelledby="trend">
+                <h2 id="trend" className="mb-4 font-sans text-baslik-3 font-medium">
+                  Fiyat trendi
+                </h2>
+                <YakindaBolumu
+                  oran="aspect-2/1 sm:aspect-3/1"
+                  ikon={<GrafikIkon width={30} height={30} />}
+                  baslik="Fiyat trend grafiği için veri biriktiriyoruz"
+                  aciklama="Grafik, en az 6 aylık kendi gözlem verimiz oluştuğunda açılacak. Uydurma bir seri çizmek yerine beklemeyi tercih ediyoruz."
+                />
+              </section>
+            </Sahne>
 
             {/* 5 ── Konum ve çevre */}
-            <section aria-labelledby="harita">
-              <h2 id="harita" className="mb-4 font-sans text-baslik-3 font-medium">
-                Konum ve çevre
-              </h2>
+            <Sahne>
+              <section aria-labelledby="harita">
+                <h2 id="harita" className="mb-4 font-sans text-baslik-3 font-medium">
+                  Konum ve çevre
+                </h2>
 
-              {/* Mesafe listesi haritadan bağımsız çalışır: MapTiler anahtarı
-                  gelmeden de, ilgi noktaları girildiği anda dolar. */}
-              <CevreBolumu
-                mesafeler={cevre}
-                neyeGore={`${mahalle.ad} Mahallesi merkezinden`}
-                googlePlacesAcik={googlePlacesAcik}
-                sinifAdi="mb-4"
-              />
-
-              {/* Güneş haritası — mahalle merkezine göre, cephe analizi olmadan.
-                  ⚠️ Mahallenin cephesi olmaz; `cepheler` boş geçiliyor ve bileşen
-                  kendi boş durumunu gösteriyor. */}
-              {mahalleKonumu !== null ? (
-                <GunesHaritasi
-                  enlem={mahalleKonumu.enlem}
-                  boylam={mahalleKonumu.boylam}
-                  cepheler={[]}
-                  baslik={`${mahalle.ad} Mahallesi — güneş haritası`}
+                {/* Mesafe listesi haritadan bağımsız çalışır: MapTiler anahtarı
+                    gelmeden de, ilgi noktaları girildiği anda dolar. */}
+                <CevreBolumu
+                  mesafeler={cevre}
+                  neyeGore={`${mahalle.ad} Mahallesi merkezinden`}
+                  googlePlacesAcik={googlePlacesAcik}
+                  sinifAdi="mb-4"
                 />
-              ) : null}
 
-              <YakindaBolumu
-                oran="aspect-16/9"
-                ikon={<KonumIkon width={30} height={30} />}
-                baslik="Etkileşimli harita hazırlanıyor"
-                aciklama="Yukarıdaki noktalar, mahalle sınırı ve katman filtreleriyle birlikte harita üzerinde de gösterilecek."
-              />
-            </section>
+                {/* Güneş haritası — mahalle merkezine göre, cephe analizi olmadan.
+                    ⚠️ Mahallenin cephesi olmaz; `cepheler` boş geçiliyor ve bileşen
+                    kendi boş durumunu gösteriyor. */}
+                {mahalleKonumu !== null ? (
+                  <GunesHaritasi
+                    enlem={mahalleKonumu.enlem}
+                    boylam={mahalleKonumu.boylam}
+                    cepheler={[]}
+                    baslik={`${mahalle.ad} Mahallesi — güneş haritası`}
+                  />
+                ) : null}
 
-            {/* 6 ── 360° tur */}
-            <section aria-labelledby="tur">
-              <h2 id="tur" className="mb-4 font-sans text-baslik-3 font-medium">
-                360° sokak turu
-              </h2>
-              {mahalle.sanalTurUrl ? (
-                <SanalTur adres={mahalle.sanalTurUrl} baslik={`${mahalle.ad} 360° turu`} />
-              ) : (
                 <YakindaBolumu
                   oran="aspect-16/9"
-                  baslik="360° tur çekimi planlanıyor"
-                  aciklama="Mahallenin ana caddelerinde 360° çekim yapıldığında burada gezilebilir olacak."
+                  ikon={<KonumIkon width={30} height={30} />}
+                  baslik="Etkileşimli harita hazırlanıyor"
+                  aciklama="Yukarıdaki noktalar, mahalle sınırı ve katman filtreleriyle birlikte harita üzerinde de gösterilecek."
                 />
-              )}
-            </section>
+              </section>
+            </Sahne>
+
+            {/* 6 ── 360° tur */}
+            <Sahne>
+              <section aria-labelledby="tur">
+                <h2 id="tur" className="mb-4 font-sans text-baslik-3 font-medium">
+                  360° sokak turu
+                </h2>
+                {mahalle.sanalTurUrl ? (
+                  <SanalTur adres={mahalle.sanalTurUrl} baslik={`${mahalle.ad} 360° turu`} />
+                ) : (
+                  <YakindaBolumu
+                    oran="aspect-16/9"
+                    baslik="360° tur çekimi planlanıyor"
+                    aciklama="Mahallenin ana caddelerinde 360° çekim yapıldığında burada gezilebilir olacak."
+                  />
+                )}
+              </section>
+            </Sahne>
 
             {/* 7 ── Neden bu mahalle? */}
-            <section aria-labelledby="neden">
-              <h2 id="neden" className="mb-4 font-sans font-serif text-baslik-2-mobil font-medium">
-                Neden {mahalle.ad} Mahallesi?
-              </h2>
+            <Sahne>
+              <section aria-labelledby="neden">
+                <h2
+                  id="neden"
+                  className="mb-4 font-sans font-serif text-baslik-2-mobil font-medium"
+                >
+                  Neden {mahalle.ad} Mahallesi?
+                </h2>
 
-              {mahalle.icerik ? (
-                <ZenginMetin veri={mahalle.icerik} />
-              ) : (
-                <BosDurum
-                  baslik="Mahalle analizi yazılıyor"
-                  neden="Bu mahallenin değer sürücülerini, ulaşım bağlantılarını ve kimler için uygun olduğunu anlatan ayrıntılı analiz hazırlanıyor. Yüzeysel bir metin yayınlamak yerine, gerçekten işinize yarayacak olanı yazmayı tercih ediyoruz."
-                  sade
-                  eylem={
-                    whatsapp ? (
-                      <Buton href={whatsapp} dis gorunum="ikincil">
-                        <WhatsappIkon width={16} height={16} />
-                        Bu mahalleyi bize sorun
-                      </Buton>
-                    ) : undefined
-                  }
-                />
-              )}
+                {mahalle.icerik ? (
+                  <ZenginMetin veri={mahalle.icerik} />
+                ) : (
+                  <BosDurum
+                    baslik="Mahalle analizi yazılıyor"
+                    neden="Bu mahallenin değer sürücülerini, ulaşım bağlantılarını ve kimler için uygun olduğunu anlatan ayrıntılı analiz hazırlanıyor. Yüzeysel bir metin yayınlamak yerine, gerçekten işinize yarayacak olanı yazmayı tercih ediyoruz."
+                    sade
+                    eylem={
+                      whatsapp ? (
+                        <Buton href={whatsapp} dis gorunum="ikincil">
+                          <WhatsappIkon width={16} height={16} />
+                          Bu mahalleyi bize sorun
+                        </Buton>
+                      ) : undefined
+                    }
+                  />
+                )}
 
-              {mahalle.sikSorulanlar && mahalle.sikSorulanlar.length > 0 ? (
-                <div className="mt-10">
-                  <h3 className="mb-4 font-sans text-baslik-3 font-medium">Sık sorulan sorular</h3>
-                  <div className="border-kenar divide-kenar divide-y rounded-kart border-[0.5px]">
-                    {mahalle.sikSorulanlar.map((kayit) => (
-                      <details key={kayit.id ?? kayit.soru} className="group px-4 py-3">
-                        <summary className="cursor-pointer list-none text-govde font-medium marker:content-none">
-                          <span className="flex items-center justify-between gap-3">
-                            {kayit.soru}
-                            <span className="text-metin-3 transition-transform group-open:rotate-45">
-                              +
+                {mahalle.sikSorulanlar && mahalle.sikSorulanlar.length > 0 ? (
+                  <div className="mt-10">
+                    <h3 className="mb-4 font-sans text-baslik-3 font-medium">
+                      Sık sorulan sorular
+                    </h3>
+                    <div className="border-kenar divide-kenar divide-y rounded-kart border-[0.5px]">
+                      {mahalle.sikSorulanlar.map((kayit) => (
+                        <details key={kayit.id ?? kayit.soru} className="group px-4 py-3">
+                          <summary className="cursor-pointer list-none text-govde font-medium marker:content-none">
+                            <span className="flex items-center justify-between gap-3">
+                              {kayit.soru}
+                              <span className="text-metin-3 transition-transform group-open:rotate-45">
+                                +
+                              </span>
                             </span>
-                          </span>
-                        </summary>
-                        <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
-                          {kayit.cevap}
-                        </p>
-                      </details>
-                    ))}
+                          </summary>
+                          <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
+                            {kayit.cevap}
+                          </p>
+                        </details>
+                      ))}
+                    </div>
                   </div>
-                </div>
-              ) : null}
-            </section>
+                ) : null}
+              </section>
+            </Sahne>
           </div>
 
           {/* Yan panel */}
