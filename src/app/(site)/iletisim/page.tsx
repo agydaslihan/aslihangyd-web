@@ -75,7 +75,15 @@ export default async function IletisimSayfasi({
         <SayfaGovdesi icerik={icerik} />
 
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
-          <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-8">
+          {/*
+            ⚠️ FORM KARTI CAM DEĞİL, OPAK.
+
+            Cam yüzey "bu, sayfanın üstünde duruyor" der ve yapışkan
+            öğelerde doğru. Form sayfanın kendisi: içine yazı yazılan bir
+            yüzeyin arkasının görünmesi, okunurluğu zemindeki içeriğe
+            bağlar. Yalnızca köşe yarıçapı Aurora ölçeğine büyüdü.
+          */}
+          <div className="border-kenar bg-yuzey rounded-buyuk border-[0.5px] p-5 sm:p-8">
             <TalepFormu
               eylem={talepGonder}
               turnstileSiteAnahtari={turnstileSiteAnahtari()}
@@ -94,8 +102,10 @@ export default async function IletisimSayfasi({
           </div>
 
           <aside className="flex flex-col gap-4">
-            <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
-              <h2 className="font-sans text-govde font-medium">Doğrudan ulaşın</h2>
+            {/* ⚠️ Yan kartlar cam: formun yanında duran yardımcı yüzeyler,
+                içlerine yazı yazılmıyor. */}
+            <div className="cam rounded-buyuk p-5">
+              <h2 className="font-baslik text-govde font-medium">Doğrudan ulaşın</h2>
 
               <ul className="mt-4 flex flex-col gap-3">
                 {whatsapp ? (

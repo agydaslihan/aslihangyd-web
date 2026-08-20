@@ -93,7 +93,8 @@ export default async function DanismanOlSayfasi() {
             {icerik.nedenler.map((neden) => (
               <li
                 key={neden.baslik}
-                className="bg-yuzey rounded-kart flex flex-col gap-2 border-[0.5px] border-kenar p-5"
+                /* ⚠️ Altın hover kenarlığı — sitedeki kart dilinin aynısı. */
+                className="bg-yuzey rounded-kart hover:border-gold-cizgi flex flex-col gap-2 border-[0.5px] border-kenar p-5 transition-colors duration-[200ms] ease-[var(--cikis)]"
               >
                 {neden.gorsel !== null ? (
                   // eslint-disable-next-line @next/next/no-img-element -- medya kaydı zaten AVIF/WebP üretiyor.
@@ -126,7 +127,7 @@ export default async function DanismanOlSayfasi() {
                 width={gorsel.en ?? undefined}
                 height={gorsel.boy ?? undefined}
                 loading="lazy"
-                className="rounded-kart w-full object-cover"
+                className="rounded-buyuk w-full object-cover"
               />
               {gorsel.aciklama !== null ? (
                 <figcaption className="text-metin-3 text-mikro">{gorsel.aciklama}</figcaption>
