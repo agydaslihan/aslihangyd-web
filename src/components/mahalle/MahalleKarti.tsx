@@ -127,7 +127,7 @@ export function MahalleKarti({
           >
             <path
               d={siluet.yol}
-              className="fill-pudra-zemin stroke-vurgu"
+              className="fill-bant-zemin stroke-vurgu"
               strokeWidth={1.5}
               strokeLinejoin="round"
               vectorEffect="non-scaling-stroke"
@@ -151,7 +151,7 @@ export function MahalleKarti({
               {/* ⚠️ Etiketsiz bir "72 /100" ekran okuyucuda anlamsız.
                   Görsel olarak yer kaplamadan bağlamı veriyor. */}
               <span className="sr-only">Yatırım skoru: </span>
-              <span className="text-metin font-serif text-govde font-medium">{skor}</span>
+              <span className="text-metin font-baslik text-govde font-medium">{skor}</span>
               <span className="text-metin-3 text-mikro">/100</span>
             </div>
           </div>

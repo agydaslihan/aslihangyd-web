@@ -96,7 +96,7 @@ export function VitrinOzeti({
             className={
               oge.deger === null
                 ? 'text-metin-3 text-govde-kucuk'
-                : 'text-metin font-serif text-rakam font-medium'
+                : 'text-metin font-baslik text-rakam font-medium'
             }
           >
             {oge.deger ?? 'Veri bekleniyor'}

@@ -2193,7 +2193,7 @@ export interface MarkaGorunum {
      */
     butonMetin: string;
     /**
-     * Pudra tonu — hero ve yumuşak vurgu blokları. YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.
+     * Sıcak bej — yumuşak bölüm bantları. YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.
      */
     yumusakZemin: string;
     /**
@@ -2235,7 +2235,7 @@ export interface MarkaGorunum {
      */
     butonMetin: string;
     /**
-     * Pudra tonu — hero ve yumuşak vurgu blokları. YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.
+     * Sıcak bej — yumuşak bölüm bantları. YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.
      */
     yumusakZemin: string;
     /**

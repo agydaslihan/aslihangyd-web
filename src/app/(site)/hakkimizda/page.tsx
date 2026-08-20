@@ -53,7 +53,7 @@ export default async function HakkimizdaSayfasi() {
     <>
       <SayfaVitrini>
         <Eyebrow>Kurumsal</Eyebrow>
-        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin mt-4 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
           Hakkımızda
         </h1>
         <p className="text-metin-2 mt-5 text-govde leading-relaxed">
@@ -130,7 +130,7 @@ export default async function HakkimizdaSayfasi() {
 
       <Bolum zemin="yuzey">
         <div className="flex max-w-3xl flex-col gap-4">
-          <h2 className="flex items-center gap-2 font-serif text-baslik-2-mobil font-medium">
+          <h2 className="flex items-center gap-2 font-baslik text-baslik-2-mobil font-medium">
             <DogrulanmisIkon width={22} height={22} className="text-basari shrink-0" />
             Yasal bilgiler
           </h2>

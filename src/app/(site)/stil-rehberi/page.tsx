@@ -159,56 +159,46 @@ export default function StilRehberiSayfasi() {
           not="Rampalar temaya göre değişmez; anlamsal jetonlar rampanın farklı basamağına bağlanır. Kontrast oranları src/lib/tasarim/kontrast.test.ts içinde her derlemede ölçülür."
         >
           <Rampa
-            baslik="Koyu kakao — metin ve koyu zemin · taban 900 (metin, üst şerit, altbilgi, koyu tema zemini)"
-            onEk="kakao"
-            basamaklar={BASAMAKLAR}
-            jetonlar={acik}
-          />
-          <Rampa
-            baslik="Terracotta — ana vurgu · İKİ çapa: 200 pudra gülü (yalnızca zemin), 600 terracotta (dolu bant; metin için vurgu jetonu)"
-            onEk="terracotta"
-            basamaklar={BASAMAKLAR}
-            jetonlar={acik}
-          />
-          <Rampa
-            baslik="Adaçayı — eylem · taban 600 (dolu zemin yalnızca iki eylemde; metin için aksan-metin)"
-            onEk="adacayi"
-            basamaklar={BASAMAKLAR}
-            jetonlar={acik}
-          />
-          <Rampa
-            baslik="Soft gold — dekoratif · taban 400 (ASLA metin rengi değil)"
-            onEk="gold"
-            basamaklar={BASAMAKLAR}
-            jetonlar={acik}
-          />
-          <Rampa
-            baslik="Sıcak nötr — 50 kırık beyaz (ana zemin), 100 krem (bölüm ayrımı)"
+            baslik="Sıcak nötr — DÖRT çapa: 50 arka plan, 100 sıcak bej, 200 kenarlık, 900 mürekkep (metin). Açık temada yüzey, koyu temada metin."
             onEk="notr"
+            basamaklar={BASAMAKLAR}
+            jetonlar={acik}
+          />
+          <Rampa
+            baslik="Altın — tek marka rengi · taban 400. 400 ve daha açığı DEKORATİF (açık zeminde 2,28:1); metin için 600 (yalnızca büyük başlık, ≥3:1) ve 700 (normal metin, ≥4,5:1)."
+            onEk="gold"
             basamaklar={BASAMAKLAR}
             jetonlar={acik}
           />
 
           <Ornek etiket="Anlamsal — metin (beyaz üzerinde kontrast)">
-            {(['metin', 'metin-2', 'metin-3', 'metin-pasif', 'vurgu', 'aksan-metin'] as const).map(
-              (ad) => (
-                <Kutucuk
-                  key={ad}
-                  jetonAdi={`--color-${ad}`}
-                  deger={acik.get(`--color-${ad}`)}
-                  kontrast={oran(`--color-${ad}`, '--color-yuzey')}
-                />
-              ),
-            )}
+            {(
+              [
+                'metin',
+                'metin-2',
+                'metin-3',
+                'metin-pasif',
+                'vurgu',
+                'vurgu-baslik',
+                'aksan-metin',
+              ] as const
+            ).map((ad) => (
+              <Kutucuk
+                key={ad}
+                jetonAdi={`--color-${ad}`}
+                deger={acik.get(`--color-${ad}`)}
+                kontrast={oran(`--color-${ad}`, '--color-yuzey')}
+              />
+            ))}
           </Ornek>
 
           <Ornek etiket="Anlamsal — zemin rolleri (üzerine yazılan metinle)">
             {(
               [
-                ['--color-pudra-zemin', '--color-metin'],
+                ['--color-bant-zemin', '--color-metin'],
                 ['--color-vurgu-zemin', '--color-vurgu'],
-                ['--color-terracotta-yuzey', '--color-yuzey'],
-                ['--color-kakao-yuzey', '--color-yuzey'],
+                ['--color-dolu-vurgu', '--color-yuzey'],
+                ['--color-koyu-bant', '--color-yuzey'],
                 ['--color-aksan', '--color-aksan-uzeri'],
               ] as const
             ).map(([zemin, on]) => (
@@ -304,7 +294,7 @@ export default function StilRehberiSayfasi() {
         >
           <Ornek etiket="Görünümler">
             <Buton gorunum="aksan">Değerleme isteyin</Buton>
-            <Buton gorunum="kakao">Talebi gönder</Buton>
+            <Buton gorunum="koyu">Talebi gönder</Buton>
             <Buton>İkincil eylem</Buton>
             <Buton gorunum="hayalet">Hayalet</Buton>
             <Buton gorunum="whatsapp">WhatsApp&apos;tan yaz</Buton>

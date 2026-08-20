@@ -14,7 +14,7 @@
  * ─────────────────────────────────────────────────────────────────────────
  *
  * ⚠️ RAMPALAR AÇILMIYOR. Yuvalar `globals.css`teki anlamsal jetonları
- * çalışma zamanında eziyor; `--color-kakao-500` gibi rampa basamakları
+ * çalışma zamanında eziyor; `--color-notr-500` gibi rampa basamakları
  * dokunulmaz kalıyor. Rampa mutlak ölçek, jeton anlamdır — açılan şey
  * anlam olmalı.
  */
@@ -56,8 +56,8 @@ export const YUVALAR: readonly Yuva[] = [
     aciklama: 'Sayfanın genel zemini.',
     jeton: '--color-zemin',
     rol: 'zemin',
-    varsayilanAcik: '#fbfaf7',
-    varsayilanKoyu: '#3d2b2f',
+    varsayilanAcik: '#fcfbf8',
+    varsayilanKoyu: '#1c1c1c',
   },
   {
     anahtar: 'bolumZemin',
@@ -65,8 +65,8 @@ export const YUVALAR: readonly Yuva[] = [
     aciklama: 'Vurgulanan bölümlerin zemini — ana zeminden ayrışmalı.',
     jeton: '--color-yuzey-2',
     rol: 'zemin',
-    varsayilanAcik: '#f2ebe3',
-    varsayilanKoyu: '#635356',
+    varsayilanAcik: '#f5f0e8',
+    varsayilanKoyu: '#48433d',
   },
   {
     anahtar: 'metin',
@@ -74,8 +74,8 @@ export const YUVALAR: readonly Yuva[] = [
     aciklama: 'Gövde metninin rengi. Sitedeki en çok okunan renk.',
     jeton: '--color-metin',
     rol: 'metin',
-    varsayilanAcik: '#3d2b2f',
-    varsayilanKoyu: '#fbfaf7',
+    varsayilanAcik: '#1c1c1c',
+    varsayilanKoyu: '#fcfbf8',
   },
   {
     anahtar: 'vurgu',
@@ -83,8 +83,8 @@ export const YUVALAR: readonly Yuva[] = [
     aciklama: 'Başlıklar ve bağlantılar. Metin olarak kullanıldığı için AA aranır.',
     jeton: '--color-vurgu',
     rol: 'metin',
-    varsayilanAcik: '#844632',
-    varsayilanKoyu: '#e8cfc8',
+    varsayilanAcik: '#7a5e2e',
+    varsayilanKoyu: '#d5b98d',
   },
   {
     anahtar: 'butonZemin',
@@ -92,8 +92,8 @@ export const YUVALAR: readonly Yuva[] = [
     aciklama: 'Ana eylem butonlarının zemini.',
     jeton: '--color-aksan',
     rol: 'zemin',
-    varsayilanAcik: '#4f7c6a',
-    varsayilanKoyu: '#86a597',
+    varsayilanAcik: '#c7a36b',
+    varsayilanKoyu: '#c7a36b',
   },
   {
     anahtar: 'butonMetin',
@@ -101,19 +101,18 @@ export const YUVALAR: readonly Yuva[] = [
     aciklama: 'Buton üzerindeki yazı.',
     jeton: '--color-aksan-uzeri',
     rol: 'metin',
-    varsayilanAcik: '#ffffff',
-    varsayilanKoyu: '#3d2b2f',
+    varsayilanAcik: '#1c1c1c',
+    varsayilanKoyu: '#1c1c1c',
   },
   {
     anahtar: 'yumusakZemin',
     etiket: 'Yumuşak vurgu zemini',
     aciklama:
-      'Pudra tonu — hero ve yumuşak vurgu blokları. ' +
-      'YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.',
-    jeton: '--color-pudra-zemin',
+      'Sıcak bej — yumuşak bölüm bantları. ' + 'YALNIZCA ZEMİN: metin rengi olarak kullanılamaz.',
+    jeton: '--color-bant-zemin',
     rol: 'zemin',
-    varsayilanAcik: '#e8cfc8',
-    varsayilanKoyu: '#814431',
+    varsayilanAcik: '#f5f0e8',
+    varsayilanKoyu: '#2a2622',
   },
   {
     anahtar: 'dekoratifCizgi',
@@ -123,17 +122,17 @@ export const YUVALAR: readonly Yuva[] = [
       'taşımaz, metin rengi olarak kullanılamaz.',
     jeton: '--color-gold-cizgi',
     rol: 'dekoratif',
-    varsayilanAcik: '#c9a96e',
-    varsayilanKoyu: '#c9a96e',
+    varsayilanAcik: '#c7a36b',
+    varsayilanKoyu: '#c7a36b',
   },
   {
     anahtar: 'koyuBantZemin',
     etiket: 'Koyu bant zemini',
     aciklama: 'Hero ve çağrı bantlarının koyu zemini.',
-    jeton: '--color-kakao-yuzey',
+    jeton: '--color-koyu-bant',
     rol: 'zemin',
-    varsayilanAcik: '#3d2b2f',
-    varsayilanKoyu: '#635356',
+    varsayilanAcik: '#1c1c1c',
+    varsayilanKoyu: '#2a2622',
   },
   {
     anahtar: 'koyuBantMetin',
@@ -141,8 +140,8 @@ export const YUVALAR: readonly Yuva[] = [
     aciklama: 'Koyu bant üzerindeki yazı.',
     jeton: '--color-koyu-bant-metin',
     rol: 'metin',
-    varsayilanAcik: '#ffffff',
-    varsayilanKoyu: '#fbfaf7',
+    varsayilanAcik: '#fcfbf8',
+    varsayilanKoyu: '#fcfbf8',
   },
 ]
 
@@ -194,9 +193,9 @@ export interface KontrastCifti {
  * zeminde ve bölüm zemininde, vurgu ikisinde birden, buton metni buton
  * zemininde, koyu bant metni koyu bantta.
  *
- * ⚠️ Dekoratif yuvalar (gold çizgi, pudra zemin) burada ÖN PLAN olarak
- * hiç geçmiyor — bilinçli. İkisi de metin rengi değil; gold açık zeminde
- * 2,14:1 verir ve bunu bir eşiğe sokmaya çalışmak, ya paleti kırar ya
+ * ⚠️ Dekoratif yuvalar (altın çizgi, bej zemin) burada ÖN PLAN olarak
+ * hiç geçmiyor — bilinçli. İkisi de metin rengi değil; altın açık zeminde
+ * 2,28:1 verir ve bunu bir eşiğe sokmaya çalışmak, ya paleti kırar ya
  * kapıyı anlamsızlaştırırdı. Yerine `rol: 'dekoratif'` ve panelde açık
  * uyarı var.
  * ─────────────────────────────────────────────────────────────────────────
@@ -258,15 +257,22 @@ export const CIFTLER: readonly KontrastCifti[] = [
     esik: 4.5,
     gerekce: 'Çağrı bantlarının metni.',
   },
-  {
-    on: 'butonZemin',
-    arka: 'zemin',
-    etiket: 'Buton zemini / Ana arka plan',
-    esik: 3,
-    gerekce:
-      'WCAG 1.4.11 — bileşen sınırı zeminden ayırt edilebilmeli. ' +
-      'Metin değil, o yüzden eşik 3.',
-  },
+  /**
+   * ⚠️ "BUTON ZEMİNİ / ANA ARKA PLAN" ÇİFTİ KALDIRILDI — KURAL DEĞİL, KAPI
+   * DEĞİŞTİ.
+   *
+   * WCAG 1.4.11 hâlâ geçerli: dolu butonun sınırı zeminden 3:1 ayrışmalı.
+   * Ama Aurora'da bunu butonun DOLGUSU değil KENARLIĞI taşıyor ve kenarlık
+   * bir yuva değil, dolgudan türetiliyor (`ctaKenari.ts`): zeminden 3:1
+   * ayrışana kadar koyulaşıyor.
+   *
+   * Çifti burada tutmak, altın bir butonu (2,28:1) panelde reddetmek
+   * demekti — yani şartnamenin istediği rengi erişilebilirlik gerekçesiyle
+   * yasaklamak, oysa aynı erişilebilirlik kenarlıkla zaten sağlanıyor.
+   *
+   * ⚠️ Kural gevşemedi, taşıyıcısı değişti. Türetmenin gerçekten eşiği
+   * tutturduğu `ctaKenari.test.ts` içinde ölçülüyor.
+   */
 ]
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -289,9 +295,9 @@ export interface HazirPalet {
  */
 export const HAZIR_PALETLER: readonly HazirPalet[] = [
   {
-    anahtar: 'bohem',
-    ad: 'Bohem / pudra (varsayılan)',
-    aciklama: 'Sıcak kakao, terracotta ve adaçayı. Sitenin bugünkü paleti.',
+    anahtar: 'aurora',
+    ad: 'Aurora Luxury (varsayılan)',
+    aciklama: 'Sıcak beyaz, bej katmanlar ve altın. Sitenin bugünkü paleti.',
     acik: varsayilanPalet('acik'),
     koyu: varsayilanPalet('koyu'),
   },

@@ -1,3 +1,13 @@
+> # ⚠️ BU BELGE GEÇERSİZDİR — ARŞİV
+>
+> **20 Ağustos 2026** itibarıyla geçerli tasarım şartnamesi
+> [`docs/AURORA-LUXURY.md`](AURORA-LUXURY.md).
+>
+> Buradaki lacivert/adaçayı/gold paleti, Inter + Source Serif 4 tipografisi
+> ve bölüm sıralaması **uygulanmaz**. Belge, altı aşamanın nasıl yürütüldüğünü
+> ve hangi kararların neden alındığını okumak için duruyor; kod artık onu
+> takip etmiyor.
+
 # FRONTEND YENİDEN TASARIM PROMPTU — aslihangyd.com
 
 Aşağıdaki kod bloğunun tamamını agent'a **tek seferde** verin.

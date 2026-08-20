@@ -90,7 +90,7 @@ export function TemaAnahtari() {
      */
     const meta = document.querySelector('meta[name="theme-color"]')
     if (meta !== null) {
-      meta.setAttribute('content', yeni === 'koyu' ? '#3d2b2f' : '#fbfaf7')
+      meta.setAttribute('content', yeni === 'koyu' ? '#1c1c1c' : '#fcfbf8')
     }
 
     for (const dinleyici of dinleyiciler) dinleyici()

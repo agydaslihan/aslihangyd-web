@@ -167,7 +167,7 @@ export function SkorKirilimi({ bilesenler }: { bilesenler: BilesenSonucu[] }) {
           <div className="bg-yuzey-2 h-1.5 overflow-hidden rounded-full">
             {bilesen.hamPuan === null ? null : (
               <div
-                className="bg-kakao-yuzey h-full rounded-full"
+                className="bg-koyu-bant h-full rounded-full"
                 style={{ width: `${bilesen.hamPuan}%` }}
               />
             )}

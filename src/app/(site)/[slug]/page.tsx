@@ -62,7 +62,7 @@ export default async function CmsSayfasi({ params }: SayfaOzellikleri) {
           <span aria-current="page">{sayfa.baslik}</span>
         </nav>
 
-        <h1 className="text-metin font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
           {sayfa.baslik}
         </h1>
 

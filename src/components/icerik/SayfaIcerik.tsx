@@ -22,7 +22,7 @@ export function SayfaBasligi({
   icerik,
   varsayilanBaslik,
   varsayilanAciklama,
-  h1Sinifi = 'font-serif text-baslik-1-mobil font-medium sm:text-baslik-1',
+  h1Sinifi = 'font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1',
   aciklamaSinifi = 'text-metin-2 leading-relaxed',
 }: {
   icerik: SayfaIcerigi

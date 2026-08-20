@@ -79,7 +79,7 @@ export function DroneVideoOynatici({
     <button
       type="button"
       onClick={() => setOynatiliyor(true)}
-      className="cerceve bg-kakao-yuzey group relative block aspect-video w-full overflow-hidden"
+      className="cerceve bg-koyu-bant group relative block aspect-video w-full overflow-hidden"
       aria-label={`${baslik} — videoyu oynat`}
     >
       {kapak !== null && (

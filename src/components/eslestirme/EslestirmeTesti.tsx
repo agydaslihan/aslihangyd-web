@@ -191,7 +191,7 @@ export function EslestirmeTesti({
           aria-label="Test ilerlemesi"
         >
           <div
-            className="bg-kakao-yuzey h-full rounded-full transition-[width] duration-300"
+            className="bg-koyu-bant h-full rounded-full transition-[width] duration-300"
             style={{ width: `${Math.max(ilerleme, 4)}%` }}
           />
         </div>
@@ -231,7 +231,7 @@ export function EslestirmeTesti({
               </Buton>
             ) : null}
             <Buton
-              gorunum="kakao"
+              gorunum="koyu"
               boyut="kucuk"
               onClick={ilerle}
               pasif={!cevaplandi && !adim.atlanabilir}
@@ -466,7 +466,7 @@ function Sonuclar({
   return (
     <div className="mx-auto max-w-3xl">
       <header className="mb-6 text-center">
-        <h2 className="font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">
+        <h2 className="font-baslik text-baslik-2-mobil font-medium sm:text-baslik-2">
           Size en uygun {sonuc.eslesmeler.length} mahalle
         </h2>
         <p className="text-metin-2 mx-auto mt-2 max-w-xl text-govde-kucuk leading-relaxed">
@@ -588,7 +588,7 @@ function EslesmeKarti({ eslesme, sira }: { eslesme: MahalleEslesmesi; sira: numb
               </div>
               <div className="bg-yuzey-2 h-1 w-full overflow-hidden rounded-full">
                 <div
-                  className="bg-kakao-yuzey h-full rounded-full"
+                  className="bg-koyu-bant h-full rounded-full"
                   style={{ width: `${satir.puan ?? 0}%` }}
                 />
               </div>

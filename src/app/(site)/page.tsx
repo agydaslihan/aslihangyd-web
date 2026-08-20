@@ -413,7 +413,7 @@ function UcYolAyrimi() {
               height={26}
               className={vurgulu ? 'text-aksan-metin' : 'text-metin-3'}
             />
-            <h3 className="text-baslik-3 font-serif font-medium">{baslik}</h3>
+            <h3 className="text-baslik-3 font-baslik font-medium">{baslik}</h3>
             <p className="text-metin-2 text-govde-kucuk flex-1">{metin}</p>
             <span className="text-aksan-metin inline-flex items-center gap-1.5 text-govde-kucuk font-medium">
               {eylem}
@@ -449,12 +449,12 @@ function GizliPortfoyTeaser({ sayi }: { sayi: number }) {
   const doluMu = sayi > 0
 
   return (
-    <Bolum zemin="kakao">
+    <Bolum zemin="koyu">
       <div className="flex flex-col gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
-          <p className="text-adacayi-300 text-eyebrow font-medium uppercase">Gizli portföy</p>
+          <p className="text-koyu-bant-vurgu text-eyebrow font-medium uppercase">Gizli portföy</p>
 
-          <h2 className="text-notr-50 mt-2.5 font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">
+          <h2 className="text-notr-50 mt-2.5 font-baslik text-baslik-2-mobil font-medium sm:text-baslik-2">
             {doluMu ? (
               <>
                 Yayınlanmayan <span className="rakam">{sayi}</span> taşınmaz
@@ -544,7 +544,7 @@ function AslihanBolumu({
 
         <div className="flex flex-col gap-4">
           <Eyebrow>Kim danışmanlık veriyor</Eyebrow>
-          <h2 className="font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">
+          <h2 className="font-baslik text-baslik-2-mobil font-medium sm:text-baslik-2">
             Aslıhan — Çorlu&apos;da gayrimenkul danışmanı
           </h2>
           <p className="text-metin-2 text-govde">
@@ -635,7 +635,7 @@ function YaklasimBolumu() {
  */
 function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
   return (
-    <Bolum zemin="terracotta">
+    <Bolum zemin="altin">
       <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
         <div className="max-w-2xl">
           <h2 className="text-baslik-2 text-white">

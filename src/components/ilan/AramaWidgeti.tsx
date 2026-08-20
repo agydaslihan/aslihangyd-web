@@ -178,7 +178,7 @@ export function AramaWidgeti({
 
       <button
         type="submit"
-        className="bg-kakao-yuzey rounded-buton mt-3 flex min-h-13 w-full items-center justify-center gap-2 font-medium text-koyu-bant-metin transition-opacity hover:opacity-90"
+        className="bg-koyu-bant rounded-buton mt-3 flex min-h-13 w-full items-center justify-center gap-2 font-medium text-koyu-bant-metin transition-opacity hover:opacity-90"
       >
         <AraIkon width={18} height={18} />
         {sekme === 'ticari' ? 'Ticari portföyü aç' : 'Ara'}

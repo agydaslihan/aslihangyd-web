@@ -55,7 +55,7 @@ export default async function KarsilastirmaSayfasi({
           <span aria-current="page">Karşılaştır</span>
         </nav>
 
-        <h1 className="text-metin font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
           Mahalle karşılaştırma
         </h1>
         <p className="text-metin-2 mt-5 text-govde leading-relaxed">

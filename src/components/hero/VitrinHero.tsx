@@ -70,7 +70,7 @@ export function VitrinHero({
             </Sahne>
 
             <Sahne gecikme={60}>
-              <h1 className="text-metin mt-5 font-serif text-baslik-1-mobil leading-[1.05] font-medium sm:text-baslik-1">
+              <h1 className="text-metin mt-5 font-baslik text-baslik-1-mobil leading-[1.05] font-medium sm:text-baslik-1">
                 {baslik}{' '}
                 {/* ⚠️ Vurgu gold AMA `--color-gold-400` DEĞİL: o, krem zemin
                     üzerinde 1,5:1 ile okunmaz ve "gold asla metin rengi
@@ -96,7 +96,7 @@ export function VitrinHero({
                     Vitrinin birincil eylemi portföye götürmek — o iki eylemden
                     biri değil. Dolu kakao aynı görsel ağırlığı veriyor,
                     nadirliği harcamadan. */}
-                <Buton href={birincilEylem.adres} gorunum="kakao" boyut="buyuk" sinifAdi="group">
+                <Buton href={birincilEylem.adres} gorunum="koyu" boyut="buyuk" sinifAdi="group">
                   {birincilEylem.ad}
                   <OkIkonu />
                 </Buton>

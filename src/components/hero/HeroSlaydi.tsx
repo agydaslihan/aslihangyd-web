@@ -98,7 +98,7 @@ export function HeroSlaydi({
           <div className="kapsayici w-full">
             <div className={ortali ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
               {slayt.baslik !== null ? (
-                <BaslikEtiketi className="text-koyu-bant-metin font-serif text-baslik-1-mobil font-medium drop-shadow-sm sm:text-baslik-1">
+                <BaslikEtiketi className="text-koyu-bant-metin font-baslik text-baslik-1-mobil font-medium drop-shadow-sm sm:text-baslik-1">
                   {slayt.baslik}
                 </BaslikEtiketi>
               ) : null}
@@ -128,7 +128,7 @@ export function HeroSlaydi({
 export function HeroCercevesi({ children }: { children: React.ReactNode }) {
   return (
     <div
-      className="bg-kakao-yuzey relative w-full overflow-hidden"
+      className="bg-koyu-bant relative w-full overflow-hidden"
       style={{
         // ⚠️ `aspect-ratio` + `max-height`: oran CLS'i sıfırlıyor, azami
         // yükseklik ise geniş ekranlarda hero'nun bütün ekranı yutmasını

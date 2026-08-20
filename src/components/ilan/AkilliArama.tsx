@@ -70,7 +70,7 @@ export function AkilliArama() {
         <button
           type="submit"
           disabled={bekliyor || sorgu.trim() === ''}
-          className="bg-vurgu text-vurgu-uzeri rounded-buton focus-visible:outline-vurgu shrink-0 px-5 py-3 text-govde-kucuk font-medium disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="bg-koyu-bant text-koyu-bant-metin rounded-buton focus-visible:outline-vurgu shrink-0 px-5 py-3 text-govde-kucuk font-medium disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           {bekliyor ? 'Anlaşılıyor…' : 'Ara'}
         </button>

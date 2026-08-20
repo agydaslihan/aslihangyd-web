@@ -62,8 +62,8 @@ interface Aile {
 }
 
 const AILELER: readonly Aile[] = [
-  { ad: 'Inter', dosya: 'inter-turkce', agirliklar: '400;500' },
-  { ad: 'Source Serif 4', dosya: 'source-serif-4-turkce', agirliklar: '400;500' },
+  { ad: 'Manrope', dosya: 'manrope-turkce', agirliklar: '400;500' },
+  { ad: 'Plus Jakarta Sans', dosya: 'plus-jakarta-sans-turkce', agirliklar: '400;500' },
 ]
 
 async function cssGetir(aile: Aile): Promise<string> {

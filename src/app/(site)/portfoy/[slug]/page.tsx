@@ -137,7 +137,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
               ) : null}
             </div>
 
-            <h1 className="mt-3 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+            <h1 className="mt-3 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
               {ilan.baslik}
             </h1>
 

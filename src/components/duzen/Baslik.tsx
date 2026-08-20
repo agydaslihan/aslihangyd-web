@@ -123,7 +123,7 @@ export function Baslik({
             <MarkaLogosu
               marka={marka}
               sinif="h-9 w-auto"
-              metinSinifi="font-serif text-baslik-3 tracking-tight whitespace-nowrap"
+              metinSinifi="font-baslik text-baslik-3 tracking-tight whitespace-nowrap"
               vurguSinifi="text-vurgu"
             />
           </Link>
@@ -466,7 +466,7 @@ export function IcerigeAtla() {
   return (
     <a
       href="#icerik"
-      className="bg-kakao-yuzey rounded-kart sr-only z-50 px-4 py-2 text-koyu-bant-metin focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
+      className="bg-koyu-bant rounded-kart sr-only z-50 px-4 py-2 text-koyu-bant-metin focus:not-sr-only focus:absolute focus:top-3 focus:left-3"
     >
       İçeriğe atla
     </a>

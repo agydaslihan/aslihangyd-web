@@ -56,7 +56,7 @@ export default async function TicariSayfasi() {
       <SayfaVitrini>
         <Eyebrow>Ticari gayrimenkul</Eyebrow>
 
-        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin mt-4 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
           Fabrika, depo, sanayi arsası
         </h1>
 
@@ -160,10 +160,10 @@ export default async function TicariSayfasi() {
       {/* ⚠️ Dolu terracotta bant — ana sayfadaki çağrı bandıyla aynı rol.
           Metin TAM BEYAZ: terracotta üzerinde %75 beyaz 3,56:1 veriyor ve
           AA'nın altında kalıyor. Gerekçenin ölçüsü Bolum.tsx içinde. */}
-      <Bolum zemin="terracotta">
+      <Bolum zemin="altin">
         <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
           <div className="max-w-2xl">
-            <h2 className="font-serif text-baslik-1-mobil font-medium text-white sm:text-baslik-1">
+            <h2 className="font-baslik text-baslik-1-mobil font-medium text-white sm:text-baslik-1">
               Ticari taşınmazınızı mı değerlendirmek istiyorsunuz?
             </h2>
             <p className="mt-3 text-govde leading-relaxed text-white">
@@ -176,7 +176,7 @@ export default async function TicariSayfasi() {
           <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
             <Link
               href="/iletisim?tip=ticari"
-              className="text-kakao-yuzey rounded-buton inline-flex min-h-13 items-center justify-center bg-white px-6 font-medium transition-opacity hover:opacity-90"
+              className="text-koyu-bant rounded-buton inline-flex min-h-13 items-center justify-center bg-white px-6 font-medium transition-opacity hover:opacity-90"
             >
               Görüşme talep edin
             </Link>

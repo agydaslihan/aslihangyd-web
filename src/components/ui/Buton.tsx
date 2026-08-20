@@ -18,13 +18,13 @@ import { sinif } from '@/lib/sinif'
  * karar olmalı, varsayılanın yan etkisi değil.
  *
  * ⚠️ `aksan` görünümü pazarlığa kapalı bir kuralın taşıyıcısıdır: dolu
- * adaçayı zemin YALNIZCA "Değerleme isteyin" ve "Erişim talep et"
+ * altın zemin YALNIZCA "Değerleme isteyin" ve "Erişim talep et"
  * eylemlerinde kullanılır. Kural `src/lib/tasarim/disiplin.test.ts`
  * içinde denetlenir; yeni bir çağrı yeri eklemek testi kırar.
  * ─────────────────────────────────────────────────────────────────────────
  */
 
-type Gorunum = 'ikincil' | 'hayalet' | 'kakao' | 'whatsapp' | 'aksan' | 'acikBant'
+type Gorunum = 'ikincil' | 'hayalet' | 'koyu' | 'whatsapp' | 'aksan' | 'acikBant'
 type Boyut = 'kucuk' | 'orta' | 'buyuk'
 
 const GORUNUMLER: Record<Gorunum, string> = {
@@ -35,48 +35,40 @@ const GORUNUMLER: Record<Gorunum, string> = {
   /**
    * Form gönderimi ve akış içi birincil eylem.
    *
-   * Şartnamede yoktu; şartnamedeki hiyerarşi uygulanınca "Gönder" ile
-   * "Vazgeç" görsel olarak eşitleniyordu. Adaçayıyı ikinci bir eyleme
-   * açmak yerine koyu kakao kullanıldı — adaçayı nadir kalıyor, gönderim
-   * butonu yine de tıklanabilir görünüyor.
-   *
-   * ⚠️ Terracotta DEĞİL: dolu terracotta bant sayfada bölüm ayıracı olarak
-   * kullanılıyor; aynı rengi butona da vermek ikisini birbirine karıştırırdı.
+   * Altını ikinci bir eyleme açmak yerine mürekkep kullanılıyor: altın
+   * nadir kalıyor, gönderim butonu yine de tıklanabilir görünüyor. Mürekkep
+   * buton sayfadan 16,46:1 ayrışıyor — hiçbir kapıya takılmıyor.
    */
-  kakao: 'bg-kakao-yuzey text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
+  koyu: 'bg-koyu-bant text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
   /**
-   * ⚠️ KOYU FOTOĞRAF ÜZERİNDE ADAÇAYI DOĞRU CEVAP DEĞİL.
+   * ⚠️ KOYU FOTOĞRAF ÜZERİNDE ALTIN DOĞRU CEVAP DEĞİL.
    *
-   * Hero slaydının zemini karartılmış bir fotoğraf. Orada adaçayı butonu
-   * hem beşinci bir "aksan" çağrısı olur (disiplin testi bunu yakaladı) hem
-   * de fotoğrafın renkleriyle yarışır — karartma oranı kullanıcıya bağlı
-   * olduğu için buton-zemin kontrastı öngörülemez hâle gelirdi.
+   * Hero slaydının zemini karartılmış bir fotoğraf. Orada altın buton hem
+   * "aksan" nadirliğini harcar hem de fotoğrafın renkleriyle yarışır —
+   * karartma oranı kullanıcıya bağlı olduğu için buton-zemin kontrastı
+   * öngörülemez hâle gelirdi.
    *
-   * Açık buton, koyu bant üzerindeki en yüksek kontrastlı ve en yaygın
-   * çözüm; `ticari` sayfasındaki çağrı bandında da aynı desen elle
-   * yazılmıştı. Burada jetonlaştırılıyor.
-   *
-   * Ölçüm: metin açık temada 13,24:1, koyu temada 7,23:1. Buton zemini
-   * beyaz olduğu için karartma oranından bağımsız olarak fotoğraftan
-   * ayrışıyor.
+   * Beyaz buton zemini karartma oranından bağımsız olarak fotoğraftan
+   * ayrışıyor; üzerindeki mürekkep metin 17,04:1.
    */
-  acikBant: 'bg-white text-kakao-yuzey border-[0.5px] border-transparent hover:opacity-90',
+  acikBant: 'bg-white text-koyu-bant border-[0.5px] border-transparent hover:opacity-90',
   // WhatsApp'ın kurumsal yeşili bilinçli olarak kullanılmıyor: sayfadaki
   // tek parlak renk olurdu ve sakin paleti bozardı. Tanınırlık ikondan gelir.
-  whatsapp:
-    'bg-kakao-yuzey text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
+  whatsapp: 'bg-koyu-bant text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
   /**
-   * ⚠️ Metin rengi JETONDAN geliyor, `text-white` DEĞİL.
+   * ⚠️ DOLU ALTIN BUTONUN KENARLIĞI ERİŞİLEBİLİRLİK GEREĞİ, SÜS DEĞİL.
    *
-   * Açık temada beyaz doğru cevap (adaçayı-600 üzerinde 4,74:1); koyu
-   * temada değil. Orada zemin açılıyor (adaçayı-400) ve metin kakaoya
-   * dönüyor — yoksa buton koyu sayfa zemininden 2,79:1 ile ayrışıyor ve
-   * WCAG 1.4.11'in 3:1 sınırını geçemiyordu. Gerekçenin tamamı
-   * globals.css içinde `--color-aksan-uzeri` başlığında.
+   * Altın zemin sayfadan yalnızca 2,28:1 ayrışıyor; WCAG 1.4.11 bileşen
+   * sınırı için 3:1 istiyor. Yani kenarlıksız altın buton, ışık yansıyan
+   * bir ekranda nerede bittiği görünmeyen bir leke oluyor. gold-600
+   * kenarlık 4,21:1 veriyor.
+   *
+   * ⚠️ Metin `text-white` DEĞİL, mürekkep: beyaz altın üzerinde 2,36:1,
+   * mürekkep 7,20:1. Jetondan okunuyor ki koyu temada da doğru kalsın.
    */
   aksan:
     'bg-aksan text-[color:var(--color-aksan-uzeri)] border-[0.5px] ' +
-    'border-transparent hover:bg-aksan-koyu',
+    'border-aksan-kenar hover:bg-aksan-koyu',
 }
 
 const BOYUTLAR: Record<Boyut, string> = {

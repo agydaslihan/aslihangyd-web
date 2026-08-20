@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest'
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ NEDEN VAR: AÇILIŞ BANDI SESSİZCE UNUTULUR.
  *
- * Yeniden tasarımın son adımı (FRONTEND-YENIDEN-TASARIM §10, Aşama 6)
+ * Önceki yeniden tasarımın son adımı (arşiv: FRONTEND-YENIDEN-TASARIM §10)
  * "kalan sayfaların uyarlanması"ydı ve tam olarak böyle yarım kaldı: ana
  * sayfa, portföy ve mahalleler yeni bandı aldı, kalan 28 sayfa eski küçük
  * başlıkla açılmaya devam etti. Aradaki fark hiçbir yerde hata vermiyor —

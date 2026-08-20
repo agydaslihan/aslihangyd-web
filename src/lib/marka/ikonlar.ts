@@ -126,7 +126,7 @@ export async function ikonUret(kenar: number): Promise<{ veri: Buffer; imza: str
 
   // Palet doğrulanmış olsa da burada yedek var: tanımsız bir yuva
   // monogramı çökertmemeli, favicon her koşulda dönmeli.
-  const zemin = marka.acik.koyuBantZemin ?? '#3d2b2f'
+  const zemin = marka.acik.koyuBantZemin ?? '#1c1c1c'
   const metin = marka.acik.koyuBantMetin ?? '#ffffff'
 
   const svg = monogramSvg(harf, zemin, metin, kenar)

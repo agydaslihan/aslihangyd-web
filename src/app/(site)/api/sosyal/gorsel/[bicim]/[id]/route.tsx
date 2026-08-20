@@ -44,10 +44,10 @@ const TL = new Intl.NumberFormat('tr-TR', { maximumFractionDigits: 0 })
  * görseli bunların hiçbiri değil.
  */
 const RENK = {
-  zemin: '#3D2B2F', // kakao-900 — koyu kakao
-  metin: '#FBFAF7', // notr-50 — kırık beyaz
-  metinSolgun: '#B7ADAE', // kakao-300
-  cizgi: '#635356', // kakao-700
+  zemin: '#1C1C1C', // notr-900 — mürekkep
+  metin: '#FCFBF8', // notr-50 — sıcak beyaz
+  metinSolgun: '#CBC5BB', // notr-300
+  cizgi: '#48433D', // notr-700
 } as const
 
 export async function GET(
