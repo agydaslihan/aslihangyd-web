@@ -56,7 +56,19 @@ export function HesaplayiciKabugu({
         {/* Ölçüm: sayfayı açmak değil, bir değer girmek 'kullanım' sayılıyor. */}
         <KullanimIsareti>{children}</KullanimIsareti>
 
-        <div className="border-kenar mt-10 max-w-2xl border-t-[0.5px] pt-6">
+        {/*
+          ⚠️ YÖNTEM VE FERAGAT BLOĞU CAM YÜZEYDE.
+
+          Bu blok üç zorunluluğu taşıyor: hesabın nasıl yapıldığı, oran
+          tarihi ve yatırım tavsiyesi feragati. Sayfanın gövdesinden ince
+          bir çizgiyle ayrılıyordu ve okunmadan geçiliyordu; kendi yüzeyi
+          olduğunda "burada okunacak bir şey var" diyor.
+
+          ⚠️ Metin ölçüsü DEĞİŞMEDİ: feragat küçültülmedi, büyütülmedi.
+          Yasal bir ibarenin görsel ağırlığıyla oynamak, onu ya gizlemek ya
+          da bağırtmak olurdu.
+        */}
+        <div className="cam rounded-buyuk mt-10 max-w-2xl p-5 sm:p-6">
           <details className="group">
             <summary className="flex cursor-pointer list-none items-center gap-2 text-govde-kucuk font-medium marker:content-none">
               <BilgiIkon width={16} height={16} className="text-metin-3" />

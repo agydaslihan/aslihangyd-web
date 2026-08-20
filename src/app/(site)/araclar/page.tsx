@@ -110,7 +110,9 @@ export default async function AraclarSayfasi() {
             return (
               <article
                 key={arac.adres}
-                className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col gap-2 border-[0.5px] p-5 transition-shadow sm:p-6"
+                /* ⚠️ Altın kenarlık hover'da — ilan ve mahalle kartlarıyla
+                 aynı kural; sitedeki tüm kartlar aynı dili konuşuyor. */
+                className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart hover:border-gold-cizgi relative flex flex-col gap-2 border-[0.5px] p-5 transition-[box-shadow,border-color] duration-[200ms] ease-[var(--cikis)] sm:p-6"
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="flex items-start gap-3">
