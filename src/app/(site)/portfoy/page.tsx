@@ -5,6 +5,7 @@ import { Suspense } from 'react'
 
 import { AkilliArama } from '@/components/ilan/AkilliArama'
 import { SayfaVitrini, VitrinOzeti } from '@/components/duzen/SayfaVitrini'
+import { Eyebrow } from '@/components/ui/Bolum'
 import { Sahne } from '@/components/hareket/Sahne'
 import { FiltrePaneli } from '@/components/ilan/FiltrePaneli'
 import { Siralama } from '@/components/ilan/Siralama'
@@ -119,7 +120,7 @@ export default async function PortfoySayfasi({
         olmasın" ayrı şeyler; ikincisi sessiz bir SEO kaybı olurdu.
       */}
       <SayfaVitrini yan={ozet !== null ? <VitrinOzeti ogeler={ozet} /> : undefined}>
-        <p className="text-aksan-metin text-eyebrow font-medium uppercase">Portföy</p>
+        <Eyebrow>Portföy</Eyebrow>
         <SayfaBasligi
           icerik={icerik}
           varsayilanBaslik="Portföy"

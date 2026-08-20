@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { Sahne } from '@/components/hareket/Sahne'
+import { Eyebrow } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
 import { DogrulanmisIkon } from '@/components/ui/Ikon'
 
@@ -65,7 +66,7 @@ export function VitrinHero({
         <div className="grid items-center gap-12 lg:grid-cols-[1fr_auto] lg:gap-16">
           <div className="max-w-xl">
             <Sahne>
-              <p className="text-aksan-metin text-eyebrow font-medium uppercase">{ustBaslik}</p>
+              <Eyebrow>{ustBaslik}</Eyebrow>
             </Sahne>
 
             <Sahne gecikme={60}>

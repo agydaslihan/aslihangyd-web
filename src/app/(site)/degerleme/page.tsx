@@ -3,6 +3,8 @@ import { SayfaBasligi, SayfaGovdesi } from '@/components/icerik/SayfaIcerik'
 import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 
 import { DegerlemeSihirbazi } from '@/components/degerleme/DegerlemeSihirbazi'
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
+import { Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
@@ -38,55 +40,62 @@ export default async function DegerlemeSayfasi() {
   ).length
 
   return (
-    <div className="kapsayici py-10 sm:py-14">
-      <header className="mb-8 flex max-w-2xl flex-col gap-3">
+    <>
+      <SayfaVitrini>
+        <Eyebrow>Ücretsiz değerleme</Eyebrow>
         <SayfaBasligi
           icerik={icerik}
           varsayilanBaslik="Evim ne eder?"
+          h1Sinifi="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1"
+          aciklamaSinifi="text-metin-2 mt-5 text-govde leading-relaxed"
           varsayilanAciklama={
-            <p className="text-metin-2 leading-relaxed">
+            <p className="text-metin-2 mt-5 text-govde leading-relaxed">
               Satmayı düşünmeseniz bile bilmek işinize yarar. Birkaç bilgi girin, tahmini değer
               aralığını ve nasıl hesapladığımızı görün.{' '}
-              <strong className="font-medium">Hiçbir iletişim bilgisi istemiyoruz</strong> — sonucu
-              doğrudan göreceksiniz.
+              <strong className="text-metin font-medium">
+                Hiçbir iletişim bilgisi istemiyoruz
+              </strong>{' '}
+              — sonucu doğrudan göreceksiniz.
             </p>
           }
         />
-      </header>
+      </SayfaVitrini>
 
-      {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
-      <SayfaGovdesi icerik={icerik} />
+      <div className="kapsayici py-12 sm:py-16">
+        {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
+        <SayfaGovdesi icerik={icerik} />
 
-      {mahalleler.length === 0 ? (
-        <BosDurum
-          baslik="Değerleme aracı henüz hazır değil"
-          neden="Mahalle verileri girildiğinde bu araç çalışmaya başlayacak. O zamana kadar taşınmazınızı bize doğrudan sorabilirsiniz."
-          eylem={<Buton href="/iletisim?tip=degerleme">Bize sorun</Buton>}
-        />
-      ) : (
-        <>
-          {veriliMahalleSayisi === 0 ? (
-            <div className="border-kenar bg-uyari-zemin rounded-kart mb-6 border-[0.5px] p-4">
-              <p className="text-govde-kucuk leading-relaxed">
-                <strong className="font-medium">Not:</strong> Henüz hiçbir mahalle için yeterli
-                fiyat gözlemi biriktirmedik. Araç çalışıyor ama tahmin üretemeyecek — bu bilinçli:
-                elimizde veri yokken rakam uydurmuyoruz.
-              </p>
-            </div>
-          ) : null}
-
-          <DegerlemeSihirbazi
-            mahalleler={mahalleler.map((mahalle) => ({
-              slug: mahalle.slug,
-              ad: mahalle.ad,
-              m2Fiyati: mahalle.ortalamaM2Satis ?? null,
-              gozlemSayisi: mahalle.gozlemSayisi ?? null,
-            }))}
-            katsayilar={katsayilar}
-            whatsapp={whatsapp}
+        {mahalleler.length === 0 ? (
+          <BosDurum
+            baslik="Değerleme aracı henüz hazır değil"
+            neden="Mahalle verileri girildiğinde bu araç çalışmaya başlayacak. O zamana kadar taşınmazınızı bize doğrudan sorabilirsiniz."
+            eylem={<Buton href="/iletisim?tip=degerleme">Bize sorun</Buton>}
           />
-        </>
-      )}
-    </div>
+        ) : (
+          <>
+            {veriliMahalleSayisi === 0 ? (
+              <div className="border-kenar bg-uyari-zemin rounded-kart mb-6 border-[0.5px] p-4">
+                <p className="text-govde-kucuk leading-relaxed">
+                  <strong className="font-medium">Not:</strong> Henüz hiçbir mahalle için yeterli
+                  fiyat gözlemi biriktirmedik. Araç çalışıyor ama tahmin üretemeyecek — bu bilinçli:
+                  elimizde veri yokken rakam uydurmuyoruz.
+                </p>
+              </div>
+            ) : null}
+
+            <DegerlemeSihirbazi
+              mahalleler={mahalleler.map((mahalle) => ({
+                slug: mahalle.slug,
+                ad: mahalle.ad,
+                m2Fiyati: mahalle.ortalamaM2Satis ?? null,
+                gozlemSayisi: mahalle.gozlemSayisi ?? null,
+              }))}
+              katsayilar={katsayilar}
+              whatsapp={whatsapp}
+            />
+          </>
+        )}
+      </div>
+    </>
   )
 }

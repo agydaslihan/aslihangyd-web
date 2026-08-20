@@ -3,6 +3,8 @@ import { SayfaBasligi, SayfaGovdesi } from '@/components/icerik/SayfaIcerik'
 import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 
 import { TalepFormu } from '@/components/talep/TalepFormu'
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
+import { Eyebrow } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
 import { PostaIkon, TelefonIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
@@ -51,97 +53,102 @@ export default async function IletisimSayfasi({
   const whatsapp = whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())
 
   return (
-    <div className="kapsayici py-10 sm:py-14">
-      <header className="mb-10 flex max-w-2xl flex-col gap-3">
+    <>
+      <SayfaVitrini>
+        <Eyebrow>Çorlu · Tekirdağ</Eyebrow>
         <SayfaBasligi
           icerik={icerik}
           varsayilanBaslik="İletişim"
+          h1Sinifi="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1"
+          aciklamaSinifi="text-metin-2 mt-5 text-govde leading-relaxed"
           varsayilanAciklama={
-            <p className="text-metin-2 leading-relaxed">
+            <p className="text-metin-2 mt-5 text-govde leading-relaxed">
               Alım, satım, kiralama veya değerleme — hangisi olursa olsun önce sizi dinliyoruz.
               Formu doldurmak zorunda değilsiniz; WhatsApp genellikle en hızlı yol.
             </p>
           }
         />
-      </header>
+      </SayfaVitrini>
 
-      {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
-      <SayfaGovdesi icerik={icerik} />
+      <div className="kapsayici py-12 sm:py-16">
+        {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
+        <SayfaGovdesi icerik={icerik} />
 
-      <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
-        <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-8">
-          <TalepFormu
-            eylem={talepGonder}
-            turnstileSiteAnahtari={turnstileSiteAnahtari()}
-            varsayilanTip={varsayilanTip}
-            ilgiliIlan={metin('ilan')}
-            ilgiliMahalle={metin('mahalle')}
-            baslik={
-              varsayilanTip === 'degerleme' ? 'Taşınmazınızın değerini öğrenin' : 'Bize yazın'
-            }
-            aciklama={
-              varsayilanTip === 'degerleme'
-                ? 'Mahalle, metrekare ve bina bilgilerinizi paylaşın; size gerçek bir değer aralığı ve nasıl hesapladığımızı anlatalım. Satmayı düşünmeseniz bile bilmek işinize yarar.'
-                : 'Aradığınızı ne kadar ayrıntılı anlatırsanız o kadar isabetli seçenek sunabiliriz.'
-            }
-          />
-        </div>
-
-        <aside className="flex flex-col gap-4">
-          <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
-            <h2 className="font-sans text-govde font-medium">Doğrudan ulaşın</h2>
-
-            <ul className="mt-4 flex flex-col gap-3">
-              {whatsapp ? (
-                <li>
-                  <Buton href={whatsapp} dis tamGenislik>
-                    <WhatsappIkon width={18} height={18} />
-                    WhatsApp&apos;tan yazın
-                  </Buton>
-                </li>
-              ) : null}
-              {telefon ? (
-                <li>
-                  <Buton href={`tel:${telefon.replace(/\s/g, '')}`} gorunum="ikincil" tamGenislik>
-                    <TelefonIkon width={18} height={18} />
-                    {telefon}
-                  </Buton>
-                </li>
-              ) : null}
-              {eposta ? (
-                <li>
-                  <Buton href={`mailto:${eposta}`} gorunum="ikincil" tamGenislik>
-                    <PostaIkon width={18} height={18} />
-                    E-posta gönderin
-                  </Buton>
-                </li>
-              ) : null}
-            </ul>
-
-            {!whatsapp && !telefon && !eposta ? (
-              <p className="text-metin-3 mt-3 text-govde-kucuk leading-relaxed">
-                İletişim bilgileri yönetim panelinden girildiğinde burada görünecek. O zamana kadar
-                yandaki formu kullanabilirsiniz.
-              </p>
-            ) : null}
-
-            {kurumsal?.calismaSaatleri ? (
-              <p className="text-metin-3 mt-4 text-mikro">
-                Çalışma saatleri: {kurumsal.calismaSaatleri}
-              </p>
-            ) : null}
+        <div className="grid gap-10 lg:grid-cols-[minmax(0,1fr)_20rem] lg:gap-16">
+          <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-8">
+            <TalepFormu
+              eylem={talepGonder}
+              turnstileSiteAnahtari={turnstileSiteAnahtari()}
+              varsayilanTip={varsayilanTip}
+              ilgiliIlan={metin('ilan')}
+              ilgiliMahalle={metin('mahalle')}
+              baslik={
+                varsayilanTip === 'degerleme' ? 'Taşınmazınızın değerini öğrenin' : 'Bize yazın'
+              }
+              aciklama={
+                varsayilanTip === 'degerleme'
+                  ? 'Mahalle, metrekare ve bina bilgilerinizi paylaşın; size gerçek bir değer aralığı ve nasıl hesapladığımızı anlatalım. Satmayı düşünmeseniz bile bilmek işinize yarar.'
+                  : 'Aradığınızı ne kadar ayrıntılı anlatırsanız o kadar isabetli seçenek sunabiliriz.'
+              }
+            />
           </div>
 
-          {kurumsal?.adres ? (
+          <aside className="flex flex-col gap-4">
             <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
-              <h2 className="font-sans text-govde font-medium">Ofis</h2>
-              <address className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed not-italic">
-                {kurumsal.adres}
-              </address>
+              <h2 className="font-sans text-govde font-medium">Doğrudan ulaşın</h2>
+
+              <ul className="mt-4 flex flex-col gap-3">
+                {whatsapp ? (
+                  <li>
+                    <Buton href={whatsapp} dis tamGenislik>
+                      <WhatsappIkon width={18} height={18} />
+                      WhatsApp&apos;tan yazın
+                    </Buton>
+                  </li>
+                ) : null}
+                {telefon ? (
+                  <li>
+                    <Buton href={`tel:${telefon.replace(/\s/g, '')}`} gorunum="ikincil" tamGenislik>
+                      <TelefonIkon width={18} height={18} />
+                      {telefon}
+                    </Buton>
+                  </li>
+                ) : null}
+                {eposta ? (
+                  <li>
+                    <Buton href={`mailto:${eposta}`} gorunum="ikincil" tamGenislik>
+                      <PostaIkon width={18} height={18} />
+                      E-posta gönderin
+                    </Buton>
+                  </li>
+                ) : null}
+              </ul>
+
+              {!whatsapp && !telefon && !eposta ? (
+                <p className="text-metin-3 mt-3 text-govde-kucuk leading-relaxed">
+                  İletişim bilgileri yönetim panelinden girildiğinde burada görünecek. O zamana
+                  kadar yandaki formu kullanabilirsiniz.
+                </p>
+              ) : null}
+
+              {kurumsal?.calismaSaatleri ? (
+                <p className="text-metin-3 mt-4 text-mikro">
+                  Çalışma saatleri: {kurumsal.calismaSaatleri}
+                </p>
+              ) : null}
             </div>
-          ) : null}
-        </aside>
+
+            {kurumsal?.adres ? (
+              <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5">
+                <h2 className="font-sans text-govde font-medium">Ofis</h2>
+                <address className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed not-italic">
+                  {kurumsal.adres}
+                </address>
+              </div>
+            ) : null}
+          </aside>
+        </div>
       </div>
-    </div>
+    </>
   )
 }

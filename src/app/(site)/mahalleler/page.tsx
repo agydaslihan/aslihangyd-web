@@ -5,6 +5,7 @@ import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 import { SayfaVitrini, VitrinOzeti } from '@/components/duzen/SayfaVitrini'
 import { Sahne } from '@/components/hareket/Sahne'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
+import { Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Feragat } from '@/components/ui/Feragat'
 import { Buton } from '@/components/ui/Buton'
@@ -57,7 +58,7 @@ export default async function MahallelerSayfasi() {
         olurdu.
       */}
       <SayfaVitrini yan={<VitrinOzeti ogeler={ozet} />}>
-        <p className="text-aksan-metin text-eyebrow font-medium uppercase">Çorlu · Tekirdağ</p>
+        <Eyebrow>Çorlu · Tekirdağ</Eyebrow>
         <SayfaBasligi
           icerik={icerik}
           varsayilanBaslik="Çorlu mahalleleri"

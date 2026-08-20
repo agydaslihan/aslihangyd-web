@@ -3,7 +3,9 @@ import { SayfaBasligi, SayfaGovdesi } from '@/components/icerik/SayfaIcerik'
 import { sayfaIcerigi } from '@/lib/veri/sayfaIcerikleri'
 import Link from 'next/link'
 
+import { SayfaVitrini, VitrinOzeti } from '@/components/duzen/SayfaVitrini'
 import { Rozet } from '@/components/ui/Rozet'
+import { Eyebrow } from '@/components/ui/Bolum'
 import { Feragat } from '@/components/ui/Feragat'
 import {
   ArtisIkon,
@@ -53,8 +55,27 @@ export default async function AraclarSayfasi() {
   const parametreVar = (aracVergiGerektirir: boolean) =>
     !aracVergiGerektirir || Object.keys(parametreler.sayilar).length > 0
 
+  /**
+   * ⚠️ RAKAMLAR SAYILIYOR, YAZILMIYOR (kural 2).
+   *
+   * Araç sayısı gerçekten sayılıyor; oran tarihi ise CMS'ten geliyor ve
+   * girilmemişse hücre kendi boş durumunu gösteriyor. Bu, eksikliği
+   * saklamak yerine bandın en görünür yerinde söylüyor — hesaplayıcıların
+   * yarısı o oranlar olmadan çalışmıyor.
+   */
+  const ozet = [
+    {
+      etiket: 'Araç',
+      deger: gorunenAraclar.length > 0 ? String(gorunenAraclar.length) : null,
+    },
+    {
+      etiket: 'Oranlar',
+      deger: parametreler.gecerlilikTarihi ? tarihiYaz(parametreler.gecerlilikTarihi) : null,
+    },
+  ]
+
   return (
-    <div className="kapsayici py-10 sm:py-14">
+    <>
       {/*
         ⚠️ BAŞLIK ALTINDAKİ UZUN PARAGRAF KALDIRILDI.
 
@@ -64,71 +85,82 @@ export default async function AraclarSayfasi() {
 
         ⚠️ `h1` KALDI. Sayfanın SEO'su ve ekran okuyucu gezinmesi ona bağlı;
         görsel sadelik için metin kısaldı, etiket durdu.
+
+        ⚠️ Vitrin bandına da varsayılan açıklama KONULMADI: bant sayfaya bir
+        açılış veriyor, kaldırılan metin duvarını geri getirmiyor.
       */}
-      <header className="mb-8">
-        <SayfaBasligi icerik={icerik} varsayilanBaslik="Yatırımcı araçları" />
-      </header>
+      <SayfaVitrini yan={<VitrinOzeti ogeler={ozet} />}>
+        <Eyebrow>Hesaplayıcılar</Eyebrow>
+        <SayfaBasligi
+          icerik={icerik}
+          varsayilanBaslik="Yatırımcı araçları"
+          h1Sinifi="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1"
+          aciklamaSinifi="text-metin-2 mt-5 text-govde leading-relaxed"
+        />
+      </SayfaVitrini>
 
-      {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
-      <SayfaGovdesi icerik={icerik} />
+      <div className="kapsayici py-12 sm:py-16">
+        {/* Panelden gelen serbest metin — boşsa hiç çizilmiyor. */}
+        <SayfaGovdesi icerik={icerik} />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
-        {gorunenAraclar.map((arac) => {
-          const hazir = parametreVar(arac.vergiParametresiGerekli)
+        <div className="grid gap-4 sm:grid-cols-2 lg:gap-5">
+          {gorunenAraclar.map((arac) => {
+            const hazir = parametreVar(arac.vergiParametresiGerekli)
 
-          return (
-            <article
-              key={arac.adres}
-              className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col gap-2 border-[0.5px] p-5 transition-shadow sm:p-6"
-            >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-start gap-3">
-                  {/*
+            return (
+              <article
+                key={arac.adres}
+                className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col gap-2 border-[0.5px] p-5 transition-shadow sm:p-6"
+              >
+                <div className="flex items-start justify-between gap-3">
+                  <div className="flex items-start gap-3">
+                    {/*
                     ⚠️ İkon DEKORATİF: `aria-hidden` ve anlam başlıkta.
                     Marka rengi (`vurgu`) kullanılıyor; yumuşak zeminli
                     daire ikonu kart yüzeyinden ayırıyor.
                   */}
-                  <span className="bg-vurgu-zemin text-vurgu mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full">
-                    <AracIkonu tur={arac.ikon} width={18} height={18} />
-                  </span>
-                  <h2 className="text-baslik-3 leading-snug">
-                    <Link href={arac.adres} className="after:absolute after:inset-0">
-                      {arac.ad}
-                    </Link>
-                  </h2>
+                    <span className="bg-vurgu-zemin text-vurgu mt-0.5 flex size-9 shrink-0 items-center justify-center rounded-full">
+                      <AracIkonu tur={arac.ikon} width={18} height={18} />
+                    </span>
+                    <h2 className="text-baslik-3 leading-snug">
+                      <Link href={arac.adres} className="after:absolute after:inset-0">
+                        {arac.ad}
+                      </Link>
+                    </h2>
+                  </div>
+                  <OkIkon
+                    width={18}
+                    height={18}
+                    className="text-metin-3 group-hover:text-vurgu mt-1 shrink-0 transition-colors"
+                  />
                 </div>
-                <OkIkon
-                  width={18}
-                  height={18}
-                  className="text-metin-3 group-hover:text-vurgu mt-1 shrink-0 transition-colors"
-                />
-              </div>
 
-              <p className="text-metin-2 text-govde-kucuk leading-relaxed">{arac.aciklama}</p>
+                <p className="text-metin-2 text-govde-kucuk leading-relaxed">{arac.aciklama}</p>
 
-              {!hazir ? (
-                <div className="mt-2">
-                  <Rozet ton="uyari">Güncel oranlar bekleniyor</Rozet>
-                </div>
-              ) : null}
-            </article>
-          )
-        })}
+                {!hazir ? (
+                  <div className="mt-2">
+                    <Rozet ton="uyari">Güncel oranlar bekleniyor</Rozet>
+                  </div>
+                ) : null}
+              </article>
+            )
+          })}
+        </div>
+
+        <div className="mt-10 max-w-2xl">
+          {parametreler.gecerlilikTarihi ? (
+            <p className="text-metin-3 text-mikro">
+              Vergi ve harç oranları <strong>{tarihiYaz(parametreler.gecerlilikTarihi)}</strong>{' '}
+              itibarıyla güncellenmiştir.
+            </p>
+          ) : null}
+          <Feragat
+            sinifAdi="mt-2"
+            ek="Vergi hesapları basitleştirilmiştir; kişisel durumunuza göre değişir."
+          />
+        </div>
       </div>
-
-      <div className="mt-10 max-w-2xl">
-        {parametreler.gecerlilikTarihi ? (
-          <p className="text-metin-3 text-mikro">
-            Vergi ve harç oranları <strong>{tarihiYaz(parametreler.gecerlilikTarihi)}</strong>{' '}
-            itibarıyla güncellenmiştir.
-          </p>
-        ) : null}
-        <Feragat
-          sinifAdi="mt-2"
-          ek="Vergi hesapları basitleştirilmiştir; kişisel durumunuza göre değişir."
-        />
-      </div>
-    </div>
+    </>
   )
 }
 
