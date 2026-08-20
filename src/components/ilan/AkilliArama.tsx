@@ -63,14 +63,14 @@ export function AkilliArama() {
             onChange={(olay) => setSorgu(olay.target.value)}
             maxLength={AZAMI_SORGU_UZUNLUGU}
             placeholder="Örn: Muhittin'de 5 milyon altı 3+1, getirisi iyi olsun"
-            className="border-kenar bg-yuzey text-govde rounded-alan focus-visible:outline-vurgu w-full border-[0.5px] px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2"
+            className="border-kenar bg-yuzey text-govde rounded-buton focus-visible:outline-vurgu w-full border-[0.5px] px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2"
           />
         </label>
 
         <button
           type="submit"
           disabled={bekliyor || sorgu.trim() === ''}
-          className="bg-vurgu text-vurgu-uzeri rounded-alan focus-visible:outline-vurgu shrink-0 px-5 py-3 text-govde-kucuk font-medium disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
+          className="bg-vurgu text-vurgu-uzeri rounded-buton focus-visible:outline-vurgu shrink-0 px-5 py-3 text-govde-kucuk font-medium disabled:opacity-50 focus-visible:outline-2 focus-visible:outline-offset-2"
         >
           {bekliyor ? 'Anlaşılıyor…' : 'Ara'}
         </button>

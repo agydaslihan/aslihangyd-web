@@ -1,5 +1,6 @@
 import type { ReactNode } from 'react'
 
+import { Sahne } from '@/components/hareket/Sahne'
 import { sinif } from '@/lib/sinif'
 
 /**
@@ -86,8 +87,19 @@ export function BolumBasligi({
 }) {
   const Baslik = seviye === 2 ? 'h2' : 'h3'
 
+  /**
+   * ⚠️ SAHNE GEÇİŞİ BURADA, HER SAYFAYA TEK TEK DEĞİL.
+   *
+   * Kaydırdıkça oturan giriş, sitenin her bölüm başlığında aynı olsun
+   * isteniyor. Sayfa sayfa `<Sahne>` sarmak bunu 40'tan fazla yerde tekrar
+   * etmek ve ilk unutulan yerde ritmi bozmak demekti.
+   *
+   * ⚠️ Geçiş yalnızca BAŞLIK bloğunda; bölüm gövdesi sarılmıyor. Uzun bir
+   * tablo ya da kart ızgarası tek parça olarak belirseydi hareket "sayfa
+   * geç yüklendi" gibi okunurdu. Başlık girer, içerik zaten yerindedir.
+   */
   return (
-    <div className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
+    <Sahne className="mb-8 flex flex-col gap-4 sm:mb-10 sm:flex-row sm:items-end sm:justify-between">
       <div className="flex max-w-2xl flex-col gap-2.5">
         {ustBaslik ? <Eyebrow>{ustBaslik}</Eyebrow> : null}
         <Baslik
@@ -101,7 +113,7 @@ export function BolumBasligi({
         {aciklama ? <p className="text-metin-2 text-govde olcu">{aciklama}</p> : null}
       </div>
       {yan ? <div className="shrink-0">{yan}</div> : null}
-    </div>
+    </Sahne>
   )
 }
 

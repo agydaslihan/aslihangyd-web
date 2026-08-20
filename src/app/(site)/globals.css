@@ -233,6 +233,11 @@
   --color-vurgu: #844632;
   /** Terracotta TİNT ZEMİN — üzerine `vurgu` yazılır. */
   --color-vurgu-zemin: var(--color-terracotta-50);
+  /* ⚠️ Dolu vurgu zemininin ÜSTÜNE yazılan metin. Jeton yokken
+     `text-vurgu-uzeri` sınıfı hiçbir şeye çözülmüyor ve metin `--color-metin`
+     (kakao-900) olarak kalıyordu: terracotta üzerinde koyu kahve, 2,4:1.
+     AI arama varsayılan KAPALI olduğu için hata üretimde hiç görünmedi. */
+  --color-vurgu-uzeri: #ffffff;
   /**
    * PUDRA GÜLÜ zemin — yumuşak bant, hero zemini, aksan kartı.
    *
@@ -570,6 +575,8 @@
    */
   --color-vurgu: var(--color-terracotta-200);
   --color-vurgu-zemin: var(--color-kakao-800);
+  /* Koyu temada vurgu AÇIK (terracotta-200) — üstü koyu olmalı. */
+  --color-vurgu-uzeri: var(--color-kakao-900);
   /** Yumuşak bant koyu temada derin terracotta; üzerine `metin` (7,17:1). */
   --color-pudra-zemin: var(--color-terracotta-700);
   /* Dolu terracotta bant iki temada da AYNI: üzerindeki beyazla oranı
@@ -703,6 +710,103 @@
     border-radius: 2px;
   }
 
+  /* ══════════════════════════════════════════════════════════════════════
+     HAREKET KATMANI
+     ══════════════════════════════════════════════════════════════════════
+
+     ⚠️ TARAYICININ HAZIR EĞRİLERİ KULLANILMIYOR.
+
+     `ease`, `ease-out`, `ease-in-out` zayıf: hareketin niyetli olduğunu
+     hissettiren keskinlik onlarda yok. Aşağıdaki eğriler daha güçlü
+     karşılıkları.
+
+     ⚠️ `ease-in` ARAYÜZDE YASAK. Yavaş başlar — kullanıcının en dikkatle
+     baktığı ilk anı boşa harcar ve aynı süredeki `ease-out`tan DAHA YAVAŞ
+     hissettirir. Giren/çıkan her şey `--cikis` kullanır.
+
+     ⚠️ Süreler 300 ms'nin altında. 180 ms'lik bir açılır menü, 400 ms'lik
+     olandan daha "hızlı" hissettirir; algılanan performans gerçek süre
+     kadar önemli.
+     ────────────────────────────────────────────────────────────────────── */
+
+  :root {
+    /* Giren/çıkan öğeler — hızlı başlar, yumuşak oturur. */
+    --cikis: cubic-bezier(0.23, 1, 0.32, 1);
+    /* Ekranda yer değiştiren/biçim değiştiren öğeler. */
+    --giris-cikis: cubic-bezier(0.77, 0, 0.175, 1);
+    /* iOS çekmece hissi — büyük yüzeyler için. */
+    --cekmece: cubic-bezier(0.32, 0.72, 0, 1);
+
+    --sure-basma: 140ms;
+    --sure-ipucu: 160ms;
+    --sure-menu: 200ms;
+    --sure-katman: 280ms;
+    /* Sahne girişleri: arayüz değil anlatım — 300 ms sınırı buraya işlemez. */
+    --sure-sahne: 620ms;
+  }
+
+  /* ── Basma geri bildirimi ────────────────────────────────────────────
+     Basılabilir her öğe kullanıcıyı duyduğunu göstermeli. Ölçek ince
+     tutuluyor (0,97): fark edilmesi değil, yokluğunun fark edilmesi
+     amaçlanıyor. */
+  button:not(:disabled),
+  a[href],
+  [role='button'] {
+    transition: transform var(--sure-basma) var(--cikis);
+  }
+
+  button:not(:disabled):active,
+  a[href]:active,
+  [role='button']:active {
+    transform: scale(0.97);
+  }
+
+  /* ⚠️ Dokunmatik cihazlar dokunmayı hover sayıyor; hover'a bağlı hareket
+     o yüzden kapıya alınıyor. */
+  @media (hover: hover) and (pointer: fine) {
+    [data-yukselen] {
+      transition:
+        transform var(--sure-menu) var(--cikis),
+        box-shadow var(--sure-menu) var(--cikis);
+    }
+
+    [data-yukselen]:hover {
+      transform: translateY(-4px);
+    }
+  }
+
+  /* ── Sahne girişi ────────────────────────────────────────────────────
+     Görüş alanına giren bölümler aşağıdan ve hafif bulanıklıkla oturuyor.
+
+     ⚠️ Bulanıklık 6px ve bilinçli: iki ayrı durumun üst üste binmesini
+     tek bir hareket gibi gösteriyor. 20px üstü Safari'de pahalı.
+
+     ⚠️ `translateY` 14px — daha fazlası sayfayı "zıplıyor" gösterir.
+
+     Görünürlük `IntersectionObserver` ile `data-goruntude` özniteliğine
+     yazılıyor; JS inmezse öğeler ZATEN görünür (aşağıdaki varsayılan),
+     yani hareket bir görünürlük şartı değil. */
+  [data-sahne] {
+    opacity: 1;
+  }
+
+  [data-sahne='bekliyor'] {
+    opacity: 0;
+    transform: translateY(14px);
+    filter: blur(6px);
+  }
+
+  [data-sahne='girdi'] {
+    opacity: 1;
+    transform: none;
+    filter: none;
+    transition:
+      opacity var(--sure-sahne) var(--cikis),
+      transform var(--sure-sahne) var(--cikis),
+      filter var(--sure-sahne) var(--cikis);
+    transition-delay: var(--sahne-gecikme, 0ms);
+  }
+
   /* Hareket azaltma tercihine saygı. */
   @media (prefers-reduced-motion: reduce) {
     html {
@@ -715,6 +819,24 @@
       animation-duration: 0.01ms !important;
       animation-iteration-count: 1 !important;
       transition-duration: 0.01ms !important;
+    }
+
+    /* ⚠️ Hareket azaltma "hiç animasyon" demek değil, "yer değiştirme yok"
+       demek. Sahne girişleri tamamen kapatılıyor — öğe doğrudan görünür
+       hâlde duruyor; opaklık geçişi bile bırakılmıyor çünkü buradaki
+       hareketin işlevi yok, anlatımı var. */
+    [data-sahne],
+    [data-sahne='bekliyor'],
+    [data-sahne='girdi'] {
+      opacity: 1 !important;
+      transform: none !important;
+      filter: none !important;
+    }
+
+    button:not(:disabled):active,
+    a[href]:active,
+    [role='button']:active {
+      transform: none;
     }
   }
 
