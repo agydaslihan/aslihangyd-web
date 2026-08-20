@@ -126,7 +126,27 @@ yayılımlı ve düşük opaklıkta.
 
 ---
 
-## 3. Kapı — her aşamanın sonunda
+## 3. Hareket kütüphaneleri — ölçümden sonraki durum
+
+| Kütüphane | Durum | Nerede |
+| --- | --- | --- |
+| GSAP + ScrollTrigger | **kullanılıyor** | §6.6 yatay anlatı (kaydırmaya bağlı `scrub`) |
+| Lenis | **kullanılıyor** | Masaüstü yumuşak kaydırma |
+| framer-motion | **düşürüldü** | Sıfır kullanım; 52,7 kB bütçenin yarısıydı |
+
+⚠️ **framer-motion ölçümle düşürüldü.** Adım 2'de eklendi, Adım 3 ve 4'te
+hiç kullanılmadı: hover, fade, basma, alt çizgi, yavaş zoom ve sayfa geçişi
+CSS'te; kaydırma anlatısı GSAP'ta. Geri gelmesi için üç gerekçeden biri
+gerekiyor — paylaşılan düzen geçişi, sürükleme jesti, CSS'in taşıyamadığı
+yay fiziği. Bağımlılığın yokluğu `hareketYukleme.test.ts` içinde
+denetleniyor.
+
+⚠️ Yükleme sözleşmesi değişmedi: her iki kütüphane de LCP'den sonra,
+yalnızca gereken sayfada ve `prefers-reduced-motion` kapalıyken iniyor.
+
+---
+
+## 4. Kapı — her aşamanın sonunda
 
 - `pnpm typecheck && pnpm lint && pnpm test && pnpm build` → dördü de temiz
 - Kontrast: AA her çiftte, **iki temada** (`src/lib/tasarim/kontrast.test.ts`)
@@ -143,13 +163,13 @@ hangi bölüm, hangi animasyon, kaç kB.
 
 ---
 
-## 4. Çalışma sırası
+## 5. Çalışma sırası
 
-1. **Palet + tipografi + altın kontrast kanıtı** ← bu adım tamamlandı, onay bekliyor
-2. Hareket altyapısı (framer-motion, gsap, lenis) + bundle dökümü
-3. Global UI (navbar, WhatsApp, geçişler, glassmorphism, mikro etkileşimler)
-4. Ana sayfa — bölüm bölüm
-5. Ölçüm + düzeltme
+1. ✅ Palet + tipografi + altın kontrast kanıtı
+2. ✅ Hareket altyapısı + bundle dökümü
+3. ✅ Global UI (navbar, WhatsApp, geçişler, glassmorphism, mikro etkileşimler)
+4. ✅ Ana sayfa — bölüm bölüm
+5. Ölçüm + düzeltme ← sırada
 6. Diğer sayfalar
 
 Her adım ayrı PR.

@@ -8,8 +8,7 @@ import { azHareketIsteniyor, masaustuMu } from './kapi'
  * Hareket kütüphanelerinin TEK giriş kapısı.
  *
  * ─────────────────────────────────────────────────────────────────────────
- * ⚠️ `framer-motion`, `gsap` VE `lenis` BAŞKA HİÇBİR DOSYADAN İÇE
- * AKTARILMAZ.
+ * ⚠️ `gsap` VE `lenis` BAŞKA HİÇBİR DOSYADAN İÇE AKTARILMAZ.
  *
  * Sebebi paketleyicinin çalışma biçimi: statik bir `import` gördüğü anda
  * kütüphaneyi o modülün parçasına koyuyor ve o parça, kullanılmasa bile
@@ -52,18 +51,21 @@ export async function gsapGetir(): Promise<{
 }
 
 /**
- * Framer Motion'ın ÖZELLİK KÜMESİ — `LazyMotion` için.
+ * ⚠️ FRAMER-MOTION DÜŞÜRÜLDÜ — ÖLÇÜM KARAR VERDİ.
  *
- * ⚠️ `domAnimation` seçildi, `domMax` DEĞİL. Aradaki fark yaklaşık 10 kB:
- * `domMax` düzen animasyonlarını (`layout`, `layoutId`) ve sürükleme
- * jestlerini de getiriyor. İkisi de şartnamenin istediği hareketlerde yok
- * — ve `layout` animasyonları tanımı gereği düzen kaydırıyor, yani
- * CLS 0 hedefiyle çelişiyor.
+ * Kütüphane Adım 2'de eklendi, Adım 3 ve 4'te sıfır kez kullanıldı ve
+ * ölçüldüğünde bütçenin yarısını tutuyordu (52,7 kB gzip / 120 kB sınır).
+ *
+ * Sebep alışkanlık değil, iş bölümünün gerçeği: hover, fade, basma, alt
+ * çizgi, yavaş zoom ve sayfa geçişi CSS'te; kaydırmaya bağlı anlatı
+ * GSAP'ta. Geriye framer'a kalan bir iş kalmadı — düzen animasyonu
+ * (`layout`) zaten CLS 0 hedefiyle çelişiyor, sürükleme jesti bu sayfalarda
+ * yok.
+ *
+ * Geri gelirse şu üç işten biri için gelmeli: paylaşılan düzen geçişi,
+ * sürükleme, ya da CSS'in taşıyamadığı bir yay fiziği. Bağımlılığın
+ * yokluğu `hareketYukleme.test.ts` içinde denetleniyor.
  */
-export async function devinimOzellikleri() {
-  const { domAnimation } = await import('framer-motion')
-  return domAnimation
-}
 
 /**
  * Lenis — yumuşak kaydırma. YALNIZCA MASAÜSTÜ.

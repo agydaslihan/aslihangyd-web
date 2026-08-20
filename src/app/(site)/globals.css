@@ -1106,3 +1106,27 @@
     transform: scaleX(1);
   }
 }
+
+/* ── Kaydırma ipucu — hero'nun altındaki ince çizgi ─────────────────────
+   ⚠️ `transform` üzerinden akıyor; yükseklik ya da konum animasyonu
+   olsaydı her karede düzen hesabı gerekirdi. */
+@keyframes aurora-kaydirma {
+  0% {
+    transform: translateY(-100%);
+  }
+  60%,
+  100% {
+    transform: translateY(340%);
+  }
+}
+
+.kaydirma-ipucu {
+  animation: aurora-kaydirma 2.4s var(--giris-cikis) infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .kaydirma-ipucu {
+    animation: none !important;
+    transform: translateY(0);
+  }
+}

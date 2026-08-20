@@ -25,16 +25,28 @@ import { describe, expect, it } from 'vitest'
 const KOK = path.resolve(path.join(import.meta.dirname, '..', '..'))
 
 /** Yükleme stratejisine tabi kütüphaneler. */
-const KUTUPHANELER = ['framer-motion', 'gsap', 'lenis'] as const
+const KUTUPHANELER = ['gsap', 'lenis'] as const
 
 /**
- * Statik `import` yazmasına izin verilen tek dosya.
+ * ⚠️ DÜŞÜRÜLEN KÜTÜPHANE — GERİ SIZMASIN.
  *
- * ⚠️ `Devinim.tsx` istisna DEĞİL, kendi kuralı var: `LazyMotion` bir
- * bileşen ve render edilmek zorunda. Ama o dosyanın kendisi de yalnızca
- * `next/dynamic` ile yükleniyor — aşağıda ayrıca denetleniyor.
+ * framer-motion Adım 2'de eklendi, Adım 3–4'te SIFIR kez kullanıldı ve
+ * ölçüldüğünde hareket bütçesinin yarısını tutuyordu (52,7 kB / 120 kB).
+ * Karar ölçümle verildi ve bağımlılık kaldırıldı.
+ *
+ * Geri gelmesi bir tercih değil bir KARAR olmalı: paylaşılan düzen geçişi,
+ * sürükleme jesti ya da CSS'in taşıyamadığı bir yay fiziği. Bu test,
+ * kararın sessizce atlanmasını engelliyor.
  */
-const STATIK_IZINLI = new Set(['components/hareket/Devinim.tsx'])
+const DUSURULEN = ['framer-motion'] as const
+
+/**
+ * Statik `import` yazmasına izin verilen dosyalar.
+ *
+ * ⚠️ Liste BOŞ ve öyle kalmalı: iki kütüphane de yalnızca dinamik olarak,
+ * yalnızca yükleyiciden isteniyor.
+ */
+const STATIK_IZINLI = new Set<string>([])
 
 /** Dinamik `import()` yazabilecek dosyalar. */
 const DINAMIK_IZINLI = new Set(['lib/hareket/yukleyiciler.ts'])
@@ -139,17 +151,27 @@ describe('hareket kütüphanelerinin yükleme stratejisi', () => {
     expect(blok.indexOf('masaustuMu()')).toBeLessThan(blok.indexOf("import('lenis')"))
   })
 
-  /**
-   * ⚠️ `Devinim` statik olarak içe aktarılırsa `LazyMotion` çekirdeği o
-   * sayfanın ilk paketine girer — kütüphaneyi tembelleştirmenin bütün
-   * amacı kaybolur.
-   */
-  it('Devinim yalnızca dinamik olarak yükleniyor', () => {
-    const statik = dosyalar
-      .filter((dosya) => dosya.yol !== 'components/hareket/Devinim.tsx')
-      .filter((dosya) => /^\s*import\s[^\n]*Devinim['"/]/m.test(kodu(dosya.icerik)))
+  it.each(DUSURULEN)('%s bağımlılığı geri gelmemiş', (kutuphane) => {
+    const paket = JSON.parse(readFileSync(path.join(KOK, '..', 'package.json'), 'utf8')) as {
+      dependencies?: Record<string, string>
+      devDependencies?: Record<string, string>
+    }
+
+    const bagimliliklar = { ...paket.dependencies, ...paket.devDependencies }
+    expect(
+      Object.keys(bagimliliklar),
+      `${kutuphane} ölçümle düşürüldü (52,7 kB, sıfır kullanım). ` +
+        'Geri eklemek bir karar: paylaşılan düzen geçişi, sürükleme jesti ya da ' +
+        'CSS’in taşıyamadığı yay fiziği gerekiyorsa bu testi ve gerekçesini güncelleyin.',
+    ).not.toContain(kutuphane)
+  })
+
+  it.each(DUSURULEN)('%s hiçbir dosyadan içe aktarılmıyor', (kutuphane) => {
+    const desen = new RegExp(`['"]${kutuphane}(/[^'"]*)?['"]`)
+    const ihlaller = dosyalar
+      .filter((dosya) => desen.test(kodu(dosya.icerik)))
       .map((dosya) => dosya.yol)
 
-    expect(statik, 'Devinim statik içe aktarılmış — next/dynamic kullanın').toEqual([])
+    expect(ihlaller).toEqual([])
   })
 })

@@ -1,14 +1,18 @@
 import Link from 'next/link'
 
 import { HeroBolumu } from '@/components/hero/HeroBolumu'
-import { VitrinHero } from '@/components/hero/VitrinHero'
-import { VitrinSahnesi } from '@/components/hero/VitrinSahnesi'
+import { SinematikHero } from '@/components/hero/SinematikHero'
+import { CorluDeneyimi } from '@/components/anasayfa/CorluDeneyimi'
+import { YatayAnlati } from '@/components/anlati/YatayAnlati'
+import { ANLATI_BOLUMLERI } from '@/lib/anasayfa/anlati'
 import { GuvenKartlari } from '@/components/duzen/GuvenKartlari'
 import { Sahne } from '@/components/hareket/Sahne'
 import { AramaWidgeti, type MahalleSecenegi } from '@/components/ilan/AramaWidgeti'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
 import { EndeksSeridi } from '@/components/endeks/EndeksSeridi'
+import { haritaStilAdresi } from '@/lib/harita/sunucu'
+import { mahalleyiHaritaVerisineCevir } from '@/lib/harita/mahalleVerisi'
 import { GuvenSeridi } from '@/components/duzen/GuvenSeridi'
 import { Feragat } from '@/components/ui/Feragat'
 import { Bolum, BolumBasligi, Eyebrow } from '@/components/ui/Bolum'
@@ -33,12 +37,16 @@ import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { heroAyarlari } from '@/lib/hero/sunucu'
 
 export default async function AnaSayfa() {
-  const [ilanlar, mahalleler, kurumsal, portfoy, bolumler, hero] = await Promise.all([
+  const [ilanlar, mahalleler, kurumsal, sayimIcinIlanlar, bolumler, hero] = await Promise.all([
     oneCikanIlanlariGetir(3),
     mahalleleriGetir(),
     kurumsalBilgileriGetir(),
-    // Yalnızca sayaç için; ilk sayfa yeterli, `toplam` tüm kümeyi verir.
-    ilanlariGetir({}, 1, 1),
+    /**
+     * ⚠️ Sayfa boyutu 200: hem toplam sayaç hem de mahalle başına dağılım
+     * bu tek sorgudan çıkıyor (`portfoySayilari`). Ayrı bir gruplama
+     * sorgusu, ana sayfaya her istekte ikinci bir veritabanı turu eklerdi.
+     */
+    ilanlariGetir({}, 1, 200),
     bolumDurumlariniGetir(),
     heroAyarlari(),
   ])
@@ -50,7 +58,13 @@ export default async function AnaSayfa() {
    * mi) ve `HeroBolumu` da aynı veriyi okuyor. İki ayrı okuma iki ayrı
    * veritabanı turu demek olurdu; Payload aynı istek içinde önbelleklemiyor.
    */
-  const heroSlaytVar = hero.slaytlar.length > 0
+  /**
+   * ⚠️ Hero'nun tam ekran zemini panelden geliyor: ilk slaydın görseli.
+   * Slayt yoksa `null` ve vitrin sıcak gradyanla çiziliyor.
+   */
+  const ilkSlayt = hero.slaytlar.find((slayt) => slayt.gorselUrl !== '')
+  const heroGorseli =
+    ilkSlayt !== undefined ? { url: ilkSlayt.gorselUrl, alt: ilkSlayt.gorselAlt } : null
 
   /**
    * Gizli portföy sayacı yalnızca bölüm AÇIKSA sorgulanıyor.
@@ -62,6 +76,28 @@ export default async function AnaSayfa() {
   const gizliSayi = bolumler.gizli_portfoy ? await gizliPortfoySayisi() : 0
 
   const whatsapp = whatsappBaglantisi(whatsappNumarasi(kurumsal), whatsappMesaji())
+
+  /**
+   * Harita bölümünün verisi.
+   *
+   * ⚠️ Mahalle başına portföy sayısı BURADA sayılıyor, haritada değil:
+   * istemciye ilan listesi göndermek yerine tek bir sayı gönderiyoruz.
+   * Gizli portföy bu sayıya girmiyor — sayısı zaten kendi bandında.
+   */
+  const haritaStili = haritaStilAdresi()
+  const haritaMahalleleri = mahalleler.map(mahalleyiHaritaVerisineCevir)
+
+  /**
+   * ⚠️ Sayım İLAN KAYITLARINDAN, ayrı bir sorgu ile değil: sayfa zaten
+   * portföy toplamını okuyor. Mahalle başına sayı için ikinci bir tur
+   * atmak, ana sayfaya her istekte fazladan bir sorgu eklerdi.
+   */
+  const portfoySayilari: Record<string, number> = {}
+  for (const ilan of sayimIcinIlanlar.ilanlar) {
+    const slug = typeof ilan.mahalle === 'object' && ilan.mahalle ? ilan.mahalle.slug : null
+    if (slug === null) continue
+    portfoySayilari[slug] = (portfoySayilari[slug] ?? 0) + 1
+  }
 
   /**
    * Güven şeridi — şartname §5.2.
@@ -77,7 +113,7 @@ export default async function AnaSayfa() {
   const guvenOgeleri = [
     {
       etiket: 'Aktif portföy',
-      deger: portfoy.toplam > 0 ? String(portfoy.toplam) : null,
+      deger: sayimIcinIlanlar.toplam > 0 ? String(sayimIcinIlanlar.toplam) : null,
       aciklama: 'Yayındaki taşınmaz',
     },
     {
@@ -101,52 +137,31 @@ export default async function AnaSayfa() {
     <>
       {/*
         ─────────────────────────────────────────────────────────────────
-        ⚠️ VİTRİN DAİMA AÇILIŞ; SLIDER ONUN ALTINDA, KENDİ BANDINDA.
+        ⚠️ 6.1 — SİNEMATİK VİTRİN. ÖNCEKİ İKİ SÜTUNLU HERO GİTTİ.
 
-        Önceki düzen "slayt varsa slider, yoksa metin hero'su" idi ve
-        yeniden tasarımda bu bir soruna dönüştü: yeni vitrin YALNIZCA slayt
-        yokken görünüyordu. Aslıhan'ın ana sayfasında slaytlar var, yani
-        sitenin yeni yüzünü hiç görmeyecekti.
+        Aurora'nın açılışı tam ekran ve ortalanmış. Önceki düzen metni sola,
+        3B ilan sahnesini sağa koyuyordu; o kurulum "fotoğrafımız yok"
+        sorununa verilmiş bir cevaptı. Şartname artık medya sırasını kendisi
+        veriyor: video → görsel → sıcak gradyan.
 
-        Diğer uç — slaytları vitrinin içine sıkıştırmak — daha kötüydü:
-        slider 21:9 oranına göre kurulmuş, dar bir sütunda ince bir şeride
-        düşüyor ve Faz 3'te gelecek drone görüntüsünün yeri o tam genişlik.
-
-        Bu yüzden ikisi de tam boyunda ve KENDİ işini yapıyor: vitrin sayfanın
-        sözünü söylüyor, slider Aslıhan'ın kareleriyle onu gösteriyor.
-        Slider yoksa bant hiç çizilmiyor; vitrin tek başına yeter.
+        ⚠️ ZEMİN PANELDEN GELİYOR. Hero slaytlarının ilki tam ekran arka
+        plan oluyor; yani Aslıhan'ın yüklediği fotoğraf çöpe gitmiyor,
+        sayfanın en görünür yerine çıkıyor. Slayt yoksa gradyan devreye
+        giriyor ve bu bir boş durum değil, tasarlanmış ikinci basamak.
         ─────────────────────────────────────────────────────────────────
-
-        ⚠️ VİTRİNDE STOK FOTOĞRAF YOK, GERÇEK İLAN VAR.
-
-        Referans tasarımın hero'su kocaman bir şehir fotoğrafına dayanıyordu.
-        Elimizde Çorlu'nun telifli bir fotoğrafı yok ve başka bir şehrin
-        görselini Çorlu diye koymak, kural 2'nin (uydurma veri yasak) görsel
-        karşılığı olurdu. Yerine sahnede yayındaki gerçek bir ilan duruyor —
-        kendi fotoğrafı, fiyatı ve kira çarpanıyla, 3B perspektifte. Portföy
-        boşsa sahne `null` dönüyor ve vitrin tek sütuna düşüyor.
       */}
-      <VitrinHero
+      <SinematikHero
         ustBaslik="Çorlu · Tekirdağ"
-        baslik="Gayrimenkul kararı hisle değil,"
-        vurgu="rakamla"
-        baslikDevam="verilir."
-        aciklama="Çorlu'da bir taşınmazın ne kadar ettiğini, kaç yılda kendini ödediğini ve hangi mahallenin hangi değer sürücüsünden beslendiğini gösteriyoruz. İlan listelemiyoruz — karar veriyoruz."
-        birincilEylem={{ ad: 'Portföyü gör', adres: '/portfoy' }}
-        ikincilEylem={{ ad: 'Haritada keşfet', adres: '/harita' }}
-        sahne={<VitrinSahnesi ilan={ilanlar[0] ?? null} />}
+        baslik="Gayrimenkulün gerçek değerini"
+        vurgu="birlikte"
+        baslikDevam="bulalım."
+        aciklama="Çorlu'da veri odaklı, güvenilir ve profesyonel gayrimenkul danışmanlığı. Bir taşınmazın ne kadar ettiğini, kaç yılda kendini ödediğini ve hangi mahallenin hangi değer sürücüsünden beslendiğini gösteriyoruz."
+        birincilEylem={{ ad: 'Portföyü incele', adres: '/portfoy' }}
+        ikincilEylem={{ ad: 'Ücretsiz değerleme', adres: '/degerleme' }}
+        arkaplan={heroGorseli}
       />
 
       <GuvenKartlari />
-
-      {/* ⚠️ `sayfaHerosu={false}`: sayfanın `<h1>`i ve LCP öğesi artık
-          vitrinde. Bayrağın ikisini birden çevirmesinin gerekçesi
-          `HeroBolumu` içinde yazılı. */}
-      {heroSlaytVar ? (
-        <div className="mt-16 sm:mt-20 lg:mt-24">
-          <HeroBolumu ayarlar={hero} sayfaHerosu={false} />
-        </div>
-      ) : null}
 
       <AramaBolumu
         whatsapp={whatsapp}
@@ -156,9 +171,24 @@ export default async function AnaSayfa() {
 
       <GuvenSeridi ogeler={guvenOgeleri} />
 
-      <UcYolAyrimi />
+      {/*
+        ⚠️ 6.3 — KURUCU HİKÂYESİ YUKARI TAŞINDI.
 
-      <YaklasimBolumu />
+        Önceki düzende Aslıhan sayfanın sonundaydı; şartname onu üçüncü
+        bölüme koyuyor ve gerekçesi doğru: ziyaretçi portföye bakmadan önce
+        kiminle konuştuğunu bilmeli. Güven, rakamlardan önce gelir.
+      */}
+      <AslihanBolumu kurumsal={kurumsal} />
+
+      {/*
+        ⚠️ 6.4 — İMZA BÖLÜM. Harita GÖRÜNÜR OLANA KADAR İNMİYOR
+        (MapLibre 443 kB gzip); gerekçe `CorluDeneyimi` içinde.
+      */}
+      <CorluDeneyimi
+        mahalleler={haritaMahalleleri}
+        portfoySayilari={portfoySayilari}
+        stilAdresi={haritaStili}
+      />
 
       <Bolum zemin="yuzey">
         <BolumBasligi
@@ -210,7 +240,31 @@ export default async function AnaSayfa() {
 
       {bolumler.gizli_portfoy ? <GizliPortfoyTeaser sayi={gizliSayi} /> : null}
 
+      {/*
+        ⚠️ 6.6 — YATAY ANLATI. Sıkıcı ikon kutuları yerine dört bölümlük bir
+        akış; masaüstünde yatay, mobilde dikey `scroll-snap`. GSAP burada hak
+        ediyor: kaydırmaya bağlı (`scrub`) zaman çizelgesi CSS ile yazılamaz.
+      */}
+      <YatayAnlati bolumler={ANLATI_BOLUMLERI} />
+
+      {/*
+        ⚠️ 6.7 — CANLI PİYASA. Şerit kendi kapısını taşıyor: endeks eşikleri
+        (6 ay + 500 gözlem) sağlanmadan rakam göstermiyor. Panelde durumu
+        "Ana sayfa bölümleri" ekranında yazıyor.
+      */}
       <EndeksSeridi />
+
+      {/*
+        ⚠️ Slider bandı hero'nun ALTINDA, çünkü hero zaten ilk slaydı tam
+        ekran kullanıyor. İkinci bir slayt varsa Aslıhan'ın kalan kareleri
+        burada dönüyor; tek slayt varsa bant hiç çizilmiyor — aynı fotoğrafı
+        iki kez göstermenin anlamı yok.
+      */}
+      {hero.slaytlar.length > 1 ? (
+        <div className="py-16 sm:py-20">
+          <HeroBolumu ayarlar={hero} sayfaHerosu={false} />
+        </div>
+      ) : null}
 
       <Bolum>
         <BolumBasligi
@@ -254,7 +308,7 @@ export default async function AnaSayfa() {
 
       <YatirimciAraclari />
 
-      <AslihanBolumu kurumsal={kurumsal} />
+      <UcYolAyrimi />
 
       <CagriBandi whatsapp={whatsapp} />
     </>
@@ -519,6 +573,52 @@ function YatirimciAraclari() {
   )
 }
 
+function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
+  return (
+    <Bolum zemin="altin">
+      <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
+        <div className="max-w-2xl">
+          {/*
+            ⚠️ METİN RENGİ SINIFI YOK — bant kendi metin rengini veriyor
+            (`Bolum zemin="altin"` → `text-vurgu-uzeri`, yani mürekkep).
+            Buraya `text-white` yazmak altın üzerinde 2,36:1 üretirdi;
+            eski terracotta bantta doğru olan cevap renk değişince yanlışa
+            döndü.
+          */}
+          <h2 className="text-baslik-2">Evinizin bugün ne ettiğini merak ediyor musunuz?</h2>
+          <p className="text-govde-kucuk mt-3">
+            Satmayı düşünmeseniz bile bilmek işinize yarar. Mahalle, metrekare ve bina bilgilerinizi
+            paylaşın; size gerçek bir değer aralığı ve nasıl hesapladığımızı anlatalım.
+          </p>
+        </div>
+
+        <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
+          {/*
+            ⚠️ Bakır aksanın iki kullanımından BİRİ. Diğeri gizli portföyde
+            "Erişim talep et". Üçüncü bir yerde kullanılırsa ikisi birden
+            sıradanlaşır; kural `src/lib/tasarim/disiplin.test.ts` içinde
+            denetleniyor.
+          */}
+          <Buton href="/degerleme" gorunum="aksan" boyut="buyuk">
+            Değerleme isteyin
+          </Buton>
+          {whatsapp ? (
+            <Buton
+              href={whatsapp}
+              dis
+              gorunum="ikincil"
+              boyut="buyuk"
+              sinifAdi="!border-[color:var(--color-vurgu-uzeri)]/45 hover:!bg-[color:var(--color-vurgu-uzeri)]/10"
+            >
+              WhatsApp
+            </Buton>
+          ) : null}
+        </div>
+      </div>
+    </Bolum>
+  )
+}
+
 /**
  * Aslıhan bölümü (şartname §5.9).
  *
@@ -570,109 +670,6 @@ function AslihanBolumu({
               İletişim
             </Buton>
           </div>
-        </div>
-      </div>
-    </Bolum>
-  )
-}
-
-const YAKLASIMLAR = [
-  {
-    Ikon: GrafikIkon,
-    baslik: 'Önce rakam, sonra fotoğraf',
-    metin:
-      'Her taşınmazda kira çarpanı, brüt getiri ve amortisman süresi hesaplanır. Kira verisi yoksa rakam uydurmayız — alanı boş bırakırız.',
-  },
-  {
-    Ikon: KonumIkon,
-    baslik: 'Mahalleyi biliriz',
-    metin:
-      'Çorlu OSB, hızlı tren, havalimanı, şehir hastanesi. Her mahallenin hangi sürücüden beslendiğini anlatır, mesafeleri veriyle gösteririz.',
-  },
-  {
-    Ikon: DogrulanmisIkon,
-    baslik: 'Doğrulanmış ilan',
-    metin:
-      'Yayınladığımız her ilan, mülk sahibinin e-Devlet üzerinden verdiği yetkiye dayanır. Taşınmaz numarası ilan sayfasında görünür.',
-  },
-]
-
-function YaklasimBolumu() {
-  return (
-    <Bolum>
-      <BolumBasligi
-        ustBaslik="Yaklaşımımız"
-        baslik="Rakiplerimizden farkımız ne?"
-        aciklama="Çorlu'da ilan listeleyen çok kişi var. Biz ilanı değil, kararı satıyoruz."
-      />
-
-      <div className="grid gap-6 sm:grid-cols-3 lg:gap-8">
-        {YAKLASIMLAR.map(({ Ikon, baslik, metin }) => (
-          <div key={baslik} className="flex flex-col gap-3">
-            <span className="bg-vurgu-zemin text-vurgu rounded-buton flex size-11 items-center justify-center">
-              <Ikon width={20} height={20} />
-            </span>
-            <h3 className="font-sans text-govde font-medium">{baslik}</h3>
-            <p className="text-metin-2 text-govde leading-relaxed">{metin}</p>
-          </div>
-        ))}
-      </div>
-    </Bolum>
-  )
-}
-
-/**
- * ⚠️ BANT DOLU TERRACOTTA — paletin ana vurgusu, sayfanın asıl eylemi.
- *
- * Gizli portföy bandı koyu kakao kaldı: orada anlatılan şey "saklı olan",
- * ve koyu zemin bunu taşıyor. İkisini de terracotta yapmak, vurguyu
- * sıradanlaştırırdı.
- *
- * ⚠️ Metin MÜREKKEP (banttan geliyor), beyaz DEĞİL. Altın üzerinde %80
- * beyaz 3,82:1 veriyor ve AA'nın altında kalıyor; koyu kakao bantta aynı
- * yumuşatma 9,08 verdiği için sorun çıkmıyordu. Hiyerarşi burada punto ve
- * boşlukla kuruluyor.
- */
-function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
-  return (
-    <Bolum zemin="altin">
-      <div className="flex flex-col items-start gap-6 lg:flex-row lg:items-center lg:justify-between">
-        <div className="max-w-2xl">
-          {/*
-            ⚠️ METİN RENGİ SINIFI YOK — bant kendi metin rengini veriyor
-            (`Bolum zemin="altin"` → `text-vurgu-uzeri`, yani mürekkep).
-            Buraya `text-white` yazmak altın üzerinde 2,36:1 üretirdi;
-            eski terracotta bantta doğru olan cevap renk değişince yanlışa
-            döndü.
-          */}
-          <h2 className="text-baslik-2">Evinizin bugün ne ettiğini merak ediyor musunuz?</h2>
-          <p className="text-govde-kucuk mt-3">
-            Satmayı düşünmeseniz bile bilmek işinize yarar. Mahalle, metrekare ve bina bilgilerinizi
-            paylaşın; size gerçek bir değer aralığı ve nasıl hesapladığımızı anlatalım.
-          </p>
-        </div>
-
-        <div className="flex w-full shrink-0 flex-col gap-3 sm:w-auto sm:flex-row">
-          {/*
-            ⚠️ Bakır aksanın iki kullanımından BİRİ. Diğeri gizli portföyde
-            "Erişim talep et". Üçüncü bir yerde kullanılırsa ikisi birden
-            sıradanlaşır; kural `src/lib/tasarim/disiplin.test.ts` içinde
-            denetleniyor.
-          */}
-          <Buton href="/degerleme" gorunum="aksan" boyut="buyuk">
-            Değerleme isteyin
-          </Buton>
-          {whatsapp ? (
-            <Buton
-              href={whatsapp}
-              dis
-              gorunum="ikincil"
-              boyut="buyuk"
-              sinifAdi="!border-[color:var(--color-vurgu-uzeri)]/45 hover:!bg-[color:var(--color-vurgu-uzeri)]/10"
-            >
-              WhatsApp
-            </Buton>
-          ) : null}
         </div>
       </div>
     </Bolum>

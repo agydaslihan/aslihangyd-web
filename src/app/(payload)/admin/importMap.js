@@ -32,6 +32,7 @@ import { SihirbazNavBaglantisi as SihirbazNavBaglantisi_a93db1cb1bd72a6bc3fbe2a1
 import { SosyalNavBaglantisi as SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2 } from '@/components/sosyal/SosyalNavBaglantisi'
 import { GozlemNavBaglantisi as GozlemNavBaglantisi_18cba9bdef93245964bb90fef5a851d6 } from '@/components/gozlem/GozlemNavBaglantisi'
 import { OlcumNavBaglantisi as OlcumNavBaglantisi_f11836c67b0eb631abb32947a30afc72 } from '@/components/olcum/OlcumNavBaglantisi'
+import { AnaSayfaNavBaglantisi as AnaSayfaNavBaglantisi_8b5b8b0d2b6ebe60cad9972c3bf71da2 } from '@/components/anasayfa/AnaSayfaNavBaglantisi'
 import { MahalleVerisiNavBaglantisi as MahalleVerisiNavBaglantisi_3489603cb35b701028316eaf12f57202 } from '@/components/mahalleVerisi/MahalleVerisiNavBaglantisi'
 import { OsmNavBaglantisi as OsmNavBaglantisi_74985f54a63e72798902eec0b09e586e } from '@/components/osm/OsmNavBaglantisi'
 import { GoogleNavBaglantisi as GoogleNavBaglantisi_ca9f8221f15dfad689ec5efd47542595 } from '@/components/google/GoogleNavBaglantisi'
@@ -40,6 +41,7 @@ import { YakinlikNavBaglantisi as YakinlikNavBaglantisi_ebdf29bfda9ee39d0a886776
 import { default as default_ac4995af7e2bbcdcd73ea0a7c441a293 } from '@/components/panel/BildirimSeridi'
 import { default as default_1aab0adce7828f318eceac0ff9d4de43 } from '@/components/sihirbaz/SihirbazGorunumu'
 import { default as default_fc64a4b67468114393aad077308e5041 } from '@/components/olcum/OlcumGorunumu'
+import { default as default_a801d3c59a10fd57ac9e84c64e4242e0 } from '@/components/anasayfa/AnaSayfaGorunumu'
 import { default as default_da503fe49822663a0dcf59383a7ad931 } from '@/components/sosyal/SosyalGorunumu'
 import { default as default_d7b02a7b2eea07e0848ff9c32c4173cf } from '@/components/gozlem/IceAktarmaGorunumu'
 import { default as default_8b9ddd9f332a880c4b496efd046516be } from '@/components/osm/OsmGorunumu'
@@ -85,6 +87,7 @@ export const importMap = {
   "@/components/sosyal/SosyalNavBaglantisi#SosyalNavBaglantisi": SosyalNavBaglantisi_fc19e00ac10a9bc5c4663a82aef228d2,
   "@/components/gozlem/GozlemNavBaglantisi#GozlemNavBaglantisi": GozlemNavBaglantisi_18cba9bdef93245964bb90fef5a851d6,
   "@/components/olcum/OlcumNavBaglantisi#OlcumNavBaglantisi": OlcumNavBaglantisi_f11836c67b0eb631abb32947a30afc72,
+  "@/components/anasayfa/AnaSayfaNavBaglantisi#AnaSayfaNavBaglantisi": AnaSayfaNavBaglantisi_8b5b8b0d2b6ebe60cad9972c3bf71da2,
   "@/components/mahalleVerisi/MahalleVerisiNavBaglantisi#MahalleVerisiNavBaglantisi": MahalleVerisiNavBaglantisi_3489603cb35b701028316eaf12f57202,
   "@/components/osm/OsmNavBaglantisi#OsmNavBaglantisi": OsmNavBaglantisi_74985f54a63e72798902eec0b09e586e,
   "@/components/google/GoogleNavBaglantisi#GoogleNavBaglantisi": GoogleNavBaglantisi_ca9f8221f15dfad689ec5efd47542595,
@@ -93,6 +96,7 @@ export const importMap = {
   "@/components/panel/BildirimSeridi#default": default_ac4995af7e2bbcdcd73ea0a7c441a293,
   "@/components/sihirbaz/SihirbazGorunumu#default": default_1aab0adce7828f318eceac0ff9d4de43,
   "@/components/olcum/OlcumGorunumu#default": default_fc64a4b67468114393aad077308e5041,
+  "@/components/anasayfa/AnaSayfaGorunumu#default": default_a801d3c59a10fd57ac9e84c64e4242e0,
   "@/components/sosyal/SosyalGorunumu#default": default_da503fe49822663a0dcf59383a7ad931,
   "@/components/gozlem/IceAktarmaGorunumu#default": default_d7b02a7b2eea07e0848ff9c32c4173cf,
   "@/components/osm/OsmGorunumu#default": default_8b9ddd9f332a880c4b496efd046516be,
