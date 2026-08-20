@@ -120,17 +120,67 @@ gerçekten geç görüyordu.
 Kaydırarak gelinen içerikte sorun yok: kullanıcı oraya varana kadar
 JavaScript çoktan inmiş oluyor.
 
-### Çözüm
+### Yapılan değişiklik
 
 `Sahne` artık gizlemeden önce `getBoundingClientRect()` ile bakıyor; öğe
 zaten görüş alanındaysa hiç sahneye alınmıyor.
 
-⚠️ Bu bir **tasarım kararı olarak da doğru**: ekranda zaten duran bir şeyi
+⚠️ Bu bir **tasarım kararı olarak doğru**: ekranda zaten duran bir şeyi
 "girer gibi" göstermek, hareketin anlamını (yeni bir şey geldi) boşaltıyor.
 
 Kalıcı denetim: `src/components/hareket/sahne.test.ts` — hem bu tuzağı hem
 de "içerik animasyona bağlanmasın" kuralını bağlıyor. İkisi de ekranda
 hiçbir hata bırakmadan geçen türden.
+
+### ⚠️ AMA HİPOTEZ YANLIŞ ÇIKTI — DÜZELTME LCP'Yİ DEĞİŞTİRMEDİ
+
+Düzeltilmiş sürüm ölçüldüğünde `/portfoy` mobil LCP **3,6 s'de kaldı**.
+Yani `Sahne` bu gecikmenin sebebi değildi. Geriye dönüp bakınca zaten
+olamazdı: `bekliyor` durumunu `useEffect` veriyor, yani hidrasyondan sonra —
+o ana kadar öğe görünür ve boyanmış oluyor.
+
+Düzeltme yine de duruyor çünkü kendi başına doğru; ama **LCP gerilemesini
+açıklamıyor**.
+
+### Elenen sebepler
+
+Ölçümle bakıldı, üçü de eledi:
+
+| Aday | Ölçüm | Sonuç |
+| --- | --- | --- |
+| `Sahne` gizlemesi | düzeltme sonrası LCP aynı | **değil** |
+| Render engelleyen CSS | 13.894 B → 13.991 B (+%0,7), kayıp 310 ms → 309 ms | **değil** |
+| LCP öğesinin türü | önce de sonra da aynı açıklama paragrafı | **değil** |
+
+Fark `elementRenderDelay`de: 130 ms → 421 ms (üç koşunun ikisinde; üçüncüde
+137 ms). Paragraf artık daha büyük (`text-govde-kucuk` → `text-govde`) ve
+sayfada daha aşağıda (bandın `py-12`si). Kalan en güçlü aday, `display: swap`
+sonrası font değişiminde öğenin yeniden boyanması — ama **kanıtlanmadı**.
+
+### Yol boyunca bulunan gerçek açık: font ön yüklemesi HİÇ YOK
+
+Üretilen HTML'de tek bir `<link rel="preload" as="font">` yok — hiçbir
+sayfada. `next/font/local` `preload: true` ile çağrılıyor (varsayılan da
+öyle) ve derleme çıktısındaki dosya adı Next'in "ön yüklenecek" işaretini
+taşıyor (`inter_turkce-s.p.0-…woff2`), ama bağlantı head'e basılmıyor.
+Açıkça `preload: true` yazılıp yeniden derlendi: **hiçbir şey değişmedi**.
+
+Yani sitedeki her metin LCP'si font değişimini bekliyor. Bu bu PR'ın
+getirdiği bir şey değil, **önceden beri öyle** — ve ayrı bir iş olarak
+ele alınmalı. Next 16 + Turbopack davranışı olduğu için burada bir
+geçici çözümle örtülmedi.
+
+### Sayısal durum
+
+| Sayfa | Masaüstü | Mobil performans | Mobil LCP |
+| --- | --- | --- | --- |
+| Ana sayfa | 100 | 90 (86–91) | 3,5 s |
+| Mahalleler | 100 | 91 (90–91) | 3,5 s |
+| Portföy | 100 | 89 (89–90) | 3,6 s (önce 2,8 s) |
+
+Erişilebilirlik her sayfada **100**, CLS her sayfada **0**. Mobil LCP hedefi
+(2,5 s) sitede zaten hiçbir sayfada tutmuyordu; `/portfoy` bu PR'la
+diğerlerinin seviyesine geldi.
 
 ---
 
