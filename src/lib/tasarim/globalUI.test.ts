@@ -77,11 +77,14 @@ describe('cam yüzey', () => {
    * her yer `.cam` kullanmak zorunda ve `.cam` mobilde kendini kapatıyor.
    * Küçük yüzeylerde `sm` ve altı serbest — ama izinli dosyalarda.
    */
+  /**
+   * ⚠️ MUAFİYET LİSTESİ EKSİLDİ, ARTMADI: `MahalleKarti` skor rozeti
+   * `.cam` sınıfına geçti. Kalan bir muafiyet, kaldırılabildiği hâlde
+   * durduğunda kuralı olduğundan gevşek gösterir.
+   */
   const KUCUK_CAM_IZINLI = new Set([
     // Fotoğraf üstündeki yuvarlak slider düğmeleri — 44 px.
     'components/hero/HeroKumandasi.tsx',
-    // Kart üzerindeki skor rozeti — birkaç yüz piksel kare.
-    'components/mahalle/MahalleKarti.tsx',
     // Harita üstündeki ince araç şeridi; harita zaten masaüstü ağırlıklı.
     'components/harita/HaritaSahnesi.tsx',
   ])
