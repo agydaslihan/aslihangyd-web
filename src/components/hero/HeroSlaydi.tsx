@@ -20,7 +20,25 @@ import { HERO_ORANI, overlayOpakligi, type HeroSlayti } from '@/lib/hero/tipler'
  * hiç görmüyor ve onu ilk boyamada indirmek LCP'yi doğrudan geciktirirdi.
  * ─────────────────────────────────────────────────────────────────────────
  */
-export function HeroSlaydi({ slayt, oncelikli }: { slayt: HeroSlayti; oncelikli: boolean }) {
+export function HeroSlaydi({
+  slayt,
+  oncelikli,
+  baslikSeviyesi = 1,
+}: {
+  slayt: HeroSlayti
+  oncelikli: boolean
+  /**
+   * ⚠️ SAYFADA TEK BİR `<h1>` OLABİLİR.
+   *
+   * Yeniden tasarımda ana sayfanın `<h1>`i vitrine geçti; slider artık
+   * onun ALTINDA, kendi bandında duruyor. İki `<h1>` bırakmak ekran
+   * okuyucuda sayfanın iki ayrı konusu varmış gibi okunur — bu yüzden
+   * slider oraya `<h2>` basıyor. Slider tek başına hero olduğu sayfalarda
+   * (varsayılan) yine `<h1>`.
+   */
+  baslikSeviyesi?: 1 | 2
+}) {
+  const BaslikEtiketi = baslikSeviyesi === 1 ? 'h1' : 'h2'
   const ortali = slayt.metinHizasi === 'orta'
 
   /**
@@ -80,9 +98,9 @@ export function HeroSlaydi({ slayt, oncelikli }: { slayt: HeroSlayti; oncelikli:
           <div className="kapsayici w-full">
             <div className={ortali ? 'mx-auto max-w-3xl text-center' : 'max-w-3xl'}>
               {slayt.baslik !== null ? (
-                <h1 className="text-koyu-bant-metin font-serif text-baslik-1-mobil font-medium drop-shadow-sm sm:text-baslik-1">
+                <BaslikEtiketi className="text-koyu-bant-metin font-serif text-baslik-1-mobil font-medium drop-shadow-sm sm:text-baslik-1">
                   {slayt.baslik}
-                </h1>
+                </BaslikEtiketi>
               ) : null}
 
               {slayt.altBaslik ? (

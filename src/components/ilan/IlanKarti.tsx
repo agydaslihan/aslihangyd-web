@@ -60,9 +60,18 @@ export function IlanKarti({
 
   return (
     <article
+      /**
+       * ⚠️ `data-yukselen`: hover'da 4px kalkma. Kural `globals.css`in hareket
+       * katmanında ve `(hover: hover) and (pointer: fine)` kapısının ardında —
+       * dokunmatikte "yapışık hover" üretmesin diye. Hareket azaltma
+       * tercihinde de kapanıyor.
+       */
+      data-yukselen
       className={sinif(
         'group bg-yuzey rounded-kart relative flex h-full flex-col overflow-hidden border-[0.5px] border-kenar',
-        'transition-shadow duration-[200ms] ease-[cubic-bezier(0.2,0,0,1)] hover:shadow-kart focus-within:shadow-kart',
+        // ⚠️ Yalnızca `box-shadow` ve `transform` — `all` DEĞİL. `all`,
+        // kartın içindeki her rengi de her karede canlandırırdı.
+        'transition-[box-shadow,transform] duration-[200ms] ease-[var(--cikis)] hover:shadow-kalkik focus-within:shadow-kart',
         sinifAdi,
       )}
     >

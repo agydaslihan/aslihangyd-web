@@ -61,7 +61,9 @@ describe('LCP ve CLS sözleşmesi', () => {
   it('ilk slayt öncelikli, sonrakiler tembel', () => {
     expect(slayt).toContain('priority={oncelikli}')
     expect(slayt).toContain("loading={oncelikli ? undefined : 'lazy'}")
-    expect(bolum).toContain('<HeroSlaydi slayt={ilk} oncelikli />')
+    // ⚠️ Artık koşullu: slider sayfanın hero'su değilse `priority` almıyor.
+    // Gerekçesi aşağıdaki "iki `<h1>` ve iki `priority`" notunda.
+    expect(bolum).toContain('<HeroSlaydi slayt={ilk} oncelikli={sayfaHerosu}')
   })
 
   /**
@@ -138,7 +140,16 @@ describe('tek slayt maliyeti', () => {
 
   it('kumanda yalnızca birden çok slaytta render ediliyor', () => {
     expect(bolum).toContain('slaytlar.length > 1')
-    expect(bolum).toContain('{cok ? <HeroKumandasi')
+    /**
+     * ⚠️ BİÇİME DEĞİL YAPIYA BAKILIYOR.
+     *
+     * Önceki hâli `'{cok ? <HeroKumandasi'` dizgesini arıyordu ve prettier
+     * prop eklendiği anda JSX'i çok satıra bölünce test CI'da kırıldı —
+     * yerelde yeşildi çünkü testler commit öncesi biçimlendirmeden ÖNCE
+     * koşmuştu. Sözleşme "şu satır şöyle yazılsın" değil, "kumanda `cok`
+     * koşuluna bağlı olsun".
+     */
+    expect(/\{cok \?\s*\(?\s*<HeroKumandasi/.test(bolum)).toBe(true)
   })
 
   /**
@@ -230,10 +241,49 @@ describe('yedek davranış', () => {
     expect(oku('components/hero/HeroBolumu.tsx')).toContain('slaytlar.length === 0) return null')
   })
 
-  it('sayfa slayt yokken metin hero’sunu çiziyor', () => {
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ SÖZLEŞME BİLEŞENİN ADI DEĞİL, DAVRANIŞI.
+   *
+   * Eskiden "slayt varsa slider, yoksa metin hero'su" idi ve test
+   * `<Kahraman>` arıyordu. Yeniden tasarımda düzen değişti: vitrin DAİMA
+   * açılışta, slider onun altında kendi bandında. Sebebi aşağıda ve
+   * `page.tsx` içinde yazılı — yeni vitrin yalnızca slayt yokken görünseydi
+   * Aslıhan sitenin yeni yüzünü hiç görmeyecekti.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('sayfa hero’su vitrin ve koşulsuz çiziliyor', () => {
     const sayfa = oku('app/(site)/page.tsx')
-    expect(sayfa).toContain('heroSlaytVar ?')
-    expect(sayfa).toContain('<Kahraman')
+    expect(sayfa).toContain('<VitrinHero')
+    // Slider bandı koşullu; vitrin değil.
+    expect(sayfa).toContain('heroSlaytVar ? (')
+  })
+
+  /**
+   * ⚠️ NEDEN VAR: İKİ `<h1>` VE İKİ `priority` — İKİSİ DE SESSİZ.
+   *
+   * Slider ana sayfada artık ikinci bant. Kendi `<h1>`ini basmaya devam
+   * etseydi sayfada iki `<h1>` olurdu (ekran okuyucuda iki ayrı konu) ve
+   * `priority` görselini indirmeye devam etseydi vitrinin LCP görseliyle
+   * bant genişliği için yarışırdı. İkisi de ekranda hiçbir iz bırakmaz.
+   *
+   * Bu yüzden ikisi TEK bayrağa bağlı ve ayrışamıyorlar.
+   */
+  it('ana sayfada slider bandı hero değil', () => {
+    expect(oku('app/(site)/page.tsx')).toContain('sayfaHerosu={false}')
+  })
+
+  it('sayfaHerosu bayrağı hem başlık seviyesini hem önceliği çeviriyor', () => {
+    const bolum = oku('components/hero/HeroBolumu.tsx')
+    expect(bolum).toContain('oncelikli={sayfaHerosu}')
+    expect(bolum).toContain('baslikSeviyesi={sayfaHerosu ? 1 : 2}')
+  })
+
+  /** Vitrin sahnesi ana sayfanın LCP öğesi — `priority` ve `sizes` şart. */
+  it('vitrin sahnesi öncelikli ve sizes tanımlı', () => {
+    const sahne = oku('components/hero/VitrinSahnesi.tsx')
+    expect(sahne).toContain('priority')
+    expect(sahne).toContain('sizes="(min-width: 1024px) 32rem, 90vw"')
   })
 
   it('görselsiz slayt çizilmiyor', () => {

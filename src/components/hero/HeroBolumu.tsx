@@ -37,7 +37,34 @@ const HERO_ANAHTARI = 'anasayfa'
  * Sayfa da aynı veriyi okuyor (hangi hero'yu çizeceğine karar vermek
  * için). İkinci bir okuma ikinci bir veritabanı turu demekti.
  */
-export function HeroBolumu({ ayarlar }: { ayarlar: HeroAyarlari }) {
+export function HeroBolumu({
+  ayarlar,
+  sayfaHerosu = true,
+}: {
+  ayarlar: HeroAyarlari
+  /**
+   * Slider sayfanın hero'su mu?
+   *
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ TEK BAYRAK, İKİ SONUÇ — VE BİLİNÇLİ OLARAK TEK.
+   *
+   * "Sayfanın hero'su olmak" iki şeyi birden belirliyor ve ikisi asla
+   * ayrışmamalı:
+   *
+   *   · `<h1>` mi `<h2>` mi — sayfada tek bir `<h1>` olabilir.
+   *   · `priority` mi değil mi — LCP öğesi tektir.
+   *
+   * Ayrı iki prop olsaydı biri unutulduğunda ortaya sessiz bir gerileme
+   * çıkardı: iki `<h1>` (ekran okuyucuda iki konu) ya da iki `priority`
+   * görsel (birbirinin bant genişliğini yiyen iki LCP adayı). İkisi de
+   * ekranda hiçbir iz bırakmadan geçer.
+   *
+   * Ana sayfada yeniden tasarımdan sonra `false`: `<h1>` vitrinde ve LCP
+   * öğesi vitrinin sahnesi. Slider onun altındaki bant.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  sayfaHerosu?: boolean
+}) {
   const { slaytlar } = ayarlar
 
   // ⚠️ Slayt yoksa sayfa kendi metin hero'sunu çiziyor. Slider bir ek,
@@ -73,11 +100,17 @@ export function HeroBolumu({ ayarlar }: { ayarlar: HeroAyarlari }) {
             className="absolute inset-0 transition-opacity duration-500 motion-reduce:transition-none"
             style={{ opacity: 1 }}
           >
-            <HeroSlaydi slayt={ilk} oncelikli />
+            <HeroSlaydi slayt={ilk} oncelikli={sayfaHerosu} baslikSeviyesi={sayfaHerosu ? 1 : 2} />
           </div>
         </div>
 
-        {cok ? <HeroKumandasi ayarlar={ayarlar} hedefSecici={HERO_ANAHTARI} /> : null}
+        {cok ? (
+          <HeroKumandasi
+            ayarlar={ayarlar}
+            hedefSecici={HERO_ANAHTARI}
+            baslikSeviyesi={sayfaHerosu ? 1 : 2}
+          />
+        ) : null}
       </HeroCercevesi>
     </section>
   )

@@ -55,7 +55,10 @@ export function MahalleKarti({
   const siluet = gorsel?.url ? null : siluetUret(mahalle.sinir)
 
   return (
-    <article className="group border-kenar bg-yuzey rounded-kart hover:shadow-kart relative flex flex-col overflow-hidden border-[0.5px] transition-shadow">
+    <article
+      data-yukselen
+      className="group border-kenar bg-yuzey rounded-kart hover:shadow-kalkik relative flex h-full flex-col overflow-hidden border-[0.5px] transition-[box-shadow,transform] duration-[200ms] ease-[var(--cikis)]"
+    >
       <div className="bg-vurgu-zemin relative aspect-16/10 overflow-hidden">
         {gorsel?.url ? (
           <Image

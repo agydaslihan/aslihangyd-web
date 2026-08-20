@@ -39,9 +39,11 @@ export interface KumandaOzellikleri {
   ayarlar: HeroAyarlari
   /** Slayt kapsayıcılarının ortak sınıf adı — görünürlük buradan sürülür. */
   hedefSecici: string
+  /** Sayfanın `<h1>`i başka yerdeyse 2 — bkz. `HeroSlaydi`. */
+  baslikSeviyesi?: 1 | 2
 }
 
-export function HeroKumandasi({ ayarlar, hedefSecici }: KumandaOzellikleri) {
+export function HeroKumandasi({ ayarlar, hedefSecici, baslikSeviyesi = 1 }: KumandaOzellikleri) {
   const { slaytlar, otomatikGecis, gecisSuresiMs } = ayarlar
   const toplam = slaytlar.length
 
@@ -165,7 +167,7 @@ export function HeroKumandasi({ ayarlar, hedefSecici }: KumandaOzellikleri) {
               aria-hidden={sira === aktif ? 'false' : 'true'}
               inert={sira !== aktif}
             >
-              <HeroSlaydi slayt={slayt} oncelikli={false} />
+              <HeroSlaydi slayt={slayt} oncelikli={false} baslikSeviyesi={baslikSeviyesi} />
             </div>
           ),
         )}

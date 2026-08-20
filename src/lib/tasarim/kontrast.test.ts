@@ -191,6 +191,25 @@ const KOMBINASYONLAR: readonly Kombinasyon[] = [
     nerede: 'dolu buton zeminin kendisi sayfadan ayrışmalı',
   },
 
+  /**
+   * ⚠️ BU ÇİFT BİR HATADAN DOĞDU.
+   *
+   * `text-vurgu-uzeri` sınıfı AI arama düğmesinde kullanılıyordu ama
+   * `--color-vurgu-uzeri` jetonu HİÇ TANIMLI DEĞİLDİ. Tailwind tanımsız
+   * yardımcıyı sessizce atıyor: metin `--color-metin`de kalıyor, yani
+   * terracotta zeminin üstünde koyu kahve — ~2,4:1. AI arama varsayılan
+   * KAPALI olduğu için hata üretimde hiç göze görünmedi.
+   *
+   * Jeton eklendi ve ölçüsü buraya bağlandı: jeton eklemenin bedeli,
+   * ölçülmeyi kabul etmektir.
+   */
+  {
+    on: '--color-vurgu-uzeri',
+    arka: '--color-vurgu',
+    asgari: AA_METIN,
+    nerede: 'dolu vurgu butonu — AI arama "Ara"',
+  },
+
   // ── Gold: dekoratif ────────────────────────────────────────────────────
   //
   // ⚠️ `--color-gold-cizgi` BİLİNÇLİ OLARAK BU LİSTEDE YOK.

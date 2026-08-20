@@ -510,3 +510,164 @@ describe('renk alanı muafiyeti denetimsiz değil', () => {
     ).toEqual([])
   })
 })
+
+/* ==========================================================================
+   Var olmayan jetona atıfta bulunan yardımcı sınıflar
+   ========================================================================== */
+
+/**
+ * ⚠️ NEDEN VAR: TAILWIND, TANIMSIZ YARDIMCI SINIFI SESSİZCE ATAR.
+ *
+ * `shadow-kart-yuksek` yazıldığında — ki `--shadow-kart-yuksek` diye bir
+ * jeton yok — Tailwind hata vermiyor, uyarmıyor, o sınıfı hiç üretmiyor.
+ * Öğe gölgesiz çiziliyor ve kimse fark etmiyor. `tsc` de yakalayamıyor:
+ * className bir dizge.
+ *
+ * Bu test yazılırken ÜÇ gerçek hata çıktı ve ikisi zaten üretimdeydi:
+ *
+ *   · `rounded-alan`      → `--radius-alan` yok. AI arama kutusu ve düğmesi
+ *                           sitedeki tek köşesiz alanmış.
+ *   · `text-vurgu-uzeri`  → `--color-vurgu-uzeri` yok. Dolu terracotta
+ *                           zeminin üstündeki metin `--color-metin`de
+ *                           kalıyordu: koyu kahve üzerine koyu kahve, ~2,4:1.
+ *                           AI arama varsayılan KAPALI olduğu için hata hiç
+ *                           göze görünmedi — sessiz arıza.
+ *   · `text-etiket`       → `--text-etiket` yok (doğrusu `--text-mikro`).
+ *
+ * ⚠️ Bu testi susturmanın doğru yolu muafiyet eklemek DEĞİL: ya sınıfı var
+ * olan jetona çevir, ya da jetonu `globals.css`e ekle. `--color-vurgu-uzeri`
+ * tam olarak böyle doğdu.
+ */
+describe('yardımcı sınıflar var olan jetonlara bağlı', () => {
+  const cozulmus = temalariCoz(readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8'))
+  void cozulmus
+
+  const CSS = readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')
+  const JETONLAR = new Set(Array.from(CSS.matchAll(/--([a-z0-9-]+):/g), (e) => e[1]))
+
+  /** Bir yardımcı önekinin hangi jeton uzayından beslendiği. */
+  const UZAY: Record<string, readonly string[]> = {
+    text: ['color', 'text'],
+    bg: ['color'],
+    border: ['color'],
+    ring: ['color'],
+    fill: ['color'],
+    stroke: ['color'],
+    from: ['color'],
+    via: ['color'],
+    to: ['color'],
+    decoration: ['color'],
+    outline: ['color'],
+    accent: ['color'],
+    caret: ['color'],
+    divide: ['color'],
+    placeholder: ['color'],
+    shadow: ['shadow'],
+    rounded: ['radius'],
+  }
+
+  /**
+   * Tailwind'in kendi anahtar kelimeleri — jeton değiller ve olmamalılar.
+   * ⚠️ Bu liste RENK İÇERMİYOR: `text-white` gibi ham renkler zaten yukarıdaki
+   * "ham hex yok" kuralının kardeşi olarak ayrıca ele alınıyor; buraya renk
+   * eklemek bu testi renk kaçağı için kör yapardı.
+   */
+  const ANAHTAR_KELIMELER = new Set([
+    'black',
+    'white',
+    'transparent',
+    'current',
+    'inherit',
+    'none',
+    'full',
+    'auto',
+    'center',
+    'left',
+    'right',
+    'justify',
+    'start',
+    'end',
+    'balance',
+    'pretty',
+    'nowrap',
+    'wrap',
+    'collapse',
+    'separate',
+    'solid',
+    'dashed',
+    'dotted',
+    'double',
+    'hidden',
+    'inset',
+    'gradient',
+  ])
+
+  /**
+   * ⚠️ `Harita3B.tsx` MUAF VE GEREKÇESİ VAR: MapLibre'nin stil şartnamesi
+   * `fill-extrusion-color`, `text-halo-width` gibi tireli özellik adları
+   * kullanıyor. Bunlar dizge sabiti, className değil — ama Tailwind'in
+   * ad uzayıyla birebir çakışıyorlar. Muafiyet dosyaya değil YALNIZCA bu
+   * çakışmaya veriliyor; dosyadaki gerçek className'ler de taranıyor olsaydı
+   * ayrım yapılamazdı.
+   */
+  const MUAF_DOSYALAR = ['components/harita/Harita3B.tsx']
+
+  /**
+   * ⚠️ Öncesinde `[` OLMAMALI. Tailwind'in keyfi özellik sözdizimi
+   * (`[border-color:var(--x)]`) ve `transition-[color,border-color]` gibi
+   * keyfi değer listeleri, gerçek CSS özellik adı taşıyor — jeton değiller.
+   */
+  const SINIF = new RegExp(
+    `(?<![\\w[,-])(${Object.keys(UZAY).join('|')})-([a-z][a-z0-9]*(?:-[a-z0-9]+)*)(?![\\w[-])`,
+    'g',
+  )
+
+  /**
+   * Önekle başlayan ama jeton uzayına HİÇ bakmayan gerçek Tailwind
+   * yardımcıları. `outline-offset-2` bir renk değil, bir uzaklık.
+   */
+  const BASKA_YARDIMCILAR = /^(offset|width|style|spacing|indent|wrap|opacity)(-|$)/
+
+  it('text/bg/border/shadow/rounded sınıfları tanımlı jetona çözülüyor', () => {
+    const ihlaller: string[] = []
+
+    for (const dosya of hepsi) {
+      if (MUAF_DOSYALAR.includes(dosya.yol)) continue
+
+      for (const eslesme of yorumsuz(dosya.icerik).matchAll(SINIF)) {
+        const onek = eslesme[1]
+        let ad = eslesme[2]
+        if (onek === undefined || ad === undefined) continue
+
+        // Yön eki: `border-t-…`, `rounded-t-buyuk`, `divide-y-…`
+        const yon = /^(t|r|b|l|x|y|s|e|tl|tr|bl|br|ss|se|es|ee)(-|$)/.exec(ad)
+        if (yon !== null) ad = ad.slice(yon[0].length)
+
+        if (ad === '') continue // `border-t`, `divide-y`
+        if (/^\d+$/.test(ad)) continue // `border-2`, `rounded-0`
+        if (ANAHTAR_KELIMELER.has(ad.split('-')[0] ?? '')) continue
+        if (BASKA_YARDIMCILAR.test(ad)) continue
+
+        const uzaylar = UZAY[onek] ?? []
+        if (uzaylar.some((uzay) => JETONLAR.has(`${uzay}-${ad}`))) continue
+
+        ihlaller.push(`${dosya.yol}: ${onek}-${eslesme[2]}`)
+      }
+    }
+
+    expect(
+      ihlaller,
+      'Var olmayan bir jetona atıfta bulunan yardımcı sınıf(lar) bulundu. ' +
+        'Tailwind bunları sessizce atar: öğe gölgesiz/köşesiz/renksiz çizilir ve ' +
+        'hiçbir yerde hata görünmez. Ya sınıfı var olan bir jetona çevirin ya da ' +
+        'jetonu globals.css içine ekleyin — muafiyet eklemeyin.',
+    ).toEqual([])
+  })
+
+  /** Yol yanlışsa test sessizce yeşil kalırdı. */
+  it('jeton tablosu gerçekten okunmuş', () => {
+    expect(JETONLAR.size).toBeGreaterThan(80)
+    expect(JETONLAR.has('color-metin')).toBe(true)
+    expect(JETONLAR.has('shadow-kart')).toBe(true)
+  })
+})

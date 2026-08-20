@@ -1,6 +1,10 @@
 import Link from 'next/link'
 
 import { HeroBolumu } from '@/components/hero/HeroBolumu'
+import { VitrinHero } from '@/components/hero/VitrinHero'
+import { VitrinSahnesi } from '@/components/hero/VitrinSahnesi'
+import { GuvenKartlari } from '@/components/duzen/GuvenKartlari'
+import { Sahne } from '@/components/hareket/Sahne'
 import { AramaWidgeti, type MahalleSecenegi } from '@/components/ilan/AramaWidgeti'
 import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
@@ -95,31 +99,59 @@ export default async function AnaSayfa() {
   return (
     <>
       {/*
-        ⚠️ SLAYT VARSA SLIDER, YOKSA METİN HERO'SU — İKİSİ BİRDEN DEĞİL.
+        ─────────────────────────────────────────────────────────────────
+        ⚠️ VİTRİN DAİMA AÇILIŞ; SLIDER ONUN ALTINDA, KENDİ BANDINDA.
 
-        `HeroBolumu` slayt yoksa `null` dönüyor; o zaman aşağıdaki
-        `Kahraman` çiziliyor. Slider bir ek, bir varlık şartı değil:
-        Aslıhan hiç görsel yüklemese de ana sayfa bugünkü hâliyle çalışır.
+        Önceki düzen "slayt varsa slider, yoksa metin hero'su" idi ve
+        yeniden tasarımda bu bir soruna dönüştü: yeni vitrin YALNIZCA slayt
+        yokken görünüyordu. Aslıhan'ın ana sayfasında slaytlar var, yani
+        sitenin yeni yüzünü hiç görmeyecekti.
 
-        ⚠️ Slider varken arama kartı yine görünüyor ama hero'nun ALTINDA,
-        kendi bölümünde. Kartı slaydın üstüne bindirmek metinle çakışırdı
-        ve karartma ayarını kullanıcının kontrolünden çıkarırdı.
+        Diğer uç — slaytları vitrinin içine sıkıştırmak — daha kötüydü:
+        slider 21:9 oranına göre kurulmuş, dar bir sütunda ince bir şeride
+        düşüyor ve Faz 3'te gelecek drone görüntüsünün yeri o tam genişlik.
+
+        Bu yüzden ikisi de tam boyunda ve KENDİ işini yapıyor: vitrin sayfanın
+        sözünü söylüyor, slider Aslıhan'ın kareleriyle onu gösteriyor.
+        Slider yoksa bant hiç çizilmiyor; vitrin tek başına yeter.
+        ─────────────────────────────────────────────────────────────────
+
+        ⚠️ VİTRİNDE STOK FOTOĞRAF YOK, GERÇEK İLAN VAR.
+
+        Referans tasarımın hero'su kocaman bir şehir fotoğrafına dayanıyordu.
+        Elimizde Çorlu'nun telifli bir fotoğrafı yok ve başka bir şehrin
+        görselini Çorlu diye koymak, kural 2'nin (uydurma veri yasak) görsel
+        karşılığı olurdu. Yerine sahnede yayındaki gerçek bir ilan duruyor —
+        kendi fotoğrafı, fiyatı ve kira çarpanıyla, 3B perspektifte. Portföy
+        boşsa sahne `null` dönüyor ve vitrin tek sütuna düşüyor.
       */}
-      <HeroBolumu ayarlar={hero} />
+      <VitrinHero
+        ustBaslik="Çorlu · Tekirdağ"
+        baslik="Gayrimenkul kararı hisle değil,"
+        vurgu="rakamla"
+        baslikDevam="verilir."
+        aciklama="Çorlu'da bir taşınmazın ne kadar ettiğini, kaç yılda kendini ödediğini ve hangi mahallenin hangi değer sürücüsünden beslendiğini gösteriyoruz. İlan listelemiyoruz — karar veriyoruz."
+        birincilEylem={{ ad: 'Portföyü gör', adres: '/portfoy' }}
+        ikincilEylem={{ ad: 'Haritada keşfet', adres: '/harita' }}
+        sahne={<VitrinSahnesi ilan={ilanlar[0] ?? null} />}
+      />
 
+      <GuvenKartlari />
+
+      {/* ⚠️ `sayfaHerosu={false}`: sayfanın `<h1>`i ve LCP öğesi artık
+          vitrinde. Bayrağın ikisini birden çevirmesinin gerekçesi
+          `HeroBolumu` içinde yazılı. */}
       {heroSlaytVar ? (
-        <AramaBolumu
-          whatsapp={whatsapp}
-          mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
-          ticariAcik={bolumler.ticari}
-        />
-      ) : (
-        <Kahraman
-          whatsapp={whatsapp}
-          mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
-          ticariAcik={bolumler.ticari}
-        />
-      )}
+        <div className="mt-16 sm:mt-20 lg:mt-24">
+          <HeroBolumu ayarlar={hero} sayfaHerosu={false} />
+        </div>
+      ) : null}
+
+      <AramaBolumu
+        whatsapp={whatsapp}
+        mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
+        ticariAcik={bolumler.ticari}
+      />
 
       <GuvenSeridi ogeler={guvenOgeleri} />
 
@@ -143,7 +175,23 @@ export default async function AnaSayfa() {
         {ilanlar.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
             {ilanlar.map((ilan, sira) => (
-              <IlanKarti key={ilan.id} ilan={ilan} oncelikli={sira === 0} />
+              /**
+               * ⚠️ ARTIK ÖNCELİKLİ DEĞİL — ÖLÇÜMLE.
+               *
+               * Eskiden ilk kart `oncelikli` alıyordu çünkü hero'nun hemen
+               * altındaydı. Yeni düzende önce vitrin, sonra güven kartları,
+               * sonra slider bandı geliyor: kart ızgarası ilk ekranın çok
+               * altında.
+               *
+               * Üretilen HTML'de iki `<link rel="preload" as="image">`
+               * görüldü ve ikisi AYNI dosyayı işaret ediyordu (vitrin sahnesi
+               * de ilk öne çıkan ilanı gösteriyor). İkinci ön yükleme,
+               * görünmeyen bir görsel için gerçek LCP adayının bant
+               * genişliğini yiyordu.
+               */
+              <Sahne key={ilan.id} gecikme={sira * 60} className="h-full">
+                <IlanKarti ilan={ilan} sinifAdi="h-full" />
+              </Sahne>
             ))}
           </div>
         ) : (
@@ -178,8 +226,13 @@ export default async function AnaSayfa() {
 
         {mahalleler.length > 0 ? (
           <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-            {mahalleler.slice(0, 6).map((mahalle) => (
-              <MahalleKarti key={mahalle.id} mahalle={mahalle} />
+            {/* ⚠️ Kademe 60 ms ve ÜST SINIR 5 KART (300 ms). Sabit çarpan
+                altıncı kartı 360 ms geciktirirdi; kullanıcı o noktada zaten
+                kaydırıyor ve geç gelen kart "takıldı" gibi okunur. */}
+            {mahalleler.slice(0, 6).map((mahalle, sira) => (
+              <Sahne key={mahalle.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
+                <MahalleKarti mahalle={mahalle} />
+              </Sahne>
             ))}
           </div>
         ) : (
@@ -233,83 +286,15 @@ export default async function AnaSayfa() {
  * ve sayfanın "ilk iş burada yapılır" mesajını veriyor.
  * ─────────────────────────────────────────────────────────────────────────
  */
-function Kahraman({
-  whatsapp,
-  mahalleler,
-  ticariAcik,
-}: {
-  whatsapp: string | null
-  mahalleler: MahalleSecenegi[]
-  ticariAcik: boolean
-}) {
-  return (
-    <section className="relative">
-      <div className="bg-pudra-zemin">
-        <div className="kapsayici pt-16 pb-24 sm:pt-20 sm:pb-28 lg:pt-28 lg:pb-32">
-          <div className="max-w-3xl">
-            {/* ⚠️ Eyebrow ADAÇAYI, gold değil. Gold pudra üzerinde 1,51:1 —
-                okunmaz; zaten "gold asla metin rengi değildir" kuralı
-                mutlak. `aksan-metin` burada 4,55:1 ile AA'yı geçiyor ve
-                rampanın 600 basamağı geçmiyor (3,20) — ayrı jetonun
-                gerekçesi tam olarak bu zemin. Kontrast testinde. */}
-            <p className="text-aksan-metin text-eyebrow font-medium uppercase">Çorlu · Tekirdağ</p>
-
-            <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-              Gayrimenkul kararı hisle değil, rakamla verilir.
-            </h1>
-
-            <p className="text-metin-2 mt-6 max-w-2xl text-baslik-3 leading-relaxed">
-              Çorlu&apos;da bir taşınmazın ne kadar ettiğini, kaç yılda kendini ödediğini ve hangi
-              mahallenin hangi değer sürücüsünden beslendiğini gösteriyoruz. İlan listelemiyoruz —
-              karar veriyoruz.
-            </p>
-
-            <p className="text-metin-3 mt-6 flex items-center gap-2 text-govde-kucuk">
-              <DogrulanmisIkon width={16} height={16} className="shrink-0" />
-              Tüm ilanlarımız EİDS doğrulamalıdır ve taşınmaz numarasıyla birlikte yayınlanır.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Yüzen arama kartı */}
-      <div className="kapsayici relative -mt-12 sm:-mt-14">
-        <div className="max-w-4xl">
-          <AramaWidgeti mahalleler={mahalleler} ticariAcik={ticariAcik} />
-
-          <p className="text-metin-3 mt-3 text-govde-kucuk">
-            veya{' '}
-            <Link href="/harita" className="text-aksan-metin underline underline-offset-2">
-              haritada keşfedin
-            </Link>{' '}
-            {whatsapp ? (
-              <>
-                ·{' '}
-                <a
-                  href={whatsapp}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-aksan-metin underline underline-offset-2"
-                >
-                  WhatsApp&apos;tan sorun
-                </a>
-              </>
-            ) : null}
-          </p>
-        </div>
-      </div>
-    </section>
-  )
-}
-
 /**
- * Arama bölümü — slider varken hero'nun ALTINDA duruyor.
+ * Arama bölümü — hero'nun ALTINDA, kendi zemininde duruyor.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ SLAYDIN ÜSTÜNE BİNDİRİLMEDİ VE BU BİLİNÇLİ.
  *
- * Metin hero'sunda kart hero'ya biniyor (-3rem) çünkü altındaki zemin
- * sakin ve kartın okunurluğu garanti. Fotoğraf üstünde aynı şey iki sorun
+ * Kart eskiden metin hero'suna biniyordu (-3rem). Yeni vitrinde o yeri
+ * güven kartları aldı; arama kartı onların altına indi. Fotoğraf üstüne
+ * bindirmek ise hiç denenmedi çünkü iki sorun
  * doğururdu: kart slaydın başlığıyla çakışır ve okunurluğu kullanıcının
  * seçtiği karartma oranına bağlı hâle gelir — yani bizim kontrolümüzden
  * çıkar.
