@@ -50,6 +50,9 @@ importers:
       sharp:
         specifier: ^0.34.4
         version: 0.34.4
+      web-vitals:
+        specifier: ^6.1.1
+        version: 6.1.1
       zod:
         specifier: ^4.4.3
         version: 4.4.3
@@ -4299,6 +4302,9 @@ packages:
         optional: true
       jsdom:
         optional: true
+
+  web-vitals@6.1.1:
+    resolution: {integrity: sha512-r93gKnR6ZC2O8F3JrS0AAGIQ0v0OhXuyg4DAj2oG7K+GPkwXfUSc3ZcWeu50AsV5yIc6xxnTjERipJ6EvSw2vg==}
 
   whatwg-mimetype@3.0.0:
     resolution: {integrity: sha512-nt+N2dzIutVRxARx1nghPKGv1xHikU7HKdfafKkLNLindmPU/ch3U31NOCGGA/dmPcmb1VlofO0vnKAcsm0o/Q==}
@@ -8928,6 +8934,8 @@ snapshots:
       happy-dom: 20.11.1
     transitivePeerDependencies:
       - msw
+
+  web-vitals@6.1.1: {}
 
   whatwg-mimetype@3.0.0: {}
 

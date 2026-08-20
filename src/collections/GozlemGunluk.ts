@@ -164,6 +164,24 @@ export const GozlemGunluk: CollectionConfig = {
       ],
     },
     {
+      name: 'vitaller',
+      type: 'array',
+      label: 'Core Web Vitals histogramı (Katman B)',
+      admin: {
+        readOnly: true,
+        description:
+          '⚠️ HAM DEĞER YOK — yalnızca kova sayaçları. "LCP = 2.431 ms" tek bir ' +
+          'ziyarete ait bir kayıt olurdu; kovaya düşen sayaç kimseye ait değil. ' +
+          'Örneklem yalnızca analitik onayı veren ziyaretçilerden oluşur.',
+      },
+      fields: [
+        { name: 'ad', type: 'text', required: true, label: 'Metrik (LCP/CLS/INP)' },
+        { name: 'cihaz', type: 'text', label: 'mobil / masaustu' },
+        { name: 'kova', type: 'number', label: 'Kova sırası', defaultValue: 0 },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+      ],
+    },
+    {
       name: 'ayrintiTemizlendi',
       type: 'checkbox',
       label: '90 gün doldu, ayrıntı temizlendi',

@@ -98,6 +98,18 @@ export interface TamponIcerigi {
   olay: Map<string, number>
   /** Katman B: niyet sınıfı → adet. */
   niyet: Map<Niyet, number>
+  /**
+   * Katman B: Core Web Vitals histogramı.
+   *
+   * ⚠️ Anahtar `metrik|cihaz|kovaSirasi`, değer o kovaya düşen ölçüm sayısı.
+   * HAM DEĞER SAKLANMIYOR: "LCP = 2.431 ms" tek bir ziyarete ait bir kayıt
+   * olurdu ve rota + cihaz + zamanla birleştiğinde tek bir ziyaretçiyi
+   * işaret edebilirdi. Kovaya düşen sayaç kimseye ait değil.
+   *
+   * ⚠️ Anahtar sayısı doğal olarak sınırlı: 3 metrik × 2 cihaz × ~10 kova.
+   * `AZAMI_ANAHTAR`e yaklaşmıyor, yine de aynı koruma uygulanıyor.
+   */
+  vital: Map<string, number>
   /** Katman B olayı gönderen istek sayısı — onay oranının payı. */
   onayliIstek: number
   /** Katman A'da görülen toplam istek — onay oranının paydası. */
@@ -112,6 +124,7 @@ function bosIcerik(gun: string): TamponIcerigi {
     cihaz: new Map(),
     ulke: new Map(),
     utmKaynak: new Map(),
+    vital: new Map(),
     sure: new Map(),
     hata: new Map(),
     olay: new Map(),
@@ -227,6 +240,32 @@ export function olaySay(ad: string, ayrinti: string | null, niyet: Niyet, adet =
  */
 export function hataSay(rota: string): void {
   artir(tampon().hata, rota)
+}
+
+/** Vital histogram anahtarı — `metrik|cihaz|kova`. */
+export function vitalAnahtari(ad: string, cihaz: CihazSinifi, kova: number): string {
+  return `${ad}${OLAY_AYIRICI}${cihaz}${OLAY_AYIRICI}${kova}`
+}
+
+export function vitalAnahtariniCoz(
+  anahtar: string,
+): { ad: string; cihaz: string; kova: number } | null {
+  const parcalar = anahtar.split(OLAY_AYIRICI)
+  if (parcalar.length !== 3) return null
+  const kova = Number(parcalar[2])
+  if (!Number.isInteger(kova) || kova < 0) return null
+  return { ad: parcalar[0] ?? '', cihaz: parcalar[1] ?? '', kova }
+}
+
+/**
+ * Bir Core Web Vitals ölçümünü histograma ekler.
+ *
+ * ⚠️ Değer değil KOVA geliyor. Kovaya düşürme işini uç yapıyor
+ * (`lib/olcum/vital.ts`); tampon ham sayıyı hiç görmüyor. Bir gün biri
+ * buraya ham değer yazmaya kalkarsa imza izin vermiyor.
+ */
+export function vitalSay(ad: string, cihaz: CihazSinifi, kova: number): void {
+  artir(tampon().vital, vitalAnahtari(ad, cihaz, kova), 1)
 }
 
 /** Onay oranının payı — Katman B'nin çalıştığı istek sayısı. */

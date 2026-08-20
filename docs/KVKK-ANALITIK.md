@@ -109,6 +109,37 @@ göster ama betiği yine de yükle" yaklaşımı bilinçli olarak reddedildi.
 - **Isı haritası ve oturum kaydı (session replay) YOK.** Bilinçli karar:
   ağır ve bu ölçekte gereksiz.
 
+### Core Web Vitals — sayfa hızı alan verisi
+
+**Ne ölçülüyor:** ziyaretçinin tarayıcısında sayfanın ne kadar hızlı
+boyandığı (LCP), düzenin ne kadar kaydığı (CLS) ve etkileşime ne kadar geç
+yanıt verildiği (INP). Üç sayı, sayfa başına.
+
+**Neden Katman B:** ölçüm bir tarayıcı betiği gerektiriyor. Ölçülen şeyin
+teknik bir zamanlama olması kural 8'i gevşetmiyor — kural betiğin niteliğine
+değil **varlığına** bakıyor. Onay yoksa `web-vitals` kütüphanesi hiç içe
+aktarılmıyor.
+
+**⚠️ HAM DEĞER SAKLANMIYOR.** "LCP = 2.431 ms" tek bir ziyarete ait bir
+kayıttır ve cihaz + zamanla birleştiğinde tek bir ziyaretçiyi işaret
+edebilir. Değer sunucuda bir **kovaya** düşürülüp atılıyor; veritabanına
+giden şey "bugün mobilde LCP'si 2–2,5 sn arasında olan 14 ölçüm oldu" —
+kimseye ait olmayan bir sayı.
+
+**⚠️ ROTA GÖNDERİLMİYOR.** Metrik + rota + cihaz + zaman birleşimi, az
+ziyaretçili bir sayfada tek bir kişiyi işaret edebilirdi. Yalnızca site
+geneli dağılım tutuluyor, cihaz sınıfı kırılımıyla.
+
+**⚠️ Örneklem onay verenlerle sınırlı ve bu panelde yazıyor.** Onay
+vermeyen ziyaretçilerin cihazları sistematik olarak farklı olabilir;
+sapmayı gizlemek ölçümün kendisinden zararlı olurdu.
+
+> ⚠️ **Avukata not:** Bu ölçüm ziyaretçi hakkında bir şey söylemiyor,
+> **site hakkında** bir şey söylüyor. Yine de tarayıcıda çalışan bir betik
+> olduğu için analitik onayına bağlandı. Aydınlatma metninde "sayfa
+> performansının ölçülmesi" ayrı bir madde olarak mı yazılmalı, yoksa
+> analitik başlığı altında mı kalmalı — kararınızı rica ederiz.
+
 ---
 
 ## 4. Saklama süreleri
@@ -117,6 +148,7 @@ göster ama betiği yine de yükle" yaklaşımı bilinçli olarak reddedildi.
 |---|---|---|
 | Olay ayrıntısı (hangi filtre, hangi alan, hangi bant) | **90 gün** | Sonrasında bakım göreviyle otomatik siliniyor |
 | Toplulaştırılmış günlük sayaçlar (sayfa, kaynak, cihaz, ülke) | Süresiz | Kişisel veri değil; yıllar arası karşılaştırma için gerekli |
+| Core Web Vitals kova sayaçları | Süresiz | Kişisel veri değil; ham değer hiç oluşmuyor, yalnızca histogram |
 
 Silme işi otomatik: `olcum-ayrinti-sil` bakım görevi her gece çalışıyor.
 

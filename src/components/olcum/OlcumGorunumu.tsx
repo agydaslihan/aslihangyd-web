@@ -1,11 +1,13 @@
 import type { AdminViewServerProps } from 'payload'
 
 import {
+  ASGARI_VITAL_ORNEK,
   raporuGetir,
   type AdSayi,
   type HaftaOzeti,
   type HuniAsamasi,
   type Rapor,
+  type VitalSatiri,
 } from '@/lib/olcum/rapor'
 import { KATMAN_ETIKETI, type Katman } from '@/lib/olcum/tipler'
 
@@ -201,6 +203,59 @@ export default async function GozlemGorunumu({ user }: AdminViewServerProps) {
               ))}
             </div>
           </Kutu>
+
+          {/* ── 3.8 ── */}
+          <Kutu>
+            <h2 style={baslik}>Gerçek cihazlarda hız (Core Web Vitals)</h2>
+            <p style={kucuk}>
+              ⚠️ Bu sayılar <strong>alan verisi</strong>: gerçek ziyaretçilerin gerçek cihazlarında
+              ölçüldü. Lighthouse&apos;un raporladığı sayı bir ölçüm değil bir modeldir — sayfayı
+              hızlı bir makinede yükleyip sonucu yavaş bir 4G telefona yansıtır (istek başına 562 ms
+              varsayım). Bir ölçümde laboratuvar 3,4 sn derken sayfa gerçekte 194 ms&apos;de
+              boyanıyordu.
+            </p>
+            <p style={kucuk}>
+              ⚠️ Örneklem yalnızca <strong>analitik onayı veren</strong> ziyaretçilerden oluşur
+              (Katman B). Onay vermeyenlerin cihazları sistematik olarak farklı olabilir; sapma
+              gizlenmiyor.
+            </p>
+
+            {rapor.vitaller.length === 0 ? (
+              <p style={metin}>
+                Henüz ölçüm yok. Analitik onayı veren ziyaretçiler geldikçe burası dolacak.
+              </p>
+            ) : (
+              <>
+                <Tablo
+                  basliklar={[
+                    'Metrik',
+                    'Cihaz',
+                    'p75 (yaklaşık)',
+                    'İyi',
+                    'Geliştirilmeli',
+                    'Zayıf',
+                    'Ölçüm',
+                  ]}
+                  satirlar={rapor.vitaller.map((satir) => [
+                    satir.ad,
+                    satir.cihaz === 'mobil' ? 'Mobil' : 'Masaüstü',
+                    vitalDegeri(satir),
+                    yuzde(satir.iyiYuzde),
+                    yuzde(satir.ortaYuzde),
+                    yuzde(satir.zayifYuzde),
+                    String(satir.ornek),
+                  ])}
+                />
+                <p style={kucuk}>
+                  ⚠️ p75 <strong>yaklaşıktır</strong>: ham değer saklanmadığı için histogramdan
+                  interpolasyonla hesaplanır (CrUX de böyle yapar). {ASGARI_VITAL_ORNEK} ölçümün
+                  altındaki satırlarda sayı gösterilmez — üç ölçümden p75 çıkarmak matematiksel
+                  olarak mümkün ama anlamsızdır.
+                </p>
+                <p style={kucuk}>Hedefler: LCP ≤ 2,5 sn · CLS ≤ 0,1 · INP ≤ 200 ms</p>
+              </>
+            )}
+          </Kutu>
         </>
       )}
 
@@ -221,6 +276,10 @@ export default async function GozlemGorunumu({ user }: AdminViewServerProps) {
           </li>
           <li>
             <strong>Üçüncü taraf analitik yok.</strong> Veri yurt dışına gitmiyor.
+          </li>
+          <li>
+            <strong>Hız ölçümünde ham değer saklanmıyor.</strong> &quot;LCP = 2.431 ms&quot; tek bir
+            ziyarete ait bir kayıt olurdu; yalnızca kova sayaçları tutuluyor.
           </li>
         </ul>
         <p style={kucuk}>Ayrıntı: docs/KVKK-ANALITIK.md</p>
@@ -334,6 +393,28 @@ function zamanYaz(iso: string): string {
     dateStyle: 'short',
     timeStyle: 'short',
   }).format(tarih)
+}
+
+/**
+ * p75 değerinin okunabilir hâli.
+ *
+ * ⚠️ CLS BİRİMSİZ, diğerleri milisaniye. Aynı sütunda "0,08" ile "2.431 ms"
+ * yan yana duracak; birimi metrikten türetmek tek doğru yol.
+ *
+ * ⚠️ `asgari` işareti kaybolmuyor: p75 üst sınırsız kovaya düştüyse gerçek
+ * değer bilinmiyor, yalnızca alt sınırı biliniyor. "10.000 ms" yazmak onu
+ * kesinmiş gibi gösterirdi.
+ */
+function vitalDegeri(satir: VitalSatiri): string {
+  if (satir.p75 === null) return `— (${satir.ornek} ölçüm)`
+
+  const onek = satir.p75Asgari ? '≥ ' : ''
+  if (satir.ad === 'CLS') return `${onek}${satir.p75.toFixed(3)}`
+  return `${onek}${Math.round(satir.p75)} ms`
+}
+
+function yuzde(deger: number | null): string {
+  return deger === null ? '—' : `%${Math.round(deger)}`
 }
 
 function Kutu({ children }: { children: React.ReactNode }) {

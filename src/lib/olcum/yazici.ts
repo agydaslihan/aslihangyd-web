@@ -5,7 +5,13 @@ import { getPayload } from 'payload'
 
 import type { GozlemGunluk as GozlemGunlukKaydi } from '@/payload-types'
 
-import { bosalt, olayAnahtariniCoz, type SureOzeti, type TamponIcerigi } from './tampon'
+import {
+  bosalt,
+  olayAnahtariniCoz,
+  vitalAnahtariniCoz,
+  type SureOzeti,
+  type TamponIcerigi,
+} from './tampon'
 
 /**
  * Tamponu veritabanına yazar.
@@ -179,6 +185,12 @@ export async function tamponuYaz(): Promise<boolean> {
         ['adet'],
       ),
       olaylar: birlestir(eski?.olaylar, olayDizisi(icerik), ['ad', 'ayrinti'], ['adet']),
+      /**
+       * ⚠️ Birleştirme anahtarı üç alan: aynı gün içinde iki boşaltma
+       * olduğunda "LCP/mobil/kova 4" satırı ikiye bölünmemeli, sayacı
+       * toplanmalı.
+       */
+      vitaller: birlestir(eski?.vitaller, vitalDizisi(icerik), ['ad', 'cihaz', 'kova'], ['adet']),
     }
 
     if (eski === null) {
@@ -205,6 +217,21 @@ export async function tamponuYaz(): Promise<boolean> {
   } finally {
     yaziliyor = false
   }
+}
+
+/**
+ * Vital histogram anahtarını satıra çevirir.
+ *
+ * ⚠️ Bölme kuralı burada DEĞİL, `tampon.ts` içinde — `olayDizisi` ile aynı
+ * gerekçe: anahtarı kuran ve bölen kod aynı dosyada durmalı.
+ */
+function vitalDizisi(icerik: TamponIcerigi): Record<string, unknown>[] {
+  return [...icerik.vital.entries()].flatMap(([anahtar, adet]) => {
+    const cozulmus = vitalAnahtariniCoz(anahtar)
+    // ⚠️ Çözülemeyen anahtar sessizce ATILIYOR: bozuk bir satır yazmak,
+    // histogramı okunamaz hâle getirirdi.
+    return cozulmus === null ? [] : [{ ...cozulmus, adet }]
+  })
 }
 
 /**

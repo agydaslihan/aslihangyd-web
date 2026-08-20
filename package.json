@@ -42,6 +42,7 @@
     "react-dom": "19.2.8",
     "server-only": "^0.0.1",
     "sharp": "^0.34.4",
+    "web-vitals": "^6.1.1",
     "zod": "^4.4.3"
   },
   "devDependencies": {

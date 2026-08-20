@@ -240,6 +240,18 @@ export interface GozlemGunluk {
         id?: string | null;
       }[]
     | null;
+  /**
+   * ⚠️ HAM DEĞER YOK — yalnızca kova sayaçları. "LCP = 2.431 ms" tek bir ziyarete ait bir kayıt olurdu; kovaya düşen sayaç kimseye ait değil. Örneklem yalnızca analitik onayı veren ziyaretçilerden oluşur.
+   */
+  vitaller?:
+    | {
+        ad: string;
+        cihaz?: string | null;
+        kova?: number | null;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
   ayrintiTemizlendi?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -1306,6 +1318,15 @@ export interface GozlemGunlukSelect<T extends boolean = true> {
         ad?: T;
         ayrinti?: T;
         niyet?: T;
+        adet?: T;
+        id?: T;
+      };
+  vitaller?:
+    | T
+    | {
+        ad?: T;
+        cihaz?: T;
+        kova?: T;
         adet?: T;
         id?: T;
       };
