@@ -1,3 +1,15 @@
+> # ⚠️ BU BELGE ESKİDİ — 6 AĞUSTOS 2026 DURUMU
+>
+> Bu denetimden sonra tasarım sistemi tamamen değişti (Aurora Luxury),
+> ölçüm altyapısı kuruldu ve 33 sayfanın tamamı yeniden ele alındı.
+> Buradaki modül durumları hâlâ doğru ama **görünüm, tipografi ve
+> performans bölümleri geçersiz**.
+>
+> Güncel kaynaklar:
+> - Tasarım: [`docs/AURORA-LUXURY.md`](AURORA-LUXURY.md)
+> - Ne yapıldı: [`docs/ilerleme/`](ilerleme/) (her PR kendi dosyasında)
+> - Senden bekleyenler: [`docs/SENDEN-BEKLENENLER.md`](SENDEN-BEKLENENLER.md)
+
 # Durum Denetimi
 
 **Tarih:** 6 Ağustos 2026

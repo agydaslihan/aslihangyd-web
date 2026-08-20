@@ -146,7 +146,25 @@ yalnızca gereken sayfada ve `prefers-reduced-motion` kapalıyken iniyor.
 
 ---
 
-## 4. Kapı — her aşamanın sonunda
+## 4. Kapı — ölçülen sonuçlar
+
+Son ölçüm (CI, 3 koşum medyanı, 2 cihaz × 3 sayfa):
+
+| | Masaüstü | Mobil |
+| --- | --- | --- |
+| Performans | 100 · 100 · 100 | 91 · 92 · 89 |
+| Erişilebilirlik | 100 | 100 |
+| En iyi uygulamalar | 100 | 100 |
+| SEO | 100 | 100 |
+| CLS | 0,000 | 0,000 |
+
+Ana sayfa 210,6 kB gzip (bütçe 320) · hareket kodu 50,3 kB (bütçe 120).
+
+⚠️ Mobil LCP raporda 3,2–3,7 sn görünüyor ve bu bir MODEL: aynı raporun ham
+metriği `observedLargestContentfulPaint = 276 ms`. Gerçek sayı alan
+verisinden gelecek (panelde Core Web Vitals bölümü).
+
+### Kapının kendisi
 
 - `pnpm typecheck && pnpm lint && pnpm test && pnpm build` → dördü de temiz
 - Kontrast: AA her çiftte, **iki temada** (`src/lib/tasarim/kontrast.test.ts`)
@@ -169,8 +187,12 @@ hangi bölüm, hangi animasyon, kaç kB.
 2. ✅ Hareket altyapısı + bundle dökümü
 3. ✅ Global UI (navbar, WhatsApp, geçişler, glassmorphism, mikro etkileşimler)
 4. ✅ Ana sayfa — bölüm bölüm
-5. Ölçüm + düzeltme ← sırada
-6. Diğer sayfalar
+5. ✅ Ölçüm + düzeltme — kapının tamamı geçildi
+6. ✅ Diğer sayfalar — 13 sayfa, 5 PR
+
+**Aurora Luxury uygulaması tamamlandı.** Kalan iş koddan değil veriden
+geliyor: Çorlu'nun havadan fotoğrafı, Aslıhan'ın portresi, koyu zemin için
+açık renkli logo. Üçü de `docs/SENDEN-BEKLENENLER.md` içinde.
 
 Her adım ayrı PR.
 
