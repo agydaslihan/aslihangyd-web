@@ -69,9 +69,23 @@ export function IlanKarti({
       data-yukselen
       className={sinif(
         'group bg-yuzey rounded-kart relative flex h-full flex-col overflow-hidden border-[0.5px] border-kenar',
-        // ⚠️ Yalnızca `box-shadow` ve `transform` — `all` DEĞİL. `all`,
-        // kartın içindeki her rengi de her karede canlandırırdı.
-        'transition-[box-shadow,transform] duration-[200ms] ease-[var(--cikis)] hover:shadow-kalkik focus-within:shadow-kart',
+        // ⚠️ Yalnızca `box-shadow`, `transform` ve `border-color` — `all`
+        // DEĞİL. `all`, kartın içindeki her rengi her karede canlandırırdı.
+        'transition-[box-shadow,transform,border-color] duration-[200ms] ease-[var(--cikis)]',
+        'hover:shadow-kalkik focus-within:shadow-kart',
+        /**
+         * ⚠️ ALTIN KENARLIK HOVER'DA BELİRİYOR — dekoratif, bilgi taşımıyor.
+         *
+         * Altın açık zeminde 2,28:1 ve WCAG 1.4.11'in 3:1 eşiğini geçmiyor;
+         * kabul edilebilir olmasının tek sebebi bu çizginin hiçbir şey
+         * söylememesi. Kartın sınırını duran hâlinde `border-kenar`
+         * taşıyor, hover'da yalnızca sıcaklık ekleniyor.
+         *
+         * ⚠️ `focus-visible` KARŞILIĞI YOK ve olmamalı: klavye odağını
+         * dekoratif bir renkle göstermek, odak halkasının yerine geçmiş
+         * gibi okunurdu. Odak halkası ayrı ve global.
+         */
+        'hover:border-gold-cizgi',
         sinifAdi,
       )}
     >
@@ -104,7 +118,7 @@ export function IlanKarti({
             yoksa hiç gösterilmez (CLAUDE.md kural 1). */}
         {ilan.tasinmazNo ? (
           <span
-            className="bg-yuzey/94 text-aksan-metin absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-rozet px-2 py-1"
+            className="cam text-aksan-metin absolute top-2.5 left-2.5 inline-flex items-center gap-1 rounded-rozet px-2 py-1"
             title={`Doğrulanmış İlan — Taşınmaz no: ${ilan.tasinmazNo}`}
           >
             <DogrulanmisIkon width={13} height={13} />

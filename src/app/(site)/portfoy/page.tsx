@@ -160,7 +160,19 @@ export default async function PortfoySayfasi({
           </Suspense>
 
           <div>
-            <div className="border-kenar mb-5 flex flex-wrap items-center justify-between gap-3 border-b-[0.5px] pb-4">
+            {/*
+              ⚠️ SONUÇ ŞERİDİ YAPIŞKAN VE CAM.
+
+              Uzun bir listede "kaç sonuç var" ve "neye göre sıralı"
+              bilgisi ekranın dışına çıkıyordu; ziyaretçi sıralamayı
+              değiştirmek için başa dönmek zorundaydı. Şerit artık başlığın
+              altına yapışıyor.
+
+              ⚠️ `z-20`: kartların üstünde ama mobil filtre sheet'inin
+              (`z-50`) ve başlığın (`z-40`) altında. Katman sırası bir kez
+              karışırsa şerit menünün üstüne çıkar.
+            */}
+            <div className="cam rounded-kart sticky top-20 z-20 mb-5 flex flex-wrap items-center justify-between gap-3 px-4 py-3">
               <p className="text-metin-2 text-govde-kucuk" aria-live="polite">
                 {sonuc.toplam > 0
                   ? `${sayiYaz(sonuc.toplam)} taşınmaz listeleniyor`

@@ -285,9 +285,22 @@ export function FiltrePaneli({
         action="/portfoy"
         className={sinif('transition-opacity', gecisSuruyor && 'opacity-60')}
       >
-        {/* ── Masaüstü: yapışkan sol panel ── */}
+        {/*
+          ── Masaüstü: yapışkan sol panel ──
+
+          ⚠️ `cam` YÜZEY: panel liste boyunca ekranda kalıyor ve altından
+          kartlar geçiyor. Opak bir kutu o hareketi kesip paneli sayfadan
+          koparıyordu; cam, panelin sayfanın üstünde DURDUĞUNU söylüyor.
+
+          ⚠️ `cam` mobilde otomatik olarak düz renge düşüyor (globals.css)
+          ve bu panel zaten `lg:block` — yani bulanıklık yalnızca geniş
+          ekranda, alt sheet'te değil.
+
+          ⚠️ `top-24`: 72 px başlık + nefes. Başlık yapışkan olduğu için
+          panel onun altına girmemeli.
+        */}
         <div className="hidden lg:block">
-          <div className="sticky top-28 max-h-[calc(100dvh-9rem)] overflow-y-auto pr-1">
+          <div className="cam rounded-buyuk sticky top-24 max-h-[calc(100dvh-8rem)] overflow-y-auto p-5">
             {govde}
           </div>
         </div>
