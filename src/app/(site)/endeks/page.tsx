@@ -2,7 +2,8 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
-import { Bolum } from '@/components/ui/Bolum'
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
+import { Bolum, Eyebrow } from '@/components/ui/Bolum'
 import { Feragat, VeriNotu } from '@/components/ui/Feragat'
 import { Rozet } from '@/components/ui/Rozet'
 import { sayiYaz } from '@/lib/bicimlendirme'
@@ -44,30 +45,38 @@ export default async function EndeksSayfasi() {
 
   return (
     <>
-      <div className="kapsayici py-10 sm:py-14">
-        <header className="mb-8 flex max-w-2xl flex-col gap-3">
-          <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-            Çorlu Konut İstenen Fiyat Endeksi
-          </h1>
-          <p className="text-metin-2 leading-relaxed">
-            Çorlu&apos;da konut fiyatlarının aylık seyri. Tabakalı medyan ve sabit ağırlıklı sepet
-            yöntemiyle hesaplanır.{' '}
-            <Link href="/endeks-metodolojisi" className="text-vurgu underline underline-offset-2">
-              Metodolojinin tamamı
-            </Link>
-          </p>
+      <SayfaVitrini>
+        <Eyebrow>Aylık seri</Eyebrow>
+        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Çorlu Konut İstenen Fiyat Endeksi
+        </h1>
+        <p className="text-metin-2 mt-5 text-govde leading-relaxed">
+          Çorlu&apos;da konut fiyatlarının aylık seyri. Tabakalı medyan ve sabit ağırlıklı sepet
+          yöntemiyle hesaplanır.{' '}
+          <Link href="/endeks-metodolojisi" className="text-vurgu underline underline-offset-2">
+            Metodolojinin tamamı
+          </Link>
+        </p>
+      </SayfaVitrini>
 
-          {/* ⚠️ Serinin adında "İstenen Fiyat" geçer ve bu gizlenmez.
-              İlan fiyatları pazarlık payı içerir; gerçekleşen satış
-              fiyatıyla karıştırmak endeksi sistematik olarak şişirir. */}
-          <div className="border-kenar bg-uyari-zemin rounded-kart border-[0.5px] p-4">
-            <p className="text-govde-kucuk leading-relaxed">
-              <strong className="font-medium">Bu bir istenen fiyat endeksidir.</strong> Gözlemler
-              ilan fiyatlarına dayanır ve ilan fiyatları pazarlık payı içerir. Gerçekleşen satış
-              fiyatları ayrı bir seri olarak tutulur.
-            </p>
-          </div>
-        </header>
+      <div className="kapsayici py-12 sm:py-16">
+        {/*
+          ⚠️ Serinin adında "İstenen Fiyat" geçer ve bu gizlenmez. İlan
+          fiyatları pazarlık payı içerir; gerçekleşen satış fiyatıyla
+          karıştırmak endeksi sistematik olarak şişirir.
+
+          ⚠️ Uyarı BANDIN İÇİNE ALINMADI, ilk içerik olarak bırakıldı: bant
+          dekoratif ve sakin; içine konan bir uyarı kutusu hem bandın
+          ritmini bozar hem de uyarıyı süs gibi gösterirdi. Burada, endeks
+          değerinin hemen üstünde duruyor — okunması gereken sıra bu.
+        */}
+        <div className="border-kenar bg-uyari-zemin rounded-kart mb-8 max-w-2xl border-[0.5px] p-4">
+          <p className="text-govde-kucuk leading-relaxed">
+            <strong className="text-metin font-medium">Bu bir istenen fiyat endeksidir.</strong>{' '}
+            Gözlemler ilan fiyatlarına dayanır ve ilan fiyatları pazarlık payı içerir. Gerçekleşen
+            satış fiyatları ayrı bir seri olarak tutulur.
+          </p>
+        </div>
 
         {sonAy ? (
           <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-6">

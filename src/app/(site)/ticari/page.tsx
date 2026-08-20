@@ -2,8 +2,9 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 
 import { IlanKarti } from '@/components/ilan/IlanKarti'
-import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
+import { Bolum, BolumBasligi, Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
 import { Buton } from '@/components/ui/Buton'
 import { AlanIkon, GrafikIkon, KonumIkon, OkIkon, WhatsappIkon } from '@/components/ui/Ikon'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
@@ -44,42 +45,44 @@ export default async function TicariSayfasi() {
 
   return (
     <>
-      <section className="border-kenar border-b-[0.5px]">
-        <div className="kapsayici py-14 sm:py-20">
-          <div className="max-w-3xl">
-            <p className="text-vurgu text-mikro font-medium tracking-[0.1em] uppercase">
-              Ticari gayrimenkul
-            </p>
+      {/*
+        ⚠️ KENDİ BANDI VARDI, ORTAK BANDA GEÇTİ.
 
-            <h1 className="mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-              Fabrika, depo, sanayi arsası
-            </h1>
+        Sayfa zaten tam genişlikte bir açılışla başlıyordu ama ölçüleri
+        kendi içinde yazılmıştı: farklı dikey ritim, `tracking-[0.1em]` gibi
+        jetona bağlı olmayan bir eyebrow ve gold zemin sıcaklığı yok. Aynı
+        işi yapan iki ayrı kurulum, ilk değişiklikte ayrışır.
+      */}
+      <SayfaVitrini>
+        <Eyebrow>Ticari gayrimenkul</Eyebrow>
 
-            <p className="text-metin-2 mt-6 max-w-2xl text-baslik-3 leading-relaxed">
-              Ticari gayrimenkulde karar, konut kararından farklı çalışır. Metrekare fiyatı tek
-              başına hiçbir şey söylemez; tavan yüksekliği, vinç kapasitesi, trafo gücü, tır manevra
-              alanı ve yola çıkış mesafesi söyler. Bu tarafta ayrı bir dille çalışıyoruz.
-            </p>
+        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Fabrika, depo, sanayi arsası
+        </h1>
 
-            <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-              <Buton href="/portfoy?kategori=depo" boyut="buyuk">
-                Ticari portföyü görün
-                <OkIkon width={18} height={18} />
-              </Buton>
-              {whatsapp ? (
-                <Buton href={whatsapp} dis gorunum="ikincil" boyut="buyuk">
-                  <WhatsappIkon width={18} height={18} />
-                  İhtiyacınızı anlatın
-                </Buton>
-              ) : (
-                <Buton href="/iletisim?tip=ticari" gorunum="ikincil" boyut="buyuk">
-                  İhtiyacınızı anlatın
-                </Buton>
-              )}
-            </div>
-          </div>
+        <p className="text-metin-2 mt-5 text-govde leading-relaxed">
+          Ticari gayrimenkulde karar, konut kararından farklı çalışır. Metrekare fiyatı tek başına
+          hiçbir şey söylemez; tavan yüksekliği, vinç kapasitesi, trafo gücü, tır manevra alanı ve
+          yola çıkış mesafesi söyler. Bu tarafta ayrı bir dille çalışıyoruz.
+        </p>
+
+        <div className="mt-8 flex flex-col gap-3 sm:flex-row">
+          <Buton href="/portfoy?kategori=depo" boyut="buyuk">
+            Ticari portföyü görün
+            <OkIkon width={18} height={18} />
+          </Buton>
+          {whatsapp ? (
+            <Buton href={whatsapp} dis gorunum="ikincil" boyut="buyuk">
+              <WhatsappIkon width={18} height={18} />
+              İhtiyacınızı anlatın
+            </Buton>
+          ) : (
+            <Buton href="/iletisim?tip=ticari" gorunum="ikincil" boyut="buyuk">
+              İhtiyacınızı anlatın
+            </Buton>
+          )}
         </div>
-      </section>
+      </SayfaVitrini>
 
       <Bolum>
         <BolumBasligi

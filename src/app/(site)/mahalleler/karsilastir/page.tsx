@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 import Link from 'next/link'
 
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
 import { MahalleSecici } from '@/components/mahalle/MahalleSecici'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
@@ -36,64 +37,73 @@ export default async function KarsilastirmaSayfasi({
     .filter((mahalle): mahalle is Mahalleler => mahalle !== undefined)
     .slice(0, AZAMI_SECIM)
 
+  /**
+   * ⚠️ SAYFA YOLU BANDIN İÇİNDE, EYEBROW YERİNE.
+   *
+   * İkisi de aynı işi yapıyor: "buradasın" demek. Yan yana kullanmak aynı
+   * bilgiyi iki farklı biçimde tekrar etmek olurdu; alt sayfada kırıntı
+   * daha çok şey söylüyor çünkü üst sayfaya dönüş yolunu da taşıyor.
+   */
   return (
-    <div className="kapsayici py-10 sm:py-14">
-      <nav aria-label="Sayfa yolu" className="text-metin-3 mb-6 text-govde-kucuk">
-        <Link href="/mahalleler" className="hover:text-metin underline-offset-2 hover:underline">
-          Mahalleler
-        </Link>
-        <span aria-hidden> / </span>
-        <span aria-current="page">Karşılaştır</span>
-      </nav>
+    <>
+      <SayfaVitrini>
+        <nav aria-label="Sayfa yolu" className="text-metin-3 mb-5 text-govde-kucuk">
+          <Link href="/mahalleler" className="hover:text-metin underline-offset-2 hover:underline">
+            Mahalleler
+          </Link>
+          <span aria-hidden> / </span>
+          <span aria-current="page">Karşılaştır</span>
+        </nav>
 
-      <header className="mb-8 flex max-w-2xl flex-col gap-3">
-        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        <h1 className="text-metin font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
           Mahalle karşılaştırma
         </h1>
-        <p className="text-metin-2 leading-relaxed">
+        <p className="text-metin-2 mt-5 text-govde leading-relaxed">
           En fazla {AZAMI_SECIM} mahalleyi yan yana koyun. Her rakamın yanında kaç gözleme
           dayandığını (n) gösteriyoruz — az gözleme dayanan bir ortalama, ortalama değildir.
         </p>
-      </header>
+      </SayfaVitrini>
 
-      {hepsi.length === 0 ? (
-        <BosDurum
-          baslik="Karşılaştırılacak mahalle yok"
-          neden="Mahalle sayfaları yayına alındığında burada karşılaştırma yapabileceksiniz."
-          eylem={
-            <Buton href="/mahalleler" gorunum="ikincil">
-              Mahalleler
-            </Buton>
-          }
-        />
-      ) : (
-        <>
-          <MahalleSecici
-            mahalleler={hepsi.map((mahalle) => ({ slug: mahalle.slug, ad: mahalle.ad }))}
-            secili={secilenler.map((mahalle) => mahalle.slug)}
-            azami={AZAMI_SECIM}
+      <div className="kapsayici py-12 sm:py-16">
+        {hepsi.length === 0 ? (
+          <BosDurum
+            baslik="Karşılaştırılacak mahalle yok"
+            neden="Mahalle sayfaları yayına alındığında burada karşılaştırma yapabileceksiniz."
+            eylem={
+              <Buton href="/mahalleler" gorunum="ikincil">
+                Mahalleler
+              </Buton>
+            }
           />
+        ) : (
+          <>
+            <MahalleSecici
+              mahalleler={hepsi.map((mahalle) => ({ slug: mahalle.slug, ad: mahalle.ad }))}
+              secili={secilenler.map((mahalle) => mahalle.slug)}
+              azami={AZAMI_SECIM}
+            />
 
-          {secilenler.length > 0 ? (
-            <>
-              <KarsilastirmaTablosu mahalleler={secilenler} />
-              <Feragat
-                sinifAdi="mt-5 max-w-2xl"
-                ek="Rakamlar istenen fiyat gözlemlerine dayanır; gerçekleşen satış fiyatlarından farklı olabilir."
-              />
-            </>
-          ) : (
-            <div className="mt-8">
-              <BosDurum
-                baslik="Karşılaştırmak için mahalle seçin"
-                neden="Yukarıdaki listeden en az bir mahalle seçtiğinizde rakamlar yan yana görünecek."
-                sade
-              />
-            </div>
-          )}
-        </>
-      )}
-    </div>
+            {secilenler.length > 0 ? (
+              <>
+                <KarsilastirmaTablosu mahalleler={secilenler} />
+                <Feragat
+                  sinifAdi="mt-5 max-w-2xl"
+                  ek="Rakamlar istenen fiyat gözlemlerine dayanır; gerçekleşen satış fiyatlarından farklı olabilir."
+                />
+              </>
+            ) : (
+              <div className="mt-8">
+                <BosDurum
+                  baslik="Karşılaştırmak için mahalle seçin"
+                  neden="Yukarıdaki listeden en az bir mahalle seçtiğinizde rakamlar yan yana görünecek."
+                  sade
+                />
+              </div>
+            )}
+          </>
+        )}
+      </div>
+    </>
   )
 }
 

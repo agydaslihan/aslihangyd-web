@@ -11,7 +11,7 @@ import { MahalleKarti } from '@/components/mahalle/MahalleKarti'
 import { EndeksSeridi } from '@/components/endeks/EndeksSeridi'
 import { GuvenSeridi } from '@/components/duzen/GuvenSeridi'
 import { Feragat } from '@/components/ui/Feragat'
-import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
+import { Bolum, BolumBasligi, Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import {
@@ -543,9 +543,7 @@ function AslihanBolumu({
         </div>
 
         <div className="flex flex-col gap-4">
-          <p className="text-aksan-metin text-eyebrow font-medium uppercase">
-            Kim danışmanlık veriyor
-          </p>
+          <Eyebrow>Kim danışmanlık veriyor</Eyebrow>
           <h2 className="font-serif text-baslik-2-mobil font-medium sm:text-baslik-2">
             Aslıhan — Çorlu&apos;da gayrimenkul danışmanı
           </h2>

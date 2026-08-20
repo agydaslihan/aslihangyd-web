@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
-import { Bolum } from '@/components/ui/Bolum'
+import { Bolum, Eyebrow } from '@/components/ui/Bolum'
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { DogrulanmisIkon } from '@/components/ui/Ikon'
@@ -50,17 +51,18 @@ export default async function HakkimizdaSayfasi() {
 
   return (
     <>
-      <div className="kapsayici py-10 sm:py-14">
-        <header className="mb-8 flex max-w-2xl flex-col gap-3">
-          <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-            Hakkımızda
-          </h1>
-          <p className="text-metin-2 leading-relaxed">
-            {hakkimizda.girisMetni ??
-              'Çorlu’da gayrimenkul danışmanlığı yapıyoruz. İşimizin merkezinde ilan değil, karar var.'}
-          </p>
-        </header>
+      <SayfaVitrini>
+        <Eyebrow>Kurumsal</Eyebrow>
+        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Hakkımızda
+        </h1>
+        <p className="text-metin-2 mt-5 text-govde leading-relaxed">
+          {hakkimizda.girisMetni ??
+            'Çorlu’da gayrimenkul danışmanlığı yapıyoruz. İşimizin merkezinde ilan değil, karar var.'}
+        </p>
+      </SayfaVitrini>
 
+      <div className="kapsayici py-12 sm:py-16">
         {/*
           ⚠️ Portre metnin YANINDA, üstünde değil: metnin ilk satırı
           sayfanın en çok okunan yeri ve bir fotoğraf onu aşağı iterdi.

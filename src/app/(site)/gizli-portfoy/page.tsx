@@ -1,6 +1,7 @@
 import type { Metadata } from 'next'
 
-import { Bolum } from '@/components/ui/Bolum'
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
+import { Bolum, Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { KilitliKart } from '@/components/ui/KilitliKart'
@@ -31,38 +32,33 @@ export default async function GizliPortfoySayfasi() {
 
   return (
     <>
-      <section className="border-kenar border-b-[0.5px]">
-        <div className="kapsayici py-12 sm:py-16">
-          <div className="max-w-3xl">
-            <p className="text-vurgu text-mikro font-medium tracking-[0.1em] uppercase">
-              Off-market
-            </p>
+      <SayfaVitrini>
+        <Eyebrow>Off-market</Eyebrow>
 
-            <h1 className="mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
-              Yayınlanmayan portföy
-            </h1>
+        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          Yayınlanmayan portföy
+        </h1>
 
-            {sayi > 0 ? (
-              <p className="text-metin-2 mt-4 text-baslik-3">
-                Şu anda <strong className="rakam text-metin font-medium">{sayiYaz(sayi)}</strong>{' '}
-                taşınmaz — hiçbir ilan sitesinde yok.
-              </p>
-            ) : null}
+        {/* ⚠️ Sayı SAYILIYOR; sıfırsa cümle hiç kurulmuyor (kural 2). */}
+        {sayi > 0 ? (
+          <p className="text-metin-2 mt-5 text-govde leading-relaxed">
+            Şu anda <strong className="rakam text-metin font-medium">{sayiYaz(sayi)}</strong>{' '}
+            taşınmaz — hiçbir ilan sitesinde yok.
+          </p>
+        ) : null}
 
-            <p className="text-metin-2 mt-4 max-w-2xl leading-relaxed">
-              Bazı mülk sahipleri taşınmazlarının ilan sitelerinde görünmesini istemez: kiracısı
-              bilmesin, komşusu duymasın, iş ortakları öğrenmesin. Bu taşınmazları yayınlamıyoruz —
-              ama var olduklarını söylüyoruz.
-            </p>
+        <p className="text-metin-2 mt-4 text-govde leading-relaxed">
+          Bazı mülk sahipleri taşınmazlarının ilan sitelerinde görünmesini istemez: kiracısı
+          bilmesin, komşusu duymasın, iş ortakları öğrenmesin. Bu taşınmazları yayınlamıyoruz — ama
+          var olduklarını söylüyoruz.
+        </p>
 
-            <p className="text-metin-3 mt-3 max-w-2xl text-govde-kucuk leading-relaxed">
-              Aşağıda mahalle, kategori, büyüklük aralığı ve fiyat bandını görüyorsunuz. Tam adres,
-              fotoğraflar ve kat planı yalnızca erişim talebi onaylandıktan sonra paylaşılır. Onay
-              adımı elle yapılır ve bu bilinçlidir.
-            </p>
-          </div>
-        </div>
-      </section>
+        <p className="text-metin-3 mt-3 text-govde-kucuk leading-relaxed">
+          Aşağıda mahalle, kategori, büyüklük aralığı ve fiyat bandını görüyorsunuz. Tam adres,
+          fotoğraflar ve kat planı yalnızca erişim talebi onaylandıktan sonra paylaşılır. Onay adımı
+          elle yapılır ve bu bilinçlidir.
+        </p>
+      </SayfaVitrini>
 
       <Bolum>
         {kayitlar.length > 0 ? (

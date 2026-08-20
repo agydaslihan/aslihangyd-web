@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react'
 
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
 import { KullanimIsareti } from '@/components/olcum/KullanimIsareti'
+import { Eyebrow } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
 import { Feragat } from '@/components/ui/Feragat'
 import { BilgiIkon } from '@/components/ui/Ikon'
@@ -33,48 +35,60 @@ export function HesaplayiciKabugu({
   /** Vergi hesabı içeriyorsa mali müşavir ibaresi eklenir. */
   vergiIcerir?: boolean
 }) {
+  /**
+   * ⚠️ AÇILIŞ BANDI KABUKTA, YEDİ SAYFADA AYRI AYRI DEĞİL.
+   *
+   * Hesaplayıcıların tamamı bu kabuğu kullanıyor; bandı sayfalara tek tek
+   * koymak yedi yerde tekrar etmek ve ilk unutulan yerde ritmi bozmak
+   * olurdu — `BolumBasligi` içindeki sahne geçişiyle aynı gerekçe.
+   */
   return (
-    <div className="kapsayici py-10 sm:py-14">
-      <header className="mb-8 flex max-w-2xl flex-col gap-3">
-        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">{baslik}</h1>
-        <p className="text-metin-2 leading-relaxed">{aciklama}</p>
-      </header>
+    <>
+      <SayfaVitrini>
+        <Eyebrow>Yatırımcı aracı</Eyebrow>
+        <h1 className="text-metin mt-4 font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+          {baslik}
+        </h1>
+        <p className="text-metin-2 mt-5 text-govde leading-relaxed">{aciklama}</p>
+      </SayfaVitrini>
 
-      {/* Ölçüm: sayfayı açmak değil, bir değer girmek 'kullanım' sayılıyor. */}
-      <KullanimIsareti>{children}</KullanimIsareti>
+      <div className="kapsayici py-12 sm:py-16">
+        {/* Ölçüm: sayfayı açmak değil, bir değer girmek 'kullanım' sayılıyor. */}
+        <KullanimIsareti>{children}</KullanimIsareti>
 
-      <div className="border-kenar mt-10 max-w-2xl border-t-[0.5px] pt-6">
-        <details className="group">
-          <summary className="flex cursor-pointer list-none items-center gap-2 text-govde-kucuk font-medium marker:content-none">
-            <BilgiIkon width={16} height={16} className="text-metin-3" />
-            Bu hesap nasıl yapılıyor?
-            <span className="text-metin-3 ml-auto transition-transform group-open:rotate-45">
-              +
-            </span>
-          </summary>
-          <div className="text-metin-2 mt-3 space-y-3 text-govde-kucuk leading-relaxed">
-            {yontem}
+        <div className="border-kenar mt-10 max-w-2xl border-t-[0.5px] pt-6">
+          <details className="group">
+            <summary className="flex cursor-pointer list-none items-center gap-2 text-govde-kucuk font-medium marker:content-none">
+              <BilgiIkon width={16} height={16} className="text-metin-3" />
+              Bu hesap nasıl yapılıyor?
+              <span className="text-metin-3 ml-auto transition-transform group-open:rotate-45">
+                +
+              </span>
+            </summary>
+            <div className="text-metin-2 mt-3 space-y-3 text-govde-kucuk leading-relaxed">
+              {yontem}
+            </div>
+          </details>
+
+          <div className="mt-6 flex flex-col gap-2">
+            {parametreTarihi ? (
+              <p className="text-metin-3 text-mikro">
+                Vergi ve harç oranları <strong>{tarihiYaz(parametreTarihi)}</strong> itibarıyla
+                güncellenmiştir.
+              </p>
+            ) : null}
+
+            <Feragat
+              ek={
+                vergiIcerir
+                  ? 'Vergi hesabı basitleştirilmiştir ve kişisel durumunuza göre değişir; mali müşavirinize danışın.'
+                  : undefined
+              }
+            />
           </div>
-        </details>
-
-        <div className="mt-6 flex flex-col gap-2">
-          {parametreTarihi ? (
-            <p className="text-metin-3 text-mikro">
-              Vergi ve harç oranları <strong>{tarihiYaz(parametreTarihi)}</strong> itibarıyla
-              güncellenmiştir.
-            </p>
-          ) : null}
-
-          <Feragat
-            ek={
-              vergiIcerir
-                ? 'Vergi hesabı basitleştirilmiştir ve kişisel durumunuza göre değişir; mali müşavirinize danışın.'
-                : undefined
-            }
-          />
         </div>
       </div>
-    </div>
+    </>
   )
 }
 

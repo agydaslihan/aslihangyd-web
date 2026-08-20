@@ -1,6 +1,7 @@
 'use client'
 
 import { useRouter, useSearchParams } from 'next/navigation'
+import { Eyebrow } from '@/components/ui/Bolum'
 
 import { gozlemOlayi } from '@/lib/olcum/istemci'
 import { fiyatBandi } from '@/lib/olcum/tipler'
@@ -205,9 +206,7 @@ export function FiltrePaneli({
           Türkiye'de hiçbir emlak sitesinde yok. Görsel olarak da ayrışsın
           diye gold ince çizgiyle çerçeveleniyor (dekoratif). */}
       <div className="border-gold-cizgi rounded-kart border p-4">
-        <p className="text-aksan-metin text-eyebrow mb-1 font-medium uppercase">
-          Yatırım filtreleri
-        </p>
+        <Eyebrow sinifAdi="mb-1 block">Yatırım filtreleri</Eyebrow>
         <p className="text-metin-3 text-mikro mb-4">
           Kira verisi girilmemiş ilanlar bu filtreler kullanıldığında listeden düşer — bilmediğimiz
           bir rakamı koşulu sağlıyormuş gibi gösteremeyiz.

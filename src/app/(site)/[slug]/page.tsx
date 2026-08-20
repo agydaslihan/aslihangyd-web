@@ -2,6 +2,7 @@ import type { Metadata } from 'next'
 import Link from 'next/link'
 import { notFound } from 'next/navigation'
 
+import { SayfaVitrini } from '@/components/duzen/SayfaVitrini'
 import { Buton } from '@/components/ui/Buton'
 import { ZenginMetin } from '@/components/ui/ZenginMetin'
 import { mutlakAdres } from '@/lib/site'
@@ -43,17 +44,25 @@ export default async function CmsSayfasi({ params }: SayfaOzellikleri) {
   if (!sayfa) notFound()
 
   return (
-    <div className="kapsayici py-10 sm:py-14">
-      <nav aria-label="Sayfa yolu" className="text-metin-3 mb-6 text-govde-kucuk">
-        <Link href="/" className="hover:text-metin underline-offset-2 hover:underline">
-          Ana sayfa
-        </Link>
-        <span aria-hidden> / </span>
-        <span aria-current="page">{sayfa.baslik}</span>
-      </nav>
+    <>
+      {/*
+        ⚠️ HUKUKİ METİNLER DE AYNI BANDI ALIYOR.
 
-      <article className="max-w-2xl">
-        <h1 className="font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
+        Ayrı tutmak — "bunlar sıkıcı sayfalar" — tam da bu sayfaların
+        okunmamasına yol açardı. Bandın taşıdığı tek fazladan bilgi son
+        güncelleme tarihi ve o, hukuki bir metinde başlığın hemen yanında
+        durması gereken şey.
+      */}
+      <SayfaVitrini>
+        <nav aria-label="Sayfa yolu" className="text-metin-3 mb-5 text-govde-kucuk">
+          <Link href="/" className="hover:text-metin underline-offset-2 hover:underline">
+            Ana sayfa
+          </Link>
+          <span aria-hidden> / </span>
+          <span aria-current="page">{sayfa.baslik}</span>
+        </nav>
+
+        <h1 className="text-metin font-serif text-baslik-1-mobil font-medium sm:text-baslik-1">
           {sayfa.baslik}
         </h1>
 
@@ -64,28 +73,30 @@ export default async function CmsSayfasi({ params }: SayfaOzellikleri) {
         ) : null}
 
         {sayfa.ozet ? (
-          <p className="text-metin-2 mt-4 text-baslik-3 leading-relaxed">{sayfa.ozet}</p>
+          <p className="text-metin-2 mt-5 text-govde leading-relaxed">{sayfa.ozet}</p>
         ) : null}
+      </SayfaVitrini>
 
-        {sayfa.icerik ? (
-          <div className="mt-8">
+      <div className="kapsayici py-12 sm:py-16">
+        <article className="max-w-2xl">
+          {sayfa.icerik ? (
             <ZenginMetin veri={sayfa.icerik} />
-          </div>
-        ) : (
-          <div className="border-kenar bg-yuzey-2/60 rounded-kart mt-8 border-[0.5px] border-dashed p-6">
-            <h2 className="font-sans text-govde font-medium">Bu metin hazırlanıyor</h2>
-            <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
-              Bu sayfanın içeriği hukuk danışmanımız tarafından hazırlanıyor. Metin hazır olana
-              kadar, bu konudaki sorularınızı doğrudan bize iletebilirsiniz.
-            </p>
-            <div className="mt-4">
-              <Buton href="/iletisim" gorunum="ikincil" boyut="kucuk">
-                Bize ulaşın
-              </Buton>
+          ) : (
+            <div className="border-kenar bg-yuzey-2/60 rounded-kart border-[0.5px] border-dashed p-6">
+              <h2 className="font-sans text-govde font-medium">Bu metin hazırlanıyor</h2>
+              <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">
+                Bu sayfanın içeriği hukuk danışmanımız tarafından hazırlanıyor. Metin hazır olana
+                kadar, bu konudaki sorularınızı doğrudan bize iletebilirsiniz.
+              </p>
+              <div className="mt-4">
+                <Buton href="/iletisim" gorunum="ikincil" boyut="kucuk">
+                  Bize ulaşın
+                </Buton>
+              </div>
             </div>
-          </div>
-        )}
-      </article>
-    </div>
+          )}
+        </article>
+      </div>
+    </>
   )
 }
