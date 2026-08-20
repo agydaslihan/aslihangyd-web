@@ -234,7 +234,17 @@ function SonucEkrani({
 
   return (
     <div className="flex flex-col gap-5">
-      <div className="border-kenar bg-yuzey shadow-kart rounded-kart border-[0.5px] p-6 sm:p-8">
+      {/*
+        ⚠️ SONUÇ KARTI ALTIN ÇERÇEVE ALIYOR — sayfanın cevabı burası.
+
+        Şartname altına üç yer ayırıyor: bölüm ayraçları, yatırım kartının
+        çerçevesi ve kira çarpanı satırının üst çizgisi. Değerleme sonucu
+        ikincisiyle aynı rol: sayfanın taşıdığı tek rakam.
+
+        ⚠️ Çerçeve DEKORATİF: sonucun kendisi metinle de anlatılıyor, renk
+        tek başına bilgi taşımıyor (WCAG 1.4.1).
+      */}
+      <div className="border-gold-cizgi bg-yuzey shadow-kart rounded-buyuk border p-6 sm:p-8">
         <p className="text-metin-3 text-mikro font-medium">Tahmini değer aralığı</p>
 
         <p className="rakam text-rakam mt-2 font-medium sm:text-rakam-buyuk">
