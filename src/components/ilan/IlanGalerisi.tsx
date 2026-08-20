@@ -1,8 +1,8 @@
-import Image from 'next/image'
-
 import { VeriBekleniyorIkon } from '@/components/ui/Ikon'
 import type { Ilanlar, Medya } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
+
+import { GaleriIzgarasi } from './GaleriIzgarasi'
 
 /**
  * İlan görselleri.
@@ -12,6 +12,14 @@ import { bulanikOzellikleri } from '@/lib/medya/bulanik'
  * Bunun yerine: büyük kapak + yan ızgara, hepsi doğrudan görünür.
  *
  * İlk görsel `priority` ile yüklenir — sayfanın LCP öğesi odur.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BU BİLEŞEN SUNUCUDA KALIYOR, BÜYÜTME İSTEMCİYE İNİYOR.
+ *
+ * Payload kayıtları (`Medya`) istemciye gönderilecek veriden çok daha
+ * büyük: her görselin tüm boyut varyantları, tarihleri, bütçe ölçümleri.
+ * Burada yalnızca üç alan seçilip geçiliyor — RSC yükü buna göre küçülüyor.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 export function IlanGalerisi({ ilan }: { ilan: Ilanlar }) {
   const gorseller = (ilan.gorseller ?? [])
@@ -27,42 +35,17 @@ export function IlanGalerisi({ ilan }: { ilan: Ilanlar }) {
     )
   }
 
-  const [kapak, ...digerleri] = gorseller
-  const yan = digerleri.slice(0, 4)
-
   return (
-    <div className="grid gap-2 sm:grid-cols-[2fr_1fr] sm:gap-3">
-      <div className="bg-yuzey-2 rounded-kart relative aspect-4/3 overflow-hidden sm:aspect-3/2">
-        <Image
-          src={kapak!.url ?? ''}
-          alt={kapak!.alt ?? ilan.baslik}
-          fill
-          sizes="(max-width: 640px) 100vw, 66vw"
-          className="object-cover"
-          priority
-          {...bulanikOzellikleri(kapak)}
-        />
-      </div>
-
-      {yan.length > 0 ? (
-        <div className="grid grid-cols-4 gap-2 sm:grid-cols-2 sm:gap-3">
-          {yan.map((gorsel) => (
-            <div
-              key={gorsel.id}
-              className="bg-yuzey-2 rounded-kart relative aspect-square overflow-hidden"
-            >
-              <Image
-                src={gorsel.url ?? ''}
-                alt={gorsel.alt ?? ''}
-                fill
-                sizes="(max-width: 640px) 25vw, 17vw"
-                className="object-cover"
-                {...bulanikOzellikleri(gorsel)}
-              />
-            </div>
-          ))}
-        </div>
-      ) : null}
-    </div>
+    <GaleriIzgarasi
+      baslik={ilan.baslik}
+      gorseller={gorseller
+        .filter((gorsel) => typeof gorsel.url === 'string' && gorsel.url !== '')
+        .map((gorsel) => ({
+          url: gorsel.url as string,
+          alt: gorsel.alt ?? '',
+          // ⚠️ Bulanık yer tutucu tek kaynaktan: `bulanikOzellikleri`.
+          bulanik: bulanikOzellikleri(gorsel).blurDataURL,
+        }))}
+    />
   )
 }
