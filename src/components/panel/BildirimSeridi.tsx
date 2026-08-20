@@ -26,6 +26,12 @@ import type { Bildirim, Oncelik } from '@/lib/bildirim/motor'
  */
 
 const ONCELIK_ETIKETI: Record<Oncelik, string> = {
+  /**
+   * ⚠️ "Erişim" yasalın da üstünde: site açılmıyorsa yasal uyarıyı
+   * okuyacak panel de yok. 18 Ağustos 2026'da alan adı `clientHold`
+   * yüzünden düştü ve hiçbir izleme görmedi.
+   */
+  erisim: 'Erişim',
   yasal: 'Yasal',
   onemli: 'Önemli',
   bilgi: 'Bilgi',
@@ -39,6 +45,7 @@ const ONCELIK_ETIKETI: Record<Oncelik, string> = {
  * kaybolmadıkça öncelik anlaşılır kalır.
  */
 const ONCELIK_SIMGESI: Record<Oncelik, string> = {
+  erisim: '!',
   yasal: '!',
   onemli: '!',
   bilgi: 'i',

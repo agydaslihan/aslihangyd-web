@@ -24,12 +24,21 @@ import { gunFarki, gunAnahtari, type GunAnahtari } from '@/lib/tarih'
  * yaptırım. İkisini aynı görsel ağırlıkta göstermek, ikincisini
  * görünmez kılar.
  */
-export type Oncelik = 'yasal' | 'onemli' | 'bilgi'
+export type Oncelik = 'erisim' | 'yasal' | 'onemli' | 'bilgi'
 
+/**
+ * ⚠️ `erisim` YASALIN DA ÜSTÜNDE — 18 Ağustos 2026'da öğrenildi.
+ *
+ * Alan adı `clientHold` yüzünden düştü ve site saatlerce kimseye açılmadı.
+ * O durumda EİDS uyarısını okuyacak bir panel de yok: erişilebilirlik
+ * diğer her şeyin ÖN KOŞULU. Yasal uyarıyla aynı seviyeye konsaydı,
+ * sıralaması tesadüfe kalırdı.
+ */
 export const ONCELIK_SIRASI: Record<Oncelik, number> = {
-  yasal: 0,
-  onemli: 1,
-  bilgi: 2,
+  erisim: 0,
+  yasal: 1,
+  onemli: 2,
+  bilgi: 3,
 }
 
 export interface Bildirim {
@@ -77,6 +86,14 @@ export interface BakimGorevDurumu {
   sonHata: string | null
 }
 
+export interface AlanSagligiGirdisi {
+  saglik: 'saglikli' | 'uyari' | 'kritik' | 'bilinmiyor'
+  ozet: string
+  eylem: string
+  /** Son sorgu zamanı (ISO) — bayat kayıt sessizce güven vermemeli. */
+  sorguZamani: string | null
+}
+
 export interface BildirimGirdisi {
   /** 15 gün içinde yetkisi bitecek yayındaki ilan sayısı. */
   yetkisiBitecekIlan: number
@@ -115,6 +132,14 @@ export interface BildirimGirdisi {
 
   /** Site adresi port içeriyor mu (`:8443` gibi) — kanonik adresleri bozar. */
   siteAdresindePortVar: boolean
+
+  /**
+   * Alan adı sağlığı — son bakım sorgusunun sonucu.
+   *
+   * ⚠️ Hiç sorgulanmadıysa `null`. "Sorun yok" ile "hiç bakılmadı" farklı
+   * şeyler ve ikincisi de bir uyarıdır.
+   */
+  alanSagligi: AlanSagligiGirdisi | null
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -129,8 +154,92 @@ export function saatFarki(bas: string | null, simdi: Date): number | null {
   return (simdi.getTime() - an) / 3_600_000
 }
 
+/**
+ * Alan adı sağlığı kaç saat sonra bayat sayılır.
+ *
+ * ⚠️ Bakım eşiğiyle aynı gerekçe (26 saat, 24 değil): cron günde bir kez
+ * koşuyor ve saat kayması yüzünden 24'ü birkaç dakika aşabilir. 24'e
+ * sabitlemek her gün yanlış alarm üretirdi.
+ */
+export const ALAN_BAYAT_SAAT = 26
+
 export function bildirimleriUret(girdi: BildirimGirdisi, simdi: Date = new Date()): Bildirim[] {
   const bildirimler: Bildirim[] = []
+
+  /* ── Alan adı sağlığı ─────────────────────────────────────────────────
+   *
+   * ⚠️ EN ÜSTTE VE YASALIN DA ÖNÜNDE.
+   *
+   * Site erişilemezse yasal uyarıyı okuyacak panel de yok. 18 Ağustos
+   * 2026'da alan adı `clientHold` yüzünden düştü; sunucu ve Cloudflare
+   * sağlıklıydı, hiçbir izleme görmedi.
+   * ─────────────────────────────────────────────────────────────────── */
+  const alan = girdi.alanSagligi
+
+  if (alan === null) {
+    bildirimler.push({
+      anahtar: 'alan-hic-bakilmadi',
+      oncelik: 'erisim',
+      baslik: 'Alan adı sağlığı hiç kontrol edilmedi',
+      aciklama:
+        'Alan adının kayıt kuruluşundaki durumu ve dışarıdan çözülüp çözülmediği henüz ' +
+        'sorgulanmadı. Bakım görevinin (alan-sagligi) cron’a eklendiğini doğrulayın.',
+      adres: '/globals/bakim-durumu',
+      adresEtiketi: 'Bakım durumu',
+    })
+  } else {
+    const saatler = saatFarki(alan.sorguZamani, simdi)
+    const bayat = saatler === null || saatler > ALAN_BAYAT_SAAT
+
+    if (alan.saglik === 'kritik') {
+      bildirimler.push({
+        anahtar: 'alan-kritik',
+        oncelik: 'erisim',
+        baslik: alan.ozet,
+        aciklama: alan.eylem,
+        adres: '/globals/alan-sagligi',
+        adresEtiketi: 'Ayrıntı',
+      })
+    } else if (alan.saglik === 'uyari') {
+      bildirimler.push({
+        anahtar: 'alan-uyari',
+        oncelik: 'erisim',
+        baslik: alan.ozet,
+        aciklama: alan.eylem,
+        adres: '/globals/alan-sagligi',
+        adresEtiketi: 'Ayrıntı',
+      })
+    } else if (alan.saglik === 'bilinmiyor') {
+      bildirimler.push({
+        anahtar: 'alan-bilinmiyor',
+        oncelik: 'erisim',
+        baslik: 'Alan adı durumu sorgulanamadı',
+        aciklama: alan.eylem,
+        adres: '/globals/alan-sagligi',
+        adresEtiketi: 'Ayrıntı',
+      })
+    }
+
+    /**
+     * ⚠️ BAYAT KAYIT SESSİZCE GÜVEN VERMEMELİ.
+     *
+     * "Sağlıklı" yazan üç gün önceki bir satır, bugün alan adı düşmüş olsa
+     * bile panelde yeşil görünür. Kontrolün kendisi durduğunda bunu
+     * söylemek, kontrolün bir parçası.
+     */
+    if (bayat && alan.saglik !== 'kritik') {
+      bildirimler.push({
+        anahtar: 'alan-bayat',
+        oncelik: 'erisim',
+        baslik: 'Alan adı kontrolü güncel değil',
+        aciklama:
+          'Son sorgunun üzerinden 26 saatten fazla geçti; ekrandaki sonuç bugünü ' +
+          'yansıtmıyor olabilir. Bakım görevinin çalıştığını doğrulayın.',
+        adres: '/globals/bakim-durumu',
+        adresEtiketi: 'Bakım durumu',
+      })
+    }
+  }
 
   /* ── YASAL ─────────────────────────────────────────────────────────── */
 

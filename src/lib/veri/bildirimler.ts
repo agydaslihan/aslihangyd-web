@@ -5,6 +5,7 @@ import type { Payload } from 'payload'
 import { eksikAyarlar, eskiAdlaOkunanlar } from '@/lib/ayarlar'
 import { GOREV_KUNYELERI } from '@/lib/bakim/kunye'
 import {
+  type AlanSagligiGirdisi,
   bildirimleriUret,
   GOZLEMSIZ_MAHALLE_GUN,
   ILGISIZ_PORTFOY_GUN,
@@ -181,6 +182,35 @@ async function gozlemsizMahalleSay(payload: Payload, simdi: Date): Promise<numbe
  *                   üzerinde işlem yapamayacağı bir uyarı biriktirir ve
  *                   şeridin tamamını görmezden gelmeyi öğretir.
  */
+/**
+ * Global kaydını bildirim girdisine çevirir.
+ *
+ * ⚠️ Kayıt hiç yoksa ya da sağlık alanı boşsa `null` — "sorun yok" DEĞİL.
+ * Hiç sorgulanmamış bir kontrolü sağlıklı saymak, kontrolün olmadığı
+ * durumu gizlemek olurdu.
+ */
+function alanSagligiGirdisi(ham: unknown): AlanSagligiGirdisi | null {
+  if (ham === null || typeof ham !== 'object') return null
+  const kayit = ham as Record<string, unknown>
+
+  const saglik = kayit.saglik
+  if (
+    saglik !== 'saglikli' &&
+    saglik !== 'uyari' &&
+    saglik !== 'kritik' &&
+    saglik !== 'bilinmiyor'
+  ) {
+    return null
+  }
+
+  return {
+    saglik,
+    ozet: typeof kayit.ozet === 'string' ? kayit.ozet : 'Alan adı durumu',
+    eylem: typeof kayit.eylem === 'string' ? kayit.eylem : '',
+    sorguZamani: typeof kayit.sorguZamani === 'string' ? kayit.sorguZamani : null,
+  }
+}
+
 export async function bildirimleriGetir(
   payload: Payload,
   simdi: Date = new Date(),
@@ -194,6 +224,7 @@ export async function bildirimleriGetir(
       ilgisizPortfoy,
       gozlemsizMahalle,
       kurumsal,
+      alanKaydi,
       onayBekleyen,
     ] = await Promise.all([
       payload.count({
@@ -219,6 +250,15 @@ export async function bildirimleriGetir(
       ilgisizPortfoyuSay(payload, simdi),
       gozlemsizMahalleSay(payload, simdi),
       payload.findGlobal({ slug: 'kurumsal-bilgiler', depth: 0 }),
+      /**
+       * ⚠️ Alan adı sağlığı BURADA SORGULANMIYOR, yalnızca okunuyor.
+       *
+       * Kayıt kuruluşuna giden istek günde bir kez `alan-sagligi` bakım
+       * göreviyle yapılıyor. Şerit her sayfa açılışında çalıştığı için
+       * buradan sorulsaydı günde yüzlerce istek giderdi — şartnamenin
+       * "nazik ol" şartının tam tersi.
+       */
+      payload.findGlobal({ slug: 'alan-sagligi', depth: 0 }).catch(() => null),
       // Danışmana gösterilmeyecekse sorguyu hiç çalıştırma.
       yoneticiMi
         ? payload.count({
@@ -256,6 +296,7 @@ export async function bildirimleriGetir(
           aciklama: durum.tanim.aciklama,
         })),
         siteAdresindePortVar: /:\d+$/.test(SITE_ADRESI),
+        alanSagligi: alanSagligiGirdisi(alanKaydi ?? null),
       },
       simdi,
     )

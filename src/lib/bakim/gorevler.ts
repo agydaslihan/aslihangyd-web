@@ -1,5 +1,8 @@
 import 'server-only'
 
+import { alaniDegerlendir } from '@/lib/alan/degerlendirme'
+import { alaniSorgula } from '@/lib/alan/sorgu'
+
 import type { Payload } from 'payload'
 
 import { GOREV_KUNYELERI, gorevKunyesi, type GorevAnahtari, type GorevKunyesi } from './kunye'
@@ -251,6 +254,80 @@ export async function olcumAyrintilariniTemizle(payload: Payload): Promise<Gorev
   return rapor
 }
 
+/**
+ * Alan adı sağlığını sorgular ve sonucu önbelleğe yazar.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SORGU GÜNDE BİR KEZ BURADA YAPILIYOR — panel hiç sormuyor.
+ *
+ * Şartnamenin şartı: kayıt kuruluşunu yorma. Panel şeridi her sayfa
+ * açılışında çalışıyor; oradan RDAP sorgulansaydı günde yüzlerce istek
+ * giderdi. Sonuç `alan-sagligi` globaline yazılıyor, şerit onu okuyor.
+ *
+ * ⚠️ Sorgu başarısız olsa bile YAZILIYOR: "sorgulanamadı" da bir bilgi.
+ * Sessizce eski sonucu bırakmak, dört gün önceki "sağlıklı" satırının
+ * bugünkü gerçek sanılmasına yol açardı.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function alanSagliginiKontrolEt(payload: Payload): Promise<GorevRaporu> {
+  const rapor: GorevRaporu = {
+    anahtar: 'alan-sagligi',
+    ad: 'Alan adı sağlığı — durum, bitiş tarihi ve dış DNS',
+    islenen: 0,
+    detay: [],
+  }
+
+  try {
+    const sorgu = await alaniSorgula()
+
+    if (sorgu === null) {
+      /**
+       * ⚠️ HATA DEĞİL, ATLAMA.
+       *
+       * Geliştirme ve hazırlık ortamlarında `SITE_ADRESI` genellikle
+       * `localhost` ya da bir IP; o adresin kayıt kuruluşu da DNS kaydı da
+       * yok. Bunu hata saymak, geliştiricinin panelinde her gün kırmızı bir
+       * satır üretirdi ve gerçek uyarıları gölgelerdi.
+       */
+      rapor.detay.push(
+        'SITE_ADRESI genel bir alan adı değil (localhost, IP ya da yerel uzantı); ' +
+          'alan adı kontrolü atlandı.',
+      )
+      return rapor
+    }
+
+    const sonuc = alaniDegerlendir(sorgu)
+    rapor.islenen = 1
+
+    await payload.updateGlobal({
+      slug: 'alan-sagligi',
+      data: {
+        alan: sorgu.alan,
+        saglik: sonuc.saglik,
+        ozet: sonuc.ozet,
+        eylem: sonuc.eylem,
+        bitisTarihi: sorgu.bitisTarihi,
+        kalanGun: sonuc.kalanGun,
+        durumlar: (sorgu.durumlar ?? []).join(', '),
+        cozumleme:
+          sorgu.cozumleme === null
+            ? 'sorgulanamadı'
+            : Object.entries(sorgu.cozumleme)
+                .map(([ad, bulundu]) => `${ad}: ${bulundu ? 'çözülüyor' : 'ÇÖZÜLMÜYOR'}`)
+                .join(' · '),
+        sorguZamani: sorgu.sorguZamani,
+      },
+      overrideAccess: true,
+    })
+
+    rapor.detay.push(`${sorgu.alan} → ${sonuc.saglik}: ${sonuc.ozet}`)
+  } catch (hata) {
+    rapor.hata = hata instanceof Error ? hata.message : 'Bilinmeyen hata'
+  }
+
+  return rapor
+}
+
 /* ══════════════════════════════════════════════════════════════════════════
    Görev kaydı
    ══════════════════════════════════════════════════════════════════════════ */
@@ -272,6 +349,7 @@ const CALISTIRICILAR: Record<GorevAnahtari, (payload: Payload) => Promise<GorevR
   'eids-uyar': yetkisiBitecekleriBildir,
   'kvkk-sil': saklamaSuresiDolanlariSil,
   'olcum-ayrinti-sil': olcumAyrintilariniTemizle,
+  'alan-sagligi': alanSagliginiKontrolEt,
 }
 
 export const GOREV_KAYDI: readonly GorevTanimi[] = GOREV_KUNYELERI.map((kunye) => ({

@@ -125,6 +125,7 @@ export interface Config {
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
     'bakim-durumu': BakimDurumu;
+    'alan-sagligi': AlanSagligi;
     'google-places-kullanimi': GooglePlacesKullanimi;
   };
   globalsSelect: {
@@ -141,6 +142,7 @@ export interface Config {
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
     'bakim-durumu': BakimDurumuSelect<false> | BakimDurumuSelect<true>;
+    'alan-sagligi': AlanSagligiSelect<false> | AlanSagligiSelect<true>;
     'google-places-kullanimi': GooglePlacesKullanimiSelect<false> | GooglePlacesKullanimiSelect<true>;
   };
   locale: null;
@@ -2505,7 +2507,7 @@ export interface EndeksAyarlari {
 export interface BakimDurumu {
   id: number;
   /**
-   * Her satır bir bakım görevinin son durumunu tutar. Tanımlı görevler: eids-kaldir, eids-uyar, kvkk-sil, olcum-ayrinti-sil
+   * Her satır bir bakım görevinin son durumunu tutar. Tanımlı görevler: alan-sagligi, eids-kaldir, eids-uyar, kvkk-sil, olcum-ayrinti-sil
    */
   gorevler?:
     | {
@@ -2517,6 +2519,35 @@ export interface BakimDurumu {
         id?: string | null;
       }[]
     | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Alan adının kayıt kuruluşundaki durumu ve dışarıdan çözülüp çözülmediği. Günde bir kez bakım göreviyle güncellenir; elle düzenlenemez.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "alan-sagligi".
+ */
+export interface AlanSagligi {
+  id: number;
+  alan?: string | null;
+  /**
+   * saglikli / uyari / kritik / bilinmiyor
+   */
+  saglik?: string | null;
+  ozet?: string | null;
+  eylem?: string | null;
+  bitisTarihi?: string | null;
+  kalanGun?: number | null;
+  /**
+   * RDAP’ten gelen ham durum listesi.
+   */
+  durumlar?: string | null;
+  /**
+   * ⚠️ Kendi sunucumuzun çözümleyicisi değil, 1.1.1.1 ve 8.8.8.8 üzerinden sorulur. Kendi DNS’imiz önbellekten cevap verip düşmüş bir alan adını "çalışıyor" gösterebilir.
+   */
+  cozumleme?: string | null;
+  sorguZamani?: string | null;
   updatedAt?: string | null;
   createdAt?: string | null;
 }
@@ -2873,6 +2904,24 @@ export interface BakimDurumuSelect<T extends boolean = true> {
         sonIslenen?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "alan-sagligi_select".
+ */
+export interface AlanSagligiSelect<T extends boolean = true> {
+  alan?: T;
+  saglik?: T;
+  ozet?: T;
+  eylem?: T;
+  bitisTarihi?: T;
+  kalanGun?: T;
+  durumlar?: T;
+  cozumleme?: T;
+  sorguZamani?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
