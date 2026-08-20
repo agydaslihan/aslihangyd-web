@@ -148,7 +148,7 @@ export default async function BolgeRadariSayfasi() {
                 </table>
               </div>
 
-              <h3 className="mt-8 font-sans text-govde font-medium">Eşikler</h3>
+              <h3 className="mt-8 font-baslik text-govde font-medium">Eşikler</h3>
               <ul className="text-metin-2 mt-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
                 <li>
                   Kira çarpanı medyanın{' '}
@@ -179,7 +179,7 @@ export default async function BolgeRadariSayfasi() {
               </p>
 
               <div className="border-kenar bg-vurgu-zemin rounded-kart mt-6 border-[0.5px] p-5">
-                <h3 className="font-sans text-govde font-medium">Radarın söylemedikleri</h3>
+                <h3 className="font-baslik text-govde font-medium">Radarın söylemedikleri</h3>
                 <ul className="text-metin-2 mt-2 list-disc space-y-1.5 pl-5 text-govde-kucuk leading-relaxed">
                   <li>
                     Sinyaller <strong>geçmiş ölçümlerden</strong> türer; hiçbiri geleceğe dair bir
@@ -219,6 +219,11 @@ function SinyalKarti({ sinyal }: { sinyal: Sinyal }) {
   const gorunum = TUR_GORUNUMU[sinyal.tur]
 
   return (
+    /*
+      ⚠️ Sinyal kartının kenarlık rengi SİNYAL TÜRÜNDEN geliyor (güçlü,
+      zayıf, nötr) — altın hover buraya KONMADI: iki renk aynı kenarlıkta
+      yarışır ve sinyalin kendi rengi okunmaz olurdu.
+    */
     <li className={`rounded-kart border-[0.5px] p-5 ${gorunum.sinif}`}>
       <div className="flex flex-wrap items-center gap-2">
         <Rozet ton={gorunum.ton}>{gorunum.etiket}</Rozet>
@@ -230,7 +235,7 @@ function SinyalKarti({ sinyal }: { sinyal: Sinyal }) {
         </Link>
       </div>
 
-      <h3 className="mt-2.5 font-sans text-govde leading-snug font-medium">{sinyal.baslik}</h3>
+      <h3 className="mt-2.5 font-baslik text-govde leading-snug font-medium">{sinyal.baslik}</h3>
       <p className="text-metin-2 mt-1.5 text-govde-kucuk leading-relaxed">{sinyal.gerekce}</p>
     </li>
   )

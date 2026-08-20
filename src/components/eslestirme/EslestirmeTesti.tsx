@@ -197,7 +197,12 @@ export function EslestirmeTesti({
         </div>
       </div>
 
-      <div className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-6 sm:p-8">
+      {/*
+        ⚠️ SORU KARTI OPAK. Testin tek işi soruyu okutmak; arkası görünen
+        bir yüzeyde metin zemindeki içeriğe bağlanır. Yalnızca köşe
+        yarıçapı Aurora ölçeğine geçti.
+      */}
+      <div className="border-kenar bg-yuzey rounded-buyuk border-[0.5px] p-6 sm:p-8">
         <h2 className="text-baslik-3 font-medium sm:text-baslik-2-mobil">{adim.soru}</h2>
         {adim.yardim ? (
           <p className="text-metin-2 mt-2 text-govde-kucuk leading-relaxed">{adim.yardim}</p>
@@ -546,7 +551,8 @@ function EslesmeKarti({ eslesme, sira }: { eslesme: MahalleEslesmesi; sira: numb
     .sort((a, b) => b.katki - a.katki)
 
   return (
-    <li className="border-kenar bg-yuzey rounded-kart border-[0.5px] p-5 sm:p-6">
+    /* ⚠️ Öneri kartında altın hover kenarlığı — sitedeki kart dili. */
+    <li className="border-kenar bg-yuzey rounded-kart hover:border-gold-cizgi border-[0.5px] p-5 transition-colors duration-[200ms] ease-[var(--cikis)] sm:p-6">
       <div className="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1">
         <h3 className="text-baslik-3 font-medium">
           <span className="text-metin-3 mr-2">{sira}.</span>

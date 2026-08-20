@@ -116,7 +116,7 @@ export default async function TicariSayfasi() {
               <span className="bg-vurgu-zemin text-vurgu rounded-buton flex size-11 items-center justify-center">
                 <Ikon width={20} height={20} />
               </span>
-              <h3 className="font-sans text-govde font-medium">{baslik}</h3>
+              <h3 className="font-baslik text-govde font-medium">{baslik}</h3>
               <p className="text-metin-2 text-govde leading-relaxed">{metin}</p>
             </div>
           ))}
