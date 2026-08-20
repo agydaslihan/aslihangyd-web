@@ -132,10 +132,25 @@ export function Baslik({
             className="flex items-center"
             aria-label={`${marka?.siteAdi ?? SITE_ADI} ana sayfa`}
           >
-            {/* ⚠️ Logo yoksa metin yedeği devreye giriyor — site logosuz kırılmaz. */}
+            {/*
+              ⚠️ Logo yoksa metin yedeği devreye giriyor — site logosuz kırılmaz.
+
+              ⚠️ LOGO BÜYÜDÜ, BANT BÜYÜMEDİ. Başlık 72 px (`h-18`) ve öyle
+              kalıyor; logo mobilde 40, masaüstünde 48 px. 36 px'lik logo
+              menü metninin yanında zayıf duruyordu — marka, gezinme
+              öğelerinden güçlü olmalı.
+
+              ⚠️ CLS 0: yükseklik sınıfla sabit (`h-10`/`h-12`) ve genişlik
+              `w-auto`; `MarkaLogosu` en/boy oranından ölçüyü hesaplayıp
+              `<Image>`e yazıyor, yani yer görsel inmeden ayrılıyor.
+
+              ⚠️ `max-w`: çok geniş bir logo mobilde menü düğmesini ekrandan
+              itebilirdi.
+            */}
             <MarkaLogosu
               marka={marka}
-              sinif="h-9 w-auto"
+              yukseklik={48}
+              sinif="h-10 w-auto max-w-[11rem] object-contain lg:h-12 lg:max-w-[14rem]"
               metinSinifi="font-baslik text-baslik-3 tracking-tight whitespace-nowrap"
               vurguSinifi="text-vurgu"
             />
