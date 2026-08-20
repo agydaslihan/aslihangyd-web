@@ -478,33 +478,31 @@ docker compose --env-file .env -f docker/compose.prod.yml \
 ### 5.3 Güncelleme
 
 ```bash
-cd /srv/aslihangyd/app
-
-# 1. Yeni imajları çek. Göçmen imajı `--profile` ile ayrıca çekilir.
-docker compose --env-file .env -f docker/compose.prod.yml pull
-docker compose --env-file .env -f docker/compose.prod.yml --profile gocmen pull gocmen
-
-# 2. ZORUNLU ADIM — bekleyen göç var mı? Atlanabilir DEĞİL.
-docker compose --env-file .env -f docker/compose.prod.yml \
-  --profile gocmen run --rm gocmen pnpm payload migrate:status
-
-# 3. ZORUNLU ADIM — göçü uygula.
-#    Bekleyen göç yoksa bu komut hiçbir şey yapmaz ve saniyeler sürer;
-#    "şema değişmiş mi" diye düşünmek zorunda kalmamak için koşulsuz.
-docker compose --env-file .env -f docker/compose.prod.yml \
-  --profile gocmen run --rm gocmen
-
-# 4. Uygulamayı yenile.
-docker compose --env-file .env -f docker/compose.prod.yml up -d --no-deps uygulama
-
-# 5. Doğrula.
-curl -f https://aslihangyd.com/api/saglik
-
-# 6. Eski imajları temizle — 3.2 GB'lık sunucuda disk gerçek bir kısıt.
-docker image prune -f
+sudo -u deploy bash /srv/aslihangyd/app/scripts/dagit.sh
 ```
 
-> ### ⚠️ 2. ve 3. ADIMLARI ATLAMAYIN — 13 Ağustos 2026'da site 500 verdi
+Betik altı adımı sırayla yapıyor: imajları çeker (göçmen dahil), **bekleyen
+göçleri listeler**, **göçü uygular**, uygulamayı yeniler, sağlık kontrolünü
+doğrular, eski imajları temizler.
+
+⚠️ **Neden tek komut:** göç adımı iki kez elle atlandı (aşağıya bakın).
+Adımları belgede sıralamak yetmedi — dört komutu elle yazan kişi birini
+atlayabiliyor.
+
+⚠️ **`deploy` kullanıcısı gerekli:** `.env` yalnızca ona okunabilir. Betik
+bunu kontrol ediyor ve okuyamazsa ne yapılacağını yazıp duruyor.
+
+⚠️ Bir adım başarısızsa sonrakiler **çalışmıyor** (`set -euo pipefail`).
+Göç başarısızken uygulamayı yenilemek, tam olarak kaçındığımız duruma —
+şemayla uyumsuz kod — götürürdü.
+
+Dağıtımdan sonra panelin ana ekranındaki bildirim şeridine bakın: şema
+denetimi açılıştan ~15 saniye sonra koşuyor ve kodun beklediği bir tablo
+eksikse **"Bütünlük"** etiketiyle kırmızı uyarı çıkarıyor.
+
+> ### ⚠️ GÖÇ ADIMI İKİ KEZ ATLANDI — betik bu yüzden var
+>
+> **13 Ağustos 2026 — site 500 verdi.**
 >
 > O gün yalnızca imaj çekilip uygulama başlatıldı; göç adımı atlandı.
 > Yeni sürüm ilanlara `cepheYonu` alanı eklemişti ve Payload artık her
@@ -522,6 +520,23 @@ docker image prune -f
 > "bu sürümde şema değişti mi?" sorusunun cevabını dağıtımı yapan kişinin
 > bilmesi bekleniyordu. Artık koşulsuz: bekleyen göç yoksa komut zaten
 > hiçbir şey yapmıyor.
+>
+> **18–20 Ağustos 2026 — bu sefer site HİÇ BOZULMADI ve daha kötüydü.**
+>
+> Sayfa içerikleri sürümü dağıtıldı, göç yine atlandı. `sayfa_icerikleri`,
+> `altbilgi_ayarlari` ve `danisman_ol`ın yeni sütunları veritabanında yoktu.
+>
+> Ama bütün sayfalar 200 döndü, `/api/saglik` "saglikli" dedi ve 24 saatte
+> tek hata satırı çıkmadı — çünkü içerik okuyucularındaki `try/catch`
+> blokları eksik tabloyu yakalayıp koddaki varsayılan metne düşüyordu.
+>
+> Geri düşüşler **doğruydu** (ziyaretçi bir göç yüzünden 500 görmemeli) ama
+> gürültülü bir arızayı **sessiz bir özellik kaybına** çevirdiler: yeni
+> düzenlenebilir alanlar iki gün boyunca ölüydü ve kimse fark etmedi.
+>
+> ⚠️ Bu yüzden artık iki şey var: dağıtım **tek komut** (§5.3) ve uygulama
+> açılışında **şema bütünlüğü denetimi** — eksik tablo varsa panel şeridinde
+> "Bütünlük" etiketiyle kırmızı uyarı, sunucu günlüğünde de satır.
 
 ⚠️ `git pull` **gerekmiyor**: uygulama artık depoyu değil, GHCR'daki imajı
 kullanıyor. Depoyu yine de güncel tutmak isterseniz zararı yok, ama

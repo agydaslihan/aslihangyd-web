@@ -1,5 +1,7 @@
 import 'server-only'
 
+import { semaDurumu } from '@/lib/sema/denetim'
+
 import type { Payload } from 'payload'
 
 import { eksikAyarlar, eskiAdlaOkunanlar } from '@/lib/ayarlar'
@@ -297,6 +299,13 @@ export async function bildirimleriGetir(
         })),
         siteAdresindePortVar: /:\d+$/.test(SITE_ADRESI),
         alanSagligi: alanSagligiGirdisi(alanKaydi ?? null),
+        /**
+         * ⚠️ Burada SORGU YAPILMIYOR, açılışta yapılan denetimin sonucu
+         * okunuyor. Şerit her sayfa açılışında çalışıyor; buradan 63
+         * tablo sorgulansaydı her panel görüntülemesine bir şema sorgusu
+         * eklenirdi.
+         */
+        semaDurumu: semaDurumu(),
       },
       simdi,
     )

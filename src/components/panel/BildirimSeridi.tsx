@@ -32,6 +32,12 @@ const ONCELIK_ETIKETI: Record<Oncelik, string> = {
    * yüzünden düştü ve hiçbir izleme görmedi.
    */
   erisim: 'Erişim',
+  /**
+   * ⚠️ Dağıtım yarım kaldığında diğer uyarılar da yanlış olabilir: eksik
+   * bir tablodan okuyan EİDS sayımı "0 ilan" der ve sorun yokmuş gibi
+   * görünür. Bu yüzden yasalın üstünde.
+   */
+  butunluk: 'Bütünlük',
   yasal: 'Yasal',
   onemli: 'Önemli',
   bilgi: 'Bilgi',
@@ -46,6 +52,7 @@ const ONCELIK_ETIKETI: Record<Oncelik, string> = {
  */
 const ONCELIK_SIMGESI: Record<Oncelik, string> = {
   erisim: '!',
+  butunluk: '!',
   yasal: '!',
   onemli: '!',
   bilgi: 'i',
