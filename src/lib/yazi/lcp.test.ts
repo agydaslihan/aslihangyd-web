@@ -33,7 +33,7 @@ describe('ilk ekrandaki görseller öncelikli', () => {
   })
 
   it('mahalleler listesi ilk kartlara öncelik veriyor', () => {
-    expect(oku('app/(site)/mahalleler/page.tsx')).toContain('oncelikli={sira < 3}')
+    expect(oku('app/(site)/mahalleler/(liste)/page.tsx')).toContain('oncelikli={sira < 3}')
   })
 
   /**

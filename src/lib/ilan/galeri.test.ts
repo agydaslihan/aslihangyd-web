@@ -75,7 +75,7 @@ describe('galeri büyütme', () => {
 })
 
 describe('portföy listesi katman sırası', () => {
-  const sayfa = oku('app/(site)/portfoy/page.tsx')
+  const sayfa = oku('app/(site)/portfoy/(liste)/page.tsx')
 
   /**
    * ⚠️ KATMAN SIRASI BİR KEZ KARIŞIRSA SESSİZCE BOZULUR.

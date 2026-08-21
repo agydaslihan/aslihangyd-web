@@ -165,12 +165,31 @@ export function IlanKarti({
         <p className="text-metin-3 text-mikro">{m2Fiyati ?? 'm² fiyatı için brüt m² gerekiyor'}</p>
 
         {/* Başlık cümle düzeninde, iki satırda kırpılır. */}
-        <h3 className="text-govde leading-snug font-normal">
-          {/* Tüm kart tıklanabilir olsun ama DOM'da tek bağlantı kalsın. */}
+        <h3 className="line-clamp-2 text-govde leading-snug font-normal">
+          {/*
+            ⚠️ KARTI KAPLAYAN BAĞLANTI — İKİ ŞEY AÇIKÇA YAZILIYOR.
+
+            `after:absolute after:inset-0` tek başına kırılgan çıktı:
+
+              1. `content` yoksa sözde öğe hiç üretilmez. Tailwind
+                 varsayılan bir `content` enjekte ediyor ama buna güvenmek,
+                 sınıf sırası ya da sürüm değişiminde sessizce tıklanamaz
+                 bir kart bırakıyor.
+              2. `z-index` yoksa boyama sırası DOM sırasına kalıyor:
+                 karttaki her konumlandırılmış öğe (rozetler, medya sayacı,
+                 görsel kabı) örtünün üstüne çıkıp tıklamayı yutabiliyor.
+
+            İkisi de ekranda iz bırakmadan geçen türden: kart doğru
+            görünüyor, hover çalışıyor, yalnızca tıklama gitmiyor.
+
+            ⚠️ `line-clamp` BAŞLIĞA TAŞINDI. Bağlantının üstündeyken
+            `overflow: hidden` + `-webkit-box` örtüyü kırpma riski
+            taşıyordu; kırpma başlığın işi, bağlantının değil.
+          */}
           <Link
             href={`/portfoy/${ilan.slug}`}
             data-gozlem="ilan_karti_tikla"
-            className="line-clamp-2 after:absolute after:inset-0"
+            className="after:absolute after:inset-0 after:z-10 after:rounded-kart after:content-['']"
           >
             {ilan.baslik}
           </Link>
