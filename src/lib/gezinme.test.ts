@@ -1,4 +1,4 @@
-import { existsSync, readFileSync } from 'node:fs'
+import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 
@@ -42,10 +42,36 @@ function yolu(adres: string): string {
   return adres.split('?')[0] ?? adres
 }
 
+/**
+ * ⚠️ ROTA GRUPLARI (`(liste)`) ADRESE GİRMİYOR.
+ *
+ * Next, parantezli klasörleri URL'den düşürüyor: `portfoy/(liste)/page.tsx`
+ * dosyası `/portfoy` adresini karşılıyor. Bu denetim önce yalnızca düz
+ * yolu arıyordu ve liste sayfaları rota grubuna alınınca "menüdeki adresin
+ * sayfası yok" diye kırıldı — oysa sayfa yerindeydi.
+ *
+ * Rota grubu, `loading.tsx`in kapsamını daraltmak için eklendi: dosya
+ * doğrudan segmentte dururken detay sayfası da onu miras alıyor ve
+ * `notFound()` 200 dönüyordu (soft 404). Gerekçenin tamamı
+ * `lib/dokuman/soft404.test.ts` içinde.
+ */
 function rotaVarMi(adres: string): boolean {
   const yol = yolu(adres)
   if (yol === '/') return existsSync(path.join(SITE_KOKU, 'page.tsx'))
-  return existsSync(path.join(SITE_KOKU, yol.replace(/^\//, ''), 'page.tsx'))
+
+  const parcalar = yol.replace(/^\//, '').split('/')
+  const dizin = path.join(SITE_KOKU, ...parcalar)
+
+  if (existsSync(path.join(dizin, 'page.tsx'))) return true
+
+  // Rota grubu: `<segment>/(grup)/page.tsx` de aynı adresi karşılıyor.
+  if (!existsSync(dizin)) return false
+  return readdirSync(dizin, { withFileTypes: true }).some(
+    (oge) =>
+      oge.isDirectory() &&
+      oge.name.startsWith('(') &&
+      existsSync(path.join(dizin, oge.name, 'page.tsx')),
+  )
 }
 
 /** Menüdeki tüm adresler — üst seviye + mega öğeler + sağdaki eylem. */

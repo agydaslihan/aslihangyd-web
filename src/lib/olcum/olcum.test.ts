@@ -404,7 +404,7 @@ describe('olay sözlüğü', () => {
       'src/components/duzen/Baslik.tsx',
       'src/components/duzen/UstSerit.tsx',
       'src/components/duzen/Altbilgi.tsx',
-      'src/app/(site)/portfoy/page.tsx',
+      'src/app/(site)/portfoy/(liste)/page.tsx',
       'src/app/(site)/portfoy/[slug]/page.tsx',
     ]
       .map((yol) => oku(yol))

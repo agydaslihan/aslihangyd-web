@@ -29,6 +29,23 @@ import {
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 import { temaSiralariniGetir, type TemaSirasi } from '@/lib/veri/portfoy'
 
+/**
+ * ⚠️ SAYFA `(liste)` ROTA GRUBUNDA VE BU BİR SEO DÜZELTMESİ.
+ *
+ * `loading.tsx` bulunduğu segmentin TÜM ALTINA uygulanıyor. Dosya
+ * doğrudan `portfoy/` (ya da `mahalleler/`) altındayken `[slug]` sayfası da
+ * onu miras alıyordu: Next kabuğu hemen akıtıyor, yanıt **200 olarak
+ * başlıyor** ve sonradan çağrılan `notFound()` yalnızca EKRANI
+ * değiştirebiliyor — durum kodunu değiştiremiyor.
+ *
+ * Sonuç: var olmayan bir ilan "İlan bulunamadı" yazıyor ama HTTP 200
+ * dönüyordu. Arama motoru için bu bir SOFT 404: adresi geçerli sanıp
+ * indeksliyor, içerik bulamayınca site kalitesini düşürüyor.
+ *
+ * Rota grubu adresi değiştirmiyor (`/portfoy` yine `/portfoy`) ama
+ * `loading.tsx`in kapsamını yalnızca liste sayfasına daraltıyor. Deneyle
+ * doğrulandı: dosya kaldırılınca detay 404 dönüyor, geri konunca 200.
+ */
 export const metadata: Metadata = {
   title: 'Portföy — Çorlu satılık ve kiralık taşınmazlar',
   description:

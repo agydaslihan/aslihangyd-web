@@ -168,7 +168,13 @@ export function MahalleKarti({
 
       <div className="flex flex-1 flex-col gap-2.5 p-4 sm:p-5">
         <Baslik className="text-baslik-3 leading-tight">
-          <Link href={`/mahalleler/${mahalle.slug}`} className="after:absolute after:inset-0">
+          {/* ⚠️ Örtüde `content` ve `z-index` AÇIK — gerekçe IlanKarti'nda
+              yazılı: ikisi de eksikken kart görünürde çalışıyor ama tıklama
+              gitmiyor. Aynı desen kullanan her kart aynı düzeltmeyi aldı. */}
+          <Link
+            href={`/mahalleler/${mahalle.slug}`}
+            className="after:absolute after:inset-0 after:z-10 after:rounded-kart after:content-['']"
+          >
             {mahalle.ad} Mahallesi
           </Link>
         </Baslik>

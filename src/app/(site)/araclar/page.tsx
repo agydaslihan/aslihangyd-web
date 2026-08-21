@@ -125,7 +125,11 @@ export default async function AraclarSayfasi() {
                       <AracIkonu tur={arac.ikon} width={18} height={18} />
                     </span>
                     <h2 className="text-baslik-3 leading-snug">
-                      <Link href={arac.adres} className="after:absolute after:inset-0">
+                      {/* ⚠️ `content` ve `z-index` açık — gerekçe IlanKarti'nda. */}
+                      <Link
+                        href={arac.adres}
+                        className="after:absolute after:inset-0 after:z-10 after:rounded-kart after:content-['']"
+                      >
                         {arac.ad}
                       </Link>
                     </h2>

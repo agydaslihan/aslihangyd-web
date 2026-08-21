@@ -34,7 +34,7 @@ function oku(goreli: string): string {
 
 /** Sunucunun `parametreler.X` ve `metin('X')` biçiminde okuduğu adlar. */
 function sunucununOkuduklari(): Set<string> {
-  const kaynak = oku('app/(site)/portfoy/page.tsx')
+  const kaynak = oku('app/(site)/portfoy/(liste)/page.tsx')
   const bulunan = new Set<string>()
 
   for (const [, ad] of kaynak.matchAll(/parametreler\.([a-zA-Z0-9]+)/g)) {
