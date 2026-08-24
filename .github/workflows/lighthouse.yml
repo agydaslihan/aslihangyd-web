@@ -7,7 +7,8 @@ name: Lighthouse
 # yapılabilmesi. 3.2 GB RAM'li kendi sunucumuzda alınan sayılar
 # gerçek kullanıcı deneyimini temsil etmez.
 #
-# ⚠️ Şu an ENGELLEYİCİ DEĞİL, raporlayıcıdır. Sebep: site henüz demo
+# ⚠️ Şu an ENGELLEYİCİ DEĞİL, raporlayıcıdır — TEK İSTİSNA "Gezinme
+# dumanı" adımı: o bir skor değil işlev testi ve düşerse iş kırılır. Sebep: site henüz demo
 # veriyle ve gerçek görseller olmadan çalışıyor; bu koşullarda alınan
 # skorlar yayına girecek halin skorları değil. Gerçek içerik ve medya
 # geldiğinde eşikler zorunlu hale getirilecek (bkz. docs/ILERLEME.md).
@@ -105,6 +106,26 @@ jobs:
         run: |
           pnpm start &
           npx --yes wait-on http://localhost:3000/api/saglik --timeout 60000
+
+      # ⚠️ BU ADIM ENGELLEYİCİ — dosyanın başındaki "raporlayıcı" notunun
+      #    İSTİSNASI ve istisna bilinçli.
+      #
+      # Lighthouse bir SKOR üretir; skor runner hızına duyarlı olduğu için
+      # kapı olarak kullanılmıyor. Bu adım skor değil İŞLEV ölçüyor:
+      # ziyaretçi menüden bir bağlantıya tıklayınca sayfa açılıyor mu?
+      # Cevabın "hayır" olduğu bir sürüm yayına gitmemeli.
+      #
+      # 24 Ağustos 2026: ScrollTrigger sabitlemesi React'in DOM ağacını
+      # arkasından değiştiriyordu; anasayfadan çıkan her tıklama React
+      # kökünü söküyor, ekran boşalıyordu. O gün yeşil olanlar: bütün
+      # rotalar 200, 101 test dosyası, Lighthouse masaüstü 100 / mobil 92,
+      # CLS 0,000. Hiçbiri bir bağlantıya TIKLAMIYORDU.
+      #
+      # Betik gerçek fare olayları üretiyor ve `(pointer: fine)` sorgusunu
+      # yamalıyor — ikincisi olmadan headless Chrome hareket kodunu hiç
+      # çalıştırmıyor ve test kırık yolu denemeden "geçti" diyor.
+      - name: Gezinme dumanı (engelleyici)
+        run: node scripts/gezinme-dumani.mjs http://localhost:3000
 
       # ⚠️ ÜÇ KOŞUM VE İKİ CİHAZ — ikisi de bilinçli, ikisi de bedeli var.
       #
