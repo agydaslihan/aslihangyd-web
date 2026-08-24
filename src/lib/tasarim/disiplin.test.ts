@@ -253,6 +253,20 @@ describe('ham hex kullanılmıyor', () => {
      * ödeniyor: yalnızca nötr giriş değerleri serbest, palet rengi değil.
      */
     'components/marka/RenkAlani.tsx',
+    /**
+     * ⚠️ Kök hata ekranı MUAF — çünkü jetonlara ULAŞAMIYOR.
+     *
+     * `global-error.tsx` kök düzenin YERİNE geçiyor, altına değil. Düzen
+     * render edilmediği için `globals.css` de yüklenmiyor: Tailwind sınıfı
+     * da `var(--color-…)` de çözülmüyor. Geriye satır içi somut renk
+     * kalıyor.
+     *
+     * Muafiyetin bedeli hemen aşağıdaki "kök hata ekranı onaylı paletten
+     * boyanıyor" testiyle ödeniyor: yazılan her hex, paletin içinde
+     * BİREBİR var olmak zorunda. Yani "istediğini yaz" değil, "jetonu
+     * elle taşı ama uydurma".
+     */
+    'app/global-error.tsx',
   ])
 
   it.each(uyarlanmis.filter((d) => !MUAF.has(d.yol)).map((d) => [d.yol, d] as const))(
@@ -262,6 +276,37 @@ describe('ham hex kullanılmıyor', () => {
       expect(bulunan, `ham hex bulundu: ${bulunan.join(', ')} — jeton kullanın`).toEqual([])
     },
   )
+})
+
+describe('kök hata ekranı onaylı paletten boyanıyor', () => {
+  /**
+   * `app/global-error.tsx` ham hex yazabiliyor (bkz. muafiyet gerekçesi)
+   * ama uydurma renk yazamaz.
+   *
+   * ⚠️ NEDEN ÖNEMLİ: palet bir kez değişti ve jeton sisteminin dışında
+   * kalan iki değer eski paletten geride kaldı; kimse fark etmedi
+   * (`theme-color` testinin gerekçesine bakın). Bu ekran da aynı sınıfta:
+   * yılda bir kez görünüyor ve tam da o gün eski markanın renkleriyle
+   * açılırsa kimse düzeltmeye gelmez.
+   */
+  it('her hex, palette birebir var', () => {
+    const kaynak = readFileSync(path.join(KOK, 'app/global-error.tsx'), 'utf8')
+    const css = readFileSync(path.join(KOK, 'app/(site)/globals.css'), 'utf8')
+
+    const hexler = [
+      ...new Set((kaynak.match(/#[0-9a-fA-F]{6}\b/g) ?? []).map((h) => h.toLowerCase())),
+    ]
+
+    expect(hexler.length, 'ekran renksiz olamaz').toBeGreaterThan(0)
+
+    const paletDisi = hexler.filter((h) => !css.toLowerCase().includes(h))
+    expect(
+      paletDisi,
+      'Bu renkler globals.css içindeki palette yok — ya rampadan bir değer\n' +
+        'seçin ya da palete ekleyin. Elle uydurulan renk, palet değişince\n' +
+        'geride kalır ve kimse fark etmez.',
+    ).toEqual([])
+  })
 })
 
 describe('font ağırlığı 500 ile sınırlı', () => {

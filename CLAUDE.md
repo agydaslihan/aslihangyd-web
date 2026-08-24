@@ -271,6 +271,20 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
       birim testi kuralın doğru hesaplandığını, entegrasyon testi kuralın
       atlanamadığını gösterir. `pnpm test` ikisini de çalıştırır ve
       `DATABASE_URI` ister.
+- `scripts/gezinme-dumani.mjs` — **gerçek tarayıcıda** gezinme dumanı.
+      CI'da her PR'da koşar ve ENGELLEYİCİDİR. Üç rotaya gerçek fare
+      olaylarıyla tıklar; sayfa açıldı mı, başlık dolu mu, yakalanmamış
+      istisna var mı diye bakar.
+
+⚠️ Üçüncü katman 24 Ağustos 2026'da eklendi çünkü ilk ikisi bir
+    KULLANILAMAZ SİTEYİ yeşil geçirdi: bütün rotalar 200, 101 test dosyası,
+    Lighthouse masaüstü 100 / mobil 92, CLS 0,000 — ve menüdeki hiçbir
+    bağlantı çalışmıyordu. Hiçbir denetim bir bağlantıya TIKLAMIYORDU.
+
+⚠️ Duman testi `(pointer: fine)` sorgusunu yamalıyor. Headless Chrome bu
+    sorguya varsayılan olarak `false` diyor; yama olmadan hareket kodunun
+    tamamı atlanır ve test, kırılan yolu hiç denemeden "geçti" der. O
+    yamayı kaldırmak testi sessizce işlevsizleştirir.
 
 ## Faz durumu
 
