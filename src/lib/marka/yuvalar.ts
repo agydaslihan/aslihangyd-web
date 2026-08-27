@@ -331,6 +331,82 @@ export const HAZIR_PALETLER: readonly HazirPalet[] = [
     },
   },
   {
+    anahtar: 'pudra',
+    ad: 'Pudra',
+    aciklama: 'Pudra gülü ağırlıklı, sıcak. Vurgu gülkurusu; nötrler pembeye çalıyor.',
+    /**
+     * ⚠️ VURGU GÜLKURUSU, PEMBE DEĞİL — VE SEBEBİ KONTRAST.
+     *
+     * Açık pembe bir vurgu (#d98c99 gibi) krem zeminde 2:1 civarında
+     * kalıyor; kapıdan geçmiyor. Aynı tonun koyulaştırılmışı (#8a4250)
+     * hem gülkurusu kimliğini koruyor hem de 4,5:1 eşiğini geçiyor.
+     * "Pudra" burada zeminlerin işi; vurgunun değil.
+     */
+    acik: {
+      zemin: '#fdf8f7',
+      bolumZemin: '#f6e9e7',
+      metin: '#33231f',
+      vurgu: '#8a4250',
+      butonZemin: '#8a4250',
+      butonMetin: '#fdf8f7',
+      yumusakZemin: '#efd9d6',
+      dekoratifCizgi: '#c99aa1',
+      koyuBantZemin: '#33231f',
+      koyuBantMetin: '#fdf8f7',
+    },
+    koyu: {
+      zemin: '#221a19',
+      bolumZemin: '#332725',
+      metin: '#f7ece9',
+      vurgu: '#e8b3ba',
+      butonZemin: '#e8b3ba',
+      butonMetin: '#221a19',
+      yumusakZemin: '#43312f',
+      dekoratifCizgi: '#a97b83',
+      koyuBantZemin: '#332725',
+      koyuBantMetin: '#f7ece9',
+    },
+  },
+  {
+    anahtar: 'bohem',
+    ad: 'Bohem',
+    aciklama: 'Terracotta, adaçayı ve altın. Vurgu terracotta, buton adaçayı.',
+    /**
+     * ⚠️ ÜÇ RENKLİ TEK SET — VE BU BİLİNÇLİ BİR RİSK.
+     *
+     * Diğer paletlerde vurgu ile buton aynı renk. Burada ayrı: başlıklar
+     * terracotta, eylemler adaçayı. Üç renk bir arada sakin durabilir ama
+     * dördüncüsü kalabalık eder; altın yalnızca dekoratif çizgide.
+     *
+     * ⚠️ Adaçayı zemin üzerinde metin KREM, beyaz değil: adaçayı yeterince
+     * koyu olmadığı için beyaz metin eşiğin altında kalıyordu.
+     */
+    acik: {
+      zemin: '#fbf7f0',
+      bolumZemin: '#efe6d8',
+      metin: '#2b2620',
+      vurgu: '#8a3f24',
+      butonZemin: '#3f5544',
+      butonMetin: '#fbf7f0',
+      yumusakZemin: '#e3d6c2',
+      dekoratifCizgi: '#b08d5c',
+      koyuBantZemin: '#2b2620',
+      koyuBantMetin: '#fbf7f0',
+    },
+    koyu: {
+      zemin: '#231f1a',
+      bolumZemin: '#332d25',
+      metin: '#f5eee1',
+      vurgu: '#e8a077',
+      butonZemin: '#a8c2a4',
+      butonMetin: '#231f1a',
+      yumusakZemin: '#443c31',
+      dekoratifCizgi: '#c2a173',
+      koyuBantZemin: '#332d25',
+      koyuBantMetin: '#f5eee1',
+    },
+  },
+  {
     anahtar: 'sicakNotr',
     ad: 'Sıcak nötr',
     aciklama: 'Kum, kil ve zeytin. Renk vurgusu en düşük olan set.',
