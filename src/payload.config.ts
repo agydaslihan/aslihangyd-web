@@ -43,6 +43,7 @@ import { MarkaGorunum } from '@/globals/MarkaGorunum'
 import { MenuDuzeni } from '@/globals/MenuDuzeni'
 import { PortfoyBolumleri } from '@/globals/PortfoyBolumleri'
 import { AlanSagligi } from '@/globals/AlanSagligi'
+import { AnaSayfaDuzeni } from '@/globals/AnaSayfaDuzeni'
 import { AltbilgiAyarlari } from '@/globals/AltbilgiAyarlari'
 import { SayfaIcerikleri } from '@/globals/SayfaIcerikleri'
 import { SiteBolumleri } from '@/globals/SiteBolumleri'
@@ -247,6 +248,7 @@ export default buildConfig({
     SayfaIcerikleri,
     AltbilgiAyarlari,
     HeroSlider,
+    AnaSayfaDuzeni,
     MarkaGorunum,
     SiteBolumleri,
     MenuDuzeni,

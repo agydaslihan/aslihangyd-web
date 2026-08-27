@@ -117,6 +117,7 @@ export interface Config {
     'sayfa-icerikleri': SayfaIcerikleri;
     'altbilgi-ayarlari': AltbilgiAyarlari;
     'hero-slider': HeroSlider;
+    'anasayfa-duzeni': AnasayfaDuzeni;
     'marka-gorunum': MarkaGorunum;
     'site-bolumleri': SiteBolumleri;
     'menu-duzeni': MenuDuzeni;
@@ -134,6 +135,7 @@ export interface Config {
     'sayfa-icerikleri': SayfaIcerikleriSelect<false> | SayfaIcerikleriSelect<true>;
     'altbilgi-ayarlari': AltbilgiAyarlariSelect<false> | AltbilgiAyarlariSelect<true>;
     'hero-slider': HeroSliderSelect<false> | HeroSliderSelect<true>;
+    'anasayfa-duzeni': AnasayfaDuzeniSelect<false> | AnasayfaDuzeniSelect<true>;
     'marka-gorunum': MarkaGorunumSelect<false> | MarkaGorunumSelect<true>;
     'site-bolumleri': SiteBolumleriSelect<false> | SiteBolumleriSelect<true>;
     'menu-duzeni': MenuDuzeniSelect<false> | MenuDuzeniSelect<true>;
@@ -2128,6 +2130,44 @@ export interface HeroSlider {
   createdAt?: string | null;
 }
 /**
+ * Ana sayfadaki bölümlerin sırası ve görünürlüğü. Satırları tutamacından sürükleyerek sıralayın. Kapatmak bölümü yalnızca ana sayfadan kaldırır; siteden tamamen kaldırmak için Site Bölümleri’ni kullanın.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "anasayfa-duzeni".
+ */
+export interface AnasayfaDuzeni {
+  id: number;
+  /**
+   * Yukarıdan aşağı ana sayfa sırası. Listeden silinen bölüm kaybolmaz — varsayılan yerinde çizilmeye devam eder.
+   */
+  sira?:
+    | {
+        bolum:
+          | 'guven_kartlari'
+          | 'arama'
+          | 'guven_seridi'
+          | 'aslihan'
+          | 'corlu_deneyimi'
+          | 'one_cikan_portfoy'
+          | 'gizli_portfoy'
+          | 'anlati'
+          | 'endeks'
+          | 'slayt'
+          | 'mahalleler'
+          | 'araclar'
+          | 'uc_yol'
+          | 'cagri';
+        /**
+         * Kapalıysa bölüm yalnızca ana sayfadan kalkar.
+         */
+        acik?: boolean | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Logo, site adı ve renkler. Renk değişikliği kaydedildiği anda yayına girer — imajın yeniden derlenmesi gerekmez.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -2727,6 +2767,22 @@ export interface HeroSliderSelect<T extends boolean = true> {
       };
   otomatikGecis?: T;
   gecisSuresi?: T;
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "anasayfa-duzeni_select".
+ */
+export interface AnasayfaDuzeniSelect<T extends boolean = true> {
+  sira?:
+    | T
+    | {
+        bolum?: T;
+        acik?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

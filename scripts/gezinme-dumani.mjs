@@ -402,7 +402,16 @@ async function baglantiyaTikla(sekme, rota) {
         return r.width > 0 && r.height > 0 && x.offsetParent !== null
       })`
 
-  const varMi = await sekme.deger(`Boolean(${bul})`)
+  /**
+   * ⚠️ BAĞLANTIYI BİR KEZ SORUP PES ETME — BEKLE.
+   *
+   * Kaynak sayfaya geri dönüldüğünde kartlar bir kare sonra basılıyor.
+   * Tek seferlik bir sorgu, rotayı "bağlantısı yok" diye kapsam dışına
+   * atıyordu: test yeşil kalıyor ama kapsam sessizce daralıyordu — ve
+   * kapsam raporu bunu "bağlantısı yok" diye doğru ama yanıltıcı biçimde
+   * bildiriyordu.
+   */
+  const varMi = await sekme.kosulBekle(`Boolean(${bul})`, 6000)
   if (!varMi) return null
 
   /**

@@ -345,6 +345,19 @@ describe('altın kuralları', () => {
      * bir kez geçiyor; ikisi de AYNI eylem, iki farklı kırılım noktası.
      */
     'components/duzen/Baslik.tsx',
+    /**
+     * ⚠️ ANA SAYFA ARAMA BUTONU — BİLİNÇLİ ÜÇÜNCÜ İSTİSNA (27 Ağustos 2026).
+     *
+     * Kural gevşetilmedi; Aslıhan'ın açık talebiyle bir istisna eklendi.
+     * Gerekçe: bu buton vitrindeki TEK eylem ve önceki hâli (mürekkep)
+     * "ara" demekten çok bir bant gibi duruyordu.
+     *
+     * ⚠️ Bedeli var ve kabul edildi: dolu altın artık üç yüzeyde
+     * (başlıktaki değerleme çağrısı, gizli portföy erişimi, buradaki
+     * arama). Dördüncüsü isteniyorsa önce bu üçünden biri düşmeli —
+     * kuralın koruduğu şey renk değil NADİRLİK.
+     */
+    'components/ilan/AramaWidgeti.tsx',
   ])
 
   /** `bg-gold-300` … `bg-gold-900` ve `bg-aksan` — dolu altın zemin. */
@@ -443,11 +456,18 @@ describe('altın kuralları', () => {
     })
 
     /**
-     * Üst sınır 4: iki eylem × (ana sayfa + kendi sayfası) kadar yer
-     * tutuyor. Stil rehberi de bunun içinde. Sınır aşıldığında altın
-     * seyrekliğini kaybetmiş demektir.
+     * Üst sınır 5.
+     *
+     * Dördü şuydu: iki eylem × (ana sayfa + kendi sayfası), stil rehberi
+     * dâhil. Beşincisi 27 Ağustos 2026'da ana sayfa arama butonu için
+     * Aslıhan'ın açık talebiyle eklendi (bkz. `IZINLI_DOLU_AKSAN` notu).
+     *
+     * ⚠️ Sayı yukarı doğru serbestçe oynatılamaz: kuralın koruduğu şey
+     * renk değil NADİRLİK. Altıncı bir altın eylem isteniyorsa önce
+     * mevcutlardan biri düşmeli — sınırı artırmak, kuralı sessizce
+     * kaldırmanın yavaş hâlidir.
      */
-    expect(cagrilar.length, `altın buton çağrıları: ${cagrilar.join(', ')}`).toBeLessThanOrEqual(4)
+    expect(cagrilar.length, `altın buton çağrıları: ${cagrilar.join(', ')}`).toBeLessThanOrEqual(5)
   })
 })
 
