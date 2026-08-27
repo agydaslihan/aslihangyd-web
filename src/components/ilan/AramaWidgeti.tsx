@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import { useState } from 'react'
 
+import { Buton } from '@/components/ui/Buton'
 import { AraIkon } from '@/components/ui/Ikon'
 import { sinif } from '@/lib/sinif'
 
@@ -143,46 +144,76 @@ export function AramaWidgeti({
         ))}
       </div>
 
-      {sekme === 'ticari' ? (
-        <p className="text-metin-2 text-govde-kucuk py-2">
-          Ticari portföyün kendi sayfası var — dükkân, ofis, depo ve arsa orada listeleniyor.
-        </p>
-      ) : (
-        <div className="grid gap-2 sm:grid-cols-3">
-          <Secim etiket="Mahalle" deger={mahalle} onDegisim={setMahalle}>
-            <option value="">Mahalle farketmez</option>
-            {mahalleler.map((m) => (
-              <option key={m.slug} value={m.slug}>
-                {m.ad}
-              </option>
-            ))}
-          </Secim>
+      {/*
+        ─────────────────────────────────────────────────────────────────
+        ⚠️ BUTON ALANLARLA AYNI SATIRDA — ALTINDA TAM GENİŞLİK DEĞİL.
 
-          <Secim etiket="Tür" deger={kategori} onDegisim={setKategori}>
-            {KATEGORILER.map((k) => (
-              <option key={k.deger} value={k.deger}>
-                {k.etiket}
-              </option>
-            ))}
-          </Secim>
+        Önceki düzen üç eşit açılır menü ve altlarında tam genişlik bir
+        buton koyuyordu. Orantı bozuktu: buton, üç alanın toplamı kadar
+        yer kaplayınca formun ağırlık merkezi aşağı kayıyor ve "Ara" bir
+        eylem değil bir bant gibi görünüyordu.
 
-          <Secim etiket="Fiyat" deger={fiyat} onDegisim={setFiyat}>
-            {fiyatlar.map((f) => (
-              <option key={f.deger} value={f.deger}>
-                {f.etiket}
-              </option>
-            ))}
-          </Secim>
-        </div>
-      )}
+        Masaüstünde buton alanların yanında ve genişliği içeriği kadar.
+        Mobilde tek kolona düşüyor, dikey yığılma aynen korunuyor — dar
+        ekranda tam genişlik buton doğru cevap.
 
-      <button
-        type="submit"
-        className="bg-koyu-bant rounded-buton mt-3 flex min-h-13 w-full items-center justify-center gap-2 font-medium text-koyu-bant-metin transition-opacity hover:opacity-90"
-      >
-        <AraIkon width={18} height={18} />
-        {sekme === 'ticari' ? 'Ticari portföyü aç' : 'Ara'}
-      </button>
+        ⚠️ Buton koşulun DIŞINDA: iki ayrı `Buton` yazmak altın görünümün
+        çağrı sayısını iki katına çıkarıyordu ve o sayı denetleniyor
+        (`disiplin.test.ts` — altın nadir kalmalı).
+        ─────────────────────────────────────────────────────────────────
+      */}
+      <div className="mt-3 flex flex-col gap-2 sm:flex-row sm:items-end">
+        {sekme === 'ticari' ? (
+          <p className="text-metin-2 text-govde-kucuk flex-1 py-2">
+            Ticari portföyün kendi sayfası var — dükkân, ofis, depo ve arsa orada listeleniyor.
+          </p>
+        ) : (
+          <div className="grid flex-1 gap-2 sm:grid-cols-3">
+            <Secim etiket="Mahalle" deger={mahalle} onDegisim={setMahalle}>
+              <option value="">Mahalle farketmez</option>
+              {mahalleler.map((m) => (
+                <option key={m.slug} value={m.slug}>
+                  {m.ad}
+                </option>
+              ))}
+            </Secim>
+
+            <Secim etiket="Tür" deger={kategori} onDegisim={setKategori}>
+              {KATEGORILER.map((k) => (
+                <option key={k.deger} value={k.deger}>
+                  {k.etiket}
+                </option>
+              ))}
+            </Secim>
+
+            <Secim etiket="Fiyat" deger={fiyat} onDegisim={setFiyat}>
+              {fiyatlar.map((f) => (
+                <option key={f.deger} value={f.deger}>
+                  {f.etiket}
+                </option>
+              ))}
+            </Secim>
+          </div>
+        )}
+
+        {/*
+          ⚠️ ALTIN, MÜREKKEP DEĞİL — VE BU BİLİNÇLİ BİR İSTİSNA.
+
+          `Buton`un `koyu` görünümü "form gönderimi altın harcamasın" diye
+          seçilmişti ve gerekçesi hâlâ geçerli: dolu altın nadir kaldıkça
+          değerli. Ama Aslıhan bu butonun altın olmasını istedi ve karar
+          onun: ana sayfanın vitrinindeki tek eylem bu.
+
+          ⚠️ Kenarlık ve mürekkep metin `Buton`dan geliyor: altın zemin
+          sayfadan 2,28:1 ayrışıyor (WCAG 1.4.11 için 3:1 gerekli) ve
+          üzerinde beyaz metin 2,36:1 kalıyor. İkisi de orada çözülmüş;
+          burada elle sınıf yazmak o çözümü atlamak olurdu.
+        */}
+        <Buton type="submit" gorunum="aksan" sinifAdi="min-h-11 w-full sm:w-auto">
+          <AraIkon width={18} height={18} />
+          {sekme === 'ticari' ? 'Ticari portföyü aç' : 'Ara'}
+        </Buton>
+      </div>
     </form>
   )
 }

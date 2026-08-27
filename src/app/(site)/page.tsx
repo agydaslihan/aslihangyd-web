@@ -1,3 +1,6 @@
+import { Fragment, type ReactNode } from 'react'
+
+import Image from 'next/image'
 import Link from 'next/link'
 
 import { HeroBolumu } from '@/components/hero/HeroBolumu'
@@ -18,13 +21,7 @@ import { Feragat } from '@/components/ui/Feragat'
 import { Bolum, BolumBasligi, Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
-import {
-  DogrulanmisIkon,
-  GrafikIkon,
-  KonumIkon,
-  OkIkon,
-  VeriBekleniyorIkon,
-} from '@/components/ui/Ikon'
+import { DogrulanmisIkon, GrafikIkon, KonumIkon, OkIkon } from '@/components/ui/Ikon'
 import { ARACLAR } from '@/lib/araclar'
 import { whatsappBaglantisi } from '@/lib/bicimlendirme'
 import { kurumsalBilgileriGetir, whatsappNumarasi } from '@/lib/kurumsal'
@@ -35,21 +32,35 @@ import { gizliPortfoySayisi } from '@/lib/veri/gizliPortfoy'
 import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { heroAyarlari } from '@/lib/hero/sunucu'
+import { hakkimizdaGetir, type HakkimizdaGorseli } from '@/lib/veri/hakkimizda'
+import { anaSayfaDuzeniniGetir } from '@/lib/veri/anaSayfaDuzeni'
 
 export default async function AnaSayfa() {
-  const [ilanlar, mahalleler, kurumsal, sayimIcinIlanlar, bolumler, hero] = await Promise.all([
-    oneCikanIlanlariGetir(3),
-    mahalleleriGetir(),
-    kurumsalBilgileriGetir(),
-    /**
-     * ⚠️ Sayfa boyutu 200: hem toplam sayaç hem de mahalle başına dağılım
-     * bu tek sorgudan çıkıyor (`portfoySayilari`). Ayrı bir gruplama
-     * sorgusu, ana sayfaya her istekte ikinci bir veritabanı turu eklerdi.
-     */
-    ilanlariGetir({}, 1, 200),
-    bolumDurumlariniGetir(),
-    heroAyarlari(),
-  ])
+  const [ilanlar, mahalleler, kurumsal, sayimIcinIlanlar, bolumler, hero, hakkimizda, duzen] =
+    await Promise.all([
+      oneCikanIlanlariGetir(3),
+      mahalleleriGetir(),
+      kurumsalBilgileriGetir(),
+      /**
+       * ⚠️ Sayfa boyutu 200: hem toplam sayaç hem de mahalle başına dağılım
+       * bu tek sorgudan çıkıyor (`portfoySayilari`). Ayrı bir gruplama
+       * sorgusu, ana sayfaya her istekte ikinci bir veritabanı turu eklerdi.
+       */
+      ilanlariGetir({}, 1, 200),
+      bolumDurumlariniGetir(),
+      heroAyarlari(),
+      /**
+       * ⚠️ Portre HAKKIMIZDA GLOBALİNDEN. Aslıhan fotoğrafını oraya
+       * yüklüyordu ve ana sayfa onu hiç okumuyordu: panelde dolu, sayfada
+       * "Fotoğraf hazırlanıyor" yazan boş bir çerçeve duruyordu.
+       */
+      hakkimizdaGetir(),
+      /**
+       * ⚠️ Bölüm sırası PANELDEN. Okuma başarısız olursa varsayılan kod
+       * sırasına düşüyor — ana sayfa düzen kaydına bağımlı değil.
+       */
+      anaSayfaDuzeniniGetir(),
+    ])
 
   /**
    * ⚠️ Hero ayarları BURADA okunuyor, `HeroBolumu` içinde ikinci kez değil.
@@ -133,6 +144,231 @@ export default async function AnaSayfa() {
     },
   ]
 
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BÖLÜM SIRASI PANELDEN — JSX'TEN DEĞİL.
+   *
+   * Bu harita "hangi anahtar neyi çiziyor" sorusunu cevaplıyor; "hangi
+   * sırada" sorusunun cevabı `Ana Sayfa Düzeni` globalinde ve sürükle-
+   * bırakla değiştiriliyor. İkisini ayırmanın sebebi basit: sıra editoryal
+   * bir tercih ve her değiştiğinde bir geliştiricinin JSX taşımasını
+   * beklemek, o tercihi pratikte dondurmak demekti.
+   *
+   * ⚠️ HARİTA İLE `ANASAYFA_BOLUMLERI` LİSTESİ EŞİT OLMAK ZORUNDA.
+   * Panelde seçilebilen ama hiçbir şey çizmeyen bir satır, en kötü panel
+   * deneyimi; çizilen ama sıralanamayan bir bölüm ise sessiz bir kapsam
+   * boşluğu. Eşitlik `lib/anasayfa/duzen.test.ts` ile denetleniyor.
+   *
+   * ⚠️ VİTRİN BU HARİTADA YOK: sayfanın LCP öğesi ve daima ilk sırada.
+   * Gerekçe `lib/anasayfa/duzen.ts` başında.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  const bolumCizimleri: Record<string, ReactNode> = {
+    guven_kartlari: (
+      <>
+        <GuvenKartlari />
+      </>
+    ),
+    arama: (
+      <>
+        <AramaBolumu
+          whatsapp={whatsapp}
+          mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
+          ticariAcik={bolumler.ticari}
+        />
+      </>
+    ),
+    guven_seridi: (
+      <>
+        <GuvenSeridi ogeler={guvenOgeleri} />
+      </>
+    ),
+    aslihan: (
+      <>
+        {/*
+            ⚠️ 6.3 — KURUCU HİKÂYESİ YUKARI TAŞINDI.
+
+            Önceki düzende Aslıhan sayfanın sonundaydı; şartname onu üçüncü
+            bölüme koyuyor ve gerekçesi doğru: ziyaretçi portföye bakmadan önce
+            kiminle konuştuğunu bilmeli. Güven, rakamlardan önce gelir.
+          */}
+        <AslihanBolumu
+          kurumsal={kurumsal}
+          portre={hakkimizda.portre}
+          portreAltMetni={hakkimizda.portreAltMetni}
+        />
+      </>
+    ),
+    corlu_deneyimi: (
+      <>
+        {/*
+            ⚠️ 6.4 — İMZA BÖLÜM. Harita GÖRÜNÜR OLANA KADAR İNMİYOR
+            (MapLibre 443 kB gzip); gerekçe `CorluDeneyimi` içinde.
+          */}
+        <CorluDeneyimi
+          mahalleler={haritaMahalleleri}
+          portfoySayilari={portfoySayilari}
+          stilAdresi={haritaStili}
+        />
+      </>
+    ),
+    one_cikan_portfoy: (
+      <>
+        <Bolum zemin="yuzey">
+          <BolumBasligi
+            ustBaslik="Portföy"
+            baslik="Öne çıkan taşınmazlar"
+            aciklama="Her ilan, mülk sahibinin e-Devlet üzerinden verdiği EİDS yetkisiyle yayınlanır."
+            yan={
+              <Buton href="/portfoy" gorunum="ikincil">
+                Tüm portföy
+                <OkIkon width={16} height={16} />
+              </Buton>
+            }
+          />
+
+          {ilanlar.length > 0 ? (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+              {ilanlar.map((ilan, sira) => (
+                /**
+                 * ⚠️ ARTIK ÖNCELİKLİ DEĞİL — ÖLÇÜMLE.
+                 *
+                 * Eskiden ilk kart `oncelikli` alıyordu çünkü hero'nun hemen
+                 * altındaydı. Yeni düzende önce vitrin, sonra güven kartları,
+                 * sonra slider bandı geliyor: kart ızgarası ilk ekranın çok
+                 * altında.
+                 *
+                 * Üretilen HTML'de iki `<link rel="preload" as="image">`
+                 * görüldü ve ikisi AYNI dosyayı işaret ediyordu (vitrin sahnesi
+                 * de ilk öne çıkan ilanı gösteriyor). İkinci ön yükleme,
+                 * görünmeyen bir görsel için gerçek LCP adayının bant
+                 * genişliğini yiyordu.
+                 */
+                <Sahne key={ilan.id} gecikme={sira * 60} className="h-full">
+                  <IlanKarti ilan={ilan} sinifAdi="h-full" />
+                </Sahne>
+              ))}
+            </div>
+          ) : (
+            <BosDurum
+              baslik="Portföy hazırlanıyor"
+              neden="Şu anda yayında ilan bulunmuyor. Aradığınız taşınmazı bize anlatın; portföyümüze girdiğinde ilk siz haberdar olun."
+              eylem={
+                <Buton href="/iletisim" gorunum="ikincil">
+                  Aradığınızı anlatın
+                </Buton>
+              }
+            />
+          )}
+        </Bolum>
+      </>
+    ),
+    gizli_portfoy: <>{bolumler.gizli_portfoy ? <GizliPortfoyTeaser sayi={gizliSayi} /> : null}</>,
+    anlati: (
+      <>
+        {/*
+            ⚠️ 6.6 — YATAY ANLATI. Sıkıcı ikon kutuları yerine dört bölümlük bir
+            akış; masaüstünde yatay, mobilde dikey `scroll-snap`. GSAP burada hak
+            ediyor: kaydırmaya bağlı (`scrub`) zaman çizelgesi CSS ile yazılamaz.
+          */}
+        <YatayAnlati bolumler={ANLATI_BOLUMLERI} />
+      </>
+    ),
+    endeks: (
+      <>
+        {/*
+            ⚠️ 6.7 — CANLI PİYASA. Şerit kendi kapısını taşıyor: endeks eşikleri
+            (6 ay + 500 gözlem) sağlanmadan rakam göstermiyor. Panelde durumu
+            "Ana sayfa bölümleri" ekranında yazıyor.
+          */}
+        <EndeksSeridi />
+      </>
+    ),
+    slayt: (
+      <>
+        {/*
+            ⚠️ Slider bandı hero'nun ALTINDA, çünkü hero zaten ilk slaydı tam
+            ekran kullanıyor. İkinci bir slayt varsa Aslıhan'ın kalan kareleri
+            burada dönüyor; tek slayt varsa bant hiç çizilmiyor — aynı fotoğrafı
+            iki kez göstermenin anlamı yok.
+          */}
+        {hero.slaytlar.length > 1 ? (
+          <div className="py-16 sm:py-20">
+            {/*
+                ⚠️ İLK SLAYT BANTTAN ÇIKARILIYOR — ÖLÇÜMLE BULUNDU.
+
+                Üretilen HTML'de aynı fotoğraf iki kez görüldü: biri hero'nun tam
+                ekran zemini (`priority`), biri bandın ilk slaydı (`lazy`).
+                Ziyaretçi için tekrar, ağ için ikinci bir istek.
+              */}
+            <HeroBolumu
+              ayarlar={{ ...hero, slaytlar: hero.slaytlar.slice(1) }}
+              sayfaHerosu={false}
+            />
+          </div>
+        ) : null}
+      </>
+    ),
+    mahalleler: (
+      <>
+        <Bolum>
+          <BolumBasligi
+            ustBaslik="Mahalleler"
+            baslik="Çorlu'yu mahalle mahalle tanıyın"
+            aciklama="Her mahallenin kendi hikâyesi ve kendi rakamları var. Hangi mahallenin hangi değer sürücüsünden beslendiğini anlatıyoruz."
+            yan={
+              <Buton href="/mahalleler" gorunum="ikincil">
+                Tüm mahalleler
+                <OkIkon width={16} height={16} />
+              </Buton>
+            }
+          />
+
+          {mahalleler.length > 0 ? (
+            <>
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
+                {/* ⚠️ Kademe 60 ms ve ÜST SINIR 5 KART (300 ms). Sabit çarpan
+                    altıncı kartı 360 ms geciktirirdi; kullanıcı o noktada zaten
+                    kaydırıyor ve geç gelen kart "takıldı" gibi okunur. */}
+                {mahalleler.slice(0, 6).map((mahalle, sira) => (
+                  <Sahne key={mahalle.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
+                    <MahalleKarti mahalle={mahalle} />
+                  </Sahne>
+                ))}
+              </div>
+
+              {/* ⚠️ KURAL 5 — kartlar yatırım skoru rozeti taşıyor; skor
+                    gösterilen her yerde feragat zorunlu. Gerekçenin tamamı
+                    `/mahalleler` sayfasında yazılı. */}
+              <Feragat sinifAdi="mt-6" />
+            </>
+          ) : (
+            <BosDurum
+              baslik="Mahalle sayfaları hazırlanıyor"
+              neden="Pilot mahallelerin analiz metinleri ve rakamları üzerinde çalışıyoruz. Hazır olduğunda burada göreceksiniz."
+              ikon={<KonumIkon width={32} height={32} />}
+            />
+          )}
+        </Bolum>
+      </>
+    ),
+    araclar: (
+      <>
+        <YatirimciAraclari />
+      </>
+    ),
+    uc_yol: (
+      <>
+        <UcYolAyrimi />
+      </>
+    ),
+    cagri: (
+      <>
+        <CagriBandi whatsapp={whatsapp} />
+      </>
+    ),
+  }
+
   return (
     <>
       {/*
@@ -161,163 +397,9 @@ export default async function AnaSayfa() {
         arkaplan={heroGorseli}
       />
 
-      <GuvenKartlari />
-
-      <AramaBolumu
-        whatsapp={whatsapp}
-        mahalleler={mahalleler.map((m) => ({ slug: m.slug, ad: m.ad }))}
-        ticariAcik={bolumler.ticari}
-      />
-
-      <GuvenSeridi ogeler={guvenOgeleri} />
-
-      {/*
-        ⚠️ 6.3 — KURUCU HİKÂYESİ YUKARI TAŞINDI.
-
-        Önceki düzende Aslıhan sayfanın sonundaydı; şartname onu üçüncü
-        bölüme koyuyor ve gerekçesi doğru: ziyaretçi portföye bakmadan önce
-        kiminle konuştuğunu bilmeli. Güven, rakamlardan önce gelir.
-      */}
-      <AslihanBolumu kurumsal={kurumsal} />
-
-      {/*
-        ⚠️ 6.4 — İMZA BÖLÜM. Harita GÖRÜNÜR OLANA KADAR İNMİYOR
-        (MapLibre 443 kB gzip); gerekçe `CorluDeneyimi` içinde.
-      */}
-      <CorluDeneyimi
-        mahalleler={haritaMahalleleri}
-        portfoySayilari={portfoySayilari}
-        stilAdresi={haritaStili}
-      />
-
-      <Bolum zemin="yuzey">
-        <BolumBasligi
-          ustBaslik="Portföy"
-          baslik="Öne çıkan taşınmazlar"
-          aciklama="Her ilan, mülk sahibinin e-Devlet üzerinden verdiği EİDS yetkisiyle yayınlanır."
-          yan={
-            <Buton href="/portfoy" gorunum="ikincil">
-              Tüm portföy
-              <OkIkon width={16} height={16} />
-            </Buton>
-          }
-        />
-
-        {ilanlar.length > 0 ? (
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-            {ilanlar.map((ilan, sira) => (
-              /**
-               * ⚠️ ARTIK ÖNCELİKLİ DEĞİL — ÖLÇÜMLE.
-               *
-               * Eskiden ilk kart `oncelikli` alıyordu çünkü hero'nun hemen
-               * altındaydı. Yeni düzende önce vitrin, sonra güven kartları,
-               * sonra slider bandı geliyor: kart ızgarası ilk ekranın çok
-               * altında.
-               *
-               * Üretilen HTML'de iki `<link rel="preload" as="image">`
-               * görüldü ve ikisi AYNI dosyayı işaret ediyordu (vitrin sahnesi
-               * de ilk öne çıkan ilanı gösteriyor). İkinci ön yükleme,
-               * görünmeyen bir görsel için gerçek LCP adayının bant
-               * genişliğini yiyordu.
-               */
-              <Sahne key={ilan.id} gecikme={sira * 60} className="h-full">
-                <IlanKarti ilan={ilan} sinifAdi="h-full" />
-              </Sahne>
-            ))}
-          </div>
-        ) : (
-          <BosDurum
-            baslik="Portföy hazırlanıyor"
-            neden="Şu anda yayında ilan bulunmuyor. Aradığınız taşınmazı bize anlatın; portföyümüze girdiğinde ilk siz haberdar olun."
-            eylem={
-              <Buton href="/iletisim" gorunum="ikincil">
-                Aradığınızı anlatın
-              </Buton>
-            }
-          />
-        )}
-      </Bolum>
-
-      {bolumler.gizli_portfoy ? <GizliPortfoyTeaser sayi={gizliSayi} /> : null}
-
-      {/*
-        ⚠️ 6.6 — YATAY ANLATI. Sıkıcı ikon kutuları yerine dört bölümlük bir
-        akış; masaüstünde yatay, mobilde dikey `scroll-snap`. GSAP burada hak
-        ediyor: kaydırmaya bağlı (`scrub`) zaman çizelgesi CSS ile yazılamaz.
-      */}
-      <YatayAnlati bolumler={ANLATI_BOLUMLERI} />
-
-      {/*
-        ⚠️ 6.7 — CANLI PİYASA. Şerit kendi kapısını taşıyor: endeks eşikleri
-        (6 ay + 500 gözlem) sağlanmadan rakam göstermiyor. Panelde durumu
-        "Ana sayfa bölümleri" ekranında yazıyor.
-      */}
-      <EndeksSeridi />
-
-      {/*
-        ⚠️ Slider bandı hero'nun ALTINDA, çünkü hero zaten ilk slaydı tam
-        ekran kullanıyor. İkinci bir slayt varsa Aslıhan'ın kalan kareleri
-        burada dönüyor; tek slayt varsa bant hiç çizilmiyor — aynı fotoğrafı
-        iki kez göstermenin anlamı yok.
-      */}
-      {hero.slaytlar.length > 1 ? (
-        <div className="py-16 sm:py-20">
-          {/*
-            ⚠️ İLK SLAYT BANTTAN ÇIKARILIYOR — ÖLÇÜMLE BULUNDU.
-
-            Üretilen HTML'de aynı fotoğraf iki kez görüldü: biri hero'nun tam
-            ekran zemini (`priority`), biri bandın ilk slaydı (`lazy`).
-            Ziyaretçi için tekrar, ağ için ikinci bir istek.
-          */}
-          <HeroBolumu ayarlar={{ ...hero, slaytlar: hero.slaytlar.slice(1) }} sayfaHerosu={false} />
-        </div>
-      ) : null}
-
-      <Bolum>
-        <BolumBasligi
-          ustBaslik="Mahalleler"
-          baslik="Çorlu'yu mahalle mahalle tanıyın"
-          aciklama="Her mahallenin kendi hikâyesi ve kendi rakamları var. Hangi mahallenin hangi değer sürücüsünden beslendiğini anlatıyoruz."
-          yan={
-            <Buton href="/mahalleler" gorunum="ikincil">
-              Tüm mahalleler
-              <OkIkon width={16} height={16} />
-            </Buton>
-          }
-        />
-
-        {mahalleler.length > 0 ? (
-          <>
-            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 lg:gap-5">
-              {/* ⚠️ Kademe 60 ms ve ÜST SINIR 5 KART (300 ms). Sabit çarpan
-                altıncı kartı 360 ms geciktirirdi; kullanıcı o noktada zaten
-                kaydırıyor ve geç gelen kart "takıldı" gibi okunur. */}
-              {mahalleler.slice(0, 6).map((mahalle, sira) => (
-                <Sahne key={mahalle.id} gecikme={Math.min(sira, 5) * 60} className="h-full">
-                  <MahalleKarti mahalle={mahalle} />
-                </Sahne>
-              ))}
-            </div>
-
-            {/* ⚠️ KURAL 5 — kartlar yatırım skoru rozeti taşıyor; skor
-                gösterilen her yerde feragat zorunlu. Gerekçenin tamamı
-                `/mahalleler` sayfasında yazılı. */}
-            <Feragat sinifAdi="mt-6" />
-          </>
-        ) : (
-          <BosDurum
-            baslik="Mahalle sayfaları hazırlanıyor"
-            neden="Pilot mahallelerin analiz metinleri ve rakamları üzerinde çalışıyoruz. Hazır olduğunda burada göreceksiniz."
-            ikon={<KonumIkon width={32} height={32} />}
-          />
-        )}
-      </Bolum>
-
-      <YatirimciAraclari />
-
-      <UcYolAyrimi />
-
-      <CagriBandi whatsapp={whatsapp} />
+      {duzen.map((anahtar) => (
+        <Fragment key={anahtar}>{bolumCizimleri[anahtar] ?? null}</Fragment>
+      ))}
     </>
   )
 }
@@ -629,25 +711,75 @@ function CagriBandi({ whatsapp }: { whatsapp: string | null }) {
 /**
  * Aslıhan bölümü (şartname §5.9).
  *
- * ⚠️ FOTOĞRAF YOK — konulmadı. Aslıhan'ın kendi fotoğrafı gelmeden bu
- * alana stok görsel koymak, "kurumsal güven" anlatısının tam tersini
- * yapardı. Yerine tasarlanmış bir boş durum duruyor.
+ * ⚠️ PORTRE VARSA FOTOĞRAF, YOKSA TİPOGRAFİK BLOK — BOŞ ÇERÇEVE ASLA.
+ *
+ * Burada bir süre "Fotoğraf hazırlanıyor" yazan gri bir kutu durdu ve iki
+ * ayrı şeyi birden yanlış yaptı:
+ *
+ *   1. Panelde portre YÜKLÜYKEN bile boş kutuyu gösteriyordu — bölüm
+ *      `Hakkımızda` globalindeki `portre` alanını hiç okumuyordu.
+ *   2. Portre gerçekten yokken bile şartnameye aykırıydı: "portre yoksa
+ *      tipografik blok, boş çerçeve gösterme".
+ *
+ * Boş çerçeve, "burada bir şey olmalıydı" der ve sayfayı eksik gösterir.
+ * Tipografik blok ise tasarlanmış görünür: aynı yeri doldurur, aynı
+ * en-boy oranını korur (CLS 0) ve eksikliği kusur gibi sunmaz.
+ *
+ * ⚠️ Stok fotoğraf hâlâ yasak (CLAUDE.md kural 2 ile aynı ruh): olmayan
+ * bir yüzü olmuş gibi göstermek, "kurumsal güven" anlatısının tersi.
  *
  * ⚠️ Yetki belgesi numarası burada da görünür ve UYDURULMAZ; boşsa
  * eksikliği söyleyen uyarı basılır (altbilgideki kuralın aynısı).
  */
 function AslihanBolumu({
   kurumsal,
+  portre,
+  portreAltMetni,
 }: {
   kurumsal: Awaited<ReturnType<typeof kurumsalBilgileriGetir>>
+  portre: HakkimizdaGorseli | null
+  portreAltMetni: string | null
 }) {
+  const unvan = kurumsal?.ticaretUnvani ?? null
+
   return (
     <Bolum>
       <div className="grid items-center gap-8 lg:grid-cols-2 lg:gap-12">
-        <div className="bg-yuzey-2 border-kenar rounded-kart text-metin-3 flex aspect-[4/3] flex-col items-center justify-center gap-2 border-[0.5px] px-6 text-center">
-          <VeriBekleniyorIkon width={30} height={30} />
-          <p className="text-govde-kucuk">Fotoğraf hazırlanıyor</p>
-        </div>
+        {portre ? (
+          <div className="border-kenar rounded-kart relative aspect-[4/3] overflow-hidden border-[0.5px]">
+            <Image
+              src={portre.url}
+              alt={portreAltMetni ?? 'Aslıhan'}
+              fill
+              sizes="(max-width: 1024px) 100vw, 50vw"
+              className="object-cover"
+            />
+          </div>
+        ) : (
+          /*
+            ⚠️ TİPOGRAFİK BLOK — boş durum değil, tasarlanmış ikinci basamak.
+
+            Aynı `aspect-[4/3]` kutuyu dolduruyor: portre geldiğinde düzen
+            zıplamıyor. İçerik uydurma değil — ad, unvan ve yaptığı iş;
+            hepsi zaten sayfanın söylediği şeyler, burada yalnızca büyük
+            puntoyla söyleniyor.
+          */
+          <div
+            aria-hidden="true"
+            className="bg-vurgu-zemin border-aksan-kenar rounded-kart flex aspect-[4/3] flex-col justify-center gap-4 border-[0.5px] px-8 sm:px-10"
+          >
+            <p className="text-vurgu text-eyebrow font-medium uppercase">
+              Çorlu · Gayrimenkul danışmanlığı
+            </p>
+            <p className="text-metin font-baslik text-baslik-1-mobil leading-[1.05] font-medium sm:text-baslik-1">
+              Aslıhan
+            </p>
+            <span className="border-aksan-kenar w-16 border-t-[0.5px]" />
+            <p className="text-metin-2 text-govde-kucuk">
+              {unvan ?? 'Taşınmaz Ticareti Yetki Belgesi sahibi işletme'}
+            </p>
+          </div>
+        )}
 
         <div className="flex flex-col gap-4">
           <Eyebrow>Kim danışmanlık veriyor</Eyebrow>

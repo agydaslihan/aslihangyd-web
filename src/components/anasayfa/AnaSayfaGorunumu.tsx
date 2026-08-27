@@ -1,3 +1,4 @@
+import Link from 'next/link'
 import type { AdminViewServerProps } from 'payload'
 
 import { anaSayfaHazirligi } from '@/lib/anasayfa/hazirlik'
@@ -56,6 +57,18 @@ export default async function AnaSayfaGorunumu({ initPageResult }: AdminViewServ
       </p>
       <p style={{ marginTop: '0.5rem', opacity: 0.7 }}>
         {hazirSayisi} / {bolumler.length} bölüm hazır.
+      </p>
+
+      {/*
+        ⚠️ BU EKRAN "NEDEN GÖRÜNMÜYOR" SORUSUNU CEVAPLIYOR, "NEREDE
+        DURUYOR" SORUSUNU DEĞİL. İkisi ayrı ekran; ayrı olduklarını
+        söylemezsek kullanıcı sırayı burada arar ve bulamaz.
+      */}
+      <p style={{ marginTop: '1rem', opacity: 0.8, lineHeight: 1.6 }}>
+        Bölümlerin <strong>sırasını</strong> ve ana sayfada görünüp görünmeyeceğini{' '}
+        <Link href="/admin/globals/anasayfa-duzeni">Ana Sayfa Düzeni</Link> ekranından
+        değiştirebilirsiniz. Buradaki liste yalnızca <strong>verisi hazır mı</strong> sorusunu
+        cevaplar.
       </p>
 
       <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '1.5rem' }}>
