@@ -1,7 +1,7 @@
 import 'server-only'
 
 import config from '@payload-config'
-import { getPayload, type Where } from 'payload'
+import { getPayload } from 'payload'
 
 import { BOSALTMA_ARALIGI_MS, gunAnahtari, tamponuOku } from './tampon'
 import { olayTanimi, YUKSEK_NIYETLI_OLAYLAR } from './sozluk'
@@ -434,25 +434,44 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
        * karşılaştırması. Bu biçimde alfabetik sıra kronolojik sırayla aynı
        * olduğu için çalışıyor — biçim değişirse (ör. GG.AA.YYYY) sorgu
        * sessizce yanlış aralık döner.
+       *
+       * ─────────────────────────────────────────────────────────────────
+       * ⚠️ OPERATÖR `greater_than_equal` — ARADA "or" YOK. VE BURADAKİ
+       *    `as Where` KALKANI TAM DA BUNU GİZLEMİŞTİ.
+       *
+       * Dört sorgu da `greater_than_or_equal` yazıyordu. Payload böyle bir
+       * operatör tanımıyor ve isteği reddediyor:
+       *
+       *     The following path cannot be queried: createdAt.greater_than_or_equal
+       *
+       * TypeScript bunu yakalayabilirdi — `Where` tipi geçerli operatörleri
+       * biliyor. Ama her sorgunun sonuna yazılan `as Where` denetimi
+       * kapatıyordu: derleyiciye "bu nesne zaten Where, bakma" demek,
+       * yazım hatasını çalışma zamanına ertelemekti.
+       *
+       * Kalkan kaldırıldı. Aynı hata bir daha yazılırsa `pnpm typecheck`
+       * kırılır. `as Where` yasağı `lib/olcum/rapor.test.ts` içinde de
+       * denetleniyor.
+       * ─────────────────────────────────────────────────────────────────
        */
-      where: { gun: { greater_than_or_equal: oncekiIlk } } as Where,
+      where: { gun: { greater_than_equal: oncekiIlk } },
       limit: gunSayisi * 2 + 2,
       sort: 'gun',
       overrideAccess: true,
     }),
     payload.count({
       collection: 'talepler',
-      where: { createdAt: { greater_than_or_equal: `${ilkGun}T00:00:00.000Z` } } as Where,
+      where: { createdAt: { greater_than_equal: `${ilkGun}T00:00:00.000Z` } },
       overrideAccess: true,
     }),
     payload.count({
       collection: 'talepler',
       where: {
         and: [
-          { createdAt: { greater_than_or_equal: `${oncekiIlk}T00:00:00.000Z` } },
+          { createdAt: { greater_than_equal: `${oncekiIlk}T00:00:00.000Z` } },
           { createdAt: { less_than: `${ilkGun}T00:00:00.000Z` } },
         ],
-      } as Where,
+      },
       overrideAccess: true,
     }),
   ])
@@ -475,7 +494,7 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
   const leadKaynak = new Map<string, number>()
   const talepListesi = await payload.find({
     collection: 'talepler',
-    where: { createdAt: { greater_than_or_equal: `${ilkGun}T00:00:00.000Z` } } as Where,
+    where: { createdAt: { greater_than_equal: `${ilkGun}T00:00:00.000Z` } },
     limit: 500,
     depth: 0,
     overrideAccess: true,

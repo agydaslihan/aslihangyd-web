@@ -31,7 +31,7 @@ jobs:
   olcum:
     name: Core Web Vitals ölçümü
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 40
 
     services:
       postgres:
@@ -81,6 +81,19 @@ jobs:
         env:
           NODE_ENV: development
 
+      # Panel rotalarını OTURUMLU açabilmek için tek kullanımlık yönetici.
+      #
+      # ⚠️ Oturumsuz panel rotaları 200 döner ama gövdeleri boş gelir.
+      # "200 aldım, geçti" demek, 27 Ağustos 2026'da günlerce bomboş açılan
+      # iki panel ekranını kaçırmak olurdu.
+      #
+      # ⚠️ Betik `NODE_ENV=development` beyaz listesiyle korunuyor; üretim
+      # veritabanına bilinen şifreli bir yönetici açmak arka kapı olurdu.
+      - name: Duman kullanıcısı
+        run: pnpm duman:kullanici
+        env:
+          NODE_ENV: development
+
       # ⚠️ ÖLÇÜM GERÇEKTEN GÖRSEL İÇERİYOR MU — sessizce görselsiz ölçmeyelim.
       #
       # Bu iş akışı aylarca hiç görseli olmayan bir siteyi ölçtü ve sonuçlar
@@ -124,8 +137,20 @@ jobs:
       # Betik gerçek fare olayları üretiyor ve `(pointer: fine)` sorgusunu
       # yamalıyor — ikincisi olmadan headless Chrome hareket kodunu hiç
       # çalıştırmıyor ve test kırık yolu denemeden "geçti" diyor.
+      #
+      # Kapsam ELLE TUTULMUYOR: genel rotalar site haritasından, panel
+      # rotaları kaynaktaki yol sabitleri ve koleksiyon/global slug'larından
+      # türetiliyor. Yeni bir sayfa eklendiğinde denetime kendiliğinden
+      # giriyor — elle tutulan bir liste, eklenen sayfayı test etmez ve
+      # bunu kimseye söylemez.
+      #
+      # Maliyet: ~76 rota, üç tur, ~6 dakika. Bu yüzden `timeout-minutes`
+      # 25'ten 40'a çıkarıldı.
       - name: Gezinme dumanı (engelleyici)
-        run: node scripts/gezinme-dumani.mjs http://localhost:3000
+        run: |
+          node scripts/gezinme-dumani.mjs http://localhost:3000 \
+            --eposta=duman@ornek.test \
+            --sifre='DumanTesti!2026'
 
       # ⚠️ ÜÇ KOŞUM VE İKİ CİHAZ — ikisi de bilinçli, ikisi de bedeli var.
       #
