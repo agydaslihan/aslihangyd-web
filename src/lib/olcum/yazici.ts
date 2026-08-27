@@ -178,6 +178,29 @@ export async function tamponuYaz(): Promise<boolean> {
         ['adet'],
       ),
       ulkeler: birlestir(eski?.ulkeler, kovaDizisi(icerik.ulke, 'kod'), ['kod'], ['adet']),
+      girisSayfalari: birlestir(
+        eski?.girisSayfalari,
+        kovaDizisi(icerik.girisSayfasi, 'rota'),
+        ['rota'],
+        ['adet'],
+      ),
+      /**
+       * ⚠️ Saat SAYI olarak yazılıyor, dizge olarak değil: panelde 0–23
+       * sıralanacak ve `'10' < '9'` dizge karşılaştırması grafiği bozardı.
+       */
+      saatler: birlestir(
+        eski?.saatler,
+        [...icerik.saat.entries()].map(([saat, adet]) => ({ saat: Number(saat), adet })),
+        ['saat'],
+        ['adet'],
+      ),
+      tarayicilar: birlestir(
+        eski?.tarayicilar,
+        kovaDizisi(icerik.tarayici, 'aile'),
+        ['aile'],
+        ['adet'],
+      ),
+      sehirler: birlestir(eski?.sehirler, kovaDizisi(icerik.sehir, 'ad'), ['ad'], ['adet']),
       cihazlar: birlestir(
         eski?.cihazlar,
         kovaDizisi(icerik.cihaz as Map<string, number>, 'sinif'),

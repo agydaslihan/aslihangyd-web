@@ -3,6 +3,9 @@
 import { usePathname } from 'next/navigation'
 import { useEffect, useRef } from 'react'
 
+import { derinlikBandi, ekranBandi, yolDizisi } from '@/lib/olcum/bantlar'
+import { ROTA_AYRINTILI_OLAYLAR } from '@/lib/olcum/sozluk'
+
 /**
  * Katman B olay toplayıcısı.
  *
@@ -101,7 +104,19 @@ export function OlayIzleyici(): null {
 
       const ad = dugum.dataset.gozlem
       if (ad === undefined || ad === '') return
-      ekle({ ad, ayrinti: dugum.dataset.gozlemAyrinti })
+
+      /**
+       * ⚠️ "WhatsApp tıklamalarının KAYNAĞI" burada doluyor.
+       *
+       * Ayrıntı elle verilmemişse ve olay rota-ayrıntılı olaylardan biriyse,
+       * bulunulan rota ayrıntı olarak konuyor. Alternatif her WhatsApp
+       * bağlantısına elle öznitelik yazmaktı — biri unutulduğunda o kaynak
+       * sessizce kaybolurdu. Kural tek yerde: `ROTA_AYRINTILI_OLAYLAR`.
+       */
+      const ayrinti =
+        dugum.dataset.gozlemAyrinti ?? (ROTA_AYRINTILI_OLAYLAR.includes(ad) ? yol : undefined)
+
+      ekle({ ad, ayrinti })
     }
 
     /** Kaydırma derinliği — dörtlük bantlar, oturum başına bir kez. */
@@ -130,9 +145,83 @@ export function OlayIzleyici(): null {
      */
     window.__gozlemOlay = (ad: string, ayrinti?: string) => ekle({ ad, ayrinti })
 
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ GEZİNME DİZİSİ SEKMEDE KALIYOR, SUNUCUYA GİTMİYOR.
+     *
+     * Sunucuya giden tek şey, sekme kapanırken hesaplanan ÜÇ ADIMLIK bir
+     * dizge (`"/ > /portfoy > /portfoy/[slug]"`) ve bir sayaç. Sıranın
+     * kendisi `sessionStorage`ta, yani ziyaretçinin kendi tarayıcısında;
+     * biz onu hiç görmüyoruz, yalnızca özetini alıyoruz.
+     *
+     * ⚠️ Kimlik üretilmiyor: bu dizge kime ait olduğunu söylemiyor ve
+     * veritabanında birleştirilebileceği bir alan yok.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    const IZ_ANAHTARI = 'gz-iz'
+
+    const iziOku = (): string[] => {
+      try {
+        const ham = sessionStorage.getItem(IZ_ANAHTARI)
+        const cozulmus: unknown = ham === null ? [] : JSON.parse(ham)
+        return Array.isArray(cozulmus)
+          ? cozulmus.filter((x): x is string => typeof x === 'string')
+          : []
+      } catch {
+        return []
+      }
+    }
+
+    const izeEkle = (rota: string): string[] => {
+      // ⚠️ Aynı rota art arda iki kez sayılmıyor: React yeniden bağlanması
+      // ya da sorgu değişimi gezinme değildir.
+      const iz = izeUygunMu(rota) ? [...iziOku(), rota] : iziOku()
+      try {
+        // ⚠️ Yalnızca son adımlar tutuluyor. Uzun bir sıra, tek bir ziyarete
+        // ait olacak kadar seyrekleşir ve toplulaştırılmış olmaktan çıkar.
+        sessionStorage.setItem(IZ_ANAHTARI, JSON.stringify(iz.slice(-8)))
+      } catch {
+        // Gizli sekmede yazma istisna atabiliyor; ölçüm sayfayı kırmaz.
+      }
+      return iz
+    }
+
+    function izeUygunMu(rota: string): boolean {
+      const iz = iziOku()
+      return iz[iz.length - 1] !== rota
+    }
+
+    const iz = izeEkle(yol)
+
+    // Ekran bandı — oturumda bir kez.
+    if (birKezMi('gz-ekran')) {
+      ekle({ ad: 'ekran_bandi', ayrinti: ekranBandi(window.innerWidth) })
+    }
+
+    /**
+     * Sekme kapanırken: çıkış sayfası, yol dizisi ve derinlik bandı.
+     *
+     * ⚠️ `pagehide` SEÇİLDİ, `beforeunload` DEĞİL. Mobil Safari
+     * `beforeunload` olayını çoğu zaman hiç tetiklemiyor; ölçümün mobilde
+     * susması, trafiğin dörtte üçünü görmemek demekti.
+     *
+     * ⚠️ Site içi geçişte de tetikleniyor — ama o durumda `persisted`
+     * olmayan bir kapanış olmadığı için son rota yine doğru: her geçişte
+     * yeniden hesaplanıyor ve son gönderilen kazanıyor. Sunucu tarafında
+     * aynı sayaç arttığı için tekrar sayım paneli bozmuyor; gerçek olan
+     * en son gönderilen çıkış rotası.
+     */
+    const kapanis = () => {
+      ekle({ ad: 'cikis_sayfasi', ayrinti: yol })
+      const dizi = yolDizisi(iz)
+      if (dizi !== null) ekle({ ad: 'sayfa_yolu', ayrinti: dizi })
+      ekle({ ad: 'oturum_derinligi', ayrinti: derinlikBandi(iz.length) })
+      gonder()
+    }
+
     document.addEventListener('click', tiklama, { passive: true })
     window.addEventListener('scroll', kaydirma, { passive: true })
-    window.addEventListener('pagehide', gonder)
+    window.addEventListener('pagehide', kapanis)
 
     /**
      * ⚠️ İlan sayfasında 60 saniye — yüksek niyet işareti.
@@ -153,7 +242,7 @@ export function OlayIzleyici(): null {
       delete window.__gozlemOlay
       document.removeEventListener('click', tiklama)
       window.removeEventListener('scroll', kaydirma)
-      window.removeEventListener('pagehide', gonder)
+      window.removeEventListener('pagehide', kapanis)
       if (sure !== null) clearTimeout(sure)
       if (zamanlayici.current !== null) clearTimeout(zamanlayici.current)
       gonder()

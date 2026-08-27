@@ -35,6 +35,29 @@ istekleri **saymak** ve gün sonunda toplulaştırılmış sayaçları kaydetmek
 | Yanıt süresi | 120 ms | rota başına toplam ve en yavaş |
 | Hata | 500 | rota başına sayaç |
 | Kampanya etiketi | `utm_source=instagram` | etiket + sayaç |
+| Giriş sayfası | `/portfoy` | rota + sayaç (bkz. aşağıdaki not) |
+| Saat | 21 | 0–23 kovası + sayaç (yerel saat) |
+| Tarayıcı ailesi | Chrome | **sürümsüz** altı kova + sayaç |
+| Şehir | `Çorlu` | şehir adı + sayaç (**k-anonim**, 90 gün) |
+
+> ⚠️ **Giriş sayfası oturum kimliği olmadan ölçülüyor.** Olağan yöntem bir
+> oturum çerezi yazıp ilk isteği işaretlemektir; yapılmıyor. Kullanılan
+> işaret isteğin kendi içinde zaten bulunan bilgi: **yönlendiren bizden mi
+> geliyor?** Değilse o istek bir giriştir. Yaklaşıklığın bedeli panelde de
+> yazılı: yönlendiren başlığını göndermeyen tarayıcı ayarları, site içi bir
+> geçişi giriş gibi gösterebilir — yani sayı olduğundan büyük olabilir.
+
+> ⚠️ **Şehir, ülkeden farklı bir risk taşıyor** ve iki ayrı korumaya tabi:
+> 1. **Kaydetmede:** değer harf/boşluk dışındaki her şeyden arındırılıyor ve
+>    40 karaktere kırpılıyor — sahte bir `CF-IPCity` başlığıyla veritabanına
+>    serbest metin yazdırılamasın.
+> 2. **Gösterimde:** k-anonimlik eşiği (k=5). Eşiğin altında kalan şehirler
+>    tek tek gösterilmiyor, "Diğer" satırında toplanıyor. Toplam sayı doğru
+>    kalıyor, ayrıntı kayboluyor.
+> 3. **Saklamada:** şehir kırılımı 90 gün sonra siliniyor (ülke silinmiyor).
+>
+> Gerekçe: "Bu hafta Çerkezköy'den 1 ziyaretçi" cümlesi küçük bir yerleşimde
+> "o kişi" demektir — özellikle işletme sahibi o kişiyi tanıyorsa.
 
 ### Ne YAPILMIYOR — ve bu koda gömülü
 
@@ -97,6 +120,32 @@ göster ama betiği yine de yükle" yaklaşımı bilinçli olarak reddedildi.
 - Aranan fiyat aralığı — **bant olarak** (0–1 mn, 1–2 mn, …), tam değer
   değil
 
+#### Kitle ölçümleri (27 Ağustos 2026'da eklendi)
+
+| Ölçülen | Nasıl kaydediliyor | Neden böyle |
+|---|---|---|
+| Çıkış sayfası | rota + sayaç | Sekme kapanırken bir kez bildiriliyor |
+| Sayfa yolu | **en fazla üç adımlık dizi dizgesi** + sayaç | Aşağıdaki nota bakın |
+| Oturum derinliği | **bant** (1 / 2-3 / 4-6 / 7+) | Ham sayı ayırt eder, bant etmez |
+| Ekran genişliği | **bant** (5 kova) | Tam çözünürlük parmak izinin parçasıdır |
+
+> ⚠️ **Sayfa yolu bir ziyaretçi izi DEĞİL, bir dizi sayacıdır.** Gezinme
+> sırası ziyaretçinin kendi sekmesinde (`sessionStorage`) tutuluyor; sunucuya
+> giden tek şey en fazla üç adımlık bir **dizge** (`"/ > /portfoy >
+> /portfoy/ornek-ilan"`) ve karşılığında artan bir sayaç. Kim olduğu, ne
+> zaman geldiği, kaç kez geldiği bilgisi yok.
+>
+> Üç adım sınırı keyfi değil: dizi uzadıkça olası kombinasyon sayısı çarpım
+> hızıyla artar ve yeterince uzun bir dizi tek bir ziyarete ait olacak kadar
+> seyrekleşir — o noktada "toplulaştırılmış" olmaktan çıkar. Ayrıca raporda
+> **tek kez görülen diziler listelenmiyor** (k≥2); onlar "Seyrek diziler"
+> satırında toplanıyor.
+
+> ⚠️ **"Oturum" burada bir sekme demek.** Sunucuda hiçbir oturum kaydı
+> tutulmuyor; sayfa sayısı ziyaretçinin kendi tarayıcısında sayılıyor ve
+> sunucuya yalnızca bandı gönderiliyor. Hemen çıkma oranı da ayrı bir sayaç
+> değil: "1" bandının payı.
+
 ### Bu katmanda da yapılmayanlar
 
 - **Oturum kimliği sunucuya gönderilmiyor.** Bir olayın oturum başına bir
@@ -147,7 +196,8 @@ sapmayı gizlemek ölçümün kendisinden zararlı olurdu.
 | Veri | Süre | Gerekçe |
 |---|---|---|
 | Olay ayrıntısı (hangi filtre, hangi alan, hangi bant) | **90 gün** | Sonrasında bakım göreviyle otomatik siliniyor |
-| Toplulaştırılmış günlük sayaçlar (sayfa, kaynak, cihaz, ülke) | Süresiz | Kişisel veri değil; yıllar arası karşılaştırma için gerekli |
+| **Şehir kırılımı** | **90 gün** | Ülkeden farklı olarak tek kişiyi işaret edebilir; raporun k-anonimlik eşiği gösterimi kısıtlıyor, saklamayı değil |
+| Toplulaştırılmış günlük sayaçlar (sayfa, kaynak, cihaz, ülke, giriş sayfası, saat, tarayıcı) | Süresiz | Kişisel veri değil; yıllar arası karşılaştırma için gerekli |
 | Core Web Vitals kova sayaçları | Süresiz | Kişisel veri değil; ham değer hiç oluşmuyor, yalnızca histogram |
 
 Silme işi otomatik: `olcum-ayrinti-sil` bakım görevi her gece çalışıyor.
@@ -172,6 +222,81 @@ Silme işi otomatik: `olcum-ayrinti-sil` bakım görevi her gece çalışıyor.
 > ⚠️ Karşılaştırma için: sitedeki **AI doğal dil arama** özelliği yurt
 > dışına veri aktarımı içerdiği için kapalı tutuluyor
 > (`docs/AI-ARAMA-KVKK-NOTU.md`). Ölçüm sisteminde böyle bir aktarım yok.
+
+### Google Search Console — tek istisna ve neden istisna sayılmadığı
+
+Panelde bir **arama kelimeleri** bölümü var ve verisi Google'dan geliyor.
+Bu, yukarıdaki "hiçbir yere" ifadesinin istisnası **değil**, çünkü akış ters
+yönde:
+
+- Ziyaretçiden Google'a hiçbir şey **gönderilmiyor**. Bu bölüm bir izleme
+  betiği değil; sitede hiçbir kod çalışmıyor, hiçbir çerez yazılmıyor.
+- Google'ın **bize** verdiği, kendi mülkümüz hakkındaki toplu rapor
+  okunuyor. Google o raporu zaten kendi k-anonimlik eşiğiyle veriyor:
+  eşiğin altındaki sorguları hiç göstermiyor.
+- Ziyaretçinin arama kutusuna ne yazdığını biz zaten göremiyoruz —
+  yönlendiren başlığı yıllardır arama terimini taşımıyor.
+
+Yani burada yeni bir kişisel veri işleme yok; kendi hesabımızdan kendi
+raporumuzu okuyoruz. Bağlantı kurulmadığında bölüm **sayı uydurmuyor**,
+"yapılandırılmadı" yazıyor.
+
+---
+
+## 5b. ⚠️ SINIR: ZİYARETÇİ BAZLI TAKİP — AYRI BİR KARAR
+
+Bu bölüm bilinçli olarak eklendi. Yukarıda anlatılan sistemin tamamı
+**toplulaştırılmış**; hiçbir yerde "bir ziyaretçi" diye bir kayıt yok. Bir
+sonraki adım olarak sıkça istenen şeyler ise o çizginin **öteki tarafında**
+duruyor ve **ayrı bir hukuki karar** gerektiriyor.
+
+### Bu tarafta olan (bugün yapılan)
+
+| Soru | Cevaplanıyor mu | Nasıl |
+|---|---|---|
+| Hangi sayfalar geziliyor? | ✔ | Gün başına sayaç |
+| Ziyaretçiler nereden giriyor, nerede terk ediyor? | ✔ | Rota sayacı |
+| Hangi sıra ile geziliyor? | ✔ | En sık görülen 3 adımlık **diziler** (k≥2) |
+| Hangi sayfa lead getiriyor? | ✔ | Lead başına görüntüleme |
+| Kaç sayfa geziliyor, hemen çıkma oranı ne? | ✔ | **Bant** dağılımı |
+
+### Öteki tarafta olan (bugün YAPILMAYAN)
+
+| İstenebilecek şey | Neden bugün yok |
+|---|---|
+| "Bu ziyaretçi önce X'e, sonra Y'ye baktı, sonra aradı" | Ziyaretçileri birbirinden ayırt eden bir kimlik gerektirir |
+| Tekil ziyaretçi / yeni-dönen ayrımı | Kalıcı çerez ya da parmak izi gerektirir |
+| IP saklama, IP'den şirket/kurum çözümleme | Doğrudan kişisel veri işleme |
+| Oturum kaydı, ısı haritası, fare izi | Ekran içeriğiyle birlikte özel nitelikli veri bile taşıyabilir |
+| Lead'i gezinme geçmişiyle eşleştirme | Kimliği bilinen kişiyle davranış verisini birleştirmek |
+
+### ⚠️ Avukata sorulacaklar — bu maddeler karar bekliyor
+
+1. **Ziyaretçi bazlı takip istenirse hukuki dayanak ne olmalı?** Açık rıza
+   yeterli mi, yoksa meşru menfaat değerlendirmesi (LIA) de yazılmalı mı?
+2. **Kalıcı bir ziyaretçi kimliği (çerez ya da yerel depolama) kişisel veri
+   sayılır mı** — kendisi rastgele bir sayı olsa bile? Bizim kanaatimiz
+   "sayılır"; teyit gerekiyor.
+3. **IP adresi hiç saklanmadan** ziyaretçi ayrımı yapmanın kabul edilebilir
+   bir yolu var mı (ör. günlük değişen, tuzlanmış ve geri döndürülemez bir
+   türev)? Böyle bir türev kişisel veri sayılır mı?
+4. **Lead formu ile gezinme verisini eşleştirmek** (kimliği bilinen kişinin
+   hangi sayfalara baktığını görmek) hangi koşullarda mümkün? Aydınlatma
+   metninde ayrıca belirtilmesi gerekir mi?
+5. **Şehir seviyesi coğrafi kırılım** için uyguladığımız k=5 eşiği yeterli
+   mi? Küçük yerleşimlerde daha yüksek bir eşik mi gerekir?
+6. **Saklama süresi:** bugün olay ayrıntısı ve şehir kırılımı 90 gün. Bu
+   süre aydınlatma metnine nasıl yazılmalı, uzatılabilir mi?
+7. **Google Search Console** verisini panelde göstermek (yukarıdaki 5.
+   bölüm) ayrı bir aydınlatma gerektirir mi? Kanaatimiz "gerektirmez",
+   teyit gerekiyor.
+
+> ⚠️ **Bu maddelerden herhangi biri "evet" cevabı alana kadar kodda
+> karşılığı yazılmayacak.** Bugünkü şema ziyaretçi bazlı takibi
+> *yapısal olarak* imkânsız kılıyor: `gozlem-gunluk` koleksiyonunda
+> ziyaretçiye ait bir satır yok ve testler böyle bir alanın eklenmesini
+> engelliyor (`src/lib/olcum/olcum.test.ts`). O çizgiyi geçmek bir ayar
+> değişikliği değil, şema değişikliğidir — ve bilerek öyle tasarlandı.
 
 ---
 

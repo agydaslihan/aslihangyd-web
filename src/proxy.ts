@@ -2,8 +2,12 @@ import { NextResponse, type NextRequest } from 'next/server'
 
 import { CEREZ_ONAY_ADI, izinVarMi, onayCoz } from '@/lib/kvkk/onay'
 import {
+  girisMi,
   rotaAnahtari,
+  saatKovasi,
   sayilirMi,
+  sehirAdi,
+  tarayiciAilesi,
   ulkeKodu,
   utmOku,
   yonlendirenAlanAdi,
@@ -50,9 +54,29 @@ export async function proxy(istek: NextRequest): Promise<NextResponse> {
     const basliklar = istek.headers
     const utm = utmOku(istek.nextUrl.searchParams)
 
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ KENDİ ALAN ADIMIZ `Host` BAŞLIĞINDAN, `nextUrl.host`TAN DEĞİL.
+     *
+     * `next start` `nextUrl.host` değerini yapılandırılmış ana bilgisayar
+     * adından üretiyor (`localhost:3210`), isteğin gerçekte hangi adrese
+     * yapıldığından bağımsız. Ziyaretçi `127.0.0.1` üzerinden bağlandığında
+     * yönlendiren `127.0.0.1`, karşılaştırılan değer `localhost` oluyor ve
+     * SİTE İÇİ her geçiş dış yönlendiren sanılıyor.
+     *
+     * Ölçümle yakalandı: yerelde site içi dört geçişin dördü de "giriş
+     * sayfası" sayıldı. Üretimde ikisi aynı olduğu için görünmüyordu —
+     * yani hata tam da sayıları doğrulamaya çalıştığımız ortamda çıkıyordu.
+     *
+     * `Host` başlığı tarayıcının GERÇEKTEN kullandığı adres; yönlendiren de
+     * aynı adresten üretiliyor. Vekil arkasında da doğru değer bu.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    const kendiHost = basliklar.get('host') ?? istek.nextUrl.host
+
     sayfaSay({
       rota: rotaAnahtari(yol),
-      yonlendiren: yonlendirenAlanAdi(basliklar.get('referer'), istek.nextUrl.host),
+      yonlendiren: yonlendirenAlanAdi(basliklar.get('referer'), kendiHost),
       cihaz: cihazSinifi(basliklar.get('user-agent')),
       ulke: ulkeKodu(basliklar.get('cf-ipcountry')),
       utmKaynak: utm.kaynak,
@@ -60,6 +84,25 @@ export async function proxy(istek: NextRequest): Promise<NextResponse> {
       // Proxy katmanında sayfa henüz üretilmedi; hata sayımı
       // `instrumentation.ts` içindeki `onRequestError` ile yapılıyor.
       hataMi: false,
+      /**
+       * ⚠️ Giriş sayfası ölçümü OTURUM KİMLİĞİ ÜRETMEDEN yapılıyor:
+       * yönlendiren bizden değilse bu istek bir giriştir. Gerekçe ve
+       * yaklaşıklığın sınırı `girisMi` içinde yazılı.
+       */
+      girisMi: girisMi(basliklar.get('referer'), kendiHost),
+      saat: saatKovasi(),
+      /**
+       * ⚠️ Ham `User-Agent` HİÇBİR YERE YAZILMIYOR — burada altı kaba
+       * kovadan birine çevrilip atılıyor. Sürüm numarası alınmıyor:
+       * sürüm + çözünürlük + saat, tarayıcı parmak izinin ta kendisi.
+       */
+      tarayici: tarayiciAilesi(basliklar.get('user-agent')),
+      /**
+       * ⚠️ IP yine okunmuyor; Cloudflare şehri çözmüş hâlde gönderiyor.
+       * Şehir ülkeden riskli olduğu için raporda ayrıca k-anonimlik
+       * eşiğinden geçiyor (`ASGARI_SEHIR`).
+       */
+      sehir: sehirAdi(basliklar.get('cf-ipcity')),
     })
 
     /**
