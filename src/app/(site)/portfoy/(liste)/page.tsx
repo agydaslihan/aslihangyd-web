@@ -229,7 +229,15 @@ export default async function PortfoySayfasi({
                 biri — hangi filtrelerin boş döndüğü, hangi ilanı almak
                 gerektiğini söylüyor.
               */}
-                <OlayBildir ad="sonucsuz_arama" />
+                {/*
+                  ⚠️ HANGİ ÖLÇÜTLER boş döndü — yalnızca ÖLÇÜT ADLARI.
+                  Değerler (mahalle, fiyat) ayrıca ve bant hâlinde
+                  ölçülüyor; burada ikisini birleştirmek, tek bir aramayı
+                  yeniden kurulabilir hâle getirirdi. Ad listesi ise
+                  "fiyat+mahalle birlikte hep boş dönüyor" gibi ürün
+                  kararına yarayan bilgiyi veriyor.
+                */}
+                <OlayBildir ad="sonucsuz_arama" ayrinti={sonucsuzOlcutler(filtre)} />
                 <BosDurum
                   baslik="Bu kriterlere uyan taşınmaz yok"
                   neden="Filtreleri gevşetmeyi deneyin. Aradığınızı bulamadıysanız bize anlatın — portföyümüze girdiğinde ilk siz haberdar olun."
@@ -396,4 +404,20 @@ function sayiCoz(deger: string | string[] | undefined): number | undefined {
   if (typeof deger !== 'string') return undefined
   const sayi = Number.parseInt(deger, 10)
   return Number.isFinite(sayi) && sayi > 0 ? sayi : undefined
+}
+
+/**
+ * Sonuçsuz aramada hangi ölçütlerin kullanıldığı — yalnızca AD listesi.
+ *
+ * ⚠️ Değer taşımıyor. "mahalle+fiyat" der, "Muhittin + 3,5 mn" demez:
+ * ikisi birleşince tek bir ziyaretçinin araması yeniden kurulabilir hâle
+ * gelirdi. Değerler zaten ayrı ve bant hâlinde ölçülüyor
+ * (`fiyat_bandi`, `filtre_uygulandi`).
+ */
+export function sonucsuzOlcutler(filtre: object): string {
+  const kullanilan = Object.entries(filtre as Record<string, unknown>)
+    .filter(([, deger]) => deger !== undefined && deger !== null && deger !== '')
+    .map(([ad]) => ad)
+    .sort()
+  return kullanilan.length === 0 ? 'filtresiz' : kullanilan.join('+')
 }

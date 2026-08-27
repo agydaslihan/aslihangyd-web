@@ -235,7 +235,20 @@ export async function olcumAyrintilariniTemizle(payload: Payload): Promise<Gorev
       await payload.update({
         collection: 'gozlem-gunluk',
         id: (kayit as { id: string | number }).id,
-        data: { olaylar: [], ayrintiTemizlendi: true },
+        /**
+         * ⚠️ ŞEHİR DE SİLİNİYOR, ÜLKE SİLİNMİYOR — VE FARK KASITLI.
+         *
+         * Ülke tek başına hiç kimseyi işaret etmez; kalıcı bir
+         * toplulaştırılmış sayaç olarak kalabilir. Şehir edebilir: küçük
+         * bir yerleşimden gelen tek ziyaret, gün ve sayfayla birleşince
+         * "o kişi" demektir. Raporda k-anonimlik eşiği var ama o eşik
+         * GÖSTERİMİ kısıtlıyor, SAKLAMAYI değil.
+         *
+         * 90 gün kuralı bu yüzden şehri de kapsıyor: en ayrıntılı iki
+         * katman (`olaylar` ve `sehirler`) siliniyor, geri kalan
+         * toplulaştırılmış sayaçlar kalıcı.
+         */
+        data: { olaylar: [], sehirler: [], ayrintiTemizlendi: true },
         overrideAccess: true,
       })
       rapor.islenen += 1
@@ -243,7 +256,7 @@ export async function olcumAyrintilariniTemizle(payload: Payload): Promise<Gorev
 
     if (rapor.islenen > 0) {
       rapor.detay.push(
-        `${rapor.islenen} gün kaydının olay ayrıntısı temizlendi ` +
+        `${rapor.islenen} gün kaydının olay ayrıntısı ve şehir kırılımı temizlendi ` +
           `(${OLCUM_AYRINTI_GUN} günden eski). Toplulaştırılmış sayaçlar korundu.`,
       )
     }

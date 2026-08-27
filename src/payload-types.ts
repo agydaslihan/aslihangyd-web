@@ -231,6 +231,46 @@ export interface GozlemGunluk {
       }[]
     | null;
   /**
+   * Ziyaretçinin siteye girdiği sayfa. ⚠️ Hiçbir kimlik üretilmiyor: yönlendireni bizden olmayan istek giriş sayılıyor. Yaklaşıklığın sınırı panelde yazılı.
+   */
+  girisSayfalari?:
+    | {
+        rota: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * Yerel saat (Europe/Istanbul) kovası, 0–23.
+   */
+  saatler?:
+    | {
+        saat: number;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * ⚠️ SÜRÜM YOK, altı kaba kova. Sürüm + çözünürlük + saat birleşince tarayıcı parmak izi olurdu.
+   */
+  tarayicilar?:
+    | {
+        aile: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * ⚠️ Cloudflare’in çözdüğü şehir adı; adres bilgisi okunmuyor. Raporda k-anonimlik eşiği uygulanıyor: eşiğin altındaki şehirler tek tek gösterilmez.
+   */
+  sehirler?:
+    | {
+        ad: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
    * ⚠️ 90 günden eski satırlarda bu dizi bakım göreviyle temizlenir; toplulaştırılmış sayaçlar kalır.
    */
   olaylar?:
@@ -1311,6 +1351,34 @@ export interface GozlemGunlukSelect<T extends boolean = true> {
     | T
     | {
         sinif?: T;
+        adet?: T;
+        id?: T;
+      };
+  girisSayfalari?:
+    | T
+    | {
+        rota?: T;
+        adet?: T;
+        id?: T;
+      };
+  saatler?:
+    | T
+    | {
+        saat?: T;
+        adet?: T;
+        id?: T;
+      };
+  tarayicilar?:
+    | T
+    | {
+        aile?: T;
+        adet?: T;
+        id?: T;
+      };
+  sehirler?:
+    | T
+    | {
+        ad?: T;
         adet?: T;
         id?: T;
       };

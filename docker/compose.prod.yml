@@ -144,6 +144,17 @@ services:
       # kimliği; ad, adres ve çalışma saati gösterildiği anda çekilir.
       GOOGLE_PLACES_API_KEY: ${GOOGLE_PLACES_API_KEY:-}
 
+      # Google Search Console — panelin "arama kelimeleri" bölümü.
+      #
+      # ⚠️ Boşken bölüm SAYI UYDURMAZ: "yapılandırılmadı" yazar ve neyin
+      # eksik olduğunu söyler. Sıfırlarla dolu bir tablo "arama trafiği yok"
+      # gibi okunurdu; doğru cevap "bakamıyoruz".
+      #
+      # ⚠️ Servis hesabı anahtarı salt okunur kapsamla üretilmeli
+      # (`webmasters.readonly`); bu anahtar hiçbir şeyi değiştirememeli.
+      ARAMA_KONSOLU_SITE: ${ARAMA_KONSOLU_SITE:-}
+      ARAMA_KONSOLU_SERVIS_HESABI: ${ARAMA_KONSOLU_SERVIS_HESABI:-}
+
       # ⚠️ ANTHROPIC_API_KEY VE ANTHROPIC_ARAMA_MODELI BİLİNÇLİ OLARAK YOK.
       #
       # AI doğal dil arama, avukat metinleri gelene kadar ERTELENDİ: ziyaretçi

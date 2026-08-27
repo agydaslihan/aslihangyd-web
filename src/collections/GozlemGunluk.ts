@@ -147,6 +147,60 @@ export const GozlemGunluk: CollectionConfig = {
       ],
     },
     {
+      name: 'girisSayfalari',
+      type: 'array',
+      label: 'Giriş sayfaları',
+      admin: {
+        description:
+          'Ziyaretçinin siteye girdiği sayfa. ⚠️ Hiçbir kimlik üretilmiyor: ' +
+          'yönlendireni bizden olmayan istek giriş sayılıyor. Yaklaşıklığın sınırı ' +
+          'panelde yazılı.',
+      },
+      fields: [
+        { name: 'rota', type: 'text', required: true },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+      ],
+    },
+    {
+      name: 'saatler',
+      type: 'array',
+      label: 'Saat yoğunluğu',
+      admin: { description: 'Yerel saat (Europe/Istanbul) kovası, 0–23.' },
+      fields: [
+        { name: 'saat', type: 'number', required: true },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+      ],
+    },
+    {
+      name: 'tarayicilar',
+      type: 'array',
+      label: 'Tarayıcı dağılımı',
+      admin: {
+        description:
+          '⚠️ SÜRÜM YOK, altı kaba kova. Sürüm + çözünürlük + saat birleşince ' +
+          'tarayıcı parmak izi olurdu.',
+      },
+      fields: [
+        { name: 'aile', type: 'text', required: true },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+      ],
+    },
+    {
+      name: 'sehirler',
+      type: 'array',
+      label: 'Şehir dağılımı',
+      admin: {
+        description:
+          '⚠️ Cloudflare’in çözdüğü şehir adı; adres bilgisi okunmuyor. Raporda ' +
+          'k-anonimlik eşiği uygulanıyor: eşiğin altındaki şehirler tek tek ' +
+          'gösterilmez.',
+      },
+      fields: [
+        { name: 'ad', type: 'text', required: true },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+      ],
+    },
+    {
       name: 'olaylar',
       type: 'array',
       label: 'Olaylar (Katman B)',

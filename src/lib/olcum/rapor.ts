@@ -3,6 +3,8 @@ import 'server-only'
 import config from '@payload-config'
 import { getPayload } from 'payload'
 
+import { DERINLIK_BANTLARI, DERINLIK_ETIKETI, DERINLIK_TEMSILCISI, EKRAN_ETIKETI } from './bantlar'
+
 import { BOSALTMA_ARALIGI_MS, gunAnahtari, tamponuOku } from './tampon'
 import { olayTanimi, YUKSEK_NIYETLI_OLAYLAR } from './sozluk'
 import { DEGERLEME_ALANLARI, fiyatBandiEtiketi, type Katman } from './tipler'
@@ -49,6 +51,33 @@ export const ASGARI_ORNEKLEM = 100
  * matematiksel olarak mümkün ama anlamsız.
  */
 export const ASGARI_VITAL_ORNEK = 30
+
+/**
+ * Şehir listesinde k-anonimlik eşiği.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ ŞEHİR, ÜLKEDEN FARKLI OLARAK TEK KİŞİYİ İŞARET EDEBİLİR.
+ *
+ * "Bu hafta Çerkezköy'den 1 ziyaretçi" cümlesi, küçük bir yerleşimde
+ * "o kişi" demektir — özellikle Aslıhan o kişiyi tanıyorsa. Bu yüzden
+ * eşiğin altında kalan şehirler tek tek gösterilmiyor, "diğer" kovasına
+ * toplanıyor. Toplam sayı doğru kalıyor, ayrıntı kayboluyor.
+ *
+ * ⚠️ Eşik 5: literatürdeki en yaygın k değeri ve bu ölçekte anlamlı.
+ * Düşürülmesi bir "ayar" değil, KVKK kararının gevşetilmesidir.
+ */
+export const ASGARI_SEHIR = 5
+
+/**
+ * Yol dizisi listesinde k-anonimlik eşiği.
+ *
+ * ⚠️ Tek kez görülmüş bir gezinme dizisi, tek bir ziyaretin izidir.
+ * Toplulaştırma iddiası ancak dizi birden fazla kez görüldüğünde geçerli.
+ * Eşik burada 2: dizi zaten üç adımla sınırlı ve rotalar şablon
+ * (`/portfoy/[slug]` değil gerçek slug taşıyor — ama slug'lar da herkese
+ * açık sayfa adresleri, kişi değil).
+ */
+export const ASGARI_YOL = 2
 
 export interface Deger {
   sayi: number
@@ -143,6 +172,43 @@ export interface Rapor {
   utmKaynaklar: AdSayi[]
   teknik: TeknikSatiri[]
   cihazlar: AdSayi[]
+
+  /* ── SmarterStats tarzı kitle raporları — hepsi toplulaştırılmış ── */
+
+  /** Ziyaretçilerin siteye girdiği sayfalar (Katman A, yaklaşık). */
+  girisSayfalari: AdSayi[]
+  /** Siteyi terk ederken son görülen sayfalar (Katman B). */
+  cikisSayfalari: AdSayi[]
+  /** En sık görülen üç adımlık gezinme dizileri (Katman B, k≥2). */
+  yollar: AdSayi[]
+  /** Ülke dağılımı (Katman A). */
+  ulkeler: AdSayi[]
+  /** Şehir dağılımı (Katman A, k-anonim). */
+  sehirler: AdSayi[]
+  /** Tarayıcı ailesi dağılımı — sürümsüz (Katman A). */
+  tarayicilar: AdSayi[]
+  /** Ekran genişliği bandı dağılımı (Katman B). */
+  ekranBantlari: AdSayi[]
+  /** Saat yoğunluğu, 0–23 (Katman A). */
+  saatler: { saat: number; adet: number }[]
+  /** Haftanın günü yoğunluğu, Pazartesi–Pazar (Katman A). */
+  gunler: AdSayi[]
+  /** Oturum derinliği bantları (Katman B). */
+  derinlikBantlari: AdSayi[]
+  /**
+   * Hemen çıkma oranı — tek sayfalık oturumların payı.
+   *
+   * ⚠️ Ayrı bir sayaç değil: `oturum_derinligi` olayının "1" bandının payı.
+   * İki ayrı sayaç, birbirini tutmadıkları bir gün üretirdi.
+   */
+  hemenCikmaYuzde: number | null
+  /** Ortalama oturum derinliği — bant temsilcilerinden YAKLAŞIK. */
+  ortalamaDerinlik: number | null
+  /** WhatsApp tıklamalarının geldiği sayfalar (Katman B). */
+  whatsappKaynaklari: AdSayi[]
+  /** Sonuç bulunamayan aramaların ölçütleri — portföy boşluğu (Katman B). */
+  sonucsuzAramalar: AdSayi[]
+
   hataOrani: number | null
   /**
    * Gerçek ziyaretçilerden ölçülen Core Web Vitals.
@@ -208,6 +274,11 @@ interface GunSatiri {
   utmKaynaklar: { kaynak: string; adet: number }[]
   cihazlar: { sinif: string; adet: number }[]
   olaylar: { ad: string; ayrinti: string | null; niyet: string; adet: number }[]
+  ulkeler: { kod: string; adet: number }[]
+  girisSayfalari: { rota: string; adet: number }[]
+  saatler: { saat: number; adet: number }[]
+  tarayicilar: { aile: string; adet: number }[]
+  sehirler: { ad: string; adet: number }[]
 }
 
 function gunEkle(gun: string, fark: number): string {
@@ -238,6 +309,11 @@ function satirlariCoz(ham: unknown[]): GunSatiri[] {
       cihazlar: dizi(k.cihazlar),
       olaylar: dizi(k.olaylar),
       vitaller: dizi(k.vitaller),
+      ulkeler: dizi(k.ulkeler),
+      girisSayfalari: dizi(k.girisSayfalari),
+      saatler: dizi(k.saatler),
+      tarayicilar: dizi(k.tarayicilar),
+      sehirler: dizi(k.sehirler),
     }
   })
 }
@@ -407,6 +483,55 @@ function hunileyi(asamalar: Omit<HuniAsamasi, 'dususYuzde' | 'enBuyukDusus'>[]):
     if (hedef !== undefined) hedef.enBuyukDusus = true
   }
 
+  return sonuc
+}
+
+/**
+ * Katman A dizilerini (gün satırlarındaki kovalar) tek haritada toplar.
+ *
+ * ⚠️ Rapor SORGULARI ÖZET TABLODAN OKUYOR, ham kayıttan değil. Gün satırı
+ * zaten önceden hesaplanmış toplam; burada yapılan tek şey gün satırlarını
+ * üst üste koymak. İstek başına veritabanı yazma kuralının raporlama
+ * tarafındaki karşılığı bu.
+ */
+function kovaTopla<T extends Record<string, unknown>>(
+  satirlar: GunSatiri[],
+  sec: (satir: GunSatiri) => T[],
+  anahtarAdi: keyof T,
+): Map<string, number> {
+  const harita = new Map<string, number>()
+  for (const satir of satirlar) {
+    for (const kova of sec(satir)) {
+      const anahtar = String(kova[anahtarAdi] ?? '')
+      if (anahtar === '') continue
+      harita.set(anahtar, (harita.get(anahtar) ?? 0) + sayi(kova.adet))
+    }
+  }
+  return harita
+}
+
+/**
+ * k-anonimlik eşiği: eşiğin altındaki satırları "diğer"e toplar.
+ *
+ * ⚠️ SATIRLARI ATMIYOR, TOPLUYOR. Atsaydı listedeki sayıların toplamı
+ * gerçek toplamı tutmaz ve panel sessizce eksik bir tablo gösterirdi.
+ * Ayrıntı gizleniyor, sayı gizlenmiyor.
+ */
+export function kAnonim(
+  harita: Map<string, number>,
+  esik: number,
+  digerEtiketi = 'Diğer',
+): Map<string, number> {
+  const sonuc = new Map<string, number>()
+  let diger = 0
+  for (const [anahtar, adet] of harita) {
+    if (adet < esik) {
+      diger += adet
+      continue
+    }
+    sonuc.set(anahtar, adet)
+  }
+  if (diger > 0) sonuc.set(digerEtiketi, diger)
   return sonuc
 }
 
@@ -649,6 +774,125 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
 
   const toplamHata = [...sayfaHaritasi.values()].reduce((t, s) => t + s.hata, 0)
 
+  /* ── Kitle raporları ─────────────────────────────────────────────────── */
+
+  const girisSayfalari = siralaVeKes(
+    kovaTopla(buHaftaSatirlari, (satir) => satir.girisSayfalari, 'rota'),
+  )
+  const cikisSayfalari = siralaVeKes(ayrintiDagilimi(buHaftaSatirlari, 'cikis_sayfasi'))
+
+  /**
+   * ⚠️ Yol dizilerinde k-anonimlik eşiği. Tek kez görülmüş bir dizi, tek bir
+   * ziyaretin izidir; toplulaştırma iddiası orada biter.
+   */
+  const yollar = siralaVeKes(
+    kAnonim(ayrintiDagilimi(buHaftaSatirlari, 'sayfa_yolu'), ASGARI_YOL, 'Seyrek diziler'),
+  ).map((satir) => ({
+    /**
+     * ⚠️ Kaydedilen ayırıcı boşluksuz `>` (olay ucu boşluğa izin vermiyor);
+     * panelde okunabilir hâline çevriliyor.
+     *
+     * ⚠️ Süslü bir ok (`›`) kullanılmadı: font alt kümesinde yok ve
+     * `alfabe.test.ts` haklı olarak kırılıyor. Alt küme yalnızca
+     * kullandığımız karakterleri taşıyor; tek bir süs için büyütmek,
+     * mobil sayfa ağırlığını ölçüm panelinin estetiğine feda etmek olurdu.
+     */
+    ad: satir.ad.replaceAll('>', ' > '),
+    adet: satir.adet,
+  }))
+
+  const ulkeler = siralaVeKes(kovaTopla(buHaftaSatirlari, (satir) => satir.ulkeler, 'kod'))
+
+  /**
+   * ⚠️ Şehirde k-anonimlik ZORUNLU. Gerekçe `ASGARI_SEHIR` yanında yazılı:
+   * küçük bir yerleşimden gelen tek ziyaret, "o kişi" demektir.
+   */
+  const sehirler = siralaVeKes(
+    kAnonim(
+      kovaTopla(buHaftaSatirlari, (satir) => satir.sehirler, 'ad'),
+      ASGARI_SEHIR,
+    ),
+  )
+
+  const tarayicilar = siralaVeKes(
+    kovaTopla(buHaftaSatirlari, (satir) => satir.tarayicilar, 'aile'),
+    6,
+  )
+  const ekranBantlari = siralaVeKes(ayrintiDagilimi(buHaftaSatirlari, 'ekran_bandi'), 6).map(
+    (satir) => ({
+      ad: EKRAN_ETIKETI[satir.ad as keyof typeof EKRAN_ETIKETI] ?? satir.ad,
+      adet: satir.adet,
+    }),
+  )
+
+  /**
+   * Saat yoğunluğu — 24 kova, hiçbiri atlanmıyor.
+   *
+   * ⚠️ Boş saatler de basılıyor. Yalnızca dolu saatleri döndürmek grafiği
+   * yalancı biçimde sıkıştırır: "gece 3'te trafik yok" bilgisi, o saatin
+   * listede hiç görünmemesiyle değil sıfır görünmesiyle anlaşılır.
+   */
+  const saatHaritasi = kovaTopla(buHaftaSatirlari, (satir) => satir.saatler, 'saat')
+  const saatler = Array.from({ length: 24 }, (_, saat) => ({
+    saat,
+    adet: saatHaritasi.get(String(saat)) ?? 0,
+  }))
+
+  /**
+   * Haftanın günü — gün satırlarının kendi tarihinden.
+   *
+   * ⚠️ Ayrı bir sayaç tutulmuyor: gün anahtarı zaten tarihi taşıyor.
+   * Fazladan bir alan, iki kaynağın çeliştiği bir gün üretirdi.
+   */
+  const GUN_ADLARI = ['Pazar', 'Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi']
+  const gunHaritasi = new Map<string, number>()
+  for (const satir of buHaftaSatirlari) {
+    const [y, a, g] = satir.gun.split('-').map(Number)
+    if (y === undefined || a === undefined || g === undefined) continue
+    const ad = GUN_ADLARI[new Date(Date.UTC(y, a - 1, g)).getUTCDay()] ?? ''
+    if (ad === '') continue
+    gunHaritasi.set(ad, (gunHaritasi.get(ad) ?? 0) + satir.toplamIstek)
+  }
+  /** ⚠️ Hafta Pazartesi başlıyor: Türkiye'de takvim böyle okunuyor. */
+  const gunYogunlugu = GUN_ADLARI.slice(1)
+    .concat(GUN_ADLARI[0] ?? 'Pazar')
+    .map((ad) => ({ ad, adet: gunHaritasi.get(ad) ?? 0 }))
+
+  const derinlikHaritasi = ayrintiDagilimi(buHaftaSatirlari, 'oturum_derinligi')
+  const derinlikToplami = [...derinlikHaritasi.values()].reduce((t, s) => t + s, 0)
+  /**
+   * ⚠️ KABLO DEĞERİ İLE EKRAN METNİ AYRI. Kaydedilen değer `7-ustu`
+   * (olay ucunun karakter süzgecinden geçmek zorunda); panelde "7 ve üzeri"
+   * yazıyor. İkisini birleştirmek, süzgeci gevşetmek demekti.
+   */
+  const derinlikBantlari = DERINLIK_BANTLARI.map((bant) => ({
+    ad: DERINLIK_ETIKETI[bant],
+    adet: derinlikHaritasi.get(bant) ?? 0,
+  }))
+  const hemenCikmaYuzde =
+    derinlikToplami > 0
+      ? Math.round(((derinlikHaritasi.get('1') ?? 0) / derinlikToplami) * 1000) / 10
+      : null
+  /**
+   * ⚠️ ORTALAMA YAKLAŞIK VE PANELDE ÖYLE YAZIYOR. Ham sayfa sayısı hiç
+   * saklanmadığı için gerçek ortalama hesaplanamaz; bant temsilcileri
+   * kullanılıyor ve "7+" için ihtiyatlı bir 8 alınıyor.
+   */
+  const ortalamaDerinlik =
+    derinlikToplami > 0
+      ? Math.round(
+          (DERINLIK_BANTLARI.reduce(
+            (t, bant) => t + (derinlikHaritasi.get(bant) ?? 0) * DERINLIK_TEMSILCISI[bant],
+            0,
+          ) /
+            derinlikToplami) *
+            10,
+        ) / 10
+      : null
+
+  const whatsappKaynaklari = siralaVeKes(ayrintiDagilimi(buHaftaSatirlari, 'whatsapp_tikla'))
+  const sonucsuzAramalar = siralaVeKes(ayrintiDagilimi(buHaftaSatirlari, 'sonucsuz_arama'))
+
   return {
     gunSayisi,
     ilkGun,
@@ -672,6 +916,20 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
     utmKaynaklar: siralaVeKes(utmHaritasi),
     teknik,
     cihazlar: siralaVeKes(cihazHaritasi, 4),
+    girisSayfalari,
+    cikisSayfalari,
+    yollar,
+    ulkeler,
+    sehirler,
+    tarayicilar,
+    ekranBantlari,
+    saatler,
+    gunler: gunYogunlugu,
+    derinlikBantlari,
+    hemenCikmaYuzde,
+    ortalamaDerinlik,
+    whatsappKaynaklari,
+    sonucsuzAramalar,
     hataOrani: ziyaretci > 0 ? Math.round((toplamHata / ziyaretci) * 1000) / 10 : null,
     vitaller: vitalleriTopla(buHaftaSatirlari),
     bos: ziyaretci === 0 && tum.length === 0,

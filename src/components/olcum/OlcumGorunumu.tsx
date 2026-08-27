@@ -1,6 +1,7 @@
 import type { AdminViewServerProps } from 'payload'
 
 import {
+  ASGARI_SEHIR,
   ASGARI_VITAL_ORNEK,
   raporuGetir,
   type AdSayi,
@@ -11,6 +12,7 @@ import {
 } from '@/lib/olcum/rapor'
 import { KATMAN_ETIKETI, type Katman } from '@/lib/olcum/tipler'
 import { yoneticiMi } from '@/lib/erisim'
+import { aramaKelimeleriniGetir, type AramaKonsoluRaporu } from '@/lib/olcum/aramaKonsolu'
 
 /**
  * Gözlemlenebilirlik ekranı.
@@ -52,7 +54,7 @@ export default async function GozlemGorunumu({ initPageResult }: AdminViewServer
     )
   }
 
-  const rapor = await raporuGetir(7)
+  const [rapor, arama] = await Promise.all([raporuGetir(7), aramaKelimeleriniGetir(28)])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '68rem' }}>
@@ -267,6 +269,127 @@ export default async function GozlemGorunumu({ initPageResult }: AdminViewServer
           </Kutu>
         </>
       )}
+
+      {/* ── Kitle raporları ─────────────────────────────────────────── */}
+      <Kutu>
+        <h2 style={baslik}>Giriş ve çıkış sayfaları</h2>
+        <p style={kucuk}>
+          ⚠️ <strong>Giriş</strong> sayfası, oturum kimliği üretilmeden ölçülüyor: yönlendireni
+          bizden olmayan istek giriş sayılıyor. Yönlendiren başlığını göndermeyen tarayıcı ayarları
+          site içi bir geçişi giriş gibi gösterebilir — yani sayı olduğundan <strong>büyük</strong>{' '}
+          olabilir.
+        </p>
+        <p style={kucuk}>
+          ⚠️ <strong>Çıkış</strong> sayfası sekme kapanırken bildiriliyor; yalnızca analitik onayı
+          verenlerden gelir.
+        </p>
+        <div style={ikiliIzgara}>
+          <Liste baslik="Giriş sayfaları" katman="A" satirlar={rapor.girisSayfalari} />
+          <Liste baslik="Çıkış sayfaları" katman="B" satirlar={rapor.cikisSayfalari} />
+        </div>
+      </Kutu>
+
+      <Kutu>
+        <h2 style={baslik}>Sayfa yolu — en sık görülen diziler</h2>
+        <p style={kucuk}>
+          ⚠️ Bu bir <strong>ziyaretçi izi değil</strong>, dizi sayacı. En fazla üç adımlık rota
+          dizileri bir dizge olarak sayılıyor; kim, ne zaman, kaç kez bilgisi yok. Dizinin kendisi
+          ziyaretçinin sekmesinde kalıyor, sunucuya yalnızca özeti geliyor.
+        </p>
+        <p style={kucuk}>
+          ⚠️ Tek kez görülen diziler listelenmiyor — tek kez görülmüş bir dizi, tek bir ziyaretin
+          izidir. Onlar &quot;Seyrek diziler&quot; satırında toplanıyor: sayı korunuyor, ayrıntı
+          gizleniyor.
+        </p>
+        <Liste baslik="En sık on dizi" katman="B" satirlar={rapor.yollar} />
+      </Kutu>
+
+      <Kutu>
+        <h2 style={baslik}>Coğrafya</h2>
+        <p style={kucuk}>
+          Ülke ve şehir Cloudflare&apos;in çözdüğü değerlerden geliyor; adres bilgisi okunmuyor.
+        </p>
+        <p style={kucuk}>
+          ⚠️ <strong>Şehirde k-anonimlik eşiği var ({ASGARI_SEHIR}).</strong> Küçük bir yerleşimden
+          gelen tek ziyaret, gün ve sayfayla birleşince &quot;o kişi&quot; demektir. Eşiğin
+          altındaki şehirler &quot;Diğer&quot; satırında toplanıyor — toplam doğru kalıyor, ayrıntı
+          kayboluyor.
+        </p>
+        <div style={ikiliIzgara}>
+          <Liste baslik="Ülkeler" katman="A" satirlar={rapor.ulkeler} />
+          <Liste baslik="Şehirler" katman="A" satirlar={rapor.sehirler} />
+        </div>
+      </Kutu>
+
+      <Kutu>
+        <h2 style={baslik}>Cihaz, tarayıcı ve ekran</h2>
+        <p style={kucuk}>
+          ⚠️ Tarayıcı <strong>sürümü alınmıyor</strong> ve ekran <strong>bant</strong> olarak
+          kaydediliyor. Sürüm + tam çözünürlük + saat, tarayıcı parmak izinin ta kendisidir.
+        </p>
+        <div style={ucluIzgara}>
+          <Liste baslik="Cihaz" katman="A" satirlar={rapor.cihazlar} />
+          <Liste baslik="Tarayıcı" katman="A" satirlar={rapor.tarayicilar} />
+          <Liste baslik="Ekran genişliği" katman="B" satirlar={rapor.ekranBantlari} />
+        </div>
+      </Kutu>
+
+      <Kutu>
+        <h2 style={baslik}>Saat ve gün yoğunluğu</h2>
+        <p style={kucuk}>
+          Yerel saat (Europe/Istanbul). Boş saatler de basılıyor: &quot;gece 3&apos;te trafik
+          yok&quot; bilgisi, o saatin listede hiç görünmemesiyle değil sıfır görünmesiyle anlaşılır.
+        </p>
+        <SaatSeridi saatler={rapor.saatler} />
+        <div style={{ marginTop: '1rem' }}>
+          <Liste baslik="Haftanın günleri" katman="A" satirlar={rapor.gunler} />
+        </div>
+      </Kutu>
+
+      <Kutu>
+        <h2 style={baslik}>Hemen çıkma ve oturum derinliği</h2>
+        <p style={kucuk}>
+          ⚠️ &quot;Oturum&quot; burada bir <strong>sekme</strong> demek; sunucuda hiçbir oturum
+          kaydı tutulmuyor. Sayfa sayısı ziyaretçinin kendi sekmesinde sayılıyor ve sunucuya
+          yalnızca bandı gönderiliyor.
+        </p>
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+          <div>
+            <p style={kucuk}>
+              Hemen çıkma oranı
+              <KatmanEtiketi katman="B" />
+            </p>
+            <p style={buyukSayi}>{yuzde(rapor.hemenCikmaYuzde)}</p>
+            <p style={kucuk}>Tek sayfalık oturumların payı.</p>
+          </div>
+          <div>
+            <p style={kucuk}>
+              Ortalama derinlik
+              <KatmanEtiketi katman="B" />
+            </p>
+            <p style={buyukSayi}>
+              {rapor.ortalamaDerinlik === null ? '—' : `${rapor.ortalamaDerinlik} sayfa`}
+            </p>
+            <p style={kucuk}>
+              ⚠️ Yaklaşık: ham sayı saklanmadığı için bant ortalarından hesaplanıyor.
+            </p>
+          </div>
+          <div style={{ minWidth: '14rem' }}>
+            <Liste baslik="Derinlik dağılımı" katman="B" satirlar={rapor.derinlikBantlari} />
+          </div>
+        </div>
+      </Kutu>
+
+      <Kutu>
+        <h2 style={baslik}>Arama kelimeleri (Google Search Console)</h2>
+        <p style={kucuk}>
+          ⚠️ Bu bölüm <strong>bizim ölçümümüz değil</strong>: ziyaretçinin Google&apos;a ne
+          yazdığını göremiyoruz, yönlendiren başlığı yıllardır arama terimini taşımıyor. Buradaki
+          veri Google&apos;ın kendi arayüzünden, zaten toplulaştırılmış hâlde geliyor — Google
+          eşiğin altındaki sorguları hiç vermiyor.
+        </p>
+        <AramaKelimeleri rapor={arama} />
+      </Kutu>
 
       <Kutu>
         <h2 style={baslik}>Bu ekran neyi ölçmüyor?</h2>
@@ -638,6 +761,141 @@ function Liste({
         </ul>
       )}
     </div>
+  )
+}
+
+const ikiliIzgara = {
+  display: 'grid',
+  gap: '1.5rem',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(16rem, 1fr))',
+} as const
+
+const ucluIzgara = {
+  display: 'grid',
+  gap: '1.5rem',
+  gridTemplateColumns: 'repeat(auto-fit, minmax(12rem, 1fr))',
+} as const
+
+/**
+ * Saat yoğunluğu — yirmi dört çubuk.
+ *
+ * ⚠️ GRAFİK KÜTÜPHANESİ YOK. Yirmi dört sayıyı çizmek için bir kütüphane
+ * eklemek, panele yüzlerce kilobayt ve bir bağımlılık daha demekti
+ * (CLAUDE.md: "Başka kütüphane ekleme"). Çubuklar yükseklik yüzdesiyle
+ * çiziliyor.
+ *
+ * ⚠️ Sayılar ayrıca METİN olarak da erişilebilir: `title` özniteliği ve
+ * `sr-only` benzeri bir özet olmadan grafik, ekran okuyucu kullanıcısı için
+ * hiçbir şey ifade etmez.
+ */
+function SaatSeridi({ saatler }: { saatler: { saat: number; adet: number }[] }) {
+  const enYuksek = Math.max(1, ...saatler.map((s) => s.adet))
+  const toplam = saatler.reduce((t, s) => t + s.adet, 0)
+
+  if (toplam === 0) return <p style={kucuk}>Henüz veri yok.</p>
+
+  return (
+    <div>
+      <div
+        style={{ display: 'flex', alignItems: 'flex-end', gap: '2px', height: '4rem' }}
+        role="img"
+        aria-label={`Saat yoğunluğu: ${saatler
+          .filter((s) => s.adet > 0)
+          .map((s) => `${s.saat}:00 → ${s.adet}`)
+          .join(', ')}`}
+      >
+        {saatler.map((s) => (
+          <div
+            key={s.saat}
+            title={`${String(s.saat).padStart(2, '0')}:00 — ${s.adet}`}
+            style={{
+              flex: 1,
+              height: `${Math.max(2, Math.round((s.adet / enYuksek) * 100))}%`,
+              /**
+               * ⚠️ HAM HEX YOK. `currentColor`, panelin kendi metin rengini
+               * miras alıyor: Payload'ın açık ve koyu temasında da doğru
+               * kalıyor ve tasarım disiplini denetimine takılmıyor.
+               */
+              background: 'currentColor',
+              opacity: 0.35,
+              borderRadius: '2px 2px 0 0',
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '.25rem' }}>
+        <span style={kucuk}>00:00</span>
+        <span style={kucuk}>12:00</span>
+        <span style={kucuk}>23:00</span>
+      </div>
+    </div>
+  )
+}
+
+/**
+ * Arama kelimeleri bölümü.
+ *
+ * ⚠️ ÜÇ DURUM VAR VE ÜÇÜ DE FARKLI ŞEY SÖYLÜYOR: yapılandırılmadı,
+ * erişilemedi, veri geldi. Üçünü aynı boş tabloya indirgemek "arama
+ * trafiği yok" gibi okunurdu — oysa ilk ikisinde doğru cevap "bakamıyoruz".
+ */
+function AramaKelimeleri({ rapor }: { rapor: AramaKonsoluRaporu }) {
+  if (rapor.durum === 'yapilandirilmadi') {
+    return (
+      <>
+        <p style={metin}>
+          <strong>Yapılandırılmadı.</strong> Bölüm sayı uydurmuyor: bağlantı kurulana kadar burada
+          rakam görünmeyecek.
+        </p>
+        <p style={kucuk}>Eksik ayar: {rapor.eksik.join(', ')}</p>
+        <p style={kucuk}>
+          Kurulum: Search Console → Ayarlar → Kullanıcılar ve izinler → servis hesabının e-postasını
+          salt okunur yetkiyle ekleyin, anahtarı sunucudaki ortam dosyasına yazın.
+        </p>
+      </>
+    )
+  }
+
+  if (rapor.durum === 'hata') {
+    return (
+      <p style={metin}>
+        <strong>Search Console&apos;a ulaşılamadı.</strong> {rapor.mesaj} — bu bir &quot;veri
+        yok&quot; değil, &quot;bakamadık&quot; durumudur.
+      </p>
+    )
+  }
+
+  if (rapor.sorgular.length === 0) {
+    return <p style={metin}>Search Console bu dönem için sorgu döndürmedi.</p>
+  }
+
+  return (
+    <>
+      <div style={{ display: 'flex', gap: '2rem', marginBottom: '.75rem' }}>
+        <div>
+          <p style={kucuk}>Tıklama</p>
+          <p style={buyukSayi}>{rapor.toplamTiklama}</p>
+        </div>
+        <div>
+          <p style={kucuk}>Gösterim</p>
+          <p style={buyukSayi}>{rapor.toplamGosterim}</p>
+        </div>
+      </div>
+      <Tablo
+        basliklar={['Sorgu', 'Tıklama', 'Gösterim', 'TO', 'Ort. sıra']}
+        satirlar={rapor.sorgular.map((satir) => [
+          satir.sorgu,
+          String(satir.tiklama),
+          String(satir.gosterim),
+          `%${satir.tiklamaOrani}`,
+          String(satir.siraOrtalamasi),
+        ])}
+      />
+      <p style={kucuk}>
+        ⚠️ Son 28 gün, iki gün geriden. Search Console verisi 2–3 gün gecikmeli yayınlanıyor; bugünü
+        istemek her seferinde boş liste döndürürdü.
+      </p>
+    </>
   )
 }
 

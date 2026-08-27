@@ -31,14 +31,23 @@ import { CEREZ_ONAY_ADI, izinVarMi, onayCoz } from '@/lib/kvkk/onay'
 const Govde = z.object({
   ad: z.string().max(40),
   /**
-   * ⚠️ Ayrıntı SERBEST METİN DEĞİL: 40 karakter, yalnızca harf/rakam/
-   * tire/nokta/eğik çizgi. Arama kutusuna yazılan cümlenin buraya
-   * sızmasını yapısal olarak engelliyor.
+   * ⚠️ Ayrıntı SERBEST METİN DEĞİL: yalnızca harf/rakam/tire/nokta/eğik
+   * çizgi ve `>`. Arama kutusuna yazılan cümlenin buraya sızmasını yapısal
+   * olarak engelliyor.
+   *
+   * ⚠️ ASIL KORUMA BOŞLUK YASAĞI — ve o duruyor. Cümleyi cümle yapan şey
+   * boşluk; `>` tek başına serbest metin üretmiyor. Yol dizisi
+   * (`/portfoy>/portfoy.detay`) bu karaktere ihtiyaç duyuyor.
+   *
+   * ⚠️ Sınır 40'tan 64'e çıkarıldı: üç adımlık kaba yol dizisi 40'a
+   * sığmıyordu ve olay SESSİZCE düşerdi — panelde "veri yok" görünür,
+   * sebebi hiçbir yerde yazmazdı. Adımlar zaten slug taşımıyor
+   * (`lib/olcum/bantlar.ts`, `yolAdimi`), yani sınır cömert değil yeterli.
    */
   ayrinti: z
     .string()
-    .max(40)
-    .regex(/^[\p{L}\p{N}._/-]*$/u)
+    .max(64)
+    .regex(/^[\p{L}\p{N}._/>-]*$/u)
     .optional(),
 })
 

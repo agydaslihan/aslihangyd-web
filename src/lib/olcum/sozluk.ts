@@ -134,6 +134,39 @@ export const OLAYLAR: readonly OlayTanimi[] = [
 
   /* ── Düşük niyet ── */
   {
+    ad: 'cikis_sayfasi',
+    etiket: 'Çıkış sayfası',
+    niyet: 'dusuk',
+    aciklama:
+      'Ziyaretçinin siteyi terk ettiği son sayfa. ⚠️ Sekme kapanırken bir kez ' +
+      'gönderiliyor; site içinde devam edilirse gönderilmiyor.',
+  },
+  {
+    ad: 'sayfa_yolu',
+    etiket: 'Sayfa yolu (dizi)',
+    niyet: 'dusuk',
+    aciklama:
+      '⚠️ ZİYARETÇİ İZİ DEĞİL, DİZİ SAYACI. En fazla üç adımlık rota dizisi bir ' +
+      'dizge olarak sayılıyor; kim, ne zaman, kaç kez bilgisi yok. Raporda tek kez ' +
+      'görülen diziler listelenmiyor.',
+  },
+  {
+    ad: 'oturum_derinligi',
+    etiket: 'Oturum derinliği (bant)',
+    niyet: 'dusuk',
+    aciklama:
+      'Bir sekmede kaç sayfa gezildiği — 1 / 2-3 / 4-6 / 7+. ⚠️ "1" bandı hemen ' +
+      'çıkma oranının kendisidir; ayrı bir bounce sayacı tutulmuyor.',
+  },
+  {
+    ad: 'ekran_bandi',
+    etiket: 'Ekran genişliği (bant)',
+    niyet: 'dusuk',
+    aciklama:
+      '⚠️ TAM ÇÖZÜNÜRLÜK DEĞİL, BANT. Tam çözünürlük tarayıcı ve saatle birleşince ' +
+      'parmak izi olur. Sınırlar tasarımın kırılma noktalarından geçiyor.',
+  },
+  {
     ad: 'harita_katmani',
     etiket: 'Harita katmanı açıldı/kapandı',
     niyet: 'dusuk',
@@ -171,3 +204,25 @@ export function gecerliOlayMi(ad: unknown): ad is string {
 export const YUKSEK_NIYETLI_OLAYLAR: readonly string[] = OLAYLAR.filter(
   (olay) => olay.niyet === 'yuksek',
 ).map((olay) => olay.ad)
+
+/**
+ * Ayrıntısı verilmediğinde BULUNULAN ROTA ile doldurulacak olaylar.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ "WhatsApp tıklamalarının kaynağı" sorusu böyle cevaplanıyor.
+ *
+ * Alternatif, her WhatsApp bağlantısına elle `data-gozlem-ayrinti` yazmaktı
+ * — bağlantılar başlıkta, üst şeritte, yüzen düğmede ve birkaç sayfa
+ * içinde. Biri unutulduğunda o kaynak sessizce "bilinmiyor" olurdu ve
+ * eksiklik ancak raporu okurken fark edilirdi.
+ *
+ * Bunun yerine kural TEK YERDE: bu kümedeki bir olay ayrıntısız
+ * gönderilirse `OlayIzleyici` bulunulan rotayı ayrıntı olarak koyuyor.
+ * Yeni bir WhatsApp düğmesi eklemek için hiçbir şey yapmak gerekmiyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const ROTA_AYRINTILI_OLAYLAR: readonly string[] = [
+  'whatsapp_tikla',
+  'telefon_tikla',
+  'gizli_portfoy_talep',
+]

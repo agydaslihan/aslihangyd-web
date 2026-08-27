@@ -224,6 +224,10 @@ describe('tampon', () => {
     utmKaynak: null,
     sureMs: 12,
     hataMi: false,
+    girisMi: true,
+    saat: 14,
+    tarayici: 'chrome',
+    sehir: 'Corlu',
   })
 
   it('sayar ve boşaltınca sıfırlanır', () => {

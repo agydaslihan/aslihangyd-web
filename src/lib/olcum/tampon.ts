@@ -114,6 +114,26 @@ export interface TamponIcerigi {
   onayliIstek: number
   /** Katman A'da görülen toplam istek — onay oranının paydası. */
   toplamIstek: number
+
+  /**
+   * Giriş sayfası → adet.
+   *
+   * ⚠️ "Ziyaretçiler nereden giriyor" sorusu, oturum kimliği ÜRETMEDEN
+   * cevaplanıyor: yönlendiren bizden değilse o istek bir giriştir
+   * (`girisMi`). Yaklaşıklığı panelde yazılı.
+   */
+  girisSayfasi: Map<string, number>
+  /** Saat (0–23, Europe/Istanbul) → adet. */
+  saat: Map<string, number>
+  /** Tarayıcı ailesi → adet. Sürüm yok, altı kaba kova. */
+  tarayici: Map<string, number>
+  /**
+   * Şehir → adet.
+   *
+   * ⚠️ Şehir ülkeden riskli: raporda k-anonimlik eşiği uygulanıyor
+   * (`ASGARI_SEHIR`), eşiğin altındakiler "diğer"e toplanıyor.
+   */
+  sehir: Map<string, number>
 }
 
 function bosIcerik(gun: string): TamponIcerigi {
@@ -131,6 +151,10 @@ function bosIcerik(gun: string): TamponIcerigi {
     niyet: new Map(),
     onayliIstek: 0,
     toplamIstek: 0,
+    girisSayfasi: new Map(),
+    saat: new Map(),
+    tarayici: new Map(),
+    sehir: new Map(),
   }
 }
 
@@ -176,6 +200,14 @@ export interface SayfaKaydi {
   utmKaynak: string | null
   sureMs: number
   hataMi: boolean
+  /** Ziyaretçi siteye bu sayfadan mı girdi (`girisMi`)? */
+  girisMi: boolean
+  /** Yerel saat kovası, 0–23. */
+  saat: number
+  /** Tarayıcı ailesi — sürümsüz, kaba kova. */
+  tarayici: string
+  /** Cloudflare'in çözdüğü şehir; ham IP değil. */
+  sehir: string
 }
 
 /** Katman A — her ziyaretçi, çerezsiz, IP'siz. */
@@ -189,6 +221,10 @@ export function sayfaSay(kayit: SayfaKaydi): void {
   t.cihaz.set(kayit.cihaz, (t.cihaz.get(kayit.cihaz) ?? 0) + 1)
   if (kayit.utmKaynak !== null) artir(t.utmKaynak, kayit.utmKaynak)
   if (kayit.hataMi) artir(t.hata, kayit.rota)
+  if (kayit.girisMi) artir(t.girisSayfasi, kayit.rota)
+  artir(t.saat, String(kayit.saat))
+  artir(t.tarayici, kayit.tarayici)
+  artir(t.sehir, kayit.sehir)
 
   const once = t.sure.get(kayit.rota)
   if (once === undefined) {

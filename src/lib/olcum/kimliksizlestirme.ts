@@ -24,6 +24,33 @@
 export const DOGRUDAN = 'dogrudan'
 
 /**
+ * Alan adını karşılaştırılabilir hâle getirir.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ PORT ATILIYOR — VE BU BİR HATA DÜZELTMESİ, SÜS DEĞİL.
+ *
+ * `URL.hostname` portu taşımıyor (`127.0.0.1`), `nextUrl.host` taşıyor
+ * (`127.0.0.1:3210`). İkisi doğrudan karşılaştırıldığında standart
+ * olmayan bir portta çalışan her kurulumda SİTE İÇİ gezinme, dış
+ * yönlendiren sanılıyordu.
+ *
+ * Ölçümle yakalandı: yerelde `/mahalleler`e site içinden yapılan beş
+ * geçişin beşi de "giriş sayfası" olarak sayıldı. Üretimde port
+ * varsayılan olduğu için görünmüyordu — yani hata yalnızca geliştirme ve
+ * hazırlık ortamlarında, tam da sayıları doğrulamaya çalıştığımız yerde
+ * ortaya çıkıyordu.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+function alanAdiniSadelestir(host: string): string {
+  return (
+    host
+      .toLowerCase()
+      .split(':')[0]
+      ?.replace(/^www\./, '') ?? ''
+  )
+}
+
+/**
  * Yönlendiren adresten yalnızca alan adını çıkarır.
  *
  * Kendi alan adımızdan gelen iç gezinmeler `null` döner: onlar bir
@@ -41,8 +68,8 @@ export function yonlendirenAlanAdi(referer: string | null | undefined, kendiHost
 
   if (host === '') return DOGRUDAN
 
-  const temizKendi = kendiHost.toLowerCase().replace(/^www\./, '')
-  const temiz = host.replace(/^www\./, '')
+  const temizKendi = alanAdiniSadelestir(kendiHost)
+  const temiz = alanAdiniSadelestir(host)
 
   // İç gezinme kaynak değildir.
   if (temiz === temizKendi) return DOGRUDAN
@@ -132,4 +159,126 @@ export function ulkeKodu(baslik: string | null | undefined): string {
   if (typeof baslik !== 'string') return 'XX'
   const temiz = baslik.trim().toUpperCase()
   return /^[A-Z]{2}$/.test(temiz) ? temiz : 'XX'
+}
+
+/**
+ * Tarayıcı ailesi — `User-Agent` başlığından, KABA sınıflarla.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SÜRÜM NUMARASI ALINMIYOR VE BU BİR KVKK KARARI.
+ *
+ * "Chrome 141.0.7390.54 / macOS 15.2" gibi bir dize, ekran çözünürlüğü ve
+ * saatle birleştiğinde tek bir cihazı işaret edebilir — tarayıcı parmak
+ * izinin ta kendisi. Burada yalnızca ALTI kova var; hiçbiri kimseyi
+ * ayırt etmez.
+ *
+ * ⚠️ Sıra önemli: Edge kendini Chrome, Chrome kendini Safari sanıyor.
+ * Genelden özele değil, ÖZELDEN GENELE bakılıyor.
+ *
+ * ⚠️ Ham `User-Agent` HİÇBİR YERE YAZILMIYOR — ne veritabanına ne günlüğe.
+ * Bu fonksiyon onu bir kovaya çevirip atıyor.
+ */
+export type TarayiciAilesi = 'chrome' | 'safari' | 'firefox' | 'edge' | 'samsung' | 'diger'
+
+export function tarayiciAilesi(userAgent: string | null | undefined): TarayiciAilesi {
+  if (typeof userAgent !== 'string') return 'diger'
+  const ua = userAgent.toLowerCase()
+
+  if (ua.includes('edg/') || ua.includes('edga/') || ua.includes('edgios/')) return 'edge'
+  if (ua.includes('samsungbrowser')) return 'samsung'
+  if (ua.includes('firefox') || ua.includes('fxios')) return 'firefox'
+  if (ua.includes('chrome') || ua.includes('crios') || ua.includes('chromium')) return 'chrome'
+  if (ua.includes('safari')) return 'safari'
+  return 'diger'
+}
+
+/**
+ * Şehir — Cloudflare'in `CF-IPCity` başlığından.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ ŞEHİR, ÜLKEDEN DAHA RİSKLİ BİR ALAN. Kayıt burada bitmiyor.
+ *
+ * Ülke tek başına hiç kimseyi işaret etmez; şehir edebilir. Küçük bir
+ * ilçeden gelen tek bir ziyaret, gün ve sayfa ile birleştiğinde "o gün o
+ * sayfaya bakan kişi" demektir. Bu yüzden iki koruma var:
+ *
+ *   1. BURADA: değer normalleştiriliyor, kırpılıyor, serbest metin
+ *      olamayacak biçime sokuluyor (uydurma bir başlık gönderilemesin).
+ *   2. RAPORDA: `k-anonimlik` eşiği — eşiğin altında kalan şehirler
+ *      "diğer" kovasına toplanıyor ve tek tek gösterilmiyor
+ *      (`lib/olcum/rapor.ts`, `ASGARI_SEHIR`).
+ *
+ * İkincisi olmadan birincisi yetmez; ikisi ayrı yerde olduğu için ikisi
+ * de yorumla değil kodla bağlı.
+ *
+ * ⚠️ IP yine okunmuyor: Cloudflare şehri çözmüş hâlde gönderiyor.
+ */
+export const SEHIR_BILINMIYOR = 'bilinmiyor'
+
+export function sehirAdi(baslik: string | null | undefined): string {
+  if (typeof baslik !== 'string') return SEHIR_BILINMIYOR
+  const temiz = baslik
+    .trim()
+    .slice(0, 40)
+    // Harf, boşluk ve tire dışında ne gelirse gelsin atılıyor: başlık
+    // dışarıdan geliyor ve serbest metin olarak saklanmamalı.
+    .replace(/[^\p{L}\s-]/gu, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+  return temiz === '' ? SEHIR_BILINMIYOR : temiz
+}
+
+/**
+ * Saat kovası — Europe/Istanbul, 0–23.
+ *
+ * ⚠️ YEREL SAAT. UTC'ye göre sayılan bir yoğunluk grafiği, akşam
+ * yoğunluğunu üç saat kaydırıp "gece 9'da kimse yok" dedirtirdi.
+ */
+export function saatKovasi(an: Date = new Date()): number {
+  const saat = new Intl.DateTimeFormat('en-GB', {
+    timeZone: 'Europe/Istanbul',
+    hour: '2-digit',
+    hour12: false,
+  }).format(an)
+  const sayi = Number(saat)
+  return Number.isInteger(sayi) && sayi >= 0 && sayi <= 23 ? sayi : 0
+}
+
+/**
+ * Bu istek bir GİRİŞ mi — yani ziyaretçi siteye buradan mı girdi?
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ OTURUM KİMLİĞİ OLMADAN "GİRİŞ SAYFASI" NASIL ÖLÇÜLÜR?
+ *
+ * Olağan yol bir oturum çerezi yazıp ilk isteği işaretlemektir — ve tam da
+ * onu yapmıyoruz. Kullanılan işaret, isteğin KENDİ İÇİNDE zaten bulunan
+ * bir bilgi: yönlendiren BİZDEN Mİ GELİYOR?
+ *
+ *   · Yönlendiren yoksa (doğrudan adres, yer imi, uygulama içi tarayıcı)
+ *   · ya da yönlendiren BAŞKA bir siteyse
+ *
+ * → ziyaretçi siteye o sayfadan girmiştir.
+ *
+ * ⚠️ `yonlendirenAlanAdi` BU SORUYU CEVAPLAYAMAZ: o, site içi gezinmeyi de
+ * doğrudan girişi de `dogrudan` kovasına koyuyor (kaynak listesi için
+ * doğru davranış — iç gezinme bir "kaynak" değil). Giriş ölçümü ayrı bir
+ * soru sorduğu için ayrı bir fonksiyona ihtiyaç duyuyor.
+ *
+ * ⚠️ Bu bir YAKLAŞIKLIK ve panelde de öyle yazıyor. Yönlendiren başlığını
+ * göndermeyen tarayıcı ayarları ve gizlilik eklentileri, site içi bir
+ * geçişi giriş gibi gösterebilir. Hata, sayıyı olduğundan BÜYÜK gösterme
+ * yönünde; bunu gizlemek yerine söylüyoruz.
+ */
+export function girisMi(referer: string | null | undefined, kendiHost: string): boolean {
+  if (typeof referer !== 'string' || referer.trim() === '') return true
+
+  let host: string
+  try {
+    host = new URL(referer).hostname.toLowerCase()
+  } catch {
+    return true
+  }
+
+  if (host === '') return true
+  return alanAdiniSadelestir(host) !== alanAdiniSadelestir(kendiHost)
 }
