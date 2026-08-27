@@ -24,6 +24,7 @@
     "db:reset": "docker compose --env-file .env -f docker/compose.dev.yml down -v && docker compose --env-file .env -f docker/compose.dev.yml up -d",
     "payload": "payload",
     "prepare": "husky",
+    "duman:kullanici": "payload run scripts/duman-kullanicisi.ts",
     "seed": "payload run scripts/seed.ts",
     "font:altkume": "node --experimental-strip-types scripts/font-altkume.ts"
   },

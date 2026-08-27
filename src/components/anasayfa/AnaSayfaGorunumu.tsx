@@ -19,9 +19,29 @@ import { anaSayfaHazirligi } from '@/lib/anasayfa/hazirlik'
  *
  * ⚠️ OTURUM KAPISI GÖVDEDE. Admin görünümleri oturumsuz da çalışıyor;
  * `if (!req.user) return null` olmadan bu ekran herkese açık olurdu.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ OTURUM `initPageResult.req.user`DAN OKUNUR — ÜST DÜZEY `user`DAN DEĞİL.
+ *
+ * Bu ekran bir süre BOMBOŞ AÇILDI ve hiçbir hata vermedi. Sebep: gövde
+ * `{ user }` prop'unu okuyordu. `AdminViewServerProps` tipinde `user`
+ * var ama İSTEĞE BAĞLI (`user?: TypedUser`) ve Payload özel görünümlere
+ * onu GEÇMİYOR. Yani:
+ *
+ *   · TypeScript memnun — alan tipte var.
+ *   · Çalışma zamanında `undefined` — kapı herkesi çeviriyor.
+ *   · `return null` — sayfa boş, konsol sessiz, sunucu günlüğü temiz.
+ *
+ * Oturum bilgisinin geçtiği tek yer `initPageResult.req`. Projedeki diğer
+ * sekiz görünüm baştan böyle yazılmıştı; sapan iki tanesi bunlardı.
+ *
+ * Kural `lib/panel/gorunumKapisi.test.ts` ile denetleniyor.
+ * ─────────────────────────────────────────────────────────────────────────
  */
-export default async function AnaSayfaGorunumu({ user }: AdminViewServerProps) {
-  if (!user) return null
+export default async function AnaSayfaGorunumu({ initPageResult }: AdminViewServerProps) {
+  const { req } = initPageResult
+
+  if (!req.user) return null
 
   const bolumler = await anaSayfaHazirligi()
   const hazirSayisi = bolumler.filter((bolum) => bolum.hazir).length

@@ -10,6 +10,7 @@ import {
   type VitalSatiri,
 } from '@/lib/olcum/rapor'
 import { KATMAN_ETIKETI, type Katman } from '@/lib/olcum/tipler'
+import { yoneticiMi } from '@/lib/erisim'
 
 /**
  * Gözlemlenebilirlik ekranı.
@@ -33,9 +34,17 @@ import { KATMAN_ETIKETI, type Katman } from '@/lib/olcum/tipler'
  * ⚠️ Oturum kapısı gövdede zorunlu: admin görünümleri oturumsuz da
  * çalışıyor (CLAUDE.md — portföy sihirbazında aynı tuzağa düşülmüştü).
  */
-export default async function GozlemGorunumu({ user }: AdminViewServerProps) {
-  if (!user) return null
-  if ((user as { rol?: string }).rol !== 'yonetici') {
+/**
+ * ⚠️ OTURUM `initPageResult.req.user`DAN OKUNUR — ÜST DÜZEY `user`DAN DEĞİL.
+ * Gerekçe `anasayfa/AnaSayfaGorunumu.tsx` içinde uzun uzun yazılı: tipte
+ * var ama isteğe bağlı, Payload özel görünümlere geçmiyor; ekran sessizce
+ * boş açılıyor. Denetim: `lib/panel/gorunumKapisi.test.ts`.
+ */
+export default async function GozlemGorunumu({ initPageResult }: AdminViewServerProps) {
+  const { req } = initPageResult
+
+  if (!req.user) return null
+  if (!yoneticiMi(req.user)) {
     return (
       <Kutu>
         <p style={metin}>Bu ekran yalnızca yöneticilere açık.</p>
