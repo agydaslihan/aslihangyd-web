@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 
 import { DERINLIK_BANTLARI, DERINLIK_ETIKETI, DERINLIK_TEMSILCISI, EKRAN_ETIKETI } from './bantlar'
 
+import { KAYNAK_TURU_ETIKETI, aramaMotoruAdi, kaynakTuru } from './kimliksizlestirme'
 import { BOSALTMA_ARALIGI_MS, gunAnahtari, tamponuOku } from './tampon'
 import { olayTanimi, YUKSEK_NIYETLI_OLAYLAR } from './sozluk'
 import { DEGERLEME_ALANLARI, fiyatBandiEtiketi, type Katman } from './tipler'
@@ -204,6 +205,17 @@ export interface Rapor {
   hemenCikmaYuzde: number | null
   /** Ortalama oturum derinliği — bant temsilcilerinden YAKLAŞIK. */
   ortalamaDerinlik: number | null
+  /**
+   * Kaynak türü dağılımı — doğrudan / arama motoru / sosyal / referans.
+   *
+   * ⚠️ Ham alan adı listesinin YERİNE geçmiyor, üstüne biniyor. Aynı
+   * kaynak beş alan adına bölününce ("google.com", "google.com.tr",
+   * "googlequicksearchbox"…) hiçbiri ilk ona giremiyor ve "arama
+   * motorundan mı geliyor" sorusu cevapsız kalıyor.
+   */
+  kaynakTurleri: AdSayi[]
+  /** Arama motoru kırılımı — Google, Bing, Yandex, DuckDuckGo, diğer. */
+  aramaMotorlari: AdSayi[]
   /** WhatsApp tıklamalarının geldiği sayfalar (Katman B). */
   whatsappKaynaklari: AdSayi[]
   /** Sonuç bulunamayan aramaların ölçütleri — portföy boşluğu (Katman B). */
@@ -890,6 +902,36 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
         ) / 10
       : null
 
+  /* ── Kaynak türü ve arama motoru kırılımı ─────────────────────────── */
+
+  const turHaritasi = new Map<string, number>()
+  const motorHaritasi = new Map<string, number>()
+  for (const [alan, adet] of kaynakHaritasi) {
+    const tur = kaynakTuru(alan)
+    const etiket = KAYNAK_TURU_ETIKETI[tur]
+    turHaritasi.set(etiket, (turHaritasi.get(etiket) ?? 0) + adet)
+
+    if (tur !== 'arama') continue
+    /**
+     * ⚠️ Tanınmayan arama motoru "diğer"e ATILMIYOR, kendi alan adıyla
+     * kalıyor: yeni bir motorun trafiği önce burada görünsün, sonra
+     * sözlüğe eklensin. "Diğer" kovası onu fark etmemizi engellerdi.
+     */
+    const motor = aramaMotoruAdi(alan) ?? alan
+    motorHaritasi.set(motor, (motorHaritasi.get(motor) ?? 0) + adet)
+  }
+
+  /**
+   * ⚠️ Dört kategori de basılıyor, sıfır olanlar dâhil. Yalnızca dolu
+   * olanları göstermek "sosyalden hiç gelen yok" bilgisini görünmez
+   * kılardı; sıfır bir cevaptır.
+   */
+  const kaynakTurleri = Object.values(KAYNAK_TURU_ETIKETI).map((etiket) => ({
+    ad: etiket,
+    adet: turHaritasi.get(etiket) ?? 0,
+  }))
+  const aramaMotorlari = siralaVeKes(motorHaritasi, 6)
+
   const whatsappKaynaklari = siralaVeKes(ayrintiDagilimi(buHaftaSatirlari, 'whatsapp_tikla'))
   const sonucsuzAramalar = siralaVeKes(ayrintiDagilimi(buHaftaSatirlari, 'sonucsuz_arama'))
 
@@ -928,6 +970,8 @@ export async function raporuGetir(gunSayisi = 7): Promise<Rapor> {
     derinlikBantlari,
     hemenCikmaYuzde,
     ortalamaDerinlik,
+    kaynakTurleri,
+    aramaMotorlari,
     whatsappKaynaklari,
     sonucsuzAramalar,
     hataOrani: ziyaretci > 0 ? Math.round((toplamHata / ziyaretci) * 1000) / 10 : null,

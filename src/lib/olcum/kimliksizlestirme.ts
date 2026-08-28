@@ -282,3 +282,107 @@ export function girisMi(referer: string | null | undefined, kendiHost: string): 
   if (host === '') return true
   return alanAdiniSadelestir(host) !== alanAdiniSadelestir(kendiHost)
 }
+
+/**
+ * Yönlendiren alan adını KAYNAK TÜRÜNE çevirir.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ "instagram.com 42" SATIRI TEK BAŞINA KARAR ALDIRMIYOR.
+ *
+ * Ham alan adı listesi uzun ve dağınık: `google.com`, `google.com.tr`,
+ * `com.google.android.googlequicksearchbox`, `l.instagram.com`,
+ * `lm.facebook.com`… Aynı kaynak beş satıra bölününce hiçbiri ilk ona
+ * giremiyor ve "arama motorundan mı geliyor sosyalden mi" sorusu
+ * cevapsız kalıyor.
+ *
+ * Dört kategori bu soruyu cevaplıyor: doğrudan / arama motoru / sosyal /
+ * referans. Ham liste de duruyor — kategori onun yerine geçmiyor, üstüne
+ * biniyor.
+ *
+ * ⚠️ EŞLEŞME ALAN ADININ SONUNA BAKIYOR, İÇİNDE ARAMIYOR.
+ * `includes('google')` yazmak, `google-analytics-blog.example.com` gibi
+ * bir siteyi arama motoru sayardı. Sonek eşlemesi bu tuzağı kesiyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export type KaynakTuru = 'dogrudan' | 'arama' | 'sosyal' | 'referans'
+
+export const KAYNAK_TURU_ETIKETI: Record<KaynakTuru, string> = {
+  dogrudan: 'Doğrudan',
+  arama: 'Arama motoru',
+  sosyal: 'Sosyal medya',
+  referans: 'Referans site',
+}
+
+/**
+ * Arama motorları — panelde tek tek gösterilenler.
+ *
+ * ⚠️ Sıra önemli: `yandex.com.tr` ile `yandex.com` aynı motora düşmeli,
+ * bu yüzden eşleşme sonek üzerinden ve en uzun sonek önce denenmiyor —
+ * hepsi ayrı ayrı listelendiği için gerek yok.
+ */
+const ARAMA_MOTORLARI: Record<string, string[]> = {
+  Google: ['google.com', 'google.com.tr', 'googlequicksearchbox', 'google'],
+  Bing: ['bing.com', 'bing'],
+  Yandex: ['yandex.com', 'yandex.com.tr', 'yandex.ru', 'yandex'],
+  DuckDuckGo: ['duckduckgo.com', 'duckduckgo'],
+  Ecosia: ['ecosia.org'],
+  Brave: ['search.brave.com'],
+}
+
+const SOSYAL_AGLAR = [
+  'instagram.com',
+  'facebook.com',
+  'fb.com',
+  'messenger.com',
+  'x.com',
+  'twitter.com',
+  't.co',
+  'linkedin.com',
+  'lnkd.in',
+  'youtube.com',
+  'youtu.be',
+  'tiktok.com',
+  'pinterest.com',
+  'reddit.com',
+  'whatsapp.com',
+  'telegram.org',
+  't.me',
+]
+
+/** Alan adı bu sonekle bitiyor mu (ya da tam olarak bu mu)? */
+function sonekEsler(alan: string, sonek: string): boolean {
+  return alan === sonek || alan.endsWith(`.${sonek}`)
+}
+
+/**
+ * Bir yönlendireni dört kategoriden birine yerleştirir.
+ *
+ * ⚠️ `DOGRUDAN` etiketi hem gerçekten doğrudan girişi hem site içi
+ * gezinmeyi taşıyor (bkz. `yonlendirenAlanAdi`); ikisi de "bir kaynaktan
+ * gelmedi" demek ve kategori olarak aynı yere düşüyorlar.
+ */
+export function kaynakTuru(alan: string): KaynakTuru {
+  if (alan === DOGRUDAN || alan === '' || alan === 'diger') return 'dogrudan'
+  const temiz = alan.toLowerCase()
+
+  for (const sonekler of Object.values(ARAMA_MOTORLARI)) {
+    if (sonekler.some((sonek) => sonekEsler(temiz, sonek))) return 'arama'
+  }
+  if (SOSYAL_AGLAR.some((sonek) => sonekEsler(temiz, sonek))) return 'sosyal'
+  return 'referans'
+}
+
+/**
+ * Arama motorunun görünen adı — tanınmıyorsa `null`.
+ *
+ * ⚠️ Tanınmayan bir arama motoru "diğer" kovasına değil, kendi alan adıyla
+ * kalıyor: yeni bir motorun trafiği önce ham listede görünsün, sonra
+ * buraya eklensin. "Diğer"e atmak, o motoru fark etmemizi engellerdi.
+ */
+export function aramaMotoruAdi(alan: string): string | null {
+  const temiz = alan.toLowerCase()
+  for (const [ad, sonekler] of Object.entries(ARAMA_MOTORLARI)) {
+    if (sonekler.some((sonek) => sonekEsler(temiz, sonek))) return ad
+  }
+  return null
+}

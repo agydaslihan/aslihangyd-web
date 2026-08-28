@@ -182,6 +182,24 @@ export default async function GozlemGorunumu({ initPageResult }: AdminViewServer
             <div style={{ marginTop: '1rem' }}>
               <Liste baslik="UTM kampanya kaynakları" katman="A" satirlar={rapor.utmKaynaklar} />
             </div>
+
+            {/*
+              ⚠️ HAM ALAN ADI LİSTESİNİN YERİNE GEÇMİYOR, ÜSTÜNE BİNİYOR.
+
+              Aynı kaynak beş alan adına bölünüyor (`google.com`,
+              `google.com.tr`, `googlequicksearchbox`…) ve hiçbiri ilk ona
+              giremiyor; "arama motorundan mı geliyor sosyalden mi" sorusu
+              ham listede cevapsız kalıyor. Dört kategori o soruyu
+              cevaplıyor, ham liste ayrıntıyı vermeye devam ediyor.
+            */}
+            <div style={ikiliIzgara}>
+              <Liste baslik="Kaynak türü" katman="A" satirlar={rapor.kaynakTurleri} />
+              <Liste baslik="Arama motoru" katman="A" satirlar={rapor.aramaMotorlari} />
+            </div>
+            <p style={kucuk}>
+              ⚠️ Tanınmayan bir arama motoru &quot;diğer&quot; kovasına atılmıyor, kendi alan adıyla
+              listede kalıyor — yeni bir motorun trafiğini fark edebilmek için.
+            </p>
           </Kutu>
 
           {/* ── 3.7 ── */}
