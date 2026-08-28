@@ -15,7 +15,10 @@ import {
   yolDizisi,
 } from './bantlar'
 import {
+  KAYNAK_TURU_ETIKETI,
+  aramaMotoruAdi,
   girisMi,
+  kaynakTuru,
   saatKovasi,
   sehirAdi,
   tarayiciAilesi,
@@ -395,6 +398,61 @@ describe('yeni raporların KVKK sınırı — kaynak denetimi', () => {
        * üretirlerdi.
        */
       expect(tanim!.niyet, `${ad} niyet sınıfı yanlış`).toBe('dusuk')
+    }
+  })
+})
+
+describe('kaynak türü ayrımı', () => {
+  it.each([
+    ['dogrudan', 'dogrudan'],
+    ['google.com', 'arama'],
+    ['www.google.com.tr', 'arama'],
+    ['com.google.android.googlequicksearchbox', 'arama'],
+    ['bing.com', 'arama'],
+    ['yandex.com.tr', 'arama'],
+    ['duckduckgo.com', 'arama'],
+    ['l.instagram.com', 'sosyal'],
+    ['t.co', 'sosyal'],
+    ['lm.facebook.com', 'sosyal'],
+    ['emlakhaber.example', 'referans'],
+  ])('%s → %s', (alan, beklenen) => {
+    expect(kaynakTuru(alan)).toBe(beklenen)
+  })
+
+  it('alan adının İÇİNDE arama yapmıyor — sonek eşliyor', () => {
+    /**
+     * ⚠️ `includes('google')` yazmak, `google-analytics-blog.example.com`
+     * gibi bir siteyi arama motoru sayardı. Kaynak raporunun tamamı o tek
+     * kısayol yüzünden yanlış olurdu.
+     */
+    expect(kaynakTuru('google-analytics-blog.example.com')).toBe('referans')
+    expect(kaynakTuru('instagram-haberleri.example.com')).toBe('referans')
+    expect(kaynakTuru('notgoogle.com')).toBe('referans')
+  })
+
+  it('arama motoru adları birleştiriliyor', () => {
+    expect(aramaMotoruAdi('google.com.tr')).toBe('Google')
+    expect(aramaMotoruAdi('www.google.com')).toBe('Google')
+    expect(aramaMotoruAdi('yandex.ru')).toBe('Yandex')
+  })
+
+  it('tanınmayan arama motoru "diğer"e ATILMIYOR', () => {
+    /**
+     * ⚠️ Yeni bir motorun trafiği önce ham listede görünsün, sonra sözlüğe
+     * eklensin. "Diğer" kovasına atmak, o motoru fark etmemizi engellerdi.
+     */
+    expect(aramaMotoruAdi('yeni-arama-motoru.example')).toBeNull()
+  })
+
+  it('dört kategori var ve hepsinin Türkçe etiketi tanımlı', () => {
+    expect(Object.keys(KAYNAK_TURU_ETIKETI).sort()).toEqual([
+      'arama',
+      'dogrudan',
+      'referans',
+      'sosyal',
+    ])
+    for (const etiket of Object.values(KAYNAK_TURU_ETIKETI)) {
+      expect(etiket.length).toBeGreaterThan(0)
     }
   })
 })
