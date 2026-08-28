@@ -24,6 +24,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { VideoDurumu as VideoDurumu_1e58a0690421ccebdda95f319e7a0509 } from '@/components/medya/VideoDurumu'
 import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/components/panel/TalepEslesmeleri'
 import { GorselButceRozeti as GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0 } from '@/components/panel/GorselButceRozeti'
+import { LogoPaneli as LogoPaneli_f51691edd3b1b9b168fcc48a8cf2ad17 } from '@/components/marka/LogoPaneli'
 import { MarkaOzeti as MarkaOzeti_39442ca5242594bbd935166eabf0a217 } from '@/components/marka/MarkaOzeti'
 import { RenkAlani as RenkAlani_ef0f301565c7f9be03293994bc79a9a9 } from '@/components/marka/RenkAlani'
 import { AcikPaletPaneli as AcikPaletPaneli_2402a32bb37cd9c644022ee73817599f } from '@/components/marka/PaletPaneli'
@@ -79,6 +80,7 @@ export const importMap = {
   "@/components/medya/VideoDurumu#VideoDurumu": VideoDurumu_1e58a0690421ccebdda95f319e7a0509,
   "@/components/panel/TalepEslesmeleri#default": default_1e93637515c2cbbab351072f38d704e3,
   "@/components/panel/GorselButceRozeti#GorselButceRozeti": GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0,
+  "@/components/marka/LogoPaneli#LogoPaneli": LogoPaneli_f51691edd3b1b9b168fcc48a8cf2ad17,
   "@/components/marka/MarkaOzeti#MarkaOzeti": MarkaOzeti_39442ca5242594bbd935166eabf0a217,
   "@/components/marka/RenkAlani#RenkAlani": RenkAlani_ef0f301565c7f9be03293994bc79a9a9,
   "@/components/marka/PaletPaneli#AcikPaletPaneli": AcikPaletPaneli_2402a32bb37cd9c644022ee73817599f,

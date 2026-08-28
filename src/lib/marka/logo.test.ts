@@ -38,12 +38,26 @@ describe('logo ölçüleri', () => {
    * öyle kalmalı: bandı büyütmek her sayfada ilk ekrandan yer çalar.
    */
   it('başlık bandı 72 px olarak kalıyor', () => {
+    /**
+     * ⚠️ ÖLÇÜLDÜ: logo yüksekliği panele taşındıktan sonra 40/48/56/72 px
+     * ile denendi; dördünde de bant 72 px kaldı ve taşma sıfır. Bandın
+     * sabit olması, logo ölçüsünün ilk ekrandan yer çalamaması demek.
+     */
     expect(baslik).toContain('h-18')
   })
 
-  it('başlık logosu mobilde 40, masaüstünde 48 px', () => {
-    expect(baslik).toContain('yukseklik={48}')
-    expect(baslik).toMatch(/sinif="h-10 w-auto[^"]*lg:h-12/)
+  /**
+   * ⚠️ ÖLÇÜ ARTIK SABİT DEĞİL, SINIRLI — VE GARANTİ YER DEĞİŞTİRDİ.
+   *
+   * Yükseklik 28 Ağustos 2026'da panele taşındı. Eskiden güvence "48 yazıyor"
+   * idi; artık "aralık dışına çıkamaz". Sabit sayıyı aramaya devam eden bir
+   * test, ölçüyü ayarlanabilir yaptığımız gün kırılır ve düzeltmek için
+   * silinirdi — güvenceyi taşımak, silinmesine izin vermekten iyi.
+   */
+  it('başlık logosunun yüksekliği panelden geliyor', () => {
+    expect(baslik).toContain('marka.baslikLogoYuksekligi')
+    // Mobilde küçültme kuralı duruyor: menü düğmesi ekrandan itilmesin.
+    expect(baslik).toMatch(/--logo-boy-mobil/)
   })
 
   /**
@@ -55,9 +69,34 @@ describe('logo ölçüleri', () => {
     expect(altbilgi).toMatch(/max-w-\[/)
   })
 
-  it('altbilgi logosu 56 px ile sınırlı', () => {
-    expect(altbilgi).toContain('yukseklik={56}')
-    expect(altbilgi).toContain('h-14 w-auto')
+  it('altbilgi logosunun yüksekliği panelden geliyor', () => {
+    expect(altbilgi).toContain('marka.altbilgiLogoYuksekligi')
+  })
+
+  it('ölçüler KODDA da kırpılıyor — panel doğrulaması tek başına yetmez', () => {
+    /**
+     * ⚠️ Panelin `min`/`max` alanı REST ucundan doğrudan yazan biri
+     * tarafından atlanabilir. Bir düzen kuralı yalnızca arayüzde durursa
+     * kural değildir; `kirp()` atlanamaz.
+     *
+     * ⚠️ `NaN` ve `Infinity` de varsayılana düşüyor: ikisi de sayfayı
+     * bozar ve ikisi de `typeof === 'number'` testini geçer.
+     */
+    const sunucu = oku('lib/marka/sunucu.ts')
+    expect(sunucu).toMatch(/kirp\(marka\.baslikLogoYuksekligi, 32, 72, 48\)/)
+    expect(sunucu).toMatch(/kirp\(marka\.altbilgiLogoYuksekligi, 32, 72, 56\)/)
+    expect(sunucu).toMatch(/kirp\(marka\.logoBoslugu, 0, 32, 0\)/)
+    expect(sunucu).toMatch(/Number\.isFinite/)
+  })
+
+  it('panel aralığı ile kod aralığı AYNI', () => {
+    /**
+     * ⚠️ İkisi ayrışırsa panelde girilebilen bir değer sessizce kırpılır ve
+     * kullanıcı "yazdım ama olmadı" der — en kötü panel geri bildirimi.
+     */
+    const global = oku('globals/MarkaGorunum.ts')
+    expect(global).toMatch(/min: 32,\s*\n\s*max: 72,/)
+    expect(global).toMatch(/min: 0,\s*\n\s*max: 32,/)
   })
 
   /**
@@ -174,17 +213,21 @@ describe('altbilgi logosunun simetrisi', () => {
   it('logo SABİT YÜKSEKLİKLİ bir kutuda — sütun düzeni içerikten bağımsız', () => {
     expect(
       altbilgi,
-      'Logo kutusu `h-14` olmalı: yükseklik içeriğe göre değişirse, logo\n' +
-        'yüklü olan ve olmayan sitede sütunların üst hizası farklı olur.',
-    ).toMatch(/className="flex h-14 items-center justify-start"/)
+      'Logo kutusunun yüksekliği SABİT olmalı (panelden gelen ölçü): içeriğe\n' +
+        'göre değişirse, logo yüklü olan ve olmayan sitede sütunların üst\n' +
+        'hizası farklı olur.',
+    ).toMatch(/style=\{\{ height: `\$\{marka\.altbilgiLogoYuksekligi\}px` \}\}/)
   })
 
-  it('logo SOLA hizalı — sütun başlığıyla aynı kenardan başlıyor', () => {
+  it('varsayılan hiza SOL — ve seçim panelden geliyor', () => {
     /**
-     * ⚠️ `items-start`/`justify-start` şart: `object-contain` dar bir
-     * logoyu kutuya ORTALAR ve sütun başlığının sol kenarıyla hizası kayar.
+     * ⚠️ `justify-start` şart: `object-contain` dar bir logoyu kutuya
+     * ORTALAR ve sütun başlığının sol kenarıyla hizası kayar. Orta seçeneği
+     * panelde var ama varsayılan değil.
      */
-    expect(altbilgi).toMatch(/justify-start/)
+    expect(altbilgi).toMatch(
+      /marka\.logoHizalamasi === 'orta' \? 'justify-center' : 'justify-start'/,
+    )
   })
 
   it('logo ile tanıtım metni arasında yeterli boşluk var', () => {

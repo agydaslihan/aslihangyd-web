@@ -1191,3 +1191,30 @@
   margin-inline: auto;
   align-items: center;
 }
+
+/*
+  ─────────────────────────────────────────────────────────────────────────
+  ⚠️ LOGO YÜKSEKLİĞİ PANELDEN — VE MEDYA SORGUSU BURADA OLMAK ZORUNDA.
+
+  Ölçü çalışma zamanında geliyor; Tailwind sınıfları derleme anında
+  sabitlendiği için `h-[48px]` üretilemiyor. Satır içi `style` ise medya
+  sorgusu taşıyamıyor. İkisinin kesişimi: değeri satır içi bir CSS
+  değişkeniyle geçmek, kırılma noktasını burada tutmak.
+
+  ⚠️ Mobilde ölçü küçültülüyor. Panelde tek sayı var ve masaüstü için
+  giriliyor; aynı sayıyı telefonda uygulamak menü düğmesini ekrandan
+  iterdi.
+
+  ⚠️ CLS 0 korunuyor: `<Image>`in `width`/`height` öznitelikleri en/boy
+  oranından hesaplanıyor, yani yer görsel inmeden ayrılıyor.
+  ─────────────────────────────────────────────────────────────────────────
+*/
+.marka-logo {
+  height: var(--logo-boy-mobil, var(--logo-boy, 2.5rem));
+}
+
+@media (min-width: 1024px) {
+  .marka-logo {
+    height: var(--logo-boy, 3rem);
+  }
+}

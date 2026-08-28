@@ -2269,6 +2269,19 @@ export interface MarkaGorunum {
    */
   logoKoyu?: (number | null) | Medya;
   /**
+   * ⚠️ Başlık bandı 72 px’de SABİT ve logo onu büyütmüyor — ölçüldü. Ama 72 px logo bandı kenardan kenara doldurur ve sıkışık görünür; ölçülmüş rahat aralık 40–56 px.
+   */
+  baslikLogoYuksekligi?: number | null;
+  altbilgiLogoYuksekligi?: number | null;
+  /**
+   * ⚠️ Boşluk logoyu BÜYÜTMEZ, içeriden yer alır (border-box) — ölçüldü. 72 px logoya 16 px boşluk verirseniz görsel 40 px’e iner, bant kıpırdamaz. Yani boşluk bir "nefes payı" değil, logoyu küçültme yolu.
+   */
+  logoBoslugu?: number | null;
+  /**
+   * ⚠️ Yalnızca ALTBİLGİ. Başlıktaki logo daima solda: sağında gezinme var ve ortalamak menüyü iterdi.
+   */
+  logoHizalamasi?: ('sol' | 'orta') | null;
+  /**
    * Kapalıysa altbilgide görsel yerine SİTE ADI yazıyla görünür. ⚠️ Sütun boş kalmaz: "logo yok" ile "logo istenmiyor" ayrı durumlar ve ikisinde de markanın adı görünür.
    */
   altbilgideLogo?: boolean | null;
@@ -2880,6 +2893,10 @@ export interface MarkaGorunumSelect<T extends boolean = true> {
   slogan?: T;
   logo?: T;
   logoKoyu?: T;
+  baslikLogoYuksekligi?: T;
+  altbilgiLogoYuksekligi?: T;
+  logoBoslugu?: T;
+  logoHizalamasi?: T;
   altbilgideLogo?: T;
   simgeKaynak?: T;
   ogGorseli?: T;

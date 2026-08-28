@@ -171,7 +171,10 @@ export async function Altbilgi() {
                 kayardı.
                 ─────────────────────────────────────────────────────────
               */}
-              <div className="flex h-14 items-center justify-start">
+              <div
+                className={`flex items-center ${marka.logoHizalamasi === 'orta' ? 'justify-center' : 'justify-start'}`}
+                style={{ height: `${marka.altbilgiLogoYuksekligi}px` }}
+              >
                 {/*
                   ⚠️ ÖLÇÜ SINIRLANDI: 56 px yükseklik, 200 px genişlik tavanı.
 
@@ -197,8 +200,12 @@ export async function Altbilgi() {
                   marka={marka}
                   daimaKoyuZemin
                   metneZorla={!marka.altbilgideLogo}
-                  yukseklik={56}
-                  sinif="h-14 w-auto max-w-[12.5rem] object-contain"
+                  yukseklik={marka.altbilgiLogoYuksekligi}
+                  sinif="w-auto max-w-[12.5rem] object-contain"
+                  stil={{
+                    height: `${marka.altbilgiLogoYuksekligi}px`,
+                    padding: `${marka.logoBoslugu}px`,
+                  }}
                   metinSinifi="font-baslik text-baslik-3 text-notr-50"
                   vurguSinifi="text-notr-300"
                 />

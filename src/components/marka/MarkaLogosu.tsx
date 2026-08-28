@@ -33,6 +33,7 @@ export function MarkaLogosu({
   yukseklik = 36,
   daimaKoyuZemin = false,
   metneZorla = false,
+  stil,
 }: {
   marka: MarkaAyarlari
   sinif?: string
@@ -57,6 +58,17 @@ export function MarkaLogosu({
    * bırakıyor; bileşen hangi kuralın işlediğini bilmek zorunda değil.
    */
   metneZorla?: boolean
+  /**
+   * Satır içi stil — panelden gelen ölçüler için.
+   *
+   * ⚠️ Tailwind sınıfları DERLEME ANINDA sabitleniyor; çalışma zamanında
+   * gelen bir sayı sınıfa çevrilemez (`h-[48px]` üretilemiyor). Ölçü
+   * paneldeyse tek yol satır içi stil.
+   *
+   * ⚠️ CLS bozulmuyor: `<Image>`in `width`/`height` öznitelikleri en/boy
+   * oranından hesaplanmaya devam ediyor, yani yer görsel inmeden ayrılıyor.
+   */
+  stil?: React.CSSProperties
 }) {
   const ad = marka.siteAdi ?? SITE_ADI
 
@@ -77,6 +89,7 @@ export function MarkaLogosu({
         width={Math.round(yukseklik * (boy > 0 ? en / boy : 4))}
         height={yukseklik}
         className={sinif}
+        style={stil}
         unoptimized={secilen.url.endsWith('.svg')}
       />
     )
@@ -103,6 +116,7 @@ export function MarkaLogosu({
         width={Math.round(yukseklik * oran)}
         height={yukseklik}
         className={`${sinif ?? ''} ${marka.logoKoyu ? 'block dark-gizle' : 'block'}`.trim()}
+        style={stil}
         // ⚠️ Logo her sayfada ve ilk ekranda: geciktirilmemeli.
         priority
         unoptimized={marka.logo.url.endsWith('.svg')}
@@ -117,6 +131,7 @@ export function MarkaLogosu({
           )}
           height={yukseklik}
           className={`${sinif ?? ''} acik-gizle`.trim()}
+          style={stil}
           priority
           unoptimized={marka.logoKoyu.url.endsWith('.svg')}
         />

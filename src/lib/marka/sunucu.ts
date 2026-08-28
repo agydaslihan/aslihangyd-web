@@ -31,6 +31,17 @@ import { varsayilanPalet, YUVALAR, type Palet } from './yuvalar'
  * ─────────────────────────────────────────────────────────────────────────
  */
 
+/**
+ * Sayıyı aralığa kırpar; tanımsız ya da geçersizse varsayılana düşer.
+ *
+ * ⚠️ `NaN` ve `Infinity` de varsayılana düşüyor: bir düzen ölçüsü olarak
+ * ikisi de sayfayı bozardı ve ikisi de `typeof === 'number'` testini geçer.
+ */
+function kirp(deger: unknown, enAz: number, enCok: number, varsayilan: number): number {
+  if (typeof deger !== 'number' || !Number.isFinite(deger)) return varsayilan
+  return Math.min(enCok, Math.max(enAz, Math.round(deger)))
+}
+
 export interface MarkaAyarlari {
   siteAdi: string | null
   slogan: string | null
@@ -47,6 +58,14 @@ export interface MarkaAyarlari {
    * paneli hiç açmamış bir kurulumda logoyu sessizce gizlerdi.
    */
   altbilgideLogo: boolean
+  /** Başlıkta logo yüksekliği (px) — 32–72 arasına kırpılmış. */
+  baslikLogoYuksekligi: number
+  /** Altbilgide logo yüksekliği (px) — 32–72 arasına kırpılmış. */
+  altbilgiLogoYuksekligi: number
+  /** Logo çevresindeki boşluk (px) — 0–32 arasına kırpılmış. */
+  logoBoslugu: number
+  /** Altbilgide logo hizası. Başlıkta daima sol. */
+  logoHizalamasi: 'sol' | 'orta'
   acik: Palet
   koyu: Palet
 }
@@ -120,6 +139,15 @@ export async function markaAyarlari(): Promise<MarkaAyarlari> {
       simgeVar: medyayiCoz(marka.simgeKaynak) !== null,
       // ⚠️ `!== false`: alan hiç kaydedilmemişse (eski kayıt) açık sayılıyor.
       altbilgideLogo: marka.altbilgideLogo !== false,
+      /**
+       * ⚠️ SINIR İKİ YERDE. Panelde `min`/`max` var ama REST ucundan
+       * doğrudan yazan biri onu atlayabilir; buradaki kırpma atlanamaz.
+       * Bir düzen kuralı, yalnızca arayüzde durursa kural değildir.
+       */
+      baslikLogoYuksekligi: kirp(marka.baslikLogoYuksekligi, 32, 72, 48),
+      altbilgiLogoYuksekligi: kirp(marka.altbilgiLogoYuksekligi, 32, 72, 56),
+      logoBoslugu: kirp(marka.logoBoslugu, 0, 32, 0),
+      logoHizalamasi: marka.logoHizalamasi === 'orta' ? 'orta' : 'sol',
       acik: paletiGuvenliOku(marka.acikTema, 'acik'),
       koyu: paletiGuvenliOku(marka.koyuTema, 'koyu'),
     }
@@ -137,6 +165,10 @@ export async function markaAyarlari(): Promise<MarkaAyarlari> {
       ogGorseli: null,
       simgeVar: false,
       altbilgideLogo: true,
+      baslikLogoYuksekligi: 48,
+      altbilgiLogoYuksekligi: 56,
+      logoBoslugu: 0,
+      logoHizalamasi: 'sol',
       acik: varsayilanPalet('acik'),
       koyu: varsayilanPalet('koyu'),
     }
