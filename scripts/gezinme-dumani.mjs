@@ -457,37 +457,28 @@ async function baglantiyaTikla(sekme, rota) {
   let hedef = null
   for (let deneme = 0; deneme < 5; deneme++) {
     /**
-     * ⚠️ `scrollIntoView` DEĞİL, HEDEF KONUMA `scrollTo`.
+     * ⚠️ `scrollIntoView` + KAYDIRMANIN DURMASINI BEKLE.
      *
-     * `scrollIntoView` "bir yere götür" der; ne kadar gittiğini
-     * söylemez. Lenis araya girdiğinde kaydırmanın bitip bitmediğini
-     * anlamanın yolu kalmıyor — "iki ardışık ölçüm aynı" hilesi, eğrinin
-     * yavaşladığı anda yanlışlıkla doğru çıkıyor.
+     * Bir ara "kesin hedef konuma `scrollTo`" denendi ve ÜRETİMDE iyileşti
+     * ama CI'DA BOZDU: kısa demo listelerinde hesaplanan hedef konuma
+     * varılamıyor, döngü boşa dönüyor ve tıklama noktası kart yerine
+     * `<main>`in boşluğuna düşüyordu. Ölçüm iki ortamda ters yönde
+     * konuştuğu için o değişiklik geri alındı.
      *
-     * Kesin bir hedef koordinat isteyip ORAYA VARILDIĞINI doğrulamak,
-     * "durdu mu?" sorusunu ölçülebilir bir eşitliğe çeviriyor.
+     * Üretimdeki kararsızlığı çözen şey bu değil, aşağıdaki iki koruma
+     * oldu: tıklamadan hemen önceki son koordinat doğrulaması ve adres hiç
+     * değişmediğinde bir tekrar hakkı.
      */
-    const istenen = await sekme.deger(`(() => {
-      const a = ${bul}
-      if (!a) return null
-      const r = a.getBoundingClientRect()
-      const hedefY = Math.max(0, Math.round(window.scrollY + r.top - window.innerHeight / 2))
-      window.scrollTo({ top: hedefY, behavior: 'instant' })
-      return hedefY
-    })()`)
-    if (istenen === null) return null
+    await sekme.deger(
+      `(() => { const a = ${bul}; if (a) a.scrollIntoView({ block: 'center', behavior: 'instant' }); return true })()`,
+    )
 
-    // Gerçekten o konuma varıldı mı — iki ardışık ölçümde.
-    let vardi = 0
+    // Kaydırma durdu mu: iki ardışık ölçüm aynı olana kadar bekle.
+    let onceki = -1
     for (let i = 0; i < 40; i++) {
-      const simdi = Number((await sekme.deger('Math.round(window.scrollY)')) ?? -1)
-      // Sayfa sonunda istenen konuma varılamayabilir; sapma büyümüyorsa da kabul.
-      if (Math.abs(simdi - Number(istenen)) <= 2) {
-        vardi += 1
-        if (vardi >= 2) break
-      } else {
-        vardi = 0
-      }
+      const simdi = Number((await sekme.deger('Math.round(window.scrollY)')) ?? 0)
+      if (simdi === onceki) break
+      onceki = simdi
       await uyu(100)
     }
 
