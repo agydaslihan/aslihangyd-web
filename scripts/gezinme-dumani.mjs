@@ -217,7 +217,8 @@ async function sekmeAc(wsAdresi, { azHareket, cerez }) {
     if (m.id && bekleyen.has(m.id)) {
       const { c, r } = bekleyen.get(m.id)
       bekleyen.delete(m.id)
-      m.error ? r(new Error(JSON.stringify(m.error))) : c(m.result)
+      if (m.error) r(new Error(JSON.stringify(m.error)))
+      else c(m.result)
     } else if (m.method) {
       olaylar.push(m)
     }
