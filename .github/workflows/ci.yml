@@ -110,6 +110,37 @@ jobs:
       - name: Veritabanı şemasını uygula
         run: pnpm payload migrate
 
+      # ─────────────────────────────────────────────────────────────────
+      # ⚠️ ŞEMA ile GÖÇLER ARASINDAKİ AÇIK, SESSİZ BİR ARIZADIR.
+      #
+      # Geliştirmede Payload şemayı doğrudan iter (push): kod bir alan
+      # eklediği anda sütun oluşur. Üretimde ise yalnızca `migrate`
+      # çalışır. Göç yazılmadığı sürece kod ile veritabanı ayrışır ve
+      # ayrışma DERLEMEDE DEĞİL, o alanı ilk açan sayfada patlar.
+      #
+      # 28 Ağustos 2026'da tam olarak bu oldu: `danisman_ol.hero_karartmasi`
+      # göçsüz kaldı, tip kontrolü + lint + testler + derleme temiz geçti,
+      # arıza yalnızca gezinme dumanının panel turunda (HTTP 404) çıktı.
+      # Duman testi olmasaydı üretime giderdi.
+      #
+      # Kapı şu: `migrate:create` yeni bir göç YAZMAK ZORUNDA KALIYORSA
+      # kod ile göçler ayrışmış demektir. Fark yoksa dosya yazmaz.
+      # `< /dev/null` şart — fark yokken açılan onay sorusu CI'da yanıtsız
+      # kalır; EOF'u "hayır" sayıp sessizce çıkıyor.
+      # ─────────────────────────────────────────────────────────────────
+      - name: Göç tazeliği (kod ile şema ayrışmasın)
+        run: |
+          pnpm payload migrate:create ci_goc_denetimi < /dev/null
+          # Yalnızca YENİ dosyaya bakılıyor: `migrate:create` var olanı değiştirmez,
+          # yalnızca ekler. Böylece iş akışının başka bir adımı çalışma ağacını
+          # kirletmiş olsa bile bu kapı yanlış yere kırılmıyor.
+          yeni=$(git status --porcelain --untracked-files=all src/migrations | grep '^??' || true)
+          if [ -n "$yeni" ]; then
+            git clean -fq src/migrations
+            echo "::error::Kod, göçlerde karşılığı olmayan bir şema değişikliği içeriyor. Yerelde 'pnpm payload migrate:create <ad>' çalıştırıp üretilen göçü commit'leyin."
+            exit 1
+          fi
+
       - name: Tip kontrolü
         run: pnpm typecheck
 

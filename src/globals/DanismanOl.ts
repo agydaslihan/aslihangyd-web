@@ -84,6 +84,45 @@ export const DanismanOl: GlobalConfig = {
       },
     },
 
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ KARARTMA BİR ZEVK AYARI DEĞİL, ERİŞİLEBİLİRLİK AYARI — VE ALT
+     *    SINIRI ÖLÇÜLDÜ.
+     *
+     * Bandın metni beyaz. Karartma azaldıkça açık renkli bir fotoğrafta
+     * beyaz metin okunmaz hâle geliyor. En kötü durum (bembeyaz fotoğraf)
+     * için hesaplanan kontrast:
+     *
+     *     %40 → 2,49:1 ✗      %65 → 5,29:1 ✓
+     *     %50 → 3,30:1 ✗      %70 → 6,28:1 ✓
+     *     %60 → 4,49:1 ✗      %75 → 7,48:1 ✓
+     *
+     * WCAG AA eşiği 4,5:1. Alt sınır bu yüzden %65: bir kademe altı
+     * (%60) eşiği KIL PAYI kaçırıyor ve o pay bir zevk meselesi değil.
+     *
+     * ⚠️ Serbest bir sayı alanı, %20 yazıp "daha güzel oldu" demeyi
+     * mümkün kılardı — ve o sayfa, fotoğrafı açık olan ziyaretçi için
+     * okunmaz olurdu.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    {
+      name: 'heroKarartmasi',
+      type: 'select',
+      label: 'Hero görselinin karartma oranı',
+      defaultValue: '75',
+      options: [
+        { value: '65', label: '%65 — en açık (ölçülmüş alt sınır)' },
+        { value: '75', label: '%75 — varsayılan' },
+        { value: '85', label: '%85 — koyu' },
+      ],
+      admin: {
+        description:
+          '⚠️ Bandın metni beyaz. Karartma azaldıkça açık renkli bir fotoğrafta metin ' +
+          'okunmaz hâle gelir. %65 ölçülmüş alt sınır: bir kademe altı WCAG AA eşiğini ' +
+          'kıl payı kaçırıyor. Görsel yoksa bu ayarın bir etkisi olmaz.',
+        condition: (veri: Record<string, unknown>) => Boolean(veri?.heroGorseli),
+      },
+    },
     {
       name: 'formUstuMetin',
       type: 'richText',

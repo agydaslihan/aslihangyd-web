@@ -13,6 +13,15 @@ export interface DanismanSayfaIcerigi {
   nedenler: { baslik: string; metin: string; gorsel: IcerikGorseli | null }[]
   /** Üst bandın arka plan görseli — yoksa düz koyu bant. */
   heroGorseli: IcerikGorseli | null
+  /**
+   * Hero görselinin karartma oranı (%).
+   *
+   * ⚠️ Değer kümesi kapalı ve alt sınır ÖLÇÜLDÜ: %65'in altında, bembeyaz
+   * bir fotoğrafın üstünde beyaz metin WCAG AA eşiğini (4,5:1) geçmiyor.
+   * Tanınmayan bir değer varsayılana düşüyor — eski kayıt sayfayı okunmaz
+   * yapmasın.
+   */
+  heroKarartmasi: 65 | 75 | 85
   formUstuMetin: SerializedEditorState | null
   ekGorseller: IcerikGorseli[]
 }
@@ -52,6 +61,7 @@ const VARSAYILAN: DanismanSayfaIcerigi = {
     },
   ],
   heroGorseli: null,
+  heroKarartmasi: 75,
   formUstuMetin: null,
   ekGorseller: [],
 }
@@ -107,6 +117,8 @@ export const danismanIceriginiGetir = cache(async (): Promise<DanismanSayfaIceri
        */
       nedenler: nedenler.length > 0 ? nedenler : VARSAYILAN.nedenler,
       heroGorseli: gorsel(icerik.heroGorseli),
+      heroKarartmasi:
+        icerik.heroKarartmasi === '65' ? 65 : icerik.heroKarartmasi === '85' ? 85 : 75,
       formUstuMetin: doluIcerik(icerik.formUstuMetin),
       ekGorseller,
     }

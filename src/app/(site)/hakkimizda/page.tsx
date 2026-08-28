@@ -8,6 +8,8 @@ import { DogrulanmisIkon } from '@/components/ui/Ikon'
 import { ZenginMetin } from '@/components/ui/ZenginMetin'
 import Image from 'next/image'
 
+import { sinif } from '@/lib/sinif'
+
 import { hakkimizdaGetir } from '@/lib/veri/hakkimizda'
 import { kurumsalBilgileriGetir } from '@/lib/kurumsal'
 import { mutlakAdres, SITE_UNVANI } from '@/lib/site'
@@ -88,16 +90,42 @@ export default async function HakkimizdaSayfasi() {
 
           {hakkimizda.portre ? (
             <figure className="mt-8 shrink-0 lg:mt-0 lg:w-72">
-              <Image
-                src={hakkimizda.portre.url}
-                alt={hakkimizda.portre.alt || hakkimizda.portreAltMetni || 'Portre'}
-                width={hakkimizda.portre.en ?? 640}
-                height={hakkimizda.portre.boy ?? 800}
-                sizes="(max-width: 1024px) 100vw, 18rem"
-                className="rounded-buyuk w-full object-cover"
-              />
+              {/*
+                ─────────────────────────────────────────────────────────
+                ⚠️ ORAN PANELDEN VE SABİT — "otomatik" seçeneği yok.
+
+                Dosyanın kendi oranına bırakmak, farklı oranlarda yüklenen
+                iki fotoğrafta düzeni zıplatır ve CLS'i ölçülemez hâle
+                getirir. Oran bilinince yer görsel inmeden ayrılıyor.
+
+                ⚠️ `object-cover` + sabit oran: dikey bir fotoğraf 16:9
+                seçildiğinde kırpılır, EZİLMEZ. Ezilmiş bir portre, kırpılmış
+                bir portreden çok daha kötü görünür.
+                ─────────────────────────────────────────────────────────
+              */}
+              <div
+                className={sinif(
+                  'relative w-full overflow-hidden',
+                  ORAN_SINIFI[hakkimizda.portreBicimi.oran],
+                  YARICAP_SINIFI[hakkimizda.portreBicimi.yaricap],
+                  hakkimizda.portreBicimi.kenarlik && 'border-kenar border-[0.5px]',
+                )}
+              >
+                <Image
+                  src={hakkimizda.portre.url}
+                  alt={hakkimizda.portre.alt || hakkimizda.portreAltMetni || 'Portre'}
+                  fill
+                  sizes="(max-width: 1024px) 100vw, 18rem"
+                  className="object-cover"
+                />
+              </div>
               {hakkimizda.portreAltMetni ? (
-                <figcaption className="text-metin-3 mt-2 text-govde-kucuk">
+                <figcaption
+                  className={sinif(
+                    'text-metin-3 mt-2 text-govde-kucuk',
+                    HIZALAMA_SINIFI[hakkimizda.portreBicimi.hizalama],
+                  )}
+                >
                   {hakkimizda.portreAltMetni}
                 </figcaption>
               ) : null}
@@ -199,3 +227,29 @@ function YapilandirilmisVeri({ unvan }: { unvan: string }) {
     />
   )
 }
+
+/**
+ * Panel seçeneklerinin sınıf karşılıkları.
+ *
+ * ⚠️ Tailwind sınıfları DERLEME ANINDA taranıyor: `aspect-[${oran}]` gibi
+ * kurulan bir sınıf üretilen CSS'e girmez ve sessizce hiçbir şey yapmaz.
+ * Bu yüzden her seçenek burada TAM METİN olarak yazılı.
+ */
+const ORAN_SINIFI = {
+  '1:1': 'aspect-square',
+  '3:4': 'aspect-[3/4]',
+  '4:3': 'aspect-[4/3]',
+  '16:9': 'aspect-video',
+} as const
+
+const YARICAP_SINIFI = {
+  yok: 'rounded-none',
+  orta: 'rounded-kart',
+  buyuk: 'rounded-buyuk',
+} as const
+
+const HIZALAMA_SINIFI = {
+  sol: 'text-left',
+  orta: 'text-center',
+  sag: 'text-right',
+} as const
