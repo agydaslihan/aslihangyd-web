@@ -642,6 +642,24 @@ export const Ilanlar: CollectionConfig = {
             },
           ],
         },
+
+        {
+          label: 'Uyan talepler',
+          description:
+            'Bu ilana uyabilecek AÇIK talepler. Sıralamadır, karar değil — buradan otomatik ' +
+            'hiçbir mesaj gitmez. Kazanıldı ve kaybedildi durumundaki kayıtlar havuza girmez.',
+          fields: [
+            {
+              name: 'uyanTalepler',
+              type: 'ui',
+              admin: {
+                components: {
+                  Field: '@/components/panel/IlanEslesmeleri#default',
+                },
+              },
+            },
+          ],
+        },
       ],
     },
   ],

@@ -16,6 +16,17 @@ import { TALEP_DURUMLARI, TALEP_KAYNAKLARI, TALEP_TIPLERI } from '@/lib/secenekl
  *  - `read` erişimi yalnızca panel kullanıcısına açıktır; oluşturma herkese
  *    açıktır ama oluşturan kendi kaydını dahi geri okuyamaz.
  */
+/**
+ * Durum kodunu Türkçe etikete çevirir.
+ *
+ * ⚠️ Nota ETİKET yazılıyor, kod değil. "Durum: arandi → randevu" satırını
+ * altı ay sonra okuyan kişi kodları hatırlamak zorunda kalmamalı; geçmiş
+ * kaydı kendi kendini açıklamalı.
+ */
+function durumEtiketi(deger: string): string {
+  return TALEP_DURUMLARI.find((d) => d.value === deger)?.label ?? deger
+}
+
 export const Talepler: CollectionConfig = {
   slug: 'talepler',
   labels: { singular: 'Talep', plural: 'Talepler' },
@@ -78,10 +89,54 @@ export const Talepler: CollectionConfig = {
           }
         }
 
+        /**
+         * ─────────────────────────────────────────────────────────────────
+         * ⚠️ DURUM DEĞİŞİKLİĞİ NOTA YAZILIYOR — VE BU GEÇMİŞ SONRADAN
+         *    ÜRETİLEMEZ.
+         *
+         * "Bu kayıt ne zaman randevuya geçti?" sorusunun cevabı, o an
+         * kaydedilmezse SONSUZA KADAR kaybolur. `updatedAt` yalnızca son
+         * dokunuşu biliyor; hangi alanın değiştiğini bilmiyor.
+         *
+         * ⚠️ Ayrı bir "geçmiş" tablosu AÇILMADI. Notlar zaten tarihli ve
+         * panelde tek bir zaman çizelgesi hâlinde okunuyor; ikinci bir
+         * liste, aynı olayın iki yerde yarısını gösterirdi. Aslıhan'ın
+         * kendi notlarıyla sistemin notları aynı akışta duruyor.
+         *
+         * ⚠️ Not otomatik olduğu için METNİ AYIRT EDİLEBİLİR ("Durum:
+         * … → …"). Elle yazılmış bir notla karışsaydı, geçmişi okuyan kişi
+         * hangisinin sistemden geldiğini bilemezdi.
+         *
+         * ⚠️ Yalnızca GERÇEK değişimde yazılıyor. Payload aynı durumu
+         * tekrar gönderdiğinde (formu kaydetmek yeterli) not düşülseydi,
+         * kayıt birkaç kaydetmede okunmaz hâle gelirdi.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        const oncekiDurum = typeof originalDoc?.durum === 'string' ? originalDoc.durum : null
+        const yeniDurum = typeof data?.durum === 'string' ? data.durum : null
+        const durumDegisti = yeniDurum !== null && oncekiDurum !== null && yeniDurum !== oncekiDurum
+
+        const mevcutNotlar = Array.isArray(data?.notlar)
+          ? data.notlar
+          : Array.isArray(originalDoc?.notlar)
+            ? originalDoc.notlar
+            : []
+
+        const notlar = durumDegisti
+          ? [
+              ...mevcutNotlar,
+              {
+                tarih: new Date().toISOString(),
+                metin: `Durum: ${durumEtiketi(oncekiDurum)} → ${durumEtiketi(yeniDurum)}`,
+              },
+            ]
+          : mevcutNotlar
+
         // Güncellemede onay bilgileri korunur — geçmişe dönük değiştirilemez.
         return {
           ...data,
           skor,
+          notlar,
           kvkkOnay: originalDoc?.kvkkOnay ?? data.kvkkOnay,
           kvkkOnayTarihi: originalDoc?.kvkkOnayTarihi ?? data.kvkkOnayTarihi,
           saklamaBitis: originalDoc?.saklamaBitis ?? data.saklamaBitis,

@@ -3,10 +3,12 @@ import 'server-only'
 import type { Payload } from 'payload'
 
 import {
+  ilanaUygunTalepler,
   talebeUygunIlanlar,
   type Eslesme,
   type IlanOzeti,
   type TalepProfili,
+  type TersEslesme,
 } from '@/lib/crm/eslestirme'
 import { HERKESE_ACIK_DURUMLAR } from '@/lib/eids'
 
@@ -129,6 +131,118 @@ export async function talebeEslestir(
 
   return {
     eslesmeler: talebeUygunIlanlar(profil, havuz, adet),
+    havuzBoyutu: havuz.length,
+  }
+}
+
+/**
+ * TERS YÖN — bir ilan için açık talepleri getirir.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ KAPANMIŞ TALEPLER HAVUZA GİRMEZ.
+ *
+ * "Kazanıldı" ve "kaybedildi" durumundaki kayıtlar artık aranacak kişiler
+ * değil. Havuza katılsalardı liste her ay biraz daha uzar, en üstteki
+ * öneri altı ay önce evini almış birini gösterirdi — ve ekran bir kez
+ * yanlış kişiyi gösterdiğinde bir daha açılmaz.
+ * ─────────────────────────────────────────────────────────────────────────
+ *
+ * ⚠️ Kişisel alanlar (ad, telefon) burada okunuyor ÇÜNKÜ ekranın işi tam
+ * olarak "kimi arayacağım" sorusuna cevap vermek. Eşleştirme MOTORU
+ * yine onları görmüyor — `talepProfiliCikar` sadece ölçüt alanlarını
+ * alıyor; motorun girdisinde olmayan bir veri çıktısını etkileyemez.
+ */
+
+/** Havuz üst sınırı — talep sayısı bunu aşarsa liste zaten okunmaz. */
+const TALEP_HAVUZ_SINIRI = 500
+
+/** Aranmayacak durumlar: iş kapanmış. */
+const KAPALI_DURUMLAR = ['kazanildi', 'kaybedildi'] as const
+
+export interface TersEslestirmeSonucu {
+  eslesmeler: (TersEslesme & {
+    adSoyad: string | null
+    telefon: string | null
+    durum: string | null
+    skor: number | null
+  })[]
+  /** Havuza kaç açık talep girdi — "hiç eşleşme yok" ile "hiç talep yok" ayrı. */
+  havuzBoyutu: number
+}
+
+export async function ilanaEslestir(
+  payload: Payload,
+  ilan: {
+    id?: unknown
+    baslik?: string | null
+    tip?: string | null
+    kategori?: string | null
+    fiyat?: number | null
+    mahalle?: unknown
+    odaSayisi?: string | null
+    brutM2?: number | null
+  },
+  adet = 8,
+): Promise<TersEslestirmeSonucu> {
+  const sonuc = await payload.find({
+    collection: 'talepler',
+    where: { durum: { not_in: [...KAPALI_DURUMLAR] } },
+    select: {
+      adSoyad: true,
+      telefon: true,
+      durum: true,
+      skor: true,
+      tip: true,
+      butceMin: true,
+      butceMax: true,
+      ilgiliMahalle: true,
+      ilgiliIlan: true,
+      mesaj: true,
+    },
+    depth: 0,
+    limit: TALEP_HAVUZ_SINIRI,
+    pagination: false,
+    overrideAccess: true,
+  })
+
+  const havuz = sonuc.docs.map((talep) => ({
+    id: talep.id,
+    profil: talepProfiliCikar(talep),
+    adSoyad: typeof talep.adSoyad === 'string' ? talep.adSoyad : null,
+    telefon: typeof talep.telefon === 'string' ? talep.telefon : null,
+    durum: typeof talep.durum === 'string' ? talep.durum : null,
+    skor: typeof talep.skor === 'number' ? talep.skor : null,
+  }))
+
+  const ozet: IlanOzeti = {
+    id: typeof ilan.id === 'number' ? ilan.id : 0,
+    baslik: ilan.baslik ?? '',
+    tip: (ilan.tip ?? 'satilik') as IlanOzeti['tip'],
+    kategori: (ilan.kategori ?? 'konut') as IlanOzeti['kategori'],
+    fiyat: ilan.fiyat ?? null,
+    mahalleId: kimlik(ilan.mahalle),
+    mahalleAdi: ad(ilan.mahalle),
+    odaSayisi: (ilan.odaSayisi ?? null) as IlanOzeti['odaSayisi'],
+    brutM2: ilan.brutM2 ?? null,
+  }
+
+  const kisiler = new Map(havuz.map((t) => [t.id, t]))
+
+  return {
+    eslesmeler: ilanaUygunTalepler(
+      ozet,
+      havuz.map(({ id, profil }) => ({ id, profil })),
+      adet,
+    ).map((eslesme) => {
+      const kisi = kisiler.get(eslesme.talepId)
+      return {
+        ...eslesme,
+        adSoyad: kisi?.adSoyad ?? null,
+        telefon: kisi?.telefon ?? null,
+        durum: kisi?.durum ?? null,
+        skor: kisi?.skor ?? null,
+      }
+    }),
     havuzBoyutu: havuz.length,
   }
 }

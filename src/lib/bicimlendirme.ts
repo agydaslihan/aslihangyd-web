@@ -125,6 +125,33 @@ export function whatsappBaglantisi(
   const rakamlar = numara.replace(/\D/g, '')
   if (rakamlar.length < 10) return null
 
-  const temel = `https://wa.me/${rakamlar}`
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ `wa.me` ULUSLARARASI BİÇİM İSTİYOR — BAŞTAKİ SIFIR BAĞLANTIYI
+   *    SESSİZCE BOZUYOR.
+   *
+   * Kurumsal numara panele `905...` diye giriliyor ve sorun çıkarmıyordu.
+   * Ama müşteri iletişim formuna telefonunu `0536...` diye yazıyor ve
+   * `wa.me/05364213083` açılan sayfada "numara geçersiz" diyor. Hata
+   * görünür değil: bağlantı çalışıyor, WhatsApp açılıyor, yalnızca kişi
+   * bulunamıyor.
+   *
+   * Ölçümle yakalandı: ters eşleştirme ekranındaki bağlantı incelendiğinde
+   * çıktı. İki dönüşüm yeterli:
+   *   · `0XXXXXXXXXX` (11 hane, sıfırla başlıyor) → `90XXXXXXXXXX`
+   *   · `XXXXXXXXXX`  (10 hane, sıfırsız)        → `90XXXXXXXXXX`
+   *
+   * ⚠️ Ülke kodu zaten varsa (12 hane, `90` ile başlıyor) dokunulmuyor;
+   * yabancı bir numara da olduğu gibi geçiyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  const uluslararasi =
+    rakamlar.length === 11 && rakamlar.startsWith('0')
+      ? `90${rakamlar.slice(1)}`
+      : rakamlar.length === 10
+        ? `90${rakamlar}`
+        : rakamlar
+
+  const temel = `https://wa.me/${uluslararasi}`
   return mesaj ? `${temel}?text=${encodeURIComponent(mesaj)}` : temel
 }
