@@ -433,38 +433,107 @@ async function baglantiyaTikla(sekme, rota) {
    * durduğu doğrulanıyor, koordinat en son okunuyor.
    * ─────────────────────────────────────────────────────────────────────
    */
-  await sekme.deger(
-    `(() => { const a = ${bul}; a.scrollIntoView({ block: 'center', behavior: 'instant' }); return true })()`,
-  )
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ KAYDIR → DUR → ÖLÇ → DOĞRULA, VE GEREKİRSE TEKRAR DENE.
+   *
+   * `behavior: 'instant'` tek başına yetmiyor: masaüstünde Lenis kaydırmayı
+   * kendi eğrisiyle sürüyor ve süren animasyon sayfayı ölçümden SONRA da
+   * oynatabiliyor — koordinat bayatlıyor.
+   *
+   * Üretimde ölçüldü: uzun `/mahalleler` sayfasında üç bağlantı "adres
+   * sapmış" ya da "tıklama noktasını başka bir öğe kapıyor" verdi; aynı
+   * bağlantılar elle denendiğinde SORUNSUZ açıldı. Bulgular gerçek değil,
+   * testin zamanlamasıydı.
+   *
+   * ⚠️ Bu önemli: sahte hata üreten ENGELLEYİCİ bir denetim birkaç koşum
+   * sonra kapatılır — ve kapatılan denetim yoktur.
+   *
+   * Çözüm hedefi zayıflatmak değil ÖLÇÜMÜ TEKRARLAMAK. Deneme hakkı
+   * bittiğinde bulgu yine raporlanıyor; üstteki katman gerçekse
+   * yakalanmaya devam ediyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  let hedef = null
+  for (let deneme = 0; deneme < 5; deneme++) {
+    /**
+     * ⚠️ `scrollIntoView` DEĞİL, HEDEF KONUMA `scrollTo`.
+     *
+     * `scrollIntoView` "bir yere götür" der; ne kadar gittiğini
+     * söylemez. Lenis araya girdiğinde kaydırmanın bitip bitmediğini
+     * anlamanın yolu kalmıyor — "iki ardışık ölçüm aynı" hilesi, eğrinin
+     * yavaşladığı anda yanlışlıkla doğru çıkıyor.
+     *
+     * Kesin bir hedef koordinat isteyip ORAYA VARILDIĞINI doğrulamak,
+     * "durdu mu?" sorusunu ölçülebilir bir eşitliğe çeviriyor.
+     */
+    const istenen = await sekme.deger(`(() => {
+      const a = ${bul}
+      if (!a) return null
+      const r = a.getBoundingClientRect()
+      const hedefY = Math.max(0, Math.round(window.scrollY + r.top - window.innerHeight / 2))
+      window.scrollTo({ top: hedefY, behavior: 'instant' })
+      return hedefY
+    })()`)
+    if (istenen === null) return null
 
-  // Kaydırma durdu mu: iki ardışık ölçüm aynı olana kadar bekle.
-  let onceki = -1
-  for (let i = 0; i < 40; i++) {
-    const simdi = Number((await sekme.deger('Math.round(window.scrollY)')) ?? 0)
-    if (simdi === onceki) break
-    onceki = simdi
-    await uyu(100)
+    // Gerçekten o konuma varıldı mı — iki ardışık ölçümde.
+    let vardi = 0
+    for (let i = 0; i < 40; i++) {
+      const simdi = Number((await sekme.deger('Math.round(window.scrollY)')) ?? -1)
+      // Sayfa sonunda istenen konuma varılamayabilir; sapma büyümüyorsa da kabul.
+      if (Math.abs(simdi - Number(istenen)) <= 2) {
+        vardi += 1
+        if (vardi >= 2) break
+      } else {
+        vardi = 0
+      }
+      await uyu(100)
+    }
+
+    hedef = await sekme.deger(`(() => {
+      const a = ${bul}
+      if (!a) return null
+      const r = a.getBoundingClientRect()
+      const x = r.x + r.width / 2
+      const y = r.y + r.height / 2
+      const ust = document.elementFromPoint(x, y)
+      return {
+        x, y,
+        // ⚠️ Tıklama noktasındaki öğe gerçekten bu bağlantı mı? Değilse
+        // üstte bir katman var demektir — aramadığımız ama bulmak
+        // istediğimiz bir arıza sınıfı (ilan kartlarında yaşandı).
+        dogruHedef: Boolean(ust && (ust === a || a.contains(ust) || ust.closest('a') === a)),
+        ustOge: ust ? ust.tagName + '.' + String(ust.className ?? '').slice(0, 40) : 'yok',
+      }
+    })()`)
+
+    if (hedef?.dogruHedef) break
+    await uyu(400)
   }
 
-  const hedef = await sekme.deger(`(() => {
-    const a = ${bul}
-    if (!a) return null
-    const r = a.getBoundingClientRect()
-    const x = r.x + r.width / 2
-    const y = r.y + r.height / 2
-    const ust = document.elementFromPoint(x, y)
-    return {
-      x, y,
-      // ⚠️ Tıklama noktasındaki öğe gerçekten bu bağlantı mı? Değilse
-      // üstte bir katman var demektir — bu, aramadığımız ama bulmak
-      // istediğimiz bir arıza sınıfı (ilan kartlarında yaşandı).
-      dogruHedef: Boolean(ust && (ust === a || a.contains(ust) || ust.closest('a') === a)),
-      ustOge: ust ? ust.tagName + '.' + String(ust.className ?? '').slice(0, 40) : 'yok',
-    }
-  })()`)
   if (!hedef) return null
   if (!hedef.dogruHedef) {
     return [`tıklama noktasını başka bir öğe kapıyor: ${hedef.ustOge}`]
+  }
+
+  /**
+   * ⚠️ SON DOĞRULAMA — ölçüm ile tıklama arasındaki boşluk gerçek bir risk.
+   *
+   * Üretimde ölçüldü: doğrulama geçtikten sonra, üç CDP turu içinde Lenis
+   * sayfayı oynattı ve tıklama KOMŞU KARTA gitti (`/mahalleler/sarilar`
+   * isterken `/mahalleler/muhittin` açıldı). Koordinat dispatch'ten hemen
+   * önce bir kez daha okunuyor; sapmışsa bulgu olarak dönülüyor, sessizce
+   * yanlış bağlantıya tıklanmıyor.
+   */
+  const sonKontrol = await sekme.deger(`(() => {
+    const a = ${bul}
+    if (!a) return false
+    const r = a.getBoundingClientRect()
+    return Math.abs(r.x + r.width / 2 - ${hedef.x}) < 2 && Math.abs(r.y + r.height / 2 - ${hedef.y}) < 2
+  })()`)
+  if (!sonKontrol) {
+    return ['tıklama anında sayfa oynadı — koordinat bayatladı']
   }
 
   sekme.olaylariBosalt()
@@ -483,7 +552,32 @@ async function baglantiyaTikla(sekme, rota) {
   await fare('mouseReleased')
 
   // Adres değişene kadar bekle; olmazsa denetim zaten "adres sapmış" der.
-  await sekme.kosulBekle(`location.pathname === ${JSON.stringify(rota)}`)
+  let gitti = await sekme.kosulBekle(`location.pathname === ${JSON.stringify(rota)}`)
+
+  /**
+   * ⚠️ TIKLAMA HİÇ İŞLEMEDİYSE BİR KEZ DAHA DENE — ama yalnızca adres HİÇ
+   * DEĞİŞMEDİYSE.
+   *
+   * Fark önemli: adres YANLIŞ bir sayfaya gittiyse bu bir bulgudur (yanlış
+   * bağlantıya tıklanmış) ve tekrar denenmez. Adres hiç değişmediyse
+   * tıklama fiziksel olarak kaybolmuş demektir — uzun listelerde, Lenis
+   * kaydırmayı sürerken olabiliyor. Fiziksel bir eylemi tekrarlamak
+   * iddiayı zayıflatmıyor.
+   *
+   * ⚠️ Tekrar hakkı BİR: ikincisinde de olmuyorsa gerçekten bir sorun var
+   * ve raporlanmalı.
+   */
+  if (!gitti) {
+    const ayniYerde = await sekme.deger(`location.pathname !== ${JSON.stringify(rota)}`)
+    if (ayniYerde) {
+      await fare('mouseMoved')
+      await uyu(60)
+      await fare('mousePressed')
+      await uyu(60)
+      await fare('mouseReleased')
+      gitti = await sekme.kosulBekle(`location.pathname === ${JSON.stringify(rota)}`)
+    }
+  }
   await sekme.kosulBekle(
     `document.readyState === 'complete' && document.body.innerText.trim().length > 0`,
   )
