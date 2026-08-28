@@ -1,7 +1,14 @@
 import { revalidatePath } from 'next/cache'
 import type { GlobalConfig } from 'payload'
 
-import { ANASAYFA_SIRA_SECENEKLERI, VARSAYILAN_ANASAYFA_SIRASI } from '@/lib/anasayfa/duzen'
+import {
+  ANASAYFA_SIRA_SECENEKLERI,
+  BOLUM_BOSLUKLARI,
+  BOLUM_HIZALAMALARI,
+  BOLUM_ZEMINLERI,
+  VARSAYILAN_ANASAYFA_SIRASI,
+  VARSAYILAN_GORUNUM,
+} from '@/lib/anasayfa/duzen'
 import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
 
 /**
@@ -29,6 +36,31 @@ import { herkesOkur, yalnizcaYonetici } from '@/lib/erisim'
  * Bir bölümü siteden tamamen kaldırmak için Site Bölümleri kullanılır —
  * orası menüyü, altbilgiyi ve site haritasını da birlikte kapatır.
  */
+/**
+ * Panelde görünen Türkçe etiketler.
+ *
+ * ⚠️ Değer kümesi kodda (`lib/anasayfa/duzen.ts`), etiketi burada: kablo
+ * değeri ile ekran metni ayrı tutuluyor. Etiketi değiştirmek kayıtlı
+ * veriyi bozmamalı.
+ */
+const ZEMIN_ETIKETI: Record<(typeof BOLUM_ZEMINLERI)[number], string> = {
+  varsayilan: 'Varsayılan (bölümün kendi zemini)',
+  kagit: 'Beyaz / kâğıt',
+  bej: 'Sıcak bej',
+  koyu: 'Koyu bant',
+}
+
+const BOSLUK_ETIKETI: Record<(typeof BOLUM_BOSLUKLARI)[number], string> = {
+  dar: 'Dar',
+  normal: 'Normal',
+  genis: 'Geniş',
+}
+
+const HIZALAMA_ETIKETI: Record<(typeof BOLUM_HIZALAMALARI)[number], string> = {
+  sol: 'Sol',
+  orta: 'Orta',
+}
+
 export const AnaSayfaDuzeni: GlobalConfig = {
   slug: 'anasayfa-duzeni',
   label: 'Ana Sayfa Düzeni',
@@ -74,6 +106,7 @@ export const AnaSayfaDuzeni: GlobalConfig = {
       defaultValue: VARSAYILAN_ANASAYFA_SIRASI.map((anahtar) => ({
         bolum: anahtar,
         acik: true,
+        ...VARSAYILAN_GORUNUM,
       })),
       admin: {
         description:
@@ -87,6 +120,11 @@ export const AnaSayfaDuzeni: GlobalConfig = {
        * Çizim tarafı zaten ikinciyi atlıyor (bir bölüm sayfada iki kez
        * duramaz) ama panelde "ekledim, görünmedi" demek en kötü geri
        * bildirim. Hata burada, sebebiyle birlikte söyleniyor.
+       */
+      /**
+       * ⚠️ Seçenek listeleri koddaki kümelerle aynı olmak zorunda;
+       * `duzen.test.ts` ikisini karşılaştırıyor. Panelde seçilebilen ama
+       * çizimde tanınmayan bir değer, sessizce varsayılana düşerdi.
        */
       validate: (deger: unknown) => {
         if (!Array.isArray(deger)) return true
@@ -127,6 +165,66 @@ export const AnaSayfaDuzeni: GlobalConfig = {
           admin: {
             width: '30%',
             description: 'Kapalıysa bölüm yalnızca ana sayfadan kalkar.',
+          },
+        },
+        /**
+         * ─────────────────────────────────────────────────────────────────
+         * ⚠️ ÜÇ AYARIN DA DEĞER KÜMESİ KAPALI — serbest renk ya da piksel
+         *    girişi YOK.
+         *
+         * Serbest bir değer, tasarım sisteminin dışına çıkan tek bir bölüm
+         * üretmeye yeter; sonra o bölüm "neden farklı görünüyor" sorusunun
+         * cevapsız kaldığı yer olur. Kapalı küme, panelin yanlış
+         * yapılandırılamamasını garanti ediyor.
+         * ─────────────────────────────────────────────────────────────────
+         */
+        {
+          name: 'zemin',
+          type: 'select',
+          label: 'Zemin',
+          defaultValue: VARSAYILAN_GORUNUM.zemin,
+          /**
+           * ⚠️ Seçenekler KODDAKİ KÜMEDEN türetiliyor. Elle yazılsaydı yeni
+           * bir zemin eklendiğinde burayı güncellemeyi unutmak kaçınılmazdı
+           * ve panelde seçilemeyen bir değer olurdu.
+           */
+          options: BOLUM_ZEMINLERI.map((deger) => ({
+            value: deger,
+            label: ZEMIN_ETIKETI[deger],
+          })),
+          admin: {
+            width: '34%',
+            description:
+              '⚠️ "Varsayılan" beyaz demek DEĞİL: bölümün kendi tasarlanmış zeminini koru ' +
+              'demek. Çorlu deneyimi ve çağrı bandı kendi bantlarını taşıyor.',
+          },
+        },
+        {
+          name: 'bosluk',
+          type: 'select',
+          label: 'Dikey boşluk',
+          defaultValue: VARSAYILAN_GORUNUM.bosluk,
+          options: BOLUM_BOSLUKLARI.map((deger) => ({
+            value: deger,
+            label: BOSLUK_ETIKETI[deger],
+          })),
+          admin: { width: '33%' },
+        },
+        {
+          name: 'hizalama',
+          type: 'select',
+          label: 'İçerik hizalaması',
+          defaultValue: VARSAYILAN_GORUNUM.hizalama,
+          options: BOLUM_HIZALAMALARI.map((deger) => ({
+            value: deger,
+            label: HIZALAMA_ETIKETI[deger],
+          })),
+          admin: {
+            width: '33%',
+            description:
+              '⚠️ Bölüm BAŞLIĞINI ve açıklamasını hizalar. Kart ızgaraları ve harita gibi ' +
+              'kendi düzeni olan içerikler bundan etkilenmez — yarım çalışan bir ayar ' +
+              'vermektense sınırını söylüyoruz.',
           },
         },
       ],

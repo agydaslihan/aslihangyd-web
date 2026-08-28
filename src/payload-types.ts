@@ -2211,17 +2211,17 @@ export interface AnasayfaDuzeni {
   sira?:
     | {
         bolum:
+          | 'guven_seridi'
           | 'guven_kartlari'
           | 'arama'
-          | 'guven_seridi'
+          | 'one_cikan_portfoy'
+          | 'mahalleler'
+          | 'slayt'
           | 'aslihan'
           | 'corlu_deneyimi'
-          | 'one_cikan_portfoy'
-          | 'gizli_portfoy'
           | 'anlati'
           | 'endeks'
-          | 'slayt'
-          | 'mahalleler'
+          | 'gizli_portfoy'
           | 'araclar'
           | 'uc_yol'
           | 'cagri';
@@ -2229,6 +2229,15 @@ export interface AnasayfaDuzeni {
          * Kapalıysa bölüm yalnızca ana sayfadan kalkar.
          */
         acik?: boolean | null;
+        /**
+         * ⚠️ "Varsayılan" beyaz demek DEĞİL: bölümün kendi tasarlanmış zeminini koru demek. Çorlu deneyimi ve çağrı bandı kendi bantlarını taşıyor.
+         */
+        zemin?: ('varsayilan' | 'kagit' | 'bej' | 'koyu') | null;
+        bosluk?: ('dar' | 'normal' | 'genis') | null;
+        /**
+         * ⚠️ Bölüm BAŞLIĞINI ve açıklamasını hizalar. Kart ızgaraları ve harita gibi kendi düzeni olan içerikler bundan etkilenmez — yarım çalışan bir ayar vermektense sınırını söylüyoruz.
+         */
+        hizalama?: ('sol' | 'orta') | null;
         id?: string | null;
       }[]
     | null;
@@ -2259,6 +2268,10 @@ export interface MarkaGorunum {
    * Koyu zemin için AÇIK RENKLİ (altın ya da beyaz) SVG tercih edin. PNG kullanacaksanız şeffaf arka planlı ve en az 3x çözünürlükte olsun — açık zemin için hazırlanmış bir PNG koyu zeminde kenarlarında hale bırakır. ⚠️ Boşsa koyu temada ve altbilgide ANA LOGO kullanılır; o da yoksa site adı yazıyla gösterilir. Bozuk görsel hiçbir durumda gösterilmez.
    */
   logoKoyu?: (number | null) | Medya;
+  /**
+   * Kapalıysa altbilgide görsel yerine SİTE ADI yazıyla görünür. ⚠️ Sütun boş kalmaz: "logo yok" ile "logo istenmiyor" ayrı durumlar ve ikisinde de markanın adı görünür.
+   */
+  altbilgideLogo?: boolean | null;
   /**
    * KARE görsel, en az 512×512. Favicon, dokunma simgesi ve manifest ikonları bundan otomatik üretilir — ayrı ayrı yüklemenize gerek yok.
    */
@@ -2849,6 +2862,9 @@ export interface AnasayfaDuzeniSelect<T extends boolean = true> {
     | {
         bolum?: T;
         acik?: T;
+        zemin?: T;
+        bosluk?: T;
+        hizalama?: T;
         id?: T;
       };
   updatedAt?: T;
@@ -2864,6 +2880,7 @@ export interface MarkaGorunumSelect<T extends boolean = true> {
   slogan?: T;
   logo?: T;
   logoKoyu?: T;
+  altbilgideLogo?: T;
   simgeKaynak?: T;
   ogGorseli?: T;
   baslikEylemMetni?: T;

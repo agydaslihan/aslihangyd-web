@@ -188,6 +188,18 @@ export const MarkaGorunum: GlobalConfig = {
               },
             },
             {
+              name: 'altbilgideLogo',
+              type: 'checkbox',
+              label: 'Altbilgide logo göster',
+              defaultValue: true,
+              admin: {
+                description:
+                  'Kapalıysa altbilgide görsel yerine SİTE ADI yazıyla görünür. ' +
+                  '⚠️ Sütun boş kalmaz: "logo yok" ile "logo istenmiyor" ayrı durumlar ve ' +
+                  'ikisinde de markanın adı görünür.',
+              },
+            },
+            {
               name: 'simgeKaynak',
               type: 'upload',
               relationTo: 'medya',

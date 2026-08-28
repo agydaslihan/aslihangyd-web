@@ -145,41 +145,66 @@ export async function Altbilgi() {
         <div className="grid gap-10 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
           {/* ── Kurumsal ── */}
           <Sutun baslik={ayarlar.kurumsalBasligi}>
-            <div className="mb-3 flex flex-col gap-2">
-              {/* ⚠️ Aksan GOLD DEĞİL. Gold üzerinde okunur görünse bile
-                  "gold asla metin rengi değildir" kuralı mutlak: istisna
-                  açıldığı anda bir sonraki kullanım açık zeminde olur ve
-                  2,06:1'e düşer. Disiplin testi yakaladı.
-
-                  ⚠️ Altbilgi bandı iki temada da koyu: `daimaKoyuZemin` ile
-                  koyu logo yeğleniyor, yoksa ana logo, o da yoksa metin.
-                  Logo yüklenmemiş bir sitede altbilgi kimliksiz kalmıyor. */}
+            <div className="mb-4 flex flex-col">
               {/*
-                ⚠️ ÖLÇÜ SINIRLANDI: 56 px yükseklik, 200 px genişlik tavanı.
+                ─────────────────────────────────────────────────────────
+                ⚠️ LOGO KENDİ SABİT KUTUSUNDA, SÜTUN BAŞLIĞIYLA AYNI HİZADA.
 
-                Altbilgi logosu koyu zeminde bulanık ve kenarlarında açık
-                bir hale ile görünüyordu. Sebep dosyanın kendisi: açık zemin
-                için hazırlanmış bir PNG'nin kenar pikselleri açık renge
-                göre yumuşatılmış oluyor ve koyu zeminde o yumuşatma hale
-                olarak görünüyor. Kod bunu düzeltemez — ama ölçüyü
-                küçültmek artefaktı görünür olmaktan çıkarıyor.
+                Önceki düzende logo, tanıtım metniyle aynı `gap-2` yığınının
+                içindeydi ve iki şey birden bozuluyordu:
 
-                ⚠️ Kalıcı çözüm dosyada: panelde "koyu tema logosu" alanı
-                var ve yardım metni artık açık renkli SVG istiyor. Alan
-                boşsa ana logoya, o da yoksa metne düşülüyor.
+                  · Metne 8 px kalıyordu; 56 px'lik bir logonun altında bu
+                    boşluk logoyu metne yapıştırıyor, ikisi tek blok gibi
+                    okunuyordu.
+                  · Kutu yüksekliği içeriğe göre değişiyordu: logo yüklüyse
+                    56 px, metin yedeğindeyse satır yüksekliği kadar. Beş
+                    sütunlu ızgarada bu, komşu sütunların üst hizasını
+                    kaydırıyordu.
 
-                ⚠️ `object-contain` + `max-w`: kare bir logo da, çok geniş
-                bir logo da aynı kutuda oranını koruyor.
+                Çözüm ikisini ayırmak: logo `h-14` sabit ve `items-start`
+                ile SOLA hizalı bir kutuda; metin ayrı ve arada `mt-4`.
+                Kutu yüksekliği içerikten bağımsız olduğu için sütun düzeni
+                logo yüklense de yüklenmese de aynı kalıyor.
+
+                ⚠️ `items-start` şart: `object-contain` dar bir logoyu
+                kutuya ortalardı ve sütun başlığının sol kenarıyla hizası
+                kayardı.
+                ─────────────────────────────────────────────────────────
               */}
-              <MarkaLogosu
-                marka={marka}
-                daimaKoyuZemin
-                yukseklik={56}
-                sinif="h-14 w-auto max-w-[12.5rem] object-contain"
-                metinSinifi="font-baslik text-baslik-3 text-notr-50"
-                vurguSinifi="text-notr-300"
-              />
-              <p className="text-notr-300 text-govde-kucuk whitespace-pre-line">
+              <div className="flex h-14 items-center justify-start">
+                {/*
+                  ⚠️ ÖLÇÜ SINIRLANDI: 56 px yükseklik, 200 px genişlik tavanı.
+
+                  Altbilgi logosu koyu zeminde bulanık ve kenarlarında açık
+                  bir hale ile görünüyordu. Sebep dosyanın kendisi: açık zemin
+                  için hazırlanmış bir PNG'nin kenar pikselleri açık renge
+                  göre yumuşatılmış oluyor ve koyu zeminde o yumuşatma hale
+                  olarak görünüyor. Kod bunu düzeltemez — ama ölçüyü
+                  küçültmek artefaktı görünür olmaktan çıkarıyor.
+
+                  ⚠️ Kalıcı çözüm dosyada: panelde "koyu tema logosu" alanı
+                  var ve yardım metni artık açık renkli SVG istiyor. Alan
+                  boşsa ana logoya, o da yoksa metne düşülüyor.
+
+                  ⚠️ Aksan GOLD DEĞİL. Gold üzerinde okunur görünse bile
+                  "gold asla metin rengi değildir" kuralı mutlak.
+
+                  ⚠️ `metneZorla`: panelden "Altbilgide logo göster"
+                  kapatıldığında görsel gizlenmiyor, yerine SİTE ADI
+                  geliyor. Sütunun kimliksiz kalmaması için.
+                */}
+                <MarkaLogosu
+                  marka={marka}
+                  daimaKoyuZemin
+                  metneZorla={!marka.altbilgideLogo}
+                  yukseklik={56}
+                  sinif="h-14 w-auto max-w-[12.5rem] object-contain"
+                  metinSinifi="font-baslik text-baslik-3 text-notr-50"
+                  vurguSinifi="text-notr-300"
+                />
+              </div>
+
+              <p className="text-notr-300 mt-4 text-govde-kucuk whitespace-pre-line">
                 {ayarlar.tanitimMetni}
               </p>
 
@@ -189,7 +214,7 @@ export async function Altbilgi() {
                 güncellenip diğeri unutulurdu.
               */}
               {sosyalHesaplar.length > 0 ? (
-                <div className="mt-2 flex flex-col gap-2">
+                <div className="mt-6 flex flex-col gap-2">
                   <h2 className="text-notr-50 text-eyebrow font-medium uppercase">
                     {ayarlar.sosyalBasligi}
                   </h2>

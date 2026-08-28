@@ -144,3 +144,70 @@ export function Eyebrow({ children, sinifAdi }: { children: ReactNode; sinifAdi?
 export function GoldAyrac({ sinifAdi }: { sinifAdi?: string }) {
   return <hr aria-hidden="true" className={sinif('border-gold-cizgi border-t', sinifAdi)} />
 }
+
+/**
+ * Panelden gelen görünüm ayarlarını uygulayan sarmalayıcı.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN SARMALAYICI, NEDEN `Bolum`A PROP DEĞİL.
+ *
+ * Ana sayfadaki on dört bölümün yalnızca dördü `Bolum` kullanıyor; kalanı
+ * (Çorlu deneyimi, çağrı bandı, güven şeridi, slayt bandı…) kendi
+ * `<section>`ını ve kendi zeminini taşıyor. Ayarları `Bolum`a prop olarak
+ * eklemek, on bölümde hiçbir şey yapmayan bir panel üretirdi — panelde
+ * görünen ama işlemeyen ayar, olmayan ayardan kötüdür.
+ *
+ * Sarmalayıcı hepsini eşit davranıyor: zemini DIŞARIDAN veriyor, dikey
+ * boşluğu EKLİYOR (değiştirmiyor) ve hizalamayı bir öznitelikle bildiriyor.
+ *
+ * ⚠️ BOŞLUK EKLENİYOR, EZİLMİYOR. Bölümün kendi `py`sini sıfırlamak,
+ * bileşenin iç ritmini bilmeyi gerektirirdi. "Dar" sıfır ek, "geniş" bir
+ * kademe ek boşluk demek; sonuç öngörülebilir ve hiçbir bölümde iki kat
+ * dolgu oluşmuyor.
+ *
+ * ⚠️ HİZALAMA YALNIZCA BAŞLIK BLOĞUNU ETKİLİYOR ve panelde de öyle
+ * yazıyor. Kart ızgarasını ya da haritayı ortalamak düzeni bozardı; yarım
+ * çalışan bir ayar vermektense sınırını söylüyoruz. Kural `globals.css`
+ * içindeki `[data-bolum-hizalama='orta']` seçicisinde.
+ */
+export function BolumSarmali({
+  zemin,
+  bosluk,
+  hizalama,
+  children,
+}: {
+  zemin: 'varsayilan' | 'kagit' | 'bej' | 'koyu'
+  bosluk: 'dar' | 'normal' | 'genis'
+  hizalama: 'sol' | 'orta'
+  children: ReactNode
+}) {
+  const zeminler = {
+    varsayilan: '',
+    kagit: 'bg-zemin',
+    bej: 'bg-bant-zemin',
+    koyu: 'bg-koyu-bant text-koyu-bant-metin',
+  } as const
+
+  const bosluklar = {
+    dar: '',
+    normal: 'py-0',
+    genis: 'py-10 sm:py-16',
+  } as const
+
+  const varsayilanMi = zemin === 'varsayilan' && bosluk === 'normal' && hizalama === 'sol'
+
+  /**
+   * ⚠️ Hiçbir ayar değişmemişse fazladan bir `<div>` BASILMIYOR.
+   *
+   * On dört bölümün on dördünü sarmak, DOM'a on dört boş katman eklemek
+   * demekti; `:has()` ve kardeş seçicileri olan bir tasarımda o katmanlar
+   * sessizce kural bozar.
+   */
+  if (varsayilanMi) return <>{children}</>
+
+  return (
+    <div data-bolum-hizalama={hizalama} className={sinif(zeminler[zemin], bosluklar[bosluk])}>
+      {children}
+    </div>
+  )
+}

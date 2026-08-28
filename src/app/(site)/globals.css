@@ -1168,3 +1168,26 @@
     transform: translateY(0);
   }
 }
+
+/*
+  ─────────────────────────────────────────────────────────────────────────
+  ⚠️ BÖLÜM HİZALAMASI — YALNIZCA BAŞLIK BLOĞU.
+
+  Panelden "orta" seçilen bölümde başlık, üst başlık ve açıklama ortalanır;
+  kart ızgarası, harita ve tablo dokunulmadan kalır. Sebep basit: bir
+  ızgarayı ortalamak sütun hizasını bozar ve "ortalanmış" değil "kaymış"
+  görünür.
+
+  ⚠️ Seçici `BolumBasligi`nin ürettiği yapıya bağlı: dış sarmalayıcı satır
+  yönünde bir flex kutusu, içindeki ilk çocuk metin sütunu. İkisi birden
+  ortalanmazsa yalnızca metin ortalanır ve kutu solda kalır.
+  ─────────────────────────────────────────────────────────────────────────
+*/
+[data-bolum-hizalama='orta'] .kapsayici > *:first-child {
+  text-align: center;
+}
+
+[data-bolum-hizalama='orta'] .kapsayici > *:first-child > div:first-child {
+  margin-inline: auto;
+  align-items: center;
+}

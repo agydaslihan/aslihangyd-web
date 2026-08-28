@@ -40,6 +40,13 @@ export interface MarkaAyarlari {
   logoKoyu: { url: string; alt: string; en: number | null; boy: number | null } | null
   ogGorseli: { url: string; en: number | null; boy: number | null } | null
   simgeVar: boolean
+  /**
+   * Altbilgide görsel logo gösterilsin mi?
+   *
+   * ⚠️ Varsayılan AÇIK ve okuma başarısızsa da açık. Kapalı varsayılan,
+   * paneli hiç açmamış bir kurulumda logoyu sessizce gizlerdi.
+   */
+  altbilgideLogo: boolean
   acik: Palet
   koyu: Palet
 }
@@ -111,6 +118,8 @@ export async function markaAyarlari(): Promise<MarkaAyarlari> {
       logoKoyu: gorseliCoz(marka.logoKoyu),
       ogGorseli: gorseliCoz(marka.ogGorseli),
       simgeVar: medyayiCoz(marka.simgeKaynak) !== null,
+      // ⚠️ `!== false`: alan hiç kaydedilmemişse (eski kayıt) açık sayılıyor.
+      altbilgideLogo: marka.altbilgideLogo !== false,
       acik: paletiGuvenliOku(marka.acikTema, 'acik'),
       koyu: paletiGuvenliOku(marka.koyuTema, 'koyu'),
     }
@@ -127,6 +136,7 @@ export async function markaAyarlari(): Promise<MarkaAyarlari> {
       logoKoyu: null,
       ogGorseli: null,
       simgeVar: false,
+      altbilgideLogo: true,
       acik: varsayilanPalet('acik'),
       koyu: varsayilanPalet('koyu'),
     }
