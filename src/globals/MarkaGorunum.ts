@@ -187,6 +187,103 @@ export const MarkaGorunum: GlobalConfig = {
                   'yazıyla gösterilir. Bozuk görsel hiçbir durumda gösterilmez.',
               },
             },
+            /**
+             * ─────────────────────────────────────────────────────────────
+             * ⚠️ LOGO ÖLÇÜLERİ SINIRLI ARALIKTA — SERBEST SAYI YOK.
+             *
+             * 32 px altında logo okunmuyor; 72 px başlık bandını (sabit
+             * 72 px) kenardan kenara doldurup sıkışık gösteriyor. Serbest
+             * bir sayı alanı, "200 yazıp ne olacağına bakmak" ile düzeni
+             * bozmayı aynı kolaylığa indirirdi.
+             *
+             * ⚠️ İLK YAZDIĞIM UYARI YANLIŞTI: "56 px üstünde bant büyür"
+             * demiştim; ölçtüm, BÜYÜMÜYOR. Bant `h-18` ile sabit ve logo
+             * ne kadar büyürse büyüsün taşma yok (40/48/56/72 px ölçüldü,
+             * dördünde de bant 72 px ve taşma 0). Metin ölçüme göre
+             * düzeltildi.
+             *
+             * ⚠️ Sınır İKİ YERDE: panelde `min`/`max`, kodda `kirp()`.
+             * Panel doğrulaması REST ile atlanabilir; kod kırpması
+             * atlanamaz.
+             * ─────────────────────────────────────────────────────────────
+             */
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'baslikLogoYuksekligi',
+                  type: 'number',
+                  label: 'Başlıkta logo yüksekliği (px)',
+                  defaultValue: 48,
+                  min: 32,
+                  max: 72,
+                  admin: {
+                    width: '50%',
+                    step: 2,
+                    description:
+                      '⚠️ Başlık bandı 72 px’de SABİT ve logo onu büyütmüyor — ölçüldü. ' +
+                      'Ama 72 px logo bandı kenardan kenara doldurur ve sıkışık görünür; ' +
+                      'ölçülmüş rahat aralık 40–56 px.',
+                  },
+                },
+                {
+                  name: 'altbilgiLogoYuksekligi',
+                  type: 'number',
+                  label: 'Altbilgide logo yüksekliği (px)',
+                  defaultValue: 56,
+                  min: 32,
+                  max: 72,
+                  admin: { width: '50%', step: 2 },
+                },
+              ],
+            },
+            {
+              type: 'row',
+              fields: [
+                {
+                  name: 'logoBoslugu',
+                  type: 'number',
+                  label: 'Logo çevresindeki boşluk (px)',
+                  defaultValue: 0,
+                  min: 0,
+                  max: 32,
+                  admin: {
+                    width: '50%',
+                    step: 4,
+                    description:
+                      '⚠️ Boşluk logoyu BÜYÜTMEZ, içeriden yer alır (border-box) — ölçüldü. ' +
+                      '72 px logoya 16 px boşluk verirseniz görsel 40 px’e iner, bant ' +
+                      'kıpırdamaz. Yani boşluk bir "nefes payı" değil, logoyu küçültme yolu.',
+                  },
+                },
+                {
+                  name: 'logoHizalamasi',
+                  type: 'select',
+                  label: 'Altbilgide logo hizası',
+                  defaultValue: 'sol',
+                  options: [
+                    { value: 'sol', label: 'Sol' },
+                    { value: 'orta', label: 'Orta' },
+                  ],
+                  admin: {
+                    width: '50%',
+                    description:
+                      '⚠️ Yalnızca ALTBİLGİ. Başlıktaki logo daima solda: sağında gezinme ' +
+                      'var ve ortalamak menüyü iterdi.',
+                  },
+                },
+              ],
+            },
+            {
+              /**
+               * ⚠️ Canlı önizleme — kör ayarı bitiriyor. "52 px" bir sayı;
+               * ekranda ne olduğunu ancak kaydedip siteye bakınca
+               * görürsünüz ve o döngü üç turda insanı bıktırır.
+               */
+              name: 'logoOnizleme',
+              type: 'ui',
+              admin: { components: { Field: '@/components/marka/LogoPaneli#LogoPaneli' } },
+            },
             {
               name: 'altbilgideLogo',
               type: 'checkbox',

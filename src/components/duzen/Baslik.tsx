@@ -147,10 +147,30 @@ export function Baslik({
               ⚠️ `max-w`: çok geniş bir logo mobilde menü düğmesini ekrandan
               itebilirdi.
             */}
+            {/*
+              ⚠️ YÜKSEKLİK ARTIK SINIFTAN DEĞİL, PANELDEN — ve CLS yine 0.
+
+              Tailwind sınıfları derleme anında sabitleniyor; panelden gelen
+              bir sayı sınıfa çevrilemez (`h-[48px]` çalışma zamanında
+              üretilemiyor). Satır içi `style` kullanılıyor ve `<Image>`
+              genişliği en/boy oranından hesaplanmaya devam ediyor: yer
+              görsel inmeden ayrılıyor, düzen zıplamıyor.
+
+              ⚠️ Mobilde ölçü %20 küçültülüyor. Panelde tek sayı var ve
+              masaüstü için giriliyor; aynı sayıyı telefonda uygulamak menü
+              düğmesini ekrandan iterdi.
+            */}
             <MarkaLogosu
               marka={marka}
-              yukseklik={48}
-              sinif="h-10 w-auto max-w-[11rem] object-contain lg:h-12 lg:max-w-[14rem]"
+              yukseklik={marka.baslikLogoYuksekligi}
+              stil={
+                {
+                  '--logo-boy': `${marka.baslikLogoYuksekligi}px`,
+                  '--logo-boy-mobil': `${Math.round(marka.baslikLogoYuksekligi * 0.8)}px`,
+                  padding: `${marka.logoBoslugu}px`,
+                } as React.CSSProperties
+              }
+              sinif="marka-logo w-auto max-w-[11rem] object-contain lg:max-w-[14rem]"
               metinSinifi="font-baslik text-baslik-3 tracking-tight whitespace-nowrap"
               vurguSinifi="text-vurgu"
             />
