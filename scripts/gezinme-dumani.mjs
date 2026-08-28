@@ -433,56 +433,163 @@ async function baglantiyaTikla(sekme, rota) {
    * durduğu doğrulanıyor, koordinat en son okunuyor.
    * ─────────────────────────────────────────────────────────────────────
    */
-  await sekme.deger(
-    `(() => { const a = ${bul}; a.scrollIntoView({ block: 'center', behavior: 'instant' }); return true })()`,
-  )
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ KAYDIR → DUR → ÖLÇ → DOĞRULA, VE GEREKİRSE TEKRAR DENE.
+   *
+   * `behavior: 'instant'` tek başına yetmiyor: masaüstünde Lenis kaydırmayı
+   * kendi eğrisiyle sürüyor ve süren animasyon sayfayı ölçümden SONRA da
+   * oynatabiliyor — koordinat bayatlıyor.
+   *
+   * Üretimde ölçüldü: uzun `/mahalleler` sayfasında üç bağlantı "adres
+   * sapmış" ya da "tıklama noktasını başka bir öğe kapıyor" verdi; aynı
+   * bağlantılar elle denendiğinde SORUNSUZ açıldı. Bulgular gerçek değil,
+   * testin zamanlamasıydı.
+   *
+   * ⚠️ Bu önemli: sahte hata üreten ENGELLEYİCİ bir denetim birkaç koşum
+   * sonra kapatılır — ve kapatılan denetim yoktur.
+   *
+   * Çözüm hedefi zayıflatmak değil ÖLÇÜMÜ TEKRARLAMAK. Deneme hakkı
+   * bittiğinde bulgu yine raporlanıyor; üstteki katman gerçekse
+   * yakalanmaya devam ediyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  let hedef = null
+  for (let deneme = 0; deneme < 5; deneme++) {
+    /**
+     * ⚠️ `scrollIntoView` + KAYDIRMANIN DURMASINI BEKLE.
+     *
+     * Bir ara "kesin hedef konuma `scrollTo`" denendi ve ÜRETİMDE iyileşti
+     * ama CI'DA BOZDU: kısa demo listelerinde hesaplanan hedef konuma
+     * varılamıyor, döngü boşa dönüyor ve tıklama noktası kart yerine
+     * `<main>`in boşluğuna düşüyordu. Ölçüm iki ortamda ters yönde
+     * konuştuğu için o değişiklik geri alındı.
+     *
+     * Üretimdeki kararsızlığı çözen şey bu değil, aşağıdaki iki koruma
+     * oldu: tıklamadan hemen önceki son koordinat doğrulaması ve adres hiç
+     * değişmediğinde bir tekrar hakkı.
+     */
+    await sekme.deger(
+      `(() => { const a = ${bul}; if (a) a.scrollIntoView({ block: 'center', behavior: 'instant' }); return true })()`,
+    )
 
-  // Kaydırma durdu mu: iki ardışık ölçüm aynı olana kadar bekle.
-  let onceki = -1
-  for (let i = 0; i < 40; i++) {
-    const simdi = Number((await sekme.deger('Math.round(window.scrollY)')) ?? 0)
-    if (simdi === onceki) break
-    onceki = simdi
-    await uyu(100)
+    /**
+     * Kaydırma gerçekten durdu mu — BEŞ ARDIŞIK ÖLÇÜM.
+     *
+     * ⚠️ İKİ ÖLÇÜM YETMİYOR, ÖLÇÜLDÜ. Lenis'in easing eğrisi 1,1 saniye
+     * sürüyor ve sonlara doğru kare başına bir pikselin altına iniyor;
+     * iki ardışık örnek o bölgede yanlışlıkla eşitleniyor. "Durdu" diyip
+     * ölçülen koordinat, tıklama CDP üzerinden gidene kadar bayatlıyor ve
+     * tıklama KOMŞU karta düşüyordu.
+     *
+     * Beş örnek × 100 ms = yarım saniye hareketsizlik; 1,1 saniyelik bir
+     * eğrinin ortasında rastlanmayacak kadar uzun.
+     */
+    let onceki = -1
+    let sabit = 0
+    for (let i = 0; i < 60; i++) {
+      const simdi = Number((await sekme.deger('Math.round(window.scrollY)')) ?? 0)
+      sabit = simdi === onceki ? sabit + 1 : 0
+      onceki = simdi
+      if (sabit >= 5) break
+      await uyu(100)
+    }
+
+    hedef = await sekme.deger(`(() => {
+      const a = ${bul}
+      if (!a) return null
+      const r = a.getBoundingClientRect()
+      const x = r.x + r.width / 2
+      const y = r.y + r.height / 2
+      const ust = document.elementFromPoint(x, y)
+      return {
+        x, y,
+        // ⚠️ Tıklama noktasındaki öğe gerçekten bu bağlantı mı? Değilse
+        // üstte bir katman var demektir — aramadığımız ama bulmak
+        // istediğimiz bir arıza sınıfı (ilan kartlarında yaşandı).
+        dogruHedef: Boolean(ust && (ust === a || a.contains(ust) || ust.closest('a') === a)),
+        ustOge: ust ? ust.tagName + '.' + String(ust.className ?? '').slice(0, 40) : 'yok',
+      }
+    })()`)
+
+    /**
+     * ⚠️ SON DOĞRULAMA DÖNGÜNÜN İÇİNDE — dışarıda olduğu sürüm ÜRETİMDE
+     * hâlâ düşüyordu.
+     *
+     * Ölçüm ile tıklama arasındaki üç CDP turu gerçek bir risk: Lenis o
+     * arada sayfayı oynatıyor ve koordinat bayatlıyor. Bunu tespit edip
+     * HEMEN bulgu olarak dönmek, testin kendi zamanlamasını arıza gibi
+     * göstermekti. Doğrusu aynı ölçümü yeniden denemek; deneme hakkı
+     * bitince bulgu yine dönülüyor.
+     */
+    if (hedef?.dogruHedef) {
+      const tazeMi = await sekme.deger(`(() => {
+        const a = ${bul}
+        if (!a) return false
+        const r = a.getBoundingClientRect()
+        return Math.abs(r.x + r.width / 2 - ${hedef.x}) < 2 && Math.abs(r.y + r.height / 2 - ${hedef.y}) < 2
+      })()`)
+      if (tazeMi) break
+      hedef = { ...hedef, dogruHedef: false, ustOge: 'sayfa oynadı — koordinat bayatladı' }
+    }
+    await uyu(400)
   }
 
-  const hedef = await sekme.deger(`(() => {
-    const a = ${bul}
-    if (!a) return null
-    const r = a.getBoundingClientRect()
-    const x = r.x + r.width / 2
-    const y = r.y + r.height / 2
-    const ust = document.elementFromPoint(x, y)
-    return {
-      x, y,
-      // ⚠️ Tıklama noktasındaki öğe gerçekten bu bağlantı mı? Değilse
-      // üstte bir katman var demektir — bu, aramadığımız ama bulmak
-      // istediğimiz bir arıza sınıfı (ilan kartlarında yaşandı).
-      dogruHedef: Boolean(ust && (ust === a || a.contains(ust) || ust.closest('a') === a)),
-      ustOge: ust ? ust.tagName + '.' + String(ust.className ?? '').slice(0, 40) : 'yok',
-    }
-  })()`)
   if (!hedef) return null
   if (!hedef.dogruHedef) {
     return [`tıklama noktasını başka bir öğe kapıyor: ${hedef.ustOge}`]
   }
 
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ TIKLAMA KOORDİNATLA DEĞİL, KLAVYEYLE — VE BU BİR TAVİZ DEĞİL.
+   *
+   * Fare koordinatıyla tıklamak ÜRETİMDE kararsızdı: Lenis kaydırmayı
+   * sürekli sürüyor ve ölçüm ile CDP'nin olayı göndermesi arasındaki üç
+   * tur içinde sayfa oynuyor. Tıklama komşu karta düşüyordu — iki
+   * koşumdan biri kırmızı. Beş farklı sağlamlaştırma denendi (kesin
+   * konuma kaydırma, son koordinat doğrulaması, yeniden hedefleme, beş
+   * örnekli durgunluk); hiçbiri yarışı ortadan KALDIRMADI, yalnızca
+   * seyrekleştirdi.
+   *
+   * Yarışın kaynağı koordinat. Odak + Enter'da koordinat yok: olay
+   * doğrudan öğeye gidiyor, sayfa oynasa bile hedef değişmiyor.
+   *
+   * ⚠️ ÜSTTEKİ KATMAN DENETİMİ KAYBOLMUYOR. `elementFromPoint` ölçümü
+   * yukarıda duruyor ve bulgu olarak raporlanıyor; yalnızca TIKLAMA yolu
+   * değişti. O denetim gezinmeye bağlı olmadığı için tekrarlanabiliyor ve
+   * kararsız değil — ilan kartlarındaki örtü arızası bugün de yakalanır.
+   *
+   * ⚠️ ÜSTELİK KAPSAM ARTIYOR: bağlantının klavyeyle erişilebilir olduğu
+   * ve Enter'la açıldığı da doğrulanmış oluyor — talimatın ayrıca istediği
+   * şey ("Tab ile odaklanıp Enter ile açılsın").
+   * ─────────────────────────────────────────────────────────────────────
+   */
   sekme.olaylariBosalt()
-  const fare = (type) =>
-    sekme.S('Input.dispatchMouseEvent', {
-      type,
-      x: hedef.x,
-      y: hedef.y,
-      button: type === 'mouseMoved' ? 'none' : 'left',
-      clickCount: type === 'mouseMoved' ? 0 : 1,
-    })
-  await fare('mouseMoved')
-  await uyu(40)
-  await fare('mousePressed')
-  await uyu(50)
-  await fare('mouseReleased')
 
-  // Adres değişene kadar bekle; olmazsa denetim zaten "adres sapmış" der.
+  const odaklandi = await sekme.deger(`(() => {
+    const a = ${bul}
+    if (!a) return false
+    a.focus()
+    return document.activeElement === a
+  })()`)
+  if (!odaklandi) {
+    return ['bağlantı klavyeyle odaklanamıyor — Tab ile erişilemez demektir']
+  }
+
+  for (const tur of ['rawKeyDown', 'char', 'keyUp']) {
+    await sekme.S('Input.dispatchKeyEvent', {
+      type: tur,
+      key: 'Enter',
+      code: 'Enter',
+      windowsVirtualKeyCode: 13,
+      nativeVirtualKeyCode: 13,
+      text: '\r',
+      unmodifiedText: '\r',
+    })
+    await uyu(30)
+  }
+
   await sekme.kosulBekle(`location.pathname === ${JSON.stringify(rota)}`)
   await sekme.kosulBekle(
     `document.readyState === 'complete' && document.body.innerText.trim().length > 0`,
@@ -615,7 +722,7 @@ let hataliMi = false
 
 const raporla = ({ etiket, sorunlar, tiklanan, tiklanamayan }) => {
   if (sorunlar.length === 0) {
-    const ek = tiklanan === undefined ? '' : ` · ${tiklanan} bağlantı tıklandı`
+    const ek = tiklanan === undefined ? '' : ` · ${tiklanan} bağlantı klavyeyle açıldı`
     console.log(`✓ ${etiket.padEnd(14)} — sorun yok${ek}`)
   } else {
     hataliMi = true
