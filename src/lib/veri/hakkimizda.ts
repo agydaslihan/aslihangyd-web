@@ -26,6 +26,34 @@ export interface HakkimizdaIcerigi {
   portre: HakkimizdaGorseli | null
   portreAltMetni: string | null
   ekGorseller: HakkimizdaGorseli[]
+  /** Portrenin biçimi — panelden, sınırlı seçeneklerle. */
+  portreBicimi: PortreBicimi
+}
+
+/**
+ * ⚠️ DEĞER KÜMELERİ KAPALI. Serbest bir oran ya da yarıçap, ilk yanlış
+ * değerde sayfayı tasarım sisteminin dışına çıkarırdı.
+ *
+ * ⚠️ "Otomatik oran" seçeneği bilinçli olarak YOK: dosyanın kendi oranına
+ * bırakmak, farklı oranlarda yüklenen iki fotoğrafta düzeni zıplatır ve
+ * CLS'i ölçülemez hâle getirir.
+ */
+export const PORTRE_ORANLARI = ['1:1', '3:4', '4:3', '16:9'] as const
+export const PORTRE_YARICAPLARI = ['yok', 'orta', 'buyuk'] as const
+export const PORTRE_HIZALAMALARI = ['sol', 'orta', 'sag'] as const
+
+export interface PortreBicimi {
+  oran: (typeof PORTRE_ORANLARI)[number]
+  yaricap: (typeof PORTRE_YARICAPLARI)[number]
+  kenarlik: boolean
+  hizalama: (typeof PORTRE_HIZALAMALARI)[number]
+}
+
+export const VARSAYILAN_PORTRE_BICIMI: PortreBicimi = {
+  oran: '3:4',
+  yaricap: 'buyuk',
+  kenarlik: false,
+  hizalama: 'sol',
 }
 
 const BOS: HakkimizdaIcerigi = {
@@ -34,6 +62,7 @@ const BOS: HakkimizdaIcerigi = {
   portre: null,
   portreAltMetni: null,
   ekGorseller: [],
+  portreBicimi: VARSAYILAN_PORTRE_BICIMI,
 }
 
 function metin(deger: unknown): string | null {
@@ -63,6 +92,12 @@ function gorseliCoz(deger: unknown, aciklama: string | null): HakkimizdaGorseli 
   }
 }
 
+function secim<T extends string>(deger: unknown, kume: readonly T[], varsayilan: T): T {
+  return typeof deger === 'string' && (kume as readonly string[]).includes(deger)
+    ? (deger as T)
+    : varsayilan
+}
+
 export async function hakkimizdaGetir(): Promise<HakkimizdaIcerigi> {
   try {
     const payload = await getPayload({ config })
@@ -71,6 +106,10 @@ export async function hakkimizdaGetir(): Promise<HakkimizdaIcerigi> {
       icerik?: unknown
       portre?: unknown
       portreAltMetni?: unknown
+      portreOrani?: unknown
+      portreYaricapi?: unknown
+      portreKenarligi?: unknown
+      portreHizalamasi?: unknown
       ekGorseller?: { gorsel?: unknown; aciklama?: unknown }[]
     }
 
@@ -89,6 +128,20 @@ export async function hakkimizdaGetir(): Promise<HakkimizdaIcerigi> {
       ekGorseller: (kayit.ekGorseller ?? [])
         .map((oge) => gorseliCoz(oge.gorsel, metin(oge.aciklama)))
         .filter((oge): oge is HakkimizdaGorseli => oge !== null),
+      /**
+       * ⚠️ Tanınmayan değer varsayılana düşüyor. Panel seçenekleri
+       * daraltılırsa eski kayıtlar sayfayı kırmamalı.
+       */
+      portreBicimi: {
+        oran: secim(kayit.portreOrani, PORTRE_ORANLARI, VARSAYILAN_PORTRE_BICIMI.oran),
+        yaricap: secim(kayit.portreYaricapi, PORTRE_YARICAPLARI, VARSAYILAN_PORTRE_BICIMI.yaricap),
+        kenarlik: kayit.portreKenarligi === true,
+        hizalama: secim(
+          kayit.portreHizalamasi,
+          PORTRE_HIZALAMALARI,
+          VARSAYILAN_PORTRE_BICIMI.hizalama,
+        ),
+      },
     }
   } catch {
     return BOS

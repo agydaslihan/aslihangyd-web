@@ -9,6 +9,7 @@ import { danismanIceriginiGetir } from '@/lib/veri/danismanOl'
 import { bolumKapisi } from '@/lib/veri/siteBolumleri'
 
 import { danismanBasvuruGonder } from './eylemler'
+import { sinif } from '@/lib/sinif'
 
 export const metadata: Metadata = {
   title: 'Danışman ol — Aslıhan GYD ekibine katılın',
@@ -58,7 +59,23 @@ export default async function DanismanOlSayfasi() {
               height={icerik.heroGorseli.boy ?? undefined}
               className="absolute inset-0 h-full w-full object-cover"
             />
-            <span aria-hidden="true" className="bg-koyu-bant/75 absolute inset-0" />
+            {/*
+              ⚠️ KARARTMA PANELDEN VE ALT SINIRI ÖLÇÜLDÜ.
+
+              Bandın metni beyaz; karartma azaldıkça açık renkli bir
+              fotoğrafta metin okunmaz hâle geliyor. Bembeyaz bir fotoğraf
+              varsayımıyla ölçülen kontrast: %60 → 4,49:1 (eşiğin altında),
+              %65 → 5,29:1, %75 → 7,48:1. Panelde en düşük seçenek %65.
+
+              ⚠️ Sınıf adı TAM METİN olarak yazılı: Tailwind sınıfları
+              derleme anında taranıyor, `bg-koyu-bant/${sayi}` gibi kurulan
+              bir sınıf üretilen CSS'e hiç girmez ve karartma sessizce
+              kaybolurdu.
+            */}
+            <span
+              aria-hidden="true"
+              className={sinif('absolute inset-0', KARARTMA_SINIFI[icerik.heroKarartmasi])}
+            />
           </>
         ) : null}
 
@@ -166,3 +183,16 @@ export default async function DanismanOlSayfasi() {
     </div>
   )
 }
+
+/**
+ * Karartma oranının sınıf karşılıkları.
+ *
+ * ⚠️ TAM METİN ZORUNLU. Tailwind sınıfları derleme anında taranıyor;
+ * `bg-koyu-bant/${oran}` biçiminde kurulan bir sınıf üretilen CSS'e hiç
+ * girmez ve karartma sessizce kaybolur — metin de okunmaz hâle gelirdi.
+ */
+const KARARTMA_SINIFI = {
+  65: 'bg-koyu-bant/65',
+  75: 'bg-koyu-bant/75',
+  85: 'bg-koyu-bant/85',
+} as const

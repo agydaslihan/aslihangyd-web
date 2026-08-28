@@ -1961,6 +1961,13 @@ export interface Hakkimizda {
    * Fotoğrafın altında görünen kısa satır (ad, unvan).
    */
   portreAltMetni?: string | null;
+  portreOrani?: ('1:1' | '3:4' | '4:3' | '16:9') | null;
+  portreYaricapi?: ('yok' | 'orta' | 'buyuk') | null;
+  /**
+   * Açık fotoğrafların kenarı beyaz zeminde kayboluyorsa işe yarar.
+   */
+  portreKenarligi?: boolean | null;
+  portreHizalamasi?: ('sol' | 'orta' | 'sag') | null;
   /**
    * Ofis, ekip, saha fotoğrafları. ⚠️ Bunlar sayfanın altında ızgarada gösteriliyor; her biri için medya kaydında "Kullanım: Kart" seçmek bütçe uyarısını doğru çalıştırır.
    */
@@ -2534,6 +2541,10 @@ export interface DanismanOl {
    */
   heroGorseli?: (number | null) | Medya;
   /**
+   * ⚠️ Bandın metni beyaz. Karartma azaldıkça açık renkli bir fotoğrafta metin okunmaz hâle gelir. %65 ölçülmüş alt sınır: bir kademe altı WCAG AA eşiğini kıl payı kaçırıyor. Görsel yoksa bu ayarın bir etkisi olmaz.
+   */
+  heroKarartmasi?: ('65' | '75' | '85') | null;
+  /**
    * Formdan hemen önce görünür; boşsa mevcut metin kalır. ⚠️ Çalışma koşulu, komisyon oranı ya da taahhüt YAZMAYIN — bunlar sözleşme konusu ve görüşmede yazılı olarak paylaşılıyor (CLAUDE.md kural 3).
    */
   formUstuMetin?: {
@@ -2765,6 +2776,10 @@ export interface HakkimizdaSelect<T extends boolean = true> {
   icerik?: T;
   portre?: T;
   portreAltMetni?: T;
+  portreOrani?: T;
+  portreYaricapi?: T;
+  portreKenarligi?: T;
+  portreHizalamasi?: T;
   ekGorseller?:
     | T
     | {
@@ -3004,6 +3019,7 @@ export interface DanismanOlSelect<T extends boolean = true> {
         id?: T;
       };
   heroGorseli?: T;
+  heroKarartmasi?: T;
   formUstuMetin?: T;
   ekGorseller?:
     | T

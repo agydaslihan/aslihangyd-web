@@ -100,6 +100,77 @@ export const Hakkimizda: GlobalConfig = {
       label: 'Portre alt yazısı',
       admin: { description: 'Fotoğrafın altında görünen kısa satır (ad, unvan).' },
     },
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ GÖRSEL BİÇİMİ SINIRLI SEÇENEKLERLE — SERBEST CSS YOK.
+     *
+     * En-boy oranı, köşe yarıçapı ve kenarlık serbest bırakılsaydı ilk
+     * yanlış değerde sayfa tasarım sisteminin dışına çıkardı. Dört oran,
+     * üç yarıçap ve bir aç/kapa: hepsi tasarımın zaten tanıdığı değerler.
+     *
+     * ⚠️ EN-BOY ORANI SABİTLENMESİ CLS İÇİN DE ÖNEMLİ: oran bilinince yer
+     * görsel inmeden ayrılıyor. "Otomatik" seçeneği yok — dosyanın kendi
+     * oranına bırakmak, farklı oranlarda yüklenen iki fotoğrafta düzeni
+     * zıplatırdı.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'portreOrani',
+          type: 'select',
+          label: 'Portre en-boy oranı',
+          defaultValue: '3:4',
+          options: [
+            { value: '1:1', label: 'Kare (1:1)' },
+            { value: '3:4', label: 'Dikey (3:4)' },
+            { value: '4:3', label: 'Yatay (4:3)' },
+            { value: '16:9', label: 'Geniş (16:9)' },
+          ],
+          admin: { width: '50%' },
+        },
+        {
+          name: 'portreYaricapi',
+          type: 'select',
+          label: 'Köşe yarıçapı',
+          defaultValue: 'buyuk',
+          options: [
+            { value: 'yok', label: 'Köşeli' },
+            { value: 'orta', label: 'Yumuşak' },
+            { value: 'buyuk', label: 'Belirgin' },
+          ],
+          admin: { width: '50%' },
+        },
+      ],
+    },
+    {
+      type: 'row',
+      fields: [
+        {
+          name: 'portreKenarligi',
+          type: 'checkbox',
+          label: 'İnce kenarlık',
+          defaultValue: false,
+          admin: {
+            width: '50%',
+            description: 'Açık fotoğrafların kenarı beyaz zeminde kayboluyorsa işe yarar.',
+          },
+        },
+        {
+          name: 'portreHizalamasi',
+          type: 'select',
+          label: 'Alt yazı hizası',
+          defaultValue: 'sol',
+          options: [
+            { value: 'sol', label: 'Sol' },
+            { value: 'orta', label: 'Orta' },
+            { value: 'sag', label: 'Sağ' },
+          ],
+          admin: { width: '50%' },
+        },
+      ],
+    },
     {
       name: 'ekGorseller',
       type: 'array',
