@@ -206,6 +206,44 @@
   /** Altın DOLU zemin — üzerine mürekkep yazılır. 7,20:1. */
   --color-gold-zemin: var(--color-gold-400);
 
+  /* ── WhatsApp: MARKA RENGİ, PALET DEĞİL ──────────────────────────────
+     ⚠️ BU İKİ JETON PALET SKALASINA AİT DEĞİL VE MARKA PANELİNDEN
+        DEĞİŞTİRİLEMEZ — bilinçli.
+
+     Aurora'nın nötr+altın skalası markanın kendi sesi; WhatsApp yeşili
+     ise BAŞKA BİR MARKANIN tanınma rengi. İkisini aynı skalada tutmak,
+     paleti değiştiren kişinin farkında olmadan WhatsApp'ın rengini de
+     bozması demekti. Ayrı durmasının sebebi estetik değil sahiplik.
+
+     ⚠️ Önceki karar TERSİYDİ ve gerekçesi hâlâ kayıtlı (`Buton.tsx`):
+     "kurumsal yeşil sayfadaki tek parlak renk olurdu". Aslıhan
+     tanınırlığı öne aldı ve kararı değiştirdi; renk artık burada.
+
+     ⚠️ BEYAZ METİN GEÇMİYOR — ölçüldü, üçü de:
+
+       zemin      beyaz metin   mürekkep metin   açık zemine sınır
+       #25D366        1,98           7,56              1,86
+       #128C7E        4,14           3,63              3,87
+       #075E54        7,67           1,95              7,18
+
+     Yani markanın kendi yeşili (#25D366) üzerine BEYAZ yazmak 1,98:1 —
+     AA'nın yarısından az. Aynı yeşil üzerine MÜREKKEP 7,56:1 veriyor ve
+     rahatça geçiyor. Doğru cevap rengi değiştirmek değil, ön planı
+     değiştirmekti — altın butonda verilen kararın aynısı.
+
+     ⚠️ Zemin sınırı ayrı bir sorun: #25D366 açık zeminden yalnızca
+     1,86:1 ayrışıyor ve WCAG 1.4.11 bileşen sınırı için 3:1 istiyor.
+     Kenarlık #128C7E bunu 3,87:1'e çıkarıyor — kullanıcının önerdiği
+     alternatif renk, burada zemin değil KENARLIK olarak işe yarıyor.
+
+     Denetim: src/lib/tasarim/whatsapp.test.ts */
+  /** WhatsApp marka yeşili — üzerine `whatsapp-uzeri` (mürekkep) yazılır. */
+  --color-whatsapp-yesil: #25d366;
+  /** Buton sınırı — 1.4.11 için; zeminin kendisi 3:1'i geçmiyor. */
+  --color-whatsapp-kenar: #128c7e;
+  /** WhatsApp zemini üzerine yazılan renk. Beyaz DEĞİL: 1,98:1 verirdi. */
+  --color-whatsapp-uzeri: var(--color-notr-900);
+
   /* ── Bantlar ─────────────────────────────────────────────────────────
      Üç bant tipi: sıcak bej (yumuşak), dolu altın (vurgu), mürekkep
      (koyu). Şartnamedeki "sıcak bej zemin" bölümleri ilkini kullanır. */
