@@ -53,9 +53,30 @@ const GORUNUMLER: Record<Gorunum, string> = {
    * ayrışıyor; üzerindeki mürekkep metin 17,04:1.
    */
   acikBant: 'bg-white text-koyu-bant border-[0.5px] border-transparent hover:opacity-90',
-  // WhatsApp'ın kurumsal yeşili bilinçli olarak kullanılmıyor: sayfadaki
-  // tek parlak renk olurdu ve sakin paleti bozardı. Tanınırlık ikondan gelir.
-  whatsapp: 'bg-koyu-bant text-koyu-bant-metin border-[0.5px] border-transparent hover:opacity-90',
+  /**
+   * ⚠️ WHATSAPP MARKA YEŞİLİ — ÖNCEKİ KARAR TERSİYDİ, DEĞİŞTİRİLDİ.
+   *
+   * Burada uzun süre mürekkep bir buton durdu ve gerekçesi şuydu:
+   * "kurumsal yeşil sayfadaki tek parlak renk olurdu ve sakin paleti
+   * bozardı; tanınırlık ikondan gelir." Aslıhan tanınırlığı öne aldı ve
+   * kararı değiştirdi (28 Ağustos 2026). Gerekçeyi siliyor değil,
+   * hangisinin neden geçersiz kaldığını yazıyoruz.
+   *
+   * ⚠️ METİN BEYAZ DEĞİL, MÜREKKEP — ve bu ölçümün sonucu.
+   * Beyaz metin #25D366 üzerinde 1,98:1 veriyor (AA'nın yarısından az).
+   * Mürekkep 7,56:1. Markanın yeşilini korumanın yolu rengi koyulaştırmak
+   * değil, ön planı değiştirmekti; altın butonda verilen kararın aynısı.
+   *
+   * ⚠️ KENARLIK ERİŞİLEBİLİRLİK GEREĞİ: #25D366 açık zeminden 1,86:1
+   * ayrışıyor, WCAG 1.4.11 bileşen sınırı için 3:1 istiyor. #128C7E
+   * kenarlık 3,87:1 veriyor.
+   *
+   * Ölçümler `lib/tasarim/whatsapp.test.ts` içinde bağlı; renk
+   * değiştirilirse test kırılır.
+   */
+  whatsapp:
+    'bg-[color:var(--color-whatsapp-yesil)] text-[color:var(--color-whatsapp-uzeri)] ' +
+    'border-[0.5px] border-[color:var(--color-whatsapp-kenar)] hover:opacity-90',
   /**
    * ⚠️ DOLU ALTIN BUTONUN KENARLIĞI ERİŞİLEBİLİRLİK GEREĞİ, SÜS DEĞİL.
    *

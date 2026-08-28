@@ -300,6 +300,61 @@ describe('yeni raporların KVKK sınırı — kaynak denetimi', () => {
     expect(proxy).not.toMatch(/userAgent:\s*basliklar\.get/)
   })
 
+  it('Cloudflare konum başlıklarından YALNIZCA ülke ve şehir okunuyor', () => {
+    /**
+     * ─────────────────────────────────────────────────────────────────
+     * ⚠️ "Add visitor location headers" AÇILINCA GELEN ŞEY ŞEHİRDEN
+     *    İBARET DEĞİL.
+     *
+     * Cloudflare o ayarla birlikte `CF-Region`, `CF-Region-Code`,
+     * `CF-Postal-Code`, `CF-IPLatitude`, `CF-IPLongitude`, `CF-Timezone`
+     * ve `CF-Metro-Code` başlıklarını da gönderiyor. Hepsi bedava
+     * görünüyor ve hiçbiri okunmuyor — bilinçli.
+     *
+     * ⚠️ POSTA KODU ÇORLU ÖLÇEĞİNDE TEK MAHALLEYİ İŞARET EDER. Gün ve
+     * sayfayla birleştiğinde "o mahalledeki o kişi" demektir; k-anonimlik
+     * eşiği bile kurtarmaz çünkü sorun toplulaştırmada değil, alanın
+     * çözünürlüğünde. Enlem/boylam daha da kötü.
+     *
+     * Bu iddia, "madem geliyor, kaydedelim" refleksine karşı duruyor.
+     * ─────────────────────────────────────────────────────────────────
+     */
+    const proxy = govde('src/proxy.ts')
+
+    expect(proxy).toContain("basliklar.get('cf-ipcountry')")
+    expect(proxy).toContain("basliklar.get('cf-ipcity')")
+
+    const YASAK = [
+      'cf-region',
+      'cf-region-code',
+      'cf-postal-code',
+      'cf-iplatitude',
+      'cf-iplongitude',
+      'cf-timezone',
+      'cf-metro-code',
+      'cf-ipcontinent',
+    ]
+    const okunan = YASAK.filter((baslik) => proxy.toLowerCase().includes(baslik))
+    expect(
+      okunan,
+      'Bu Cloudflare başlıkları okunmamalı. Posta kodu ve koordinat, Çorlu\n' +
+        'ölçeğinde tek bir mahalleyi — dolayısıyla tek bir kişiyi — işaret\n' +
+        'edebilir. Şehir yeterli ve k=5 eşiğiyle korunuyor.',
+    ).toEqual([])
+  })
+
+  it('şema da posta kodu / bölge / koordinat alanı taşımıyor', () => {
+    /**
+     * ⚠️ İki kapı: okumamak (proxy) ve saklayacak yer bırakmamak (şema).
+     * Biri açılırsa diğeri anlamsızlaşır — kullanıcı yetkilerindeki
+     * "üç kapı" kuralının aynısı.
+     */
+    const koleksiyon = govde('src/collections/GozlemGunluk.ts')
+    for (const alan of ['postaKodu', 'bolge', 'enlem', 'boylam', 'koordinat']) {
+      expect(koleksiyon, `${alan} alanı eklenmiş`).not.toMatch(new RegExp(`name: '${alan}'`, 'i'))
+    }
+  })
+
   it('proxy IP başlıklarını hâlâ okumuyor', () => {
     const proxy = govde('src/proxy.ts')
     expect(proxy).not.toMatch(/x-forwarded-for/i)
