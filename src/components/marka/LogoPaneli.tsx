@@ -19,6 +19,11 @@ import './marka.css'
  * gerçek ölçülerle, gerçek boşlukla.
  * ─────────────────────────────────────────────────────────────────────────
  *
+ * ⚠️ HAM HEX YEDEĞİ DE YOK. `var(--theme-elevation-0, #fff)` yazmak
+ * masumdu ama tasarım disiplini denetimi haklı olarak yakaladı: panel
+ * daima Payload'ın admin'i içinde çalışıyor ve o değişkenler orada her
+ * zaman tanımlı. Yedek, olmayan bir duruma karşı yazılmış ölü koddu.
+ *
  * ⚠️ SİTENİN KENDİ CSS'İ BURADA YOK. Panel Payload'ın kendi stil dünyasında
  * çalışıyor; `--color-*` jetonları burada tanımlı değil. Bantların rengi bu
  * yüzden panelin kendi değişkenlerinden alınıyor — birebir aynı olmayabilir
@@ -209,8 +214,8 @@ export function LogoPaneli() {
       <div style={{ display: 'grid', gap: '1rem' }}>
         <Bant
           baslik="Başlık (masaüstü)"
-          zemin="var(--theme-elevation-0, #fff)"
-          metin="var(--theme-elevation-1000, #111)"
+          zemin="var(--theme-elevation-0)"
+          metin="var(--theme-elevation-1000)"
           yukseklik={veri.baslikBoy}
           bosluk={veri.bosluk}
           /* ⚠️ Başlıkta hiza daima SOL: sağında gezinme var, ortalamak menüyü iterdi. */
@@ -220,8 +225,8 @@ export function LogoPaneli() {
         />
         <Bant
           baslik={veri.altbilgideLogo ? 'Altbilgi' : 'Altbilgi (logo kapalı — site adı)'}
-          zemin="var(--theme-elevation-900, #1c1c1c)"
-          metin="var(--theme-elevation-0, #fff)"
+          zemin="var(--theme-elevation-900)"
+          metin="var(--theme-elevation-0)"
           yukseklik={veri.altbilgiBoy}
           bosluk={veri.bosluk}
           hizalama={veri.hizalama}
