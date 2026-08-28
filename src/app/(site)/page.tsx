@@ -1,4 +1,4 @@
-import { Fragment, type ReactNode } from 'react'
+import type { ReactNode } from 'react'
 
 import Image from 'next/image'
 import Link from 'next/link'
@@ -18,7 +18,7 @@ import { haritaStilAdresi } from '@/lib/harita/sunucu'
 import { mahalleyiHaritaVerisineCevir } from '@/lib/harita/mahalleVerisi'
 import { GuvenSeridi } from '@/components/duzen/GuvenSeridi'
 import { Feragat } from '@/components/ui/Feragat'
-import { Bolum, BolumBasligi, Eyebrow } from '@/components/ui/Bolum'
+import { Bolum, BolumBasligi, BolumSarmali, Eyebrow } from '@/components/ui/Bolum'
 import { BosDurum } from '@/components/ui/BosDurum'
 import { Buton } from '@/components/ui/Buton'
 import { DogrulanmisIkon, GrafikIkon, KonumIkon, OkIkon } from '@/components/ui/Ikon'
@@ -397,8 +397,15 @@ export default async function AnaSayfa() {
         arkaplan={heroGorseli}
       />
 
-      {duzen.map((anahtar) => (
-        <Fragment key={anahtar}>{bolumCizimleri[anahtar] ?? null}</Fragment>
+      {duzen.map((bolum) => (
+        <BolumSarmali
+          key={bolum.anahtar}
+          zemin={bolum.zemin}
+          bosluk={bolum.bosluk}
+          hizalama={bolum.hizalama}
+        >
+          {bolumCizimleri[bolum.anahtar] ?? null}
+        </BolumSarmali>
       ))}
     </>
   )

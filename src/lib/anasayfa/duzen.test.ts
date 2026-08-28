@@ -4,7 +4,17 @@ import { fileURLToPath } from 'node:url'
 
 import { describe, expect, it } from 'vitest'
 
-import { ANASAYFA_BOLUMLERI, VARSAYILAN_ANASAYFA_SIRASI, anaSayfaSirasi } from './duzen'
+import {
+  ANASAYFA_BOLUMLERI,
+  BOLUM_BOSLUKLARI,
+  BOLUM_HIZALAMALARI,
+  BOLUM_ZEMINLERI,
+  VARSAYILAN_ANASAYFA_SIRASI,
+  VARSAYILAN_GORUNUM,
+  anaSayfaBolumleri,
+  anaSayfaSirasi,
+  gorunumuCoz,
+} from './duzen'
 
 /**
  * Ana sayfa bölüm düzeni.
@@ -133,5 +143,68 @@ describe('anaSayfaSirasi', () => {
   it('bütün bölümler kapalıysa boş dizi — sayfa yine de çöküyor değil', () => {
     const kayit = VARSAYILAN_ANASAYFA_SIRASI.map((a) => ({ bolum: a, acik: false }))
     expect(anaSayfaSirasi(kayit)).toEqual([])
+  })
+})
+
+describe('bölüm görünüm ayarları', () => {
+  it('değer kümeleri KAPALI ve küçük', () => {
+    /**
+     * ⚠️ Serbest bir renk ya da piksel girişi, tasarım sisteminin dışına
+     * çıkan tek bir bölüm üretmeye yeter. Küme büyüdükçe panelin yanlış
+     * yapılandırılabilme ihtimali büyür.
+     */
+    expect(BOLUM_ZEMINLERI.length).toBeLessThanOrEqual(4)
+    expect(BOLUM_BOSLUKLARI.length).toBe(3)
+    expect(BOLUM_HIZALAMALARI.length).toBe(2)
+  })
+
+  it('panel seçenekleri koddaki kümelerden türetiliyor', () => {
+    /**
+     * ⚠️ Elle yazılmış bir seçenek listesi, yeni bir değer eklendiğinde
+     * güncellenmeyi unutur ve panelde seçilemeyen bir değer doğar.
+     */
+    const global = readFileSync(path.resolve(dizin, '../../globals/AnaSayfaDuzeni.ts'), 'utf8')
+    expect(global).toContain('BOLUM_ZEMINLERI.map(')
+    expect(global).toContain('BOLUM_BOSLUKLARI.map(')
+    expect(global).toContain('BOLUM_HIZALAMALARI.map(')
+  })
+
+  it('tanınmayan değer varsayılana düşüyor, çizimi kırmıyor', () => {
+    expect(gorunumuCoz({ zemin: 'neon' as never })).toEqual(VARSAYILAN_GORUNUM)
+    expect(gorunumuCoz(null)).toEqual(VARSAYILAN_GORUNUM)
+  })
+
+  it('varsayılan zemin "kâğıt" DEĞİL — bölümün kendi zemini korunuyor', () => {
+    /**
+     * ⚠️ Hepsini beyaza çevirmek, kendi bandını taşıyan bölümleri
+     * (Çorlu deneyimi, çağrı bandı) tanınmaz hâle getirirdi. Varsayılan
+     * davranış müdahale etmemek.
+     */
+    expect(VARSAYILAN_GORUNUM.zemin).toBe('varsayilan')
+  })
+
+  it('görünüm ayarları sıra ile birlikte dönüyor', () => {
+    const bolumler = anaSayfaBolumleri([
+      { bolum: 'arama', acik: true, zemin: 'bej', bosluk: 'genis', hizalama: 'orta' },
+      ...VARSAYILAN_ANASAYFA_SIRASI.filter((a) => a !== 'arama').map((a) => ({
+        bolum: a,
+        acik: true,
+      })),
+    ])
+
+    const arama = bolumler.find((b) => b.anahtar === 'arama')
+    expect(arama).toEqual({ anahtar: 'arama', zemin: 'bej', bosluk: 'genis', hizalama: 'orta' })
+    // Ayarı verilmeyen bölümler varsayılanı alıyor.
+    expect(bolumler.find((b) => b.anahtar === 'cagri')).toMatchObject(VARSAYILAN_GORUNUM)
+  })
+
+  it('sarmalayıcı, ayar değişmediyse fazladan düğüm basmıyor', () => {
+    /**
+     * ⚠️ On dört bölümün on dördünü sarmak, DOM'a on dört boş katman
+     * eklemek demek; `:has()` ve kardeş seçicileri olan bir tasarımda o
+     * katmanlar sessizce kural bozar.
+     */
+    const bolum = readFileSync(path.resolve(dizin, '../../components/ui/Bolum.tsx'), 'utf8')
+    expect(bolum).toMatch(/if \(varsayilanMi\) return <>\{children\}<\/>/)
   })
 })

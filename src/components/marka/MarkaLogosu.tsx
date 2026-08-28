@@ -32,6 +32,7 @@ export function MarkaLogosu({
   vurguSinifi,
   yukseklik = 36,
   daimaKoyuZemin = false,
+  metneZorla = false,
 }: {
   marka: MarkaAyarlari
   sinif?: string
@@ -47,8 +48,21 @@ export function MarkaLogosu({
    * temada da koyu. Koyu logo varsa o kullanılır, yoksa ana logo.
    */
   daimaKoyuZemin?: boolean
+  /**
+   * Görsel yüklü olsa bile METİN yedeğini kullan.
+   *
+   * ⚠️ "Logo yok" ile "logo istenmiyor" ayrı durumlar. Panelden altbilgi
+   * logosu kapatıldığında görseli gizlemek yetmez: yerine markanın adı
+   * gelmeli, yoksa sütun kimliksiz kalır. Bu bayrak o kararı çağırana
+   * bırakıyor; bileşen hangi kuralın işlediğini bilmek zorunda değil.
+   */
+  metneZorla?: boolean
 }) {
   const ad = marka.siteAdi ?? SITE_ADI
+
+  if (metneZorla) {
+    return <AdMetni ad={ad} metinSinifi={metinSinifi} vurguSinifi={vurguSinifi} />
+  }
 
   if (daimaKoyuZemin) {
     const secilen = marka.logoKoyu ?? marka.logo

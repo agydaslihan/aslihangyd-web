@@ -44,12 +44,36 @@ export interface AnaSayfaBolumu {
  * bir bölüm çizilmelidir. İkisinin eşitliği `duzen.test.ts` ile
  * denetleniyor — panelde seçilebilen ama hiçbir şey çizmeyen bir satır,
  * en kötü panel deneyimi.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ SIRA 28 AĞUSTOS 2026'DA DEĞİŞTİ — Aslıhan'ın verdiği akış.
+ *
+ * İstenen sıra on başlık saydı: güven şeridi → portföy → mahalleler →
+ * slayt → kurucu → Çorlu deneyimi → uzmanlık → araçlar → CTA. Sayfada ise
+ * on dört sıralanabilir bölüm var; adı geçmeyen dördü sessizce sona
+ * atılmadı, en yakın akrabalarının yanına yerleştirildi:
+ *
+ *   · `guven_kartlari` → güven şeridinin hemen ardında (ikisi de güven)
+ *   · `arama`          → vitrinin altındaki birincil eylem, yukarıda kaldı
+ *   · `endeks`         → veri bloklarının arasında
+ *   · `gizli_portfoy`  → portföy anlatısının devamı
+ *   · `uc_yol`         → kapanış çağrısının hemen öncesi
+ *
+ * ⚠️ "Uzmanlık" başlığının karşılığı `anlati` sayıldı: sayfada uzmanlığı
+ * anlatan bölüm dört adımlık çalışma biçimi anlatısı. Kastedilen başka bir
+ * şeyse sıra panelden değiştirilebilir — kodda bir daha dokunmaya gerek yok.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 export const ANASAYFA_BOLUMLERI: readonly AnaSayfaBolumu[] = [
   {
+    anahtar: 'guven_seridi',
+    ad: 'Güven şeridi',
+    aciklama: 'Portföy sayısı, mahalle sayısı, yetki belgesi.',
+  },
+  {
     anahtar: 'guven_kartlari',
     ad: 'Güven kartları',
-    aciklama: 'Vitrinin hemen altındaki üç kısa güven kartı.',
+    aciklama: 'Üç kısa güven kartı — güven şeridinin görsel karşılığı.',
   },
   {
     anahtar: 'arama',
@@ -57,39 +81,14 @@ export const ANASAYFA_BOLUMLERI: readonly AnaSayfaBolumu[] = [
     aciklama: 'Mahalle, tür ve fiyat seçimiyle portföye giriş.',
   },
   {
-    anahtar: 'guven_seridi',
-    ad: 'Güven şeridi',
-    aciklama: 'Portföy sayısı, mahalle sayısı, yetki belgesi.',
-  },
-  {
-    anahtar: 'aslihan',
-    ad: 'Kurucu bölümü',
-    aciklama: 'Portre (yoksa tipografik blok) ve yetki belgesi numarası.',
-  },
-  {
-    anahtar: 'corlu_deneyimi',
-    ad: 'İnteraktif Çorlu deneyimi',
-    aciklama: 'Mahalle haritası ve portföy dağılımı.',
-  },
-  {
     anahtar: 'one_cikan_portfoy',
     ad: 'Öne çıkan portföy',
     aciklama: 'Üç ilan kartı ve portföye giden çağrı.',
   },
   {
-    anahtar: 'gizli_portfoy',
-    ad: 'Gizli portföy tanıtımı',
-    aciklama: 'Site Bölümleri’nden kapalıysa bu satır ne olursa olsun çizilmez.',
-  },
-  {
-    anahtar: 'anlati',
-    ad: 'Yatay anlatı',
-    aciklama: 'Dört adımlık çalışma biçimi anlatısı.',
-  },
-  {
-    anahtar: 'endeks',
-    ad: 'Çorlu Konut Endeksi şeridi',
-    aciklama: 'Veri eşikleri sağlanmadıysa kendiliğinden çizilmez.',
+    anahtar: 'mahalleler',
+    ad: 'Mahalle kartları',
+    aciklama: 'Mahalle ızgarası ve karşılaştırma çağrısı.',
   },
   {
     anahtar: 'slayt',
@@ -99,9 +98,29 @@ export const ANASAYFA_BOLUMLERI: readonly AnaSayfaBolumu[] = [
       'Tek slayt varsa bölüm çizilmez.',
   },
   {
-    anahtar: 'mahalleler',
-    ad: 'Mahalle kartları',
-    aciklama: 'Mahalle ızgarası ve karşılaştırma çağrısı.',
+    anahtar: 'aslihan',
+    ad: 'Kim danışmanlık veriyor',
+    aciklama: 'Portre (yoksa tipografik blok) ve yetki belgesi numarası.',
+  },
+  {
+    anahtar: 'corlu_deneyimi',
+    ad: 'İnteraktif Çorlu deneyimi',
+    aciklama: 'Mahalle haritası ve portföy dağılımı.',
+  },
+  {
+    anahtar: 'anlati',
+    ad: 'Uzmanlık — çalışma biçimi',
+    aciklama: 'Dört adımlık yatay anlatı: ilk temastan pazarlamaya.',
+  },
+  {
+    anahtar: 'endeks',
+    ad: 'Çorlu Konut Endeksi şeridi',
+    aciklama: 'Veri eşikleri sağlanmadıysa kendiliğinden çizilmez.',
+  },
+  {
+    anahtar: 'gizli_portfoy',
+    ad: 'Gizli portföy tanıtımı',
+    aciklama: 'Site Bölümleri’nden kapalıysa bu satır ne olursa olsun çizilmez.',
   },
   {
     anahtar: 'araclar',
@@ -131,9 +150,63 @@ export const VARSAYILAN_ANASAYFA_SIRASI: readonly string[] = ANASAYFA_BOLUMLERI.
   (bolum) => bolum.anahtar,
 )
 
-export interface DuzenSatiri {
+/**
+ * Bölüm başına görünüm ayarları — SINIRLI SEÇENEK, SERBEST CSS DEĞİL.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ ÜÇ AYARIN DA DEĞER KÜMESİ KAPALI. Serbest bir renk ya da piksel
+ * girişi, tasarım sisteminin dışına çıkan tek bir sayfa üretmeye yeter;
+ * sonra o sayfa "neden farklı görünüyor" sorusunun cevapsız kaldığı yer
+ * olur. Kapalı küme, panelin yanlış yapılandırılamamasını garanti ediyor.
+ *
+ * ⚠️ `zemin` seçenekleri `Bolum` bileşeninin zaten tanıdığı bantlar. Yeni
+ * bir bant adı buraya eklenirse orada da karşılığı olmalı; ikisinin
+ * eşitliği `duzen.test.ts` ile denetleniyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const BOLUM_ZEMINLERI = ['varsayilan', 'kagit', 'bej', 'koyu'] as const
+export const BOLUM_BOSLUKLARI = ['dar', 'normal', 'genis'] as const
+export const BOLUM_HIZALAMALARI = ['sol', 'orta'] as const
+
+export type BolumZemini = (typeof BOLUM_ZEMINLERI)[number]
+export type BolumBoslugu = (typeof BOLUM_BOSLUKLARI)[number]
+export type BolumHizalamasi = (typeof BOLUM_HIZALAMALARI)[number]
+
+export interface BolumGorunumu {
+  zemin: BolumZemini
+  bosluk: BolumBoslugu
+  hizalama: BolumHizalamasi
+}
+
+export const VARSAYILAN_GORUNUM: BolumGorunumu = {
+  /**
+   * ⚠️ `varsayilan` "beyaz" DEĞİL: bölümün kendi tasarlanmış zeminini
+   * koru demek. Çorlu deneyimi ve çağrı bandı kendi bantlarını taşıyor;
+   * hepsini kâğıda çevirmek onları tanınmaz hâle getirirdi. Panelden
+   * bilinçli olarak değiştirilebilir, ama varsayılan müdahale etmemek.
+   */
+  zemin: 'varsayilan',
+  bosluk: 'normal',
+  hizalama: 'sol',
+}
+
+export interface DuzenSatiri extends Partial<BolumGorunumu> {
   bolum: string
   acik: boolean
+}
+
+/** Kayıttan görünüm ayarlarını güvenle çıkarır. */
+export function gorunumuCoz(satir: Partial<BolumGorunumu> | null | undefined): BolumGorunumu {
+  const secim = <T extends string>(deger: unknown, kume: readonly T[], varsayilan: T): T =>
+    typeof deger === 'string' && (kume as readonly string[]).includes(deger)
+      ? (deger as T)
+      : varsayilan
+
+  return {
+    zemin: secim(satir?.zemin, BOLUM_ZEMINLERI, VARSAYILAN_GORUNUM.zemin),
+    bosluk: secim(satir?.bosluk, BOLUM_BOSLUKLARI, VARSAYILAN_GORUNUM.bosluk),
+    hizalama: secim(satir?.hizalama, BOLUM_HIZALAMALARI, VARSAYILAN_GORUNUM.hizalama),
+  }
 }
 
 /**
@@ -148,6 +221,32 @@ export interface DuzenSatiri {
  *      yerinde, açık olarak eklenir. Yeni bir bölüm eklendiğinde Aslıhan
  *      panele girip onu elle eklemek zorunda kalmasın diye.
  */
+export interface CizilecekBolum extends BolumGorunumu {
+  anahtar: string
+}
+
+/**
+ * Kayıtlı düzeni, görünüm ayarlarıyla birlikte çizim listesine çevirir.
+ *
+ * ⚠️ Sıra ile GÖRÜNÜM aynı satırda tutuluyor: ayrı bir tabloda olsalardı
+ * bir bölüm silindiğinde görünüm kaydı öksüz kalırdı.
+ */
+export function anaSayfaBolumleri(
+  kayit: readonly DuzenSatiri[] | null | undefined,
+): CizilecekBolum[] {
+  const gorunumler = new Map<string, BolumGorunumu>()
+  for (const satir of kayit ?? []) {
+    if (typeof satir?.bolum === 'string' && !gorunumler.has(satir.bolum)) {
+      gorunumler.set(satir.bolum, gorunumuCoz(satir))
+    }
+  }
+
+  return anaSayfaSirasi(kayit).map((anahtar) => ({
+    anahtar,
+    ...(gorunumler.get(anahtar) ?? VARSAYILAN_GORUNUM),
+  }))
+}
+
 export function anaSayfaSirasi(kayit: readonly DuzenSatiri[] | null | undefined): string[] {
   const kayitli = new Map<string, boolean>()
 

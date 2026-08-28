@@ -150,3 +150,75 @@ describe('panel yardım metinleri', () => {
     expect(global).toContain('ANA LOGO kullanılır')
   })
 })
+
+describe('altbilgi logosunun simetrisi', () => {
+  const altbilgi = kodu(oku('components/duzen/Altbilgi.tsx'))
+
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ NEDEN VAR: LOGO SÜTUN DÜZENİNİ KAYDIRIYORDU.
+   *
+   * Logo, tanıtım metniyle aynı `gap-2` yığınının içindeydi ve iki şey
+   * birden bozuluyordu:
+   *
+   *   · Metne 8 px kalıyordu; 56 px'lik bir logonun altında bu boşluk
+   *     logoyu metne yapıştırıyor, ikisi tek blok gibi okunuyordu.
+   *   · Kutu yüksekliği İÇERİĞE göre değişiyordu — logo yüklüyse 56 px,
+   *     metin yedeğindeyse satır yüksekliği kadar. Beş sütunlu ızgarada
+   *     bu, komşu sütunların üst hizasını kaydırıyordu.
+   *
+   * İkisi de "hata vermeyen" sınıftan: site çalışır, testler yeşildir,
+   * yalnızca altbilgi hizasız durur.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('logo SABİT YÜKSEKLİKLİ bir kutuda — sütun düzeni içerikten bağımsız', () => {
+    expect(
+      altbilgi,
+      'Logo kutusu `h-14` olmalı: yükseklik içeriğe göre değişirse, logo\n' +
+        'yüklü olan ve olmayan sitede sütunların üst hizası farklı olur.',
+    ).toMatch(/className="flex h-14 items-center justify-start"/)
+  })
+
+  it('logo SOLA hizalı — sütun başlığıyla aynı kenardan başlıyor', () => {
+    /**
+     * ⚠️ `items-start`/`justify-start` şart: `object-contain` dar bir
+     * logoyu kutuya ORTALAR ve sütun başlığının sol kenarıyla hizası kayar.
+     */
+    expect(altbilgi).toMatch(/justify-start/)
+  })
+
+  it('logo ile tanıtım metni arasında yeterli boşluk var', () => {
+    expect(
+      altbilgi,
+      'Tanıtım metni `mt-4` ile ayrılmalı; 8 px logoyu metne yapıştırıyordu.',
+    ).toMatch(/className="text-notr-300 mt-4 text-govde-kucuk/)
+  })
+})
+
+describe('altbilgide logo anahtarı', () => {
+  const altbilgi = kodu(oku('components/duzen/Altbilgi.tsx'))
+  const logoBileseni = kodu(oku('components/marka/MarkaLogosu.tsx'))
+  const sunucu = kodu(oku('lib/marka/sunucu.ts'))
+
+  it('anahtar altbilgiye bağlı', () => {
+    expect(altbilgi).toMatch(/metneZorla=\{!marka\.altbilgideLogo\}/)
+  })
+
+  it('kapalıyken görsel GİZLENMİYOR, yerine site adı geliyor', () => {
+    /**
+     * ⚠️ "Logo yok" ile "logo istenmiyor" ayrı durumlar. Kapalıyken
+     * bileşen `null` dönseydi sütun kimliksiz kalırdı; `metneZorla` metin
+     * yedeğine düşürüyor.
+     */
+    expect(logoBileseni).toMatch(/if \(metneZorla\) \{[\s\S]{0,120}AdMetni/)
+  })
+
+  it('varsayılan AÇIK — hem kayıtta hem okuma hatasında', () => {
+    /**
+     * ⚠️ Kapalı varsayılan, paneli hiç açmamış bir kurulumda logoyu
+     * sessizce gizlerdi. `!== false` eski kayıtları da açık sayıyor.
+     */
+    expect(sunucu).toMatch(/altbilgideLogo: marka\.altbilgideLogo !== false/)
+    expect(sunucu).toMatch(/altbilgideLogo: true/)
+  })
+})
