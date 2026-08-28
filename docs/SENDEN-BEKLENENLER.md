@@ -13,6 +13,32 @@ Bir maddeyi hallettiğinde başındaki `[ ]` kutusunu `[x]` yap.
 
 ---
 
+## Koşula bağlı — sayı dolunca yapılacak
+
+- [ ] **"Bugün aranacaklar" ekranı** ⬅️ *koşul: açık talep sayısı 15'i geçince*
+
+      Talepleri `sonTemas` + `durum` + `skor` ile sıralayan tek liste.
+      Mevcut alanlardan besleniyor; yeni şema gerekmiyor.
+
+      ⚠️ **Bilerek ertelendi (28 Ağustos 2026).** Bugün açık talep sayısı
+      tek haneli; boş bir "bugün aranacaklar" listesi kimseye fayda
+      vermez ve bir kez boş görülen ekran bir daha açılmaz. Aynı gerekçe
+      CRM'in kendisini ertelerken de kullanılmıştı ve doğruydu.
+
+      ⚠️ `sonTemas` alanı bugün HİÇBİR YERDE kullanılmıyor — ne sıralamada
+      ne uyarıda. Bu ekran yazıldığında ilk işi o alanı işe koşmak olacak.
+
+      Kontrol: panelde Talepler listesinde durum "kazanıldı"/"kaybedildi"
+      olmayan kayıt sayısı 15'i geçtiyse sıra bu ekranda.
+
+- [ ] **Kanban panosu** ⬅️ *karar: gerçek ihtiyaç doğarsa*
+
+      ⚠️ Bilerek yapılmadı. Tablo + filtre aynı işi yapıyor ve altı
+      durumlu bir pano 20 kayıtta boş görünür. Görsel olarak tatmin edici
+      ama bilgi olarak tablodan fazlasını vermiyor.
+
+---
+
 ## Acil (yayın engelleyici)
 
 - [ ] **Sunucudaki `.env` dosyasında değişken adlarını güncelle** — bu

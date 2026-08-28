@@ -90,3 +90,23 @@
   line-height: 1.6;
   color: var(--theme-elevation-600, #666);
 }
+
+/**
+ * WhatsApp bağlantısı — ters eşleştirme listesinde.
+ *
+ * ⚠️ Marka yeşili BURADA KULLANILMIYOR. Panel Payload'ın kendi tema
+ * dünyasında ve sitenin jetonları burada tanımlı değil; sabit bir yeşil
+ * yazmak koyu temada okunmaz bir düğme üretirdi. Tanınırlık zaten metinde.
+ */
+.talep-eslesme-wa {
+  display: inline-block;
+  margin-top: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--theme-success-600, currentColor);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+
+.talep-eslesme-wa:hover {
+  opacity: 0.8;
+}

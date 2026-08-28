@@ -351,3 +351,58 @@ export function talebeUygunIlanlar(
     .sort((a, b) => b.puan - a.puan || a.ilan.id - b.ilan.id)
     .slice(0, adet)
 }
+
+/**
+ * TERS YÖN — bir ilan için talepleri sıralar.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ AYNI MOTOR, TERS ÇAĞRI. `ilaniPuanla` zaten iki tarafı da alıyor;
+ * burada yapılan tek şey döngüyü çevirmek.
+ *
+ * İkinci bir puanlama yazmak cazipti ("ilan tarafından bakınca ağırlıklar
+ * farklı olmalı") ve yanlış olurdu: iki motor, aynı çiftte farklı puan
+ * verdiği gün hangisinin doğru olduğu sorulamaz hâle gelir. Tek motor,
+ * tek doğru.
+ *
+ * ⚠️ NEDEN GEREKLİ: bu ekran olmadan yeni bir ilan girildiğinde "kime
+ * haber vereyim?" sorusu elle taranarak cevaplanıyor. O alışkanlık
+ * yerleşirse veri biriktiğinde de ekran kullanılmaz.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export interface TersEslesme {
+  /** Puanlanan talebin kimliği ve motorun gördüğü profili. */
+  talepId: number
+  profil: TalepProfili
+  puan: number
+  bilesenler: EslesmeBileseni[]
+  gerekce: string
+}
+
+export function ilanaUygunTalepler(
+  ilan: IlanOzeti,
+  talepler: readonly { id: number; profil: TalepProfili }[],
+  adet = 8,
+): TersEslesme[] {
+  return (
+    talepler
+      .map(({ id, profil }) => {
+        const eslesme = ilaniPuanla(profil, ilan)
+        if (eslesme === null) return null
+        return {
+          talepId: id,
+          profil,
+          puan: eslesme.puan,
+          bilesenler: eslesme.bilesenler,
+          gerekce: eslesme.gerekce,
+        }
+      })
+      .filter((e): e is TersEslesme => e !== null && e.puan >= ASGARI_PUAN)
+      /**
+       * ⚠️ Eşit puanda talep kimliğine göre kararlı sıralama — düz yönde
+       * verilen kararın aynısı. Listenin her açılışta yer değiştirmesi,
+       * gözün listeyi tanımasını engeller.
+       */
+      .sort((a, b) => b.puan - a.puan || a.talepId - b.talepId)
+      .slice(0, adet)
+  )
+}
