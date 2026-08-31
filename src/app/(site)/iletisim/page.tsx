@@ -110,7 +110,7 @@ export default async function IletisimSayfasi({
               <ul className="mt-4 flex flex-col gap-3">
                 {whatsapp ? (
                   <li>
-                    <Buton href={whatsapp} dis tamGenislik>
+                    <Buton href={whatsapp} dis gorunum="whatsapp" tamGenislik>
                       <WhatsappIkon width={18} height={18} />
                       WhatsApp&apos;tan yazın
                     </Buton>

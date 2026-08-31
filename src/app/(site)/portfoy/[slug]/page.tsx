@@ -345,7 +345,7 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
 
               <div className="mt-5 flex flex-col gap-2">
                 {whatsapp ? (
-                  <Buton href={whatsapp} dis boyut="buyuk" tamGenislik>
+                  <Buton href={whatsapp} dis gorunum="whatsapp" boyut="buyuk" tamGenislik>
                     <WhatsappIkon width={18} height={18} />
                     WhatsApp&apos;tan sorun
                   </Buton>
@@ -481,7 +481,7 @@ function MobilEylemCubugu({
     >
       <div className="kapsayici flex gap-2">
         {whatsapp ? (
-          <Buton href={whatsapp} dis boyut="buyuk" tamGenislik>
+          <Buton href={whatsapp} dis gorunum="whatsapp" boyut="buyuk" tamGenislik>
             <WhatsappIkon width={18} height={18} />
             WhatsApp
           </Buton>

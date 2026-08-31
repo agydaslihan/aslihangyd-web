@@ -140,6 +140,17 @@ export interface Harita3BOzellikleri {
    * gelmiyor. Sınırlar, sütunlar ve POI'ler çizilmeye devam ediyor.
    */
   onAltlikDurumu: (mesaj: string | null) => void
+
+  /**
+   * Açılış görünümü — verilmezse Çorlu geneli.
+   *
+   * ⚠️ MİNİ HARİTA İÇİN ŞART. Tek bir mahalleyi gösteren harita, Çorlu
+   * genelinde ve 12 yakınlıkta açıldığında o mahalle birkaç piksellik bir
+   * lekedir; ziyaretçi haritayı "boş" sanır. Varsayılanı korumak, çağıran
+   * tarafın hiçbir şey bilmek zorunda olmaması demek.
+   */
+  baslangicMerkezi?: [number, number]
+  baslangicYakinligi?: number
 }
 
 /**
@@ -216,6 +227,8 @@ export function Harita3B({
   seciliSlug,
   onSecim,
   onHata,
+  baslangicMerkezi,
+  baslangicYakinligi,
 }: Harita3BOzellikleri) {
   const kapsayiciRef = useRef<HTMLDivElement>(null)
   const haritaRef = useRef<MapLibreMap | null>(null)
@@ -278,8 +291,8 @@ export function Harita3B({
     const harita = new MapLibreMap({
       container: kapsayiciRef.current,
       style: stilSonucu.stil,
-      center: CORLU_MERKEZ,
-      zoom: VARSAYILAN_YAKINLIK,
+      center: baslangicMerkezi ?? CORLU_MERKEZ,
+      zoom: baslangicYakinligi ?? VARSAYILAN_YAKINLIK,
       // Eğim ve döndürme 3B'nin ön koşulu; sahnedeki düğmeler bunları sürer.
       pitch: 0,
       bearing: 0,
@@ -342,6 +355,10 @@ export function Harita3B({
     // `onHata` bilinçli olarak DIŞARIDA: üst bileşen her render'da yeni bir
     // fonksiyon üretiyor ve listeye girseydi harita her seferinde sökülüp
     // yeniden kurulurdu.
+    //
+    // ⚠️ Açılış görünümü de DIŞARIDA ve aynı sebeple: yalnızca kurulumda
+    // okunuyor. Bağımlılığa konsaydı prop her değiştiğinde harita sökülüp
+    // yeniden kurulur, kullanıcının kaydırdığı konum sıfırlanırdı.
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [webglVar, stilSonucu])
 

@@ -617,12 +617,117 @@ function kaynakSayfa(rota) {
    TURLAR
    ══════════════════════════════════════════════════════════════════════ */
 
+/**
+ * ═══════════════════════════════════════════════════════════════════════
+ *  VİTRİN ÇAĞRI BUTONLARI — İLK EKRAN, KAYDIRMASIZ
+ * ═══════════════════════════════════════════════════════════════════════
+ *
+ * ⚠️ NEDEN AYRI BİR DENETİM: DİĞER HER ŞEY BU ARIZAYI YEŞİL GEÇİRDİ.
+ *
+ * 31 Ağustos 2026: ana sayfanın iki çağrı butonu ("Portföyü incele",
+ * "Ücretsiz değerleme") tıklanmıyordu. Çerez onay bandı tam genişlikte bir
+ * sarmalayıcıydı (`inset-x-0`) ama görünen kartı ortada ve 48rem idi;
+ * aradaki şeffaf alan hiçbir şey çizmeden her tıklamayı yutuyordu.
+ * Ölçüldüğünde bant y=649–885, butonlar y=666–718 aralığındaydı.
+ *
+ * Mevcut denetimlerin hiçbiri görmedi:
+ *   · rota 200 dönüyordu,
+ *   · `baglantiyaTikla` bağlantıyı önce görünür alana KAYDIRIYOR — kaydırma
+ *     butonu bandın dışına çıkarıyor ve tıklama başarılı oluyor,
+ *   · Lighthouse ve birim testleri DOM yığılmasına bakmıyor.
+ *
+ * Bu yüzden buradaki denetim bilerek KAYDIRMIYOR: ziyaretçi sayfayı açtığı
+ * anda gördüğü iki butona tıklıyor. Kullanıcının yaptığı da bu.
+ *
+ * ⚠️ ÇEREZ ÇEREZİ TEMİZLENİYOR — EN KÖTÜ DURUM ÖLÇÜLMELİ. Onay verilmiş bir
+ * tarayıcıda bant hiç çizilmiyor ve denetim hiçbir şey kanıtlamıyor.
+ */
+async function vitrinKontrolu(sekme) {
+  const sorunlar = []
+
+  // İlk ziyaret koşulları: onay yok, yani bant açık.
+  await sekme.S('Network.clearBrowserCookies')
+  await sekme.S('Page.navigate', { url: `${TABAN}/` })
+  await sekme.kosulBekle(`document.readyState === 'complete'`)
+  // Hareket kodu LCP'den sonra iniyor; bant yüksekliği de o sırada ölçülüyor.
+  await uyu(3500)
+
+  const hedefler = await sekme.deger(`(() => {
+    const vitrin = document.querySelector('main section') ?? document.querySelector('section')
+    if (!vitrin) return null
+    return [...vitrin.querySelectorAll('a[href]')].map((el) => {
+      const k = el.getBoundingClientRect()
+      if (k.width === 0 || k.height === 0) return null
+      const mx = Math.round(k.left + k.width / 2)
+      const my = Math.round(k.top + k.height / 2)
+      // Görünür alanın dışındaysa bu denetimin konusu değil.
+      if (my < 0 || my > window.innerHeight) return null
+      const ust = document.elementFromPoint(mx, my)
+      const ad = (n) => n ? n.tagName.toLowerCase() + (typeof n.className === 'string' && n.className ? '.' + n.className.trim().split(/\s+/)[0] : '') : 'yok'
+      return {
+        yol: new URL(el.href, location.origin).pathname,
+        metin: (el.textContent || '').trim().slice(0, 30),
+        merkez: [mx, my],
+        kendisiMi: ust === el || el.contains(ust),
+        ustteki: ad(ust),
+      }
+    }).filter(Boolean)
+  })()`)
+
+  if (!Array.isArray(hedefler) || hedefler.length === 0) {
+    sorunlar.push('vitrinde görünür çağrı butonu bulunamadı')
+    return sorunlar
+  }
+
+  for (const hedef of hedefler) {
+    if (!hedef.kendisiMi) {
+      sorunlar.push(
+        `vitrin "${hedef.metin}" (${hedef.yol}) ilk ekranda tıklanamıyor — ` +
+          `${hedef.merkez.join(',')} noktasında üstte ${hedef.ustteki} var`,
+      )
+      continue
+    }
+
+    // Üstte olmak yetmez: gerçekten gezindiğini de görelim.
+    await sekme.S('Input.dispatchMouseEvent', {
+      type: 'mousePressed',
+      x: hedef.merkez[0],
+      y: hedef.merkez[1],
+      button: 'left',
+      buttons: 1,
+      clickCount: 1,
+    })
+    await sekme.S('Input.dispatchMouseEvent', {
+      type: 'mouseReleased',
+      x: hedef.merkez[0],
+      y: hedef.merkez[1],
+      button: 'left',
+      buttons: 0,
+      clickCount: 1,
+    })
+    const gitti = await sekme.kosulBekle(`location.pathname === ${JSON.stringify(hedef.yol)}`, 8000)
+    if (!gitti) {
+      const nerede = await sekme.deger('location.pathname')
+      sorunlar.push(`vitrin "${hedef.metin}" tıklandı ama ${hedef.yol} açılmadı (adres: ${nerede})`)
+    }
+
+    await sekme.S('Page.navigate', { url: `${TABAN}/` })
+    await sekme.kosulBekle(`document.readyState === 'complete'`)
+    await uyu(3500)
+  }
+
+  return sorunlar
+}
+
 async function genelTur(wsAdresi, rotalar, { azHareket }) {
   const etiket = azHareket ? 'az hareket' : 'hareket AÇIK'
   const sekme = await sekmeAc(wsAdresi, { azHareket })
   const sorunlar = []
   let tiklanan = 0
   const tiklanamayan = []
+
+  // 0) Vitrinin çağrı butonları — ilk ekran, kaydırmasız
+  for (const b of await vitrinKontrolu(sekme)) sorunlar.push(b)
 
   // 1) Doğrudan açılış
   for (const rota of rotalar) {

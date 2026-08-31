@@ -72,7 +72,7 @@ export default async function TicariSayfasi() {
             <OkIkon width={18} height={18} />
           </Buton>
           {whatsapp ? (
-            <Buton href={whatsapp} dis gorunum="ikincil" boyut="buyuk">
+            <Buton href={whatsapp} dis gorunum="whatsapp" boyut="buyuk">
               <WhatsappIkon width={18} height={18} />
               İhtiyacınızı anlatın
             </Buton>

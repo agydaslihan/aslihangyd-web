@@ -33,6 +33,10 @@ import { DogrulanmisIkon, OkIkon } from '@/components/ui/Ikon'
  * büyüyüp küçülüyor; `vh` o değişimi görmediği için hero kaydırma sırasında
  * zıplıyor. `svh` en küçük görüntü alanını temel alıyor.
  *
+ * ⚠️ YÜKSEKLİK `.vitrin-boy` SINIFINDAN — ÇEREZ BANDI KADAR KISALIYOR.
+ * Sabit `100svh` iken bant, hero'nun iki çağrı butonunu da örtüyordu ve
+ * onlar tıklanamıyordu (31 Ağustos 2026, ölçüldü). Gerekçe globals.css.
+ *
  * ⚠️ GÖRSEL VARSA LCP ÖĞESİ ODUR: `priority` + `sizes="100vw"`. Yoksa LCP
  * öğesi `<h1>` ve hiçbir görsel indirilmiyor.
  */
@@ -57,7 +61,7 @@ export function SinematikHero({
   arkaplan: { url: string; alt: string } | null
 }) {
   return (
-    <section className="bg-zemin relative isolate flex min-h-[100svh] flex-col overflow-hidden">
+    <section className="bg-zemin vitrin-boy relative isolate flex flex-col overflow-hidden">
       {arkaplan ? (
         <>
           <Image
@@ -94,7 +98,7 @@ export function SinematikHero({
         />
       )}
 
-      <div className="kapsayici relative flex flex-1 flex-col items-center justify-center py-24 text-center sm:py-28">
+      <div className="kapsayici vitrin-govde relative flex flex-1 flex-col items-center justify-center py-24 text-center sm:py-28">
         <Sahne>
           <Eyebrow>{ustBaslik}</Eyebrow>
         </Sahne>
@@ -151,7 +155,7 @@ export function SinematikHero({
         ⚠️ Animasyon `transform` üzerinden ve `prefers-reduced-motion`
         bloğunda duruyor.
       */}
-      <div aria-hidden="true" className="relative flex justify-center pb-10">
+      <div aria-hidden="true" className="vitrin-ipucu relative flex justify-center pb-10">
         <span className="bg-kenar-guclu relative block h-14 w-px overflow-hidden">
           <span className="bg-gold-cizgi kaydirma-ipucu absolute inset-x-0 top-0 block h-6" />
         </span>

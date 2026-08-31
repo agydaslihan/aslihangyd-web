@@ -53,7 +53,24 @@ export function YuzenWhatsapp({ adres }: { adres: string | null }) {
       aria-hidden={!gorunur}
       tabIndex={gorunur ? 0 : -1}
       className={[
-        'cam text-metin fixed right-4 bottom-4 z-30 flex size-14 items-center justify-center',
+        /**
+         * ⚠️ WHATSAPP MARKA YEŞİLİ — PALET DIŞI, BİLİNÇLİ İSTİSNA.
+         *
+         * Düğme daha önce `cam text-metin` idi: markanın nötr cam yüzeyi.
+         * Tanınmıyordu. WhatsApp'ın tanınırlığı rengine bağlı ve bu düğmenin
+         * tek işi o uygulamayı açmak.
+         *
+         * ⚠️ ÜZERİNDEKİ İKON MÜREKKEP, BEYAZ DEĞİL — ölçüldü. Beyaz ikon bu
+         * zeminde 1,98:1 veriyor (AA'nın yarısından az), mürekkep 7,56:1.
+         * Jetonlar ve ölçümler `lib/tasarim/whatsapp.test.ts` içinde bağlı.
+         *
+         * ⚠️ KENARLIK ŞART: #25D366 açık sayfa zemininden yalnızca 1,86:1
+         * ayrışıyor; kenarlık olmadan düğmenin nerede bittiği görünmüyor
+         * (WCAG 1.4.11).
+         */
+        'bg-[color:var(--color-whatsapp-yesil)] text-[color:var(--color-whatsapp-uzeri)]',
+        'border-[0.5px] border-[color:var(--color-whatsapp-kenar)]',
+        'fixed right-4 bottom-4 z-30 flex size-14 items-center justify-center',
         'rounded-rozet shadow-kart transition-[opacity,transform] duration-[var(--sure-katman)]',
         'ease-[var(--cikis)] sm:right-6 sm:bottom-6',
         gorunur ? 'translate-y-0 opacity-100' : 'pointer-events-none translate-y-3 opacity-0',
