@@ -519,9 +519,13 @@ export interface Kullanicilar {
 export interface Medya {
   id: number;
   /**
-   * Görselde ne olduğunu bir cümleyle yaz. Ekran okuyucu kullananlar ve görsel yüklenmediğinde herkes bunu görür. Örn: "Muhittin Mahallesi'nde 3+1 dairenin salonu".
+   * Görselde ne olduğunu bir cümleyle yaz. Ekran okuyucu kullananlar ve görsel yüklenmediğinde herkes bunu görür. Örn: "Muhittin Mahallesi'nde 3+1 dairenin salonu". ⚠️ Boş bırakırsanız dosya adından geçici bir metin üretilir ve görsel "alt metni eksik" olarak işaretlenir — sonra toplu olarak düzeltebilirsiniz.
    */
-  alt: string;
+  alt?: string | null;
+  /**
+   * İşaretliyse bu görselin alt metni insan eliyle yazılmadı. Ekran okuyucu için yeterli değil; fırsat bulunca düzeltin.
+   */
+  altOtomatik?: boolean | null;
   /**
    * Görsel size ait değilse kaynağını yazın. Boş bırakılırsa kendi çekimimiz sayılır.
    */
@@ -1747,6 +1751,7 @@ export interface SayfalarSelect<T extends boolean = true> {
  */
 export interface MedyaSelect<T extends boolean = true> {
   alt?: T;
+  altOtomatik?: T;
   kaynak?: T;
   kullanim?: T;
   tahminiKartBayt?: T;

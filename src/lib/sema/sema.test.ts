@@ -50,6 +50,7 @@ const TEMEL: BildirimGirdisi = {
   gozlemsizMahalle: 0,
   yetkiBelgesiVar: true,
   onayBekleyenIlan: 0,
+  altMetniEksikGorsel: 0,
   eksikAyarlar: [],
   eskiAdliAyarlar: [],
   siteAdresindePortVar: false,
