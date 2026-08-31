@@ -325,14 +325,26 @@ export const Ilanlar: CollectionConfig = {
 
         {
           label: 'Fiyat ve yatırım',
+          description:
+            '⚠️ BİNLİK AYIRICI KULLANMAYIN: sayı alanı noktayı ondalık ayırıcı sayar, ' +
+            '"2.550" yazdığınızda kaydedilen değer 2,55 olur. Doğrusu: 2550.',
           fields: [
+            /**
+             * ⚠️ ÖLÇEK UYARISI EN ÜSTTE — rakamlardan ÖNCE. Altta dursaydı
+             * kaydet düğmesine giden kişi onu hiç görmezdi.
+             */
+            {
+              name: 'olcekUyarisi',
+              type: 'ui',
+              admin: { components: { Field: '@/components/panel/OlcekUyarisi#default' } },
+            },
             {
               type: 'row',
               fields: [
                 {
                   name: 'fiyat',
                   type: 'number',
-                  label: 'Fiyat',
+                  label: 'Fiyat (₺)',
                   min: 0,
                   index: true,
                   admin: {
@@ -360,7 +372,7 @@ export const Ilanlar: CollectionConfig = {
                 {
                   name: 'tahminiKira',
                   type: 'number',
-                  label: 'Tahmini aylık kira',
+                  label: 'Tahmini aylık kira (₺/ay)',
                   min: 0,
                   admin: {
                     width: '50%',
@@ -373,7 +385,7 @@ export const Ilanlar: CollectionConfig = {
                 {
                   name: 'aidat',
                   type: 'number',
-                  label: 'Aylık aidat',
+                  label: 'Aylık aidat (₺/ay)',
                   min: 0,
                   admin: { width: '50%' },
                 },

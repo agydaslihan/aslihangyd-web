@@ -76,6 +76,7 @@ export interface Config {
     degerlemeler: Degerlemeler;
     gozlemler: Gozlemler;
     'rayic-degerler': RayicDegerler;
+    'olcek-duzeltmeleri': OlcekDuzeltmeleri;
     'vergi-parametreleri': VergiParametreleri;
     sayfalar: Sayfalar;
     medya: Medya;
@@ -97,6 +98,7 @@ export interface Config {
     degerlemeler: DegerlemelerSelect<false> | DegerlemelerSelect<true>;
     gozlemler: GozlemlerSelect<false> | GozlemlerSelect<true>;
     'rayic-degerler': RayicDegerlerSelect<false> | RayicDegerlerSelect<true>;
+    'olcek-duzeltmeleri': OlcekDuzeltmeleriSelect<false> | OlcekDuzeltmeleriSelect<true>;
     'vergi-parametreleri': VergiParametreleriSelect<false> | VergiParametreleriSelect<true>;
     sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
     medya: MedyaSelect<false> | MedyaSelect<true>;
@@ -1067,6 +1069,34 @@ export interface RayicDegerler {
   createdAt: string;
 }
 /**
+ * Toplu ölçek düzeltmelerinin kaydı. Geri alma bu kayıtlardan okunur; silmeyin — silinen bir parti geri alınamaz.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "olcek-duzeltmeleri".
+ */
+export interface OlcekDuzeltmeleri {
+  id: number;
+  /**
+   * Otomatik üretilir.
+   */
+  ozet?: string | null;
+  geriAlindi?: boolean | null;
+  geriAlinmaTarihi?: string | null;
+  satirlar?:
+    | {
+        koleksiyon: 'mahalleler' | 'ilanlar';
+        kayitId: number;
+        alan: string;
+        eskiDeger: number;
+        yeniDeger: number;
+        kayitAdi?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Hesaplayıcıların kullandığı oran ve tutarlar. Bir parametre girilmemişse ilgili hesaplayıcı çalışmaz ve ziyaretçiye eksik olanı söyler — yanlış rakam üretmez.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1256,6 +1286,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rayic-degerler';
         value: number | RayicDegerler;
+      } | null)
+    | ({
+        relationTo: 'olcek-duzeltmeleri';
+        value: number | OlcekDuzeltmeleri;
       } | null)
     | ({
         relationTo: 'vergi-parametreleri';
@@ -1700,6 +1734,28 @@ export interface RayicDegerlerSelect<T extends boolean = true> {
   kaynak?: T;
   guncellemeTarihi?: T;
   notlar?: T;
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "olcek-duzeltmeleri_select".
+ */
+export interface OlcekDuzeltmeleriSelect<T extends boolean = true> {
+  ozet?: T;
+  geriAlindi?: T;
+  geriAlinmaTarihi?: T;
+  satirlar?:
+    | T
+    | {
+        koleksiyon?: T;
+        kayitId?: T;
+        alan?: T;
+        eskiDeger?: T;
+        yeniDeger?: T;
+        kayitAdi?: T;
+        id?: T;
+      };
   updatedAt?: T;
   createdAt?: T;
 }

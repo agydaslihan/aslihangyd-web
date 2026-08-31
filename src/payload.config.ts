@@ -19,6 +19,7 @@ import { GOOGLE_YOLU } from '@/components/google/yol'
 import { MAHALLE_VERISI_YOLU } from '@/components/mahalleVerisi/yol'
 import { OSM_YOLU } from '@/components/osm/yol'
 import { MAHALLE_RAKAM_YOLU } from '@/components/mahalleRakam/yol'
+import { OLCEK_YOLU } from '@/components/olcek/yol'
 import { RAYIC_YOLU } from '@/components/rayic/yol'
 import { YAKINLIK_YOLU } from '@/components/yakinlik/yol'
 import { GozlemGunluk } from '@/collections/GozlemGunluk'
@@ -28,6 +29,7 @@ import { IlgiNoktalari } from '@/collections/IlgiNoktalari'
 import { Kullanicilar } from '@/collections/Kullanicilar'
 import { Mahalleler } from '@/collections/Mahalleler'
 import { Medya } from '@/collections/Medya'
+import { OlcekDuzeltmeleri } from '@/collections/OlcekDuzeltmeleri'
 import { RayicDegerler } from '@/collections/RayicDegerler'
 import { Sayfalar } from '@/collections/Sayfalar'
 import { Talepler } from '@/collections/Talepler'
@@ -212,6 +214,18 @@ export default buildConfig({
         },
 
         /**
+         * Ölçek düzeltme (binlik ayırıcı).
+         *
+         * ⚠️ Yalnızca YÖNETİCİ: tek çağrıda 26 mahallenin rakamını bin
+         * katına çıkarabilen bir araç. Yanlış elde bir düzeltme aracı,
+         * bir bozma aracıdır.
+         */
+        olcekDuzeltme: {
+          Component: '@/components/olcek/OlcekGorunumu#default',
+          path: OLCEK_YOLU,
+        },
+
+        /**
          * Yakınlıktan skor önerileri.
          *
          * ⚠️ Bu ekran da hiçbir şey KAYDETMEZ. İlgi noktası
@@ -235,6 +249,7 @@ export default buildConfig({
         '@/components/anasayfa/AnaSayfaNavBaglantisi#AnaSayfaNavBaglantisi',
         '@/components/mahalleVerisi/MahalleVerisiNavBaglantisi#MahalleVerisiNavBaglantisi',
         '@/components/mahalleRakam/RakamNavBaglantisi#RakamNavBaglantisi',
+        '@/components/olcek/OlcekNavBaglantisi#OlcekNavBaglantisi',
         '@/components/osm/OsmNavBaglantisi#OsmNavBaglantisi',
         '@/components/google/GoogleNavBaglantisi#GoogleNavBaglantisi',
         '@/components/rayic/RayicNavBaglantisi#RayicNavBaglantisi',
@@ -253,6 +268,7 @@ export default buildConfig({
     Degerlemeler,
     Gozlemler,
     RayicDegerler,
+    OlcekDuzeltmeleri,
     VergiParametreleri,
     Sayfalar,
     Medya,
