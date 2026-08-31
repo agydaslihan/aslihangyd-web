@@ -1,3 +1,4 @@
+import { KIMLER_ICIN, SOKAK_DOKULARI } from '@/lib/mahalle/nitelikler'
 import { turAlanlari } from '@/lib/medya/turAlanlari'
 import { videoAlanlari } from '@/lib/medya/videoAlanlari'
 import type { CollectionConfig } from 'payload'
@@ -165,10 +166,82 @@ export const Mahalleler: CollectionConfig = {
             'Bu sekmedeki metin sayfanın "Neden bu mahalle?" bölümünü oluşturur ve ' +
             'sitenin arama motoru performansının en belirleyici parçasıdır. Hedef: en az 800 kelime özgün metin.',
           fields: [
+            /**
+             * ─────────────────────────────────────────────────────────
+             * ⚠️ BU ALANLAR ARAŞTIRMAYLA DOLDURULAMAZ.
+             *
+             * "Hangi sokak sessiz", "kim oturuyor", "son üç yılda ne
+             * değişti" — hiçbiri hiçbir kaynakta yok. Web araştırması,
+             * PostGIS ya da OSM bu soruları cevaplayamaz. Cevabı yalnızca
+             * mahalleyi gezen, müşteriyle konuşan, orada ev gösteren kişi
+             * biliyor.
+             *
+             * Yapılandırılmış alanlar, o bilgiyi girmeyi boş bir metin
+             * kutusundan kolaylaştırıyor: soru sorulunca cevap yazılıyor,
+             * beyaz sayfaya bakılınca yazılmıyor.
+             * ─────────────────────────────────────────────────────────
+             */
+            {
+              name: 'nitelikDurumu',
+              type: 'ui',
+              admin: { components: { Field: '@/components/panel/NitelikDurumu#default' } },
+            },
+            {
+              name: 'kimlerIcin',
+              type: 'select',
+              hasMany: true,
+              label: 'Kimler için uygun?',
+              options: KIMLER_ICIN.map((k) => ({ value: k.value, label: k.label })),
+              admin: {
+                description:
+                  'Birden fazla seçebilirsiniz. Emin olmadığınızı işaretlemeyin — ' +
+                  'yanlış bir eşleşme, mahalleyi hiç anlatmamaktan kötüdür.',
+              },
+            },
+            {
+              name: 'kimlerIcinNotu',
+              type: 'textarea',
+              label: 'Kimler için uygun — açıklama',
+              admin: {
+                description: 'Neden? Örn: "İki ilkokul ve pazar yeri yürüme mesafesinde."',
+              },
+            },
+            {
+              name: 'sokakDokusu',
+              type: 'select',
+              label: 'Sokak dokusu',
+              options: SOKAK_DOKULARI.map((d) => ({ value: d.value, label: d.label })),
+              admin: {
+                description:
+                  'Mahallenin geneli. Tek bir sokağa göre değil; mahallede gezerken ' +
+                  'edindiğiniz izlenim.',
+              },
+            },
+            {
+              name: 'sonUcYil',
+              type: 'textarea',
+              label: 'Son 3 yılda ne değişti?',
+              admin: {
+                description:
+                  'Yeni yol, yeni okul, dönüşen bina, değişen kiracı profili… ' +
+                  'Rakam veriyorsanız nereden bildiğinizi de yazın.',
+              },
+            },
+            {
+              name: 'dikkatEdilmeli',
+              type: 'textarea',
+              label: 'Neye dikkat etmeli?',
+              admin: {
+                description:
+                  '⚠️ Bu alan mahallenin ZAYIF tarafını yazdığınız yer. Boş bırakılan bir ' +
+                  '"dikkat" alanı, mahallede hiçbir sorun olmadığı izlenimi verir — ve o ' +
+                  'izlenim ilk ziyarette bozulur.',
+              },
+            },
             {
               name: 'icerik',
               type: 'richText',
-              label: 'Neden bu mahalle?',
+              label: 'Neden bu mahalle? (uzun analiz)',
             },
             {
               name: 'sikSorulanlar',

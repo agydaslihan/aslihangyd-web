@@ -29,6 +29,7 @@ import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahallel
 import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
 import { MiniHarita } from '@/components/mahalle/MiniHarita'
+import { NitelikProfili } from '@/components/mahalle/NitelikProfili'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
 import { geometriCoz } from '@/lib/harita/geometri'
 import { haritaStilAdresi } from '@/lib/harita/sunucu'
@@ -37,6 +38,7 @@ import { kusUcusuMesafe } from '@/lib/eslestirme/motor'
 import { POI_TIPLERI } from '@/collections/IlgiNoktalari'
 import { bolumAcikMi } from '@/lib/veri/siteBolumleri'
 import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
+import { nitelikBloklari } from '@/lib/mahalle/nitelikler'
 import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
@@ -113,6 +115,13 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
   /** Güneş haritası için mahalle merkezi. */
   const mahalleKonumu = konumuCoz(mahalle.merkez)
+
+  /**
+   * ⚠️ Niteliksel profil — Aslıhan doldurmadıysa boş dizi ve bölüm hiç
+   * çizilmiyor. Yarım bir profil yayınlamaktansa boş durum metni doğru
+   * şeyi söylüyor.
+   */
+  const nitelikler = nitelikBloklari(mahalle)
 
   /* ── Mini harita verisi ─────────────────────────────────────────────── */
 
@@ -390,6 +399,20 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                 </section>
               </Sahne>
             ) : null}
+
+            {/*
+              6c ── Yerinde gözlem (niteliksel profil)
+
+              ⚠️ UZUN ANALİZDEN ÖNCE. Yapılandırılmış gözlemler kısa ve
+              taranabilir; uzun metin arkasına konsaydı, onu okumayan
+              ziyaretçi hiçbirini görmezdi.
+
+              ⚠️ Aslıhan doldurmadıysa bileşen `null` dönüyor ve bölüm hiç
+              çizilmiyor.
+            */}
+            <Sahne>
+              <NitelikProfili bloklar={nitelikler} mahalleAdi={mahalle.ad} />
+            </Sahne>
 
             {/* 7 ── Neden bu mahalle? */}
             <Sahne>

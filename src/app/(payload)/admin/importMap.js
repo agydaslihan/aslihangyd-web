@@ -23,6 +23,7 @@ import { BoldFeatureClient as BoldFeatureClient_e70f5e05f09f93e00b997edb1ef0c864
 import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864 } from '@payloadcms/richtext-lexical/client'
 import { VideoDurumu as VideoDurumu_1e58a0690421ccebdda95f319e7a0509 } from '@/components/medya/VideoDurumu'
 import { default as default_0a37aa859b51d6fa563ad0cab51c8541 } from '@/components/panel/IlanEslesmeleri'
+import { default as default_6704e182342f943521fbcf8d2da4b1d0 } from '@/components/panel/NitelikDurumu'
 import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/components/panel/TalepEslesmeleri'
 import { GorselButceRozeti as GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0 } from '@/components/panel/GorselButceRozeti'
 import { LogoPaneli as LogoPaneli_f51691edd3b1b9b168fcc48a8cf2ad17 } from '@/components/marka/LogoPaneli'
@@ -82,6 +83,7 @@ export const importMap = {
   "@payloadcms/richtext-lexical/client#ItalicFeatureClient": ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0c864,
   "@/components/medya/VideoDurumu#VideoDurumu": VideoDurumu_1e58a0690421ccebdda95f319e7a0509,
   "@/components/panel/IlanEslesmeleri#default": default_0a37aa859b51d6fa563ad0cab51c8541,
+  "@/components/panel/NitelikDurumu#default": default_6704e182342f943521fbcf8d2da4b1d0,
   "@/components/panel/TalepEslesmeleri#default": default_1e93637515c2cbbab351072f38d704e3,
   "@/components/panel/GorselButceRozeti#GorselButceRozeti": GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0,
   "@/components/marka/LogoPaneli#LogoPaneli": LogoPaneli_f51691edd3b1b9b168fcc48a8cf2ad17,
