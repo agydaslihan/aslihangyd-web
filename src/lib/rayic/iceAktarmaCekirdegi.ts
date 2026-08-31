@@ -101,7 +101,12 @@ export async function cozumle(
   user: TypedUser,
 ): Promise<OnizlemeSonucu> {
   if (typeof girdi.csvMetni !== 'string' || girdi.csvMetni.trim() === '') {
-    return { basarili: false, genelHata: 'CSV içeriği boş.' }
+    return {
+      basarili: false,
+      genelHata:
+        'CSV içeriği boş. Dosyayı seçtiyseniz Excel’de “Farklı Kaydet → CSV UTF-8” ile ' +
+        'kaydedildiğinden emin olun; .xlsx dosyası doğrudan okunamaz.',
+    }
   }
 
   if (girdi.csvMetni.length > AZAMI_CSV_KARAKTER) {
@@ -116,13 +121,19 @@ export async function cozumle(
   const cikti = csvAyristir(girdi.csvMetni, girdi.ayirici)
 
   if (cikti.basliklar.length === 0) {
-    return { basarili: false, genelHata: 'Başlık satırı okunamadı.' }
+    return {
+      basarili: false,
+      genelHata:
+        'Başlık satırı okunamadı. Dosyanın İLK satırı sütun adlarını taşımalı ' +
+        '(örn. “Mahalle;Sokak;Bina m² rayiç;Arsa m² rayiç”). Tablonun üstünde başlık, ' +
+        'logo ya da boş satırlar varsa onları silin. Aşağıdaki örnek dosya doğru biçimi gösterir.',
+    }
   }
 
   if (cikti.satirlar.length === 0) {
     return {
       basarili: false,
-      genelHata: 'Dosyada başlık dışında satır yok.',
+      genelHata: 'Dosyada başlık dışında satır yok. Yalnızca sütun adları var, veri satırı yok.',
       basliklar: cikti.basliklar,
       ayirici: cikti.ayirici,
     }
@@ -142,6 +153,8 @@ export async function cozumle(
 
   const cozum = satirlariCozumle(cikti.satirlar, eslesme, {
     mahalleler,
+    // ⚠️ Hata mesajı sütunu ADIYLA anabilsin diye.
+    basliklar: cikti.basliklar,
     varsayilanYil: girdi.ayarlar.varsayilanYil,
     varsayilanKaynak: girdi.ayarlar.varsayilanKaynak,
     guncellemeTarihi: girdi.ayarlar.guncellemeTarihi ?? null,
@@ -190,7 +203,9 @@ export async function satirlariYaz(
   if ((cozum.eksikAlanlar?.length ?? 0) > 0) {
     return {
       basarili: false,
-      genelHata: `Şu zorunlu alanlar bir sütuna bağlanmadı: ${cozum.eksikAlanlar?.join(', ')}.`,
+      genelHata:
+        `Şu zorunlu alanlar bir sütuna bağlanmadı: ${cozum.eksikAlanlar?.join(', ')}. ` +
+        'Sütun adları tanınmadıysa yukarıdaki eşleme tablosundan elle seçebilirsiniz.',
     }
   }
 

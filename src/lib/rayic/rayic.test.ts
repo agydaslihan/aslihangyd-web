@@ -130,7 +130,7 @@ describe('satirlariCozumle', () => {
     const sonuc = satirlariCozumle(cikti.satirlar, sutunlariEslestir(cikti.basliklar), BAGLAM)
 
     expect(sonuc.hataliSayisi).toBe(1)
-    expect(sonuc.satirlar[0]?.hatalar.join(' ')).toContain('yazılacak bir rakam yok')
+    expect(sonuc.satirlar[0]?.hatalar.join(' ')).toContain('En az biri dolu olmalı')
   })
 
   it('olağandışı rakamı ENGELLEMEZ ama uyarır — sessiz sıfır kayması yakalanır', () => {
@@ -155,7 +155,7 @@ describe('satirlariCozumle', () => {
     const sonuc = satirlariCozumle(cikti.satirlar, sutunlariEslestir(cikti.basliklar), BAGLAM)
 
     expect(sonuc.satirlar[0]?.veri).toBeNull()
-    expect(sonuc.satirlar[0]?.hatalar.join(' ')).toContain('Yıl okunamadı')
+    expect(sonuc.satirlar[0]?.hatalar.join(' ')).toContain('yıl olarak okunamadı')
   })
 
   it('tanınmayan kaynağı sessizce kabul etmez, varsayılana düşer ve uyarır', () => {
@@ -163,6 +163,6 @@ describe('satirlariCozumle', () => {
     const sonuc = satirlariCozumle(cikti.satirlar, sutunlariEslestir(cikti.basliklar), BAGLAM)
 
     expect(sonuc.satirlar[0]?.veri?.kaynak).toBe('belediye')
-    expect(sonuc.satirlar[0]?.uyarilar.join(' ')).toContain('Kaynak tanınmadı')
+    expect(sonuc.satirlar[0]?.uyarilar.join(' ')).toContain('tanınmadı; varsayılan kullanıldı')
   })
 })

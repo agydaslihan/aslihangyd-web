@@ -2,7 +2,7 @@
 
 import { useState, useTransition } from 'react'
 
-import { ALAN_TANIMLARI, type SutunEslemesi } from '@/lib/rayic/iceAktarma'
+import { ALAN_TANIMLARI, ornekCsv, type SutunEslemesi } from '@/lib/rayic/iceAktarma'
 import { rayicIceAktar, rayicOnizle } from '@/lib/rayic/eylemler'
 import type { IceAktarmaSonucu, OnizlemeSonucu } from '@/lib/rayic/iceAktarmaCekirdegi'
 import { RAYIC_KAYNAKLARI, type RayicKaynagi } from '@/lib/rayic/tipler'
@@ -88,6 +88,28 @@ export function RayicSihirbazi() {
     })
   }
 
+  /**
+   * Örnek dosyayı yerinde üretip indirir.
+   *
+   * ⚠️ Sunucudan çekilmiyor: içerik zaten kodda ve tek doğru kaynak
+   * `ornekCsv()`. Ayrı bir uç eklemek, örnek dosyanın sütun adlarıyla
+   * ayrıştırıcının tanıdığı adların ayrışmasına kapı açardı.
+   *
+   * ⚠️ BOM (`\ufeff`) şart: Excel BOM'suz UTF-8 dosyayı Latin-1 sanıp
+   * Türkçe karakterleri bozuyor ve indirdiği örneği açan kişi "Muhittin"
+   * yerine "MuhÄ±ttÄ±n" görüyor.
+   */
+  function ornegiIndir(): void {
+    const bag = URL.createObjectURL(
+      new Blob(['\ufeff' + ornekCsv()], { type: 'text/csv;charset=utf-8' }),
+    )
+    const a = document.createElement('a')
+    a.href = bag
+    a.download = 'rayic-bedel-ornek.csv'
+    a.click()
+    URL.revokeObjectURL(bag)
+  }
+
   const yazilacak = (onizleme?.satirlar ?? []).filter(
     (satir) => satir.veri !== null && !atlanacak.has(satir.satirNo),
   ).length
@@ -96,6 +118,16 @@ export function RayicSihirbazi() {
     <>
       <section className="aktarim-adim">
         <h2>1 · Dosya</h2>
+
+        <p className="aktarim-not">
+          Sütun adlarının nasıl yazılması gerektiğini görmek için örnek dosyayı indirin; başlıkları
+          değiştirmeden kendi rakamlarınızı yazabilirsiniz. Sayılar <code>12.500,50</code> ya da{' '}
+          <code>12,500.50</code> biçiminde olabilir — ikisi de okunur.
+        </p>
+
+        <button type="button" className="aktarim-buton" onClick={ornegiIndir}>
+          Örnek CSV indir
+        </button>
 
         <label className="aktarim-alan">
           <span>CSV dosyası</span>
