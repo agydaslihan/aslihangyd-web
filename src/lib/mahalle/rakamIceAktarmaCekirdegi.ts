@@ -9,11 +9,10 @@ import {
   sutunlariEslestir,
   type CozulmusSatir,
   type SutunEslemesi,
-} from './iceAktarma'
-import type { RayicKaynagi } from './tipler'
+} from './rakamIceAktarma'
 
 /**
- * Rayiç bedel CSV içe aktarma — çekirdek.
+ * Mahalle rakamları CSV içe aktarma — çekirdek.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ İSTEMCİNİN ÇÖZÜMLEDİĞİ VERİYE GÜVENİLMEZ
@@ -23,26 +22,25 @@ import type { RayicKaynagi } from './tipler'
  * ayarları yeniden çözümler ve yalnızca kendi ürettiği veriyi yazar.
  * Kullanıcının seçebildiği tek şey hangi satırların dışarıda kalacağı.
  *
- * Gözlem içe aktarmasındaki ilkenin aynısı; gerekçesi orada uzun uzun
- * yazılı (`gozlem/iceAktarmaCekirdegi.ts`).
+ * Rayiç ve gözlem içe aktarmalarındaki ilkenin aynısı.
  * ─────────────────────────────────────────────────────────────────────────
  */
 
 export const AZAMI_CSV_KARAKTER = 2_000_000
-export const AZAMI_SATIR = 5_000
+export const AZAMI_SATIR = 1_000
 
-export interface RayicAyarlari {
-  varsayilanYil: number
-  varsayilanKaynak: RayicKaynagi
-  /** Tablonun alındığı tarih (ISO 'YYYY-MM-DD'); boş bırakılabilir. */
-  guncellemeTarihi?: string | null
+export interface RakamAyarlari {
+  /** CSV'de tarih sütunu yoksa tüm satırlara yazılacak tarih. */
+  varsayilanTarih?: string | null
+  /** CSV'de kaynak sütunu yoksa tüm satırlara yazılacak kaynak. */
+  varsayilanKaynak?: string | null
 }
 
 export interface OnizlemeGirdisi {
   csvMetni: string
   ayirici?: Ayirici
   eslesme?: SutunEslemesi
-  ayarlar: RayicAyarlari
+  ayarlar: RakamAyarlari
 }
 
 export interface OnizlemeSonucu {
@@ -67,7 +65,6 @@ export interface IceAktarmaGirdisi extends OnizlemeGirdisi {
 export interface IceAktarmaSonucu {
   basarili: boolean
   genelHata?: string
-  olusturulan?: number
   guncellenen?: number
   atlanan?: number
   hatali?: number
@@ -101,12 +98,7 @@ export async function cozumle(
   user: TypedUser,
 ): Promise<OnizlemeSonucu> {
   if (typeof girdi.csvMetni !== 'string' || girdi.csvMetni.trim() === '') {
-    return {
-      basarili: false,
-      genelHata:
-        'CSV içeriği boş. Dosyayı seçtiyseniz Excel’de “Farklı Kaydet → CSV UTF-8” ile ' +
-        'kaydedildiğinden emin olun; .xlsx dosyası doğrudan okunamaz.',
-    }
+    return { basarili: false, genelHata: 'CSV içeriği boş.' }
   }
 
   if (girdi.csvMetni.length > AZAMI_CSV_KARAKTER) {
@@ -121,19 +113,13 @@ export async function cozumle(
   const cikti = csvAyristir(girdi.csvMetni, girdi.ayirici)
 
   if (cikti.basliklar.length === 0) {
-    return {
-      basarili: false,
-      genelHata:
-        'Başlık satırı okunamadı. Dosyanın İLK satırı sütun adlarını taşımalı ' +
-        '(örn. “Mahalle;Sokak;Bina m² rayiç;Arsa m² rayiç”). Tablonun üstünde başlık, ' +
-        'logo ya da boş satırlar varsa onları silin. Aşağıdaki örnek dosya doğru biçimi gösterir.',
-    }
+    return { basarili: false, genelHata: 'Başlık satırı okunamadı.' }
   }
 
   if (cikti.satirlar.length === 0) {
     return {
       basarili: false,
-      genelHata: 'Dosyada başlık dışında satır yok. Yalnızca sütun adları var, veri satırı yok.',
+      genelHata: 'Dosyada başlık dışında satır yok.',
       basliklar: cikti.basliklar,
       ayirici: cikti.ayirici,
     }
@@ -153,11 +139,8 @@ export async function cozumle(
 
   const cozum = satirlariCozumle(cikti.satirlar, eslesme, {
     mahalleler,
-    // ⚠️ Hata mesajı sütunu ADIYLA anabilsin diye.
-    basliklar: cikti.basliklar,
-    varsayilanYil: girdi.ayarlar.varsayilanYil,
-    varsayilanKaynak: girdi.ayarlar.varsayilanKaynak,
-    guncellemeTarihi: girdi.ayarlar.guncellemeTarihi ?? null,
+    varsayilanTarih: girdi.ayarlar.varsayilanTarih ?? null,
+    varsayilanKaynak: girdi.ayarlar.varsayilanKaynak ?? null,
   })
 
   return {
@@ -176,18 +159,25 @@ export async function cozumle(
 }
 
 /**
- * Çözümlenmiş satırları yazar.
+ * Çözümlenmiş satırları mevcut mahalle kayıtlarına yazar.
  *
- * ⚠️ AYNI MAHALLE + SOKAK + YIL VARSA ÜZERİNE YAZILIR, KOPYA AÇILMAZ.
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ YALNIZCA GÜNCELLER — YENİ MAHALLE AÇMAZ.
  *
- * Belediye tabloları düzeltmeyle yeniden yayınlanıyor ve aynı dosya iki kez
- * aktarılabiliyor. Her seferinde yeni kayıt açsaydık, aynı mahalle için üç
- * farklı rayiç bedel görünür ve hangisinin geçerli olduğu belirsizleşirdi —
- * rayiç/piyasa oranı da hangisini kullanacağını bilemezdi.
+ * Eşleşmeyen bir ad, o mahallenin sistemde olmadığını değil, adın farklı
+ * yazıldığını gösteriyor olabilir ("Şeyhsinan" / "Seyhsinan" / "Şeyh
+ * Sinan"). Kayıt açsaydık ikinci bir mahalle sayfası, ikinci bir slug ve
+ * bölünmüş bir portföy elde ederdik. Mahalle açmanın kendi aracı var
+ * (`listeIceAktarma`).
+ *
+ * ⚠️ BOŞ HÜCRE SİLMEZ. CSV'de olmayan bir alan `undefined` geçiliyor;
+ * Payload dokunmuyor. Aksi hâlde yalnızca nüfusu güncellemek için hazırlanan
+ * bir dosya, m² ve kira rakamlarının hepsini silerdi.
  *
  * ⚠️ Kayıtlar Local API ile, `overrideAccess: false` ve gerçek kullanıcıyla
- * yazılır: koleksiyonun erişim kuralları ve `beforeChange` kancası aynen
- * çalışır. Toplu yazma, kancaları atlamak için bir bahane değildir.
+ * yazılır: erişim kuralları ve kancalar aynen çalışır. Toplu yazma,
+ * kancaları atlamak için bir bahane değildir.
+ * ─────────────────────────────────────────────────────────────────────────
  */
 export async function satirlariYaz(
   girdi: IceAktarmaGirdisi,
@@ -203,9 +193,7 @@ export async function satirlariYaz(
   if ((cozum.eksikAlanlar?.length ?? 0) > 0) {
     return {
       basarili: false,
-      genelHata:
-        `Şu zorunlu alanlar bir sütuna bağlanmadı: ${cozum.eksikAlanlar?.join(', ')}. ` +
-        'Sütun adları tanınmadıysa yukarıdaki eşleme tablosundan elle seçebilirsiniz.',
+      genelHata: `Şu zorunlu alanlar bir sütuna bağlanmadı: ${cozum.eksikAlanlar?.join(', ')}.`,
     }
   }
 
@@ -214,7 +202,6 @@ export async function satirlariYaz(
   )
 
   const yazmaHatalari: { satirNo: number; mesaj: string }[] = []
-  let olusturulan = 0
   let guncellenen = 0
   let atlanan = 0
 
@@ -228,51 +215,23 @@ export async function satirlariYaz(
     const veri = satir.veri
 
     try {
-      const mevcut = await payload.find({
-        collection: 'rayic-degerler',
-        where: {
-          and: [
-            { mahalle: { equals: veri.mahalleId } },
-            { yil: { equals: veri.yil } },
-            veri.sokak === null ? { sokak: { exists: false } } : { sokak: { equals: veri.sokak } },
-          ],
+      await payload.update({
+        collection: 'mahalleler',
+        id: veri.mahalleId,
+        data: {
+          ortalamaM2Satis: veri.ortalamaM2Satis ?? undefined,
+          ortalamaKira: veri.ortalamaKira ?? undefined,
+          kiraCarpani: veri.kiraCarpani ?? undefined,
+          degisim12Ay: veri.degisim12Ay ?? undefined,
+          nufus: veri.nufus ?? undefined,
+          gozlemSayisi: veri.gozlemSayisi ?? undefined,
+          verilerinTarihi: veri.verilerinTarihi ?? undefined,
+          veriKaynagi: veri.veriKaynagi ?? undefined,
         },
-        limit: 1,
-        depth: 0,
         user,
         overrideAccess: false,
       })
-
-      const alanlar = {
-        mahalle: veri.mahalleId,
-        sokak: veri.sokak ?? undefined,
-        yil: veri.yil,
-        metrekareRayicBedel: veri.metrekareRayicBedel ?? undefined,
-        arsaRayicBedel: veri.arsaRayicBedel ?? undefined,
-        kaynak: veri.kaynak,
-        notlar: veri.notlar ?? undefined,
-        guncellemeTarihi: veri.guncellemeTarihi ?? undefined,
-      }
-
-      const eski = mevcut.docs[0]
-      if (eski) {
-        await payload.update({
-          collection: 'rayic-degerler',
-          id: eski.id,
-          data: alanlar,
-          user,
-          overrideAccess: false,
-        })
-        guncellenen += 1
-      } else {
-        await payload.create({
-          collection: 'rayic-degerler',
-          data: alanlar,
-          user,
-          overrideAccess: false,
-        })
-        olusturulan += 1
-      }
+      guncellenen += 1
     } catch (hata) {
       yazmaHatalari.push({ satirNo: satir.satirNo, mesaj: hataMesaji(hata) })
     }
@@ -280,7 +239,6 @@ export async function satirlariYaz(
 
   return {
     basarili: true,
-    olusturulan,
     guncellenen,
     atlanan,
     hatali: cozum.hataliSayisi ?? 0,

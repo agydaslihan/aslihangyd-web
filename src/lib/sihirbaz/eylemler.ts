@@ -3,9 +3,10 @@
 import { headers } from 'next/headers'
 
 import config from '@payload-config'
-import { getPayload, type RequiredDataFromCollectionSlug } from 'payload'
+import { getPayload } from 'payload'
 
-import { sihirbazSemasi, type SihirbazVerisi } from './sema'
+import { sihirbazSemasi } from './sema'
+import { gorunumuVeriyeCevir } from './veriyeCevir'
 
 /**
  * Portföy giriş sihirbazının kayıt eylemi.
@@ -35,16 +36,42 @@ import { sihirbazSemasi, type SihirbazVerisi } from './sema'
 
 export interface SihirbazSonucu {
   basarili: boolean
-  /** Oluşturulan ilanın kimliği — admin'e yönlendirmek için. */
+  /** Oluşturulan ya da güncellenen ilanın kimliği. */
   ilanId?: string
   ilanBasligi?: string
+  /** Kayıt bu çağrıda mı açıldı? Arayüz "taslak açıldı" der. */
+  yeniMi?: boolean
+  /** Başlık boş bırakıldığı için geçici ad üretildiyse `true`. */
+  baslikUretildi?: boolean
   /** Alan bazlı hatalar. */
   hatalar?: Record<string, string>
   /** Alanla ilişkilendirilemeyen genel hata. */
   genelHata?: string
 }
 
-export async function ilanTaslagiOlustur(ham: unknown): Promise<SihirbazSonucu> {
+/**
+ * Taslağı açar ya da günceller.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ OTOMATİK KAYDETME BU İMZAYI ZORUNLU KILDI.
+ *
+ * Eski hâl yalnızca `create` yapıyordu; her otomatik kayıt yeni bir taslak
+ * açardı ve yarım saatlik bir giriş, otuz kopya taşınmaz üretirdi. İlk
+ * çağrı kaydı açıyor, kimliği geri veriyor; sonraki çağrılar aynı kaydı
+ * güncelliyor.
+ *
+ * ⚠️ TASLAK OLMAYAN KAYIT GÜNCELLENMEZ — pazarlıksız.
+ *
+ * `ilanId` istemciden geliyor. Yayındaki bir ilanın kimliği gönderilseydi,
+ * otomatik kaydetme canlı bir ilanı sessizce ezerdi: fiyat, açıklama,
+ * fotoğraflar. Kayıt her güncellemede okunuyor ve `durum` `taslak`
+ * değilse işlem reddediliyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function ilanTaslaginiKaydet(
+  ham: unknown,
+  ilanId?: string | null,
+): Promise<SihirbazSonucu> {
   const sonuc = sihirbazSemasi.safeParse(ham)
 
   if (!sonuc.success) {
@@ -73,15 +100,85 @@ export async function ilanTaslagiOlustur(ham: unknown): Promise<SihirbazSonucu> 
   // Mahalle ilişkisi sayısal kimlik bekler (Postgres adaptörü). Form değeri
   // dize taşıdığı için burada çözülüyor; çözülemezse alan hatası döner —
   // `NaN` göndermek Payload'da anlaşılmaz bir veritabanı hatası üretirdi.
+  /**
+   * ⚠️ MAHALLE, KAYDI AÇMANIN TEK ŞARTI — VE BU ŞART BİZİM DEĞİL.
+   *
+   * `Ilanlar.mahalle` koleksiyonda `required` ve varsayılanı yok: mahalle
+   * yatırım skorunu, haritayı, eşleştirmeyi ve karşılaştırmayı besliyor.
+   * Mahallesiz bir kayıt, bu sistemlerin hiçbirine giremez.
+   *
+   * Diğer her alan isteğe bağlı; bu biri, alan gerçekten zorunlu olduğu
+   * için zorunlu — sihirbazın koyduğu bir engel değil.
+   */
   const mahalleId = Number(veri.mahalle)
   if (!Number.isInteger(mahalleId) || mahalleId <= 0) {
-    return { basarili: false, hatalar: { mahalle: 'Geçerli bir mahalle seçin.' } }
+    return {
+      basarili: false,
+      hatalar: {
+        mahalle:
+          'Kaydı açmak için mahalle gerekli — taşınmazın hangi mahallede olduğu, ' +
+          'yatırım skorundan haritaya kadar her şeyin girdisi. Diğer alanları sonra doldurabilirsiniz.',
+      },
+    }
   }
 
+  /**
+   * ⚠️ BAŞLIK BOŞSA GEÇİCİ AD ÜRETİLİYOR — UYDURMA DEĞİL, AÇIKÇA GEÇİCİ.
+   *
+   * Payload'da `baslik` zorunlu. Sahada girişe fotoğraftan ya da oda
+   * sayısından başlayan biri başlığı en sona bırakıyor. Tarihli bir taslak
+   * adı, kaydın panelde bulunabilmesini sağlıyor ve ne olduğunu saklamıyor.
+   */
+  const baslikBos = veri.baslik.trim() === ''
+  const baslik = baslikBos
+    ? `Taslak — ${new Date().toLocaleString('tr-TR', { dateStyle: 'long', timeStyle: 'short' })}`
+    : veri.baslik.trim()
+
+  const kimlik = typeof ilanId === 'string' && ilanId.trim() !== '' ? ilanId.trim() : null
+
   try {
+    if (kimlik !== null) {
+      /**
+       * ⚠️ ÖNCE OKU, SONRA YAZ. Kimlik istemciden geliyor; yayındaki bir
+       * ilanın kimliği gönderilseydi otomatik kaydetme onu sessizce ezerdi.
+       */
+      const mevcut = await payload.findByID({
+        collection: 'ilanlar',
+        id: kimlik,
+        depth: 0,
+        user,
+        overrideAccess: false,
+      })
+
+      if (mevcut.durum !== 'taslak') {
+        return {
+          basarili: false,
+          genelHata:
+            'Bu ilan artık taslak değil; sihirbazdan güncellenemez. ' +
+            'Yayındaki bir kaydı değiştirmek için Payload panelini kullanın.',
+        }
+      }
+
+      const ilan = await payload.update({
+        collection: 'ilanlar',
+        id: kimlik,
+        data: gorunumuVeriyeCevir(veri, mahalleId, baslik),
+        user,
+        overrideAccess: false,
+      })
+
+      return {
+        basarili: true,
+        ilanId: String(ilan.id),
+        ilanBasligi: ilan.baslik,
+        yeniMi: false,
+        baslikUretildi: baslikBos,
+      }
+    }
+
     const ilan = await payload.create({
       collection: 'ilanlar',
-      data: gorunumuVeriyeCevir(veri, mahalleId),
+      data: gorunumuVeriyeCevir(veri, mahalleId, baslik),
       user,
       // ⚠️ Erişim kuralları ve kancalar devrede kalsın diye `false`.
       overrideAccess: false,
@@ -91,67 +188,13 @@ export async function ilanTaslagiOlustur(ham: unknown): Promise<SihirbazSonucu> 
       basarili: true,
       ilanId: String(ilan.id),
       ilanBasligi: ilan.baslik,
+      yeniMi: true,
+      baslikUretildi: baslikBos,
     }
   } catch (hata) {
     // Payload'ın alan doğrulama hataları kullanıcıya aynen gösterilir;
     // beklenmedik hatalarda veritabanı ayrıntısı sızdırılmaz.
     return { basarili: false, genelHata: hataMesaji(hata) }
-  }
-}
-
-/**
- * Şema çıktısını Payload alan adlarına çevirir.
- *
- * Boş dizeler `undefined`'a düşürülür: Payload'a boş dize yazmak, alanın
- * "girilmiş ama boş" görünmesine yol açar ve EİDS değerlendirmesinde
- * "girilmemiş" ile karışır.
- */
-function gorunumuVeriyeCevir(
-  veri: SihirbazVerisi,
-  mahalleId: number,
-): RequiredDataFromCollectionSlug<'ilanlar'> {
-  const bosDegilse = (deger: string): string | undefined =>
-    deger.trim() === '' ? undefined : deger.trim()
-
-  return {
-    // ⚠️ Sabit. İstemciden gelen hiçbir değer bu alana yazılmaz.
-    durum: 'taslak',
-
-    // Boş bırakılıyor: `slugAlani` kancası başlıktan üretir ve çakışmayı
-    // sayıyla çözer. Burada elle slug üretmek, o mantığın ikinci bir
-    // kopyasını doğururdu.
-    slug: '',
-
-    baslik: veri.baslik,
-    tip: veri.tip,
-    kategori: veri.kategori,
-    ozet: bosDegilse(veri.ozet),
-
-    il: veri.il,
-    ilce: veri.ilce,
-    mahalle: mahalleId,
-    adres: bosDegilse(veri.adres),
-    ada: bosDegilse(veri.ada),
-    parsel: bosDegilse(veri.parsel),
-    tapuDurumu: veri.tapuDurumu,
-
-    fiyat: veri.fiyat,
-    paraBirimi: veri.paraBirimi,
-    tahminiKira: veri.tahminiKira,
-    aidat: veri.aidat,
-    brutM2: veri.brutM2,
-    netM2: veri.netM2,
-    odaSayisi: veri.odaSayisi,
-    bulunduguKat: bosDegilse(veri.bulunduguKat),
-    toplamKat: veri.toplamKat,
-    binaYasi: veri.binaYasi,
-
-    eidsDurum: veri.eidsDurum,
-    tasinmazNo: bosDegilse(veri.tasinmazNo),
-    eidsYetkiBaslangic: bosDegilse(veri.eidsYetkiBaslangic),
-    eidsYetkiBitis: bosDegilse(veri.eidsYetkiBitis),
-
-    gizliPortfoy: veri.gizliPortfoy,
   }
 }
 

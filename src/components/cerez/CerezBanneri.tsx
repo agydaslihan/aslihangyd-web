@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
-import { useCallback, useEffect, useId, useState } from 'react'
+import { useCallback, useEffect, useId, useRef, useState } from 'react'
 
 import { Buton } from '@/components/ui/Buton'
 import {
@@ -33,6 +33,68 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
   const [pazarlama, setPazarlama] = useState(false)
   const router = useRouter()
   const basligiId = useId()
+  const bantRef = useRef<HTMLDivElement | null>(null)
+
+  /**
+   * Bandın yüksekliğini sayfaya BİLDİR.
+   *
+   * ───────────────────────────────────────────────────────────────────────
+   * ⚠️ BANT AÇIKKEN VİTRİN KISALIR — GEREKÇE ÖLÇÜMDÜR.
+   *
+   * Vitrin `100svh` yüksekliğinde ve içeriğini dikeyde ortalıyor. Bant ise
+   * ekranın altına sabitlenmiş 236 px'lik bir kart. 1440×900'de ikisi
+   * çakışıyordu: "Portföyü incele" ve "Ücretsiz değerleme" butonları
+   * y=666–718 aralığında, bant y=649–885 aralığında. Yani sayfanın İLK
+   * EKRANINDAKİ İKİ ÇAĞRI BUTONU DA TIKLANAMIYORDU.
+   *
+   * `pointer-events` düzeltmesi tıklamanın yutulmasını çözüyor ama örtmeyi
+   * çözmüyor: buton bandın ARKASINDA kalıyor, görünmüyor. Doğru cevap
+   * vitrini bant kadar kısaltmak — ortalanan içerik yukarı kayıyor ve
+   * bandın üstünde kalıyor.
+   *
+   * ⚠️ Yükseklik SABİT YAZILAMAZ: bant, "ayrıntılı" görünümde kategori
+   * satırlarıyla birlikte iki katına çıkıyor ve dar ekranda butonlar alt
+   * alta diziliyor. Ölçülen değer yayınlanıyor, tahmin edilen değil.
+   * ───────────────────────────────────────────────────────────────────────
+   */
+  useEffect(() => {
+    const kok = document.documentElement
+    const bant = bantRef.current
+    if (!acik || bant === null) {
+      kok.style.removeProperty('--cerez-bandi-yuksekligi')
+      delete kok.dataset.cerezBandi
+      return
+    }
+
+    const yaz = () => {
+      // Kartın kendi yüksekliği + sarmalayıcının alt boşluğu.
+      const yukseklik = Math.ceil(bant.getBoundingClientRect().height) + 32
+      kok.style.setProperty('--cerez-bandi-yuksekligi', `${yukseklik}px`)
+    }
+    yaz()
+    /**
+     * ⚠️ AYRICA BİR DURUM BAYRAĞI — YALNIZCA YÜKSEKLİK YETMİYOR.
+     *
+     * Vitrini bant kadar kısaltmak, içeriği o boya sığdığı sürece çalışıyor.
+     * 1280×720'de sığmıyor: vitrinin kendi dikey boşluğu (py-24 = 192 px) ve
+     * kaydırma göstergesi, kalan 484 px'i tek başına aşıyor. Ölçüm bunu
+     * gösterdi — kısaltma sonrası 1440×900 düzeldi ama 1280×720 ve mobil
+     * hâlâ örtülüydü.
+     *
+     * Bayrak açıkken vitrin kendi boşluğunu da daraltıyor. Bant kapanınca
+     * her şey aynen geri geliyor; yani bu bir kalıcı tasarım değişikliği
+     * değil, bandın açık olduğu birkaç saniyeye ait bir uyarlama.
+     */
+    kok.dataset.cerezBandi = 'acik'
+
+    const gozcu = new ResizeObserver(yaz)
+    gozcu.observe(bant)
+    return () => {
+      gozcu.disconnect()
+      kok.style.removeProperty('--cerez-bandi-yuksekligi')
+      delete kok.dataset.cerezBandi
+    }
+  }, [acik, ayrintili])
 
   useEffect(() => {
     const ac = () => {
@@ -69,9 +131,22 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
       aria-modal="false"
       aria-labelledby={basligiId}
       data-yazdirma="gizle"
-      className="fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4"
+      /**
+       * ⚠️ SARMALAYICI TIKLAMA YUTMAZ — `pointer-events-none` ZORUNLU.
+       *
+       * Bu katman tam genişlikte (`inset-x-0`) ama GÖRÜNEN kart ortada ve
+       * en fazla 48rem. Aradaki fark şeffaftır: hiçbir şey çizmez, her şeyi
+       * engellerdi. 31 Ağustos 2026'da ölçüldü — bant 1425 px genişliğinde
+       * ve 236 px yüksekliğinde bir tıklama duvarı kuruyordu; hero'nun iki
+       * çağrı butonu tam onun altında kalıyordu ve tıklamalar bandın
+       * başlığına gidiyordu.
+       */
+      className="pointer-events-none fixed inset-x-0 bottom-0 z-50 p-3 sm:p-4"
     >
-      <div className="border-kenar-guclu bg-yuzey shadow-kalkik rounded-kart mx-auto max-w-3xl border-[0.5px] p-5 sm:p-6">
+      <div
+        ref={bantRef}
+        className="border-kenar-guclu bg-yuzey shadow-kalkik rounded-kart pointer-events-auto mx-auto max-w-3xl border-[0.5px] p-4 sm:p-6"
+      >
         <h2 id={basligiId} className="text-baslik-3 leading-snug">
           Çerez tercihleriniz
         </h2>
@@ -110,14 +185,30 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
           </fieldset>
         ) : null}
 
-        <div className="mt-5 flex flex-col gap-2 sm:flex-row-reverse sm:items-center">
-          <Buton onClick={() => kaydet({ analitik: true, pazarlama: true })} tamGenislik>
+        {/*
+          ⚠️ BUTONLAR MOBİLDE DE YAN YANA — ÖLÇÜLMÜŞ SEBEP.
+
+          Alt alta dizildiklerinde bant 390×844'te 397 px oluyordu: ekranın
+          %47'si. O yükseklikte bant, kaydırılan her şeyin üstünü örtüyor ve
+          vitrinin çağrı butonları hiçbir kaydırma konumunda açığa
+          çıkmıyordu. Yan yana dizilim bandı ~240 px'e indiriyor.
+
+          ⚠️ Reddetme "Tümünü kabul et" ile AYNI SATIRDA ve aynı ağırlıkta:
+          onayın geçerli olması için reddetmek kabul etmek kadar kolay
+          olmalı. Sıra ters (`row-reverse`) çünkü kabul sağda durmalı ama
+          okuma sırasında önce reddetme geliyor.
+        */}
+        <div className="mt-4 flex flex-wrap items-center gap-2 sm:mt-5 sm:flex-row-reverse">
+          <Buton
+            onClick={() => kaydet({ analitik: true, pazarlama: true })}
+            sinifAdi="flex-1 sm:flex-none"
+          >
             Tümünü kabul et
           </Buton>
           <Buton
             gorunum="ikincil"
             onClick={() => kaydet({ analitik: false, pazarlama: false })}
-            tamGenislik
+            sinifAdi="flex-1 sm:flex-none"
           >
             Yalnızca zorunlu çerezler
           </Buton>
@@ -127,17 +218,11 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
               gorunum="hayalet"
               onClick={() => kaydet({ analitik, pazarlama })}
               sinifAdi="sm:mr-auto"
-              tamGenislik
             >
               Seçimimi kaydet
             </Buton>
           ) : (
-            <Buton
-              gorunum="hayalet"
-              onClick={() => setAyrintili(true)}
-              sinifAdi="sm:mr-auto"
-              tamGenislik
-            >
+            <Buton gorunum="hayalet" onClick={() => setAyrintili(true)} sinifAdi="sm:mr-auto">
               Tercihleri özelleştir
             </Buton>
           )}

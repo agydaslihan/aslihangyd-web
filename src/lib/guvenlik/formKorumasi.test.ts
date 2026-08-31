@@ -95,6 +95,10 @@ const HERKESE_ACIK = new Set([
 const PANEL_ARKASI: Record<string, string> = {
   'lib/sihirbaz/eylemler.ts': 'Portföy giriş sihirbazı — yalnızca panel kullanıcısı.',
   'lib/osm/eylemler.ts': 'OSM içe aktarma — yalnızca panel kullanıcısı.',
+  'lib/sihirbaz/gorselEylemleri.ts':
+    'Sihirbazın görsel yüklemesi — yalnızca panel kullanıcısı; medya koleksiyonuna yazıyor.',
+  'lib/sihirbaz/oneriEylemleri.ts':
+    'Benzer ilan önerileri — yalnızca panel kullanıcısı; hiçbir şey YAZMIYOR, okuyor.',
   'lib/gozlem/eylemler.ts': 'Gözlem girişi ve CSV içe aktarma — yalnızca panel kullanıcısı.',
   'lib/gozlem/iceAktarmaCekirdegi.ts':
     'Yukarıdakinin çekirdeği; kendi kapısı yok, çağıranınki geçerli.',
@@ -106,6 +110,11 @@ const PANEL_ARKASI: Record<string, string> = {
     'Ziyaretçiye açık detay çağrısı ayrı dosyada: lib/google/detayEylemi.ts.',
   'lib/rayic/eylemler.ts':
     'Rayiç bedel CSV içe aktarma — yalnızca YÖNETİCİ (alım maliyeti hesabını besliyor).',
+  'lib/mahalle/rakamEylemleri.ts':
+    'Mahalle rakamları CSV içe aktarma — yalnızca YÖNETİCİ (m², kira ve çarpan ' +
+    'yatırım skorunu ve sitedeki her ortalamayı besliyor).',
+  'lib/mahalle/rakamIceAktarmaCekirdegi.ts':
+    'Yukarıdakinin çekirdeği; kendi kapısı yok, çağıranınki geçerli.',
   'app/(payload)/layout.tsx': 'Payload panelinin kendi düzeni; form eylemi değil.',
 }
 

@@ -2,26 +2,27 @@
 
 import { useState, useTransition } from 'react'
 
-import { ALAN_TANIMLARI, ornekCsv, type SutunEslemesi } from '@/lib/rayic/iceAktarma'
-import { rayicIceAktar, rayicOnizle } from '@/lib/rayic/eylemler'
-import type { IceAktarmaSonucu, OnizlemeSonucu } from '@/lib/rayic/iceAktarmaCekirdegi'
-import { RAYIC_KAYNAKLARI, type RayicKaynagi } from '@/lib/rayic/tipler'
+import { mahalleRakamlariniAktar, mahalleRakamlariniOnizle } from '@/lib/mahalle/rakamEylemleri'
+import { ALAN_TANIMLARI, ornekCsv, type SutunEslemesi } from '@/lib/mahalle/rakamIceAktarma'
+import type { IceAktarmaSonucu, OnizlemeSonucu } from '@/lib/mahalle/rakamIceAktarmaCekirdegi'
 
 /**
- * Rayiç bedel CSV sihirbazı — önce gör, sonra yaz.
+ * Mahalle rakamları CSV sihirbazı — önce gör, sonra yaz.
  *
- * ⚠️ Sütun eşlemesi TAHMİN edilir ve kullanıcıya gösterilir. Belediye
- * tablolarının başlıkları standart değil; sabit bir düzen dayatmak içe
+ * ⚠️ Sütun eşlemesi TAHMİN edilir ve kullanıcıya gösterilir. Elle tutulan
+ * tabloların başlıkları standart değil; sabit bir düzen dayatmak içe
  * aktarmayı hiç kullanılmayacak bir özelliğe çevirirdi.
  *
- * ⚠️ Hatalı satır sessizce atlanmaz: sebebi yazılır ve sayılır.
+ * ⚠️ Uyarılı satır AKTARILIR. Gözlem sayısı eşiğin altındaki bir mahalle
+ * engellenmiyor — Aslıhan bilerek girebilir. Ama görmeden giremez: satır
+ * sarı işaretleniyor, sebebi yazılıyor ve rakam sitede "tahmini" olarak
+ * görünüyor.
  */
-export function RayicSihirbazi() {
+export function RakamSihirbazi() {
   const [csvMetni, setCsvMetni] = useState('')
   const [dosyaAdi, setDosyaAdi] = useState<string | null>(null)
-  const [yil, setYil] = useState<number>(new Date().getFullYear())
-  const [kaynak, setKaynak] = useState<RayicKaynagi>('belediye')
-  const [tabloTarihi, setTabloTarihi] = useState('')
+  const [tarih, setTarih] = useState('')
+  const [kaynak, setKaynak] = useState('')
 
   const [onizleme, setOnizleme] = useState<OnizlemeSonucu | null>(null)
   const [eslesme, setEslesme] = useState<SutunEslemesi | null>(null)
@@ -30,9 +31,8 @@ export function RayicSihirbazi() {
   const [bekliyor, basla] = useTransition()
 
   const ayarlar = {
-    varsayilanYil: yil,
-    varsayilanKaynak: kaynak,
-    guncellemeTarihi: tabloTarihi === '' ? null : tabloTarihi,
+    varsayilanTarih: tarih === '' ? null : tarih,
+    varsayilanKaynak: kaynak.trim() === '' ? null : kaynak.trim(),
   }
 
   async function dosyaSecildi(dosya: File | undefined): Promise<void> {
@@ -47,7 +47,7 @@ export function RayicSihirbazi() {
   function onizle(yeniEslesme?: SutunEslemesi): void {
     setSonuc(null)
     basla(async () => {
-      const cevap = await rayicOnizle({
+      const cevap = await mahalleRakamlariniOnizle({
         csvMetni,
         ayarlar,
         eslesme: yeniEslesme ?? eslesme ?? undefined,
@@ -59,7 +59,7 @@ export function RayicSihirbazi() {
 
   function aktar(): void {
     basla(async () => {
-      const cevap = await rayicIceAktar({
+      const cevap = await mahalleRakamlariniAktar({
         csvMetni,
         ayarlar,
         eslesme: eslesme ?? undefined,
@@ -94,18 +94,14 @@ export function RayicSihirbazi() {
    * ⚠️ Sunucudan çekilmiyor: içerik zaten kodda ve tek doğru kaynak
    * `ornekCsv()`. Ayrı bir uç eklemek, örnek dosyanın sütun adlarıyla
    * ayrıştırıcının tanıdığı adların ayrışmasına kapı açardı.
-   *
-   * ⚠️ BOM (`\ufeff`) şart: Excel BOM'suz UTF-8 dosyayı Latin-1 sanıp
-   * Türkçe karakterleri bozuyor ve indirdiği örneği açan kişi "Muhittin"
-   * yerine "MuhÄ±ttÄ±n" görüyor.
    */
   function ornegiIndir(): void {
     const bag = URL.createObjectURL(
-      new Blob(['\ufeff' + ornekCsv()], { type: 'text/csv;charset=utf-8' }),
+      new Blob(['﻿' + ornekCsv()], { type: 'text/csv;charset=utf-8' }),
     )
     const a = document.createElement('a')
     a.href = bag
-    a.download = 'rayic-bedel-ornek.csv'
+    a.download = 'mahalle-rakamlari-ornek.csv'
     a.click()
     URL.revokeObjectURL(bag)
   }
@@ -114,15 +110,17 @@ export function RayicSihirbazi() {
     (satir) => satir.veri !== null && !atlanacak.has(satir.satirNo),
   ).length
 
+  const sayiYaz = (deger: number | null | undefined) =>
+    typeof deger === 'number' ? deger.toLocaleString('tr-TR') : '—'
+
   return (
     <>
       <section className="aktarim-adim">
         <h2>1 · Dosya</h2>
 
         <p className="aktarim-not">
-          Sütun adlarının nasıl yazılması gerektiğini görmek için örnek dosyayı indirin; başlıkları
-          değiştirmeden kendi rakamlarınızı yazabilirsiniz. Sayılar <code>12.500,50</code> ya da{' '}
-          <code>12,500.50</code> biçiminde olabilir — ikisi de okunur.
+          Hangi sütun adlarının tanındığını görmek için örnek dosyayı indirin; başlıkları
+          değiştirmeden kendi rakamlarınızı yazabilirsiniz.
         </p>
 
         <button type="button" className="aktarim-buton" onClick={ornegiIndir}>
@@ -138,7 +136,8 @@ export function RayicSihirbazi() {
           />
           <em>
             Excel&apos;de &quot;Farklı Kaydet → CSV UTF-8&quot;. Noktalı virgülle ayrılmış Türkçe
-            Excel çıktısı da okunur.
+            Excel çıktısı da okunur. Sayılar <code>1.234,56</code> ya da <code>1,234.56</code>{' '}
+            biçiminde olabilir — ikisi de tanınır.
           </em>
         </label>
 
@@ -151,7 +150,7 @@ export function RayicSihirbazi() {
               setDosyaAdi(null)
             }}
             placeholder={
-              'Mahalle;Sokak;Bina m² rayiç;Arsa m² rayiç\nMuhittin;Atatürk Cad.;9.500;6.200'
+              'Mahalle;Ortalama m² satış;Ortalama kira;Gözlem sayısı\nMuhittin;32.500;12.400;24'
             }
           />
         </label>
@@ -164,37 +163,23 @@ export function RayicSihirbazi() {
         </p>
 
         <label className="aktarim-alan">
-          <span>Yıl</span>
-          <input
-            type="number"
-            min={1990}
-            max={2100}
-            value={yil}
-            onChange={(olay) => setYil(Number(olay.target.value))}
-          />
-          <em>Rayiç bedelin ait olduğu vergi yılı. Yılsız rakam anlamsızdır.</em>
+          <span>Veriler hangi tarih itibarıyla</span>
+          <input type="date" value={tarih} onChange={(olay) => setTarih(olay.target.value)} />
+          <em>
+            &quot;Veriler [tarih] itibarıyladır&quot; ibaresi bundan üretilir. Tarihsiz bir
+            ortalama, ne zamanın ortalaması olduğu bilinmeyen bir rakamdır.
+          </em>
         </label>
 
         <label className="aktarim-alan">
-          <span>Kaynak</span>
-          <select value={kaynak} onChange={(olay) => setKaynak(olay.target.value as RayicKaynagi)}>
-            {RAYIC_KAYNAKLARI.map((secenek) => (
-              <option key={secenek.value} value={secenek.value}>
-                {secenek.label}
-              </option>
-            ))}
-          </select>
-          <em>Sitede rakamın yanında aynen gösterilir.</em>
-        </label>
-
-        <label className="aktarim-alan">
-          <span>Tabloyu aldığınız tarih (isteğe bağlı)</span>
+          <span>Veri kaynağı</span>
           <input
-            type="date"
-            value={tabloTarihi}
-            onChange={(olay) => setTabloTarihi(olay.target.value)}
+            type="text"
+            value={kaynak}
+            onChange={(olay) => setKaynak(olay.target.value)}
+            placeholder="Örn. Kendi gözlemlerimiz, Ağustos 2026"
           />
-          <em>&quot;Veriler [tarih] itibarıyladır&quot; ibaresi bundan üretilir.</em>
+          <em>Mahalle sayfasında rakamların yanında aynen gösterilir.</em>
         </label>
 
         <button
@@ -270,7 +255,7 @@ export function RayicSihirbazi() {
           <div className="aktarim-ozet">
             <span className="aktarim-rozet aktarim-rozet--yeni">{onizleme.hazirSayisi} hazır</span>
             <span className="aktarim-rozet aktarim-rozet--korunacak">
-              {onizleme.uyariliSayisi} uyarılı
+              {onizleme.uyariliSayisi} uyarılı (aktarılır, işaretlenir)
             </span>
             <span className="aktarim-rozet">{onizleme.hataliSayisi} hatalı (aktarılmayacak)</span>
           </div>
@@ -282,10 +267,12 @@ export function RayicSihirbazi() {
                   <th scope="col">Satır</th>
                   <th scope="col">Aktar</th>
                   <th scope="col">Mahalle</th>
-                  <th scope="col">Sokak</th>
-                  <th scope="col">Yıl</th>
-                  <th scope="col">Bina ₺/m²</th>
-                  <th scope="col">Arsa ₺/m²</th>
+                  <th scope="col">m² satış</th>
+                  <th scope="col">Kira</th>
+                  <th scope="col">Çarpan</th>
+                  <th scope="col">Değişim</th>
+                  <th scope="col">Nüfus</th>
+                  <th scope="col">n</th>
                   <th scope="col">Durum</th>
                 </tr>
               </thead>
@@ -315,11 +302,13 @@ export function RayicSihirbazi() {
                       )}
                     </td>
                     <td>{satir.veri?.mahalleAdi ?? '—'}</td>
-                    <td>{satir.veri?.sokak ?? '—'}</td>
-                    <td>{satir.veri?.yil ?? '—'}</td>
-                    <td>{satir.veri?.metrekareRayicBedel?.toLocaleString('tr-TR') ?? '—'}</td>
-                    <td>{satir.veri?.arsaRayicBedel?.toLocaleString('tr-TR') ?? '—'}</td>
-                    <td style={{ whiteSpace: 'normal', minWidth: '20rem' }}>
+                    <td>{sayiYaz(satir.veri?.ortalamaM2Satis)}</td>
+                    <td>{sayiYaz(satir.veri?.ortalamaKira)}</td>
+                    <td>{sayiYaz(satir.veri?.kiraCarpani)}</td>
+                    <td>{sayiYaz(satir.veri?.degisim12Ay)}</td>
+                    <td>{sayiYaz(satir.veri?.nufus)}</td>
+                    <td>{sayiYaz(satir.veri?.gozlemSayisi)}</td>
+                    <td style={{ whiteSpace: 'normal', minWidth: '22rem' }}>
                       {[...satir.hatalar, ...satir.uyarilar].join(' ') || 'hazır'}
                     </td>
                   </tr>
@@ -340,7 +329,7 @@ export function RayicSihirbazi() {
             onClick={aktar}
             disabled={bekliyor || yazilacak === 0 || (onizleme.eksikAlanlar?.length ?? 0) > 0}
           >
-            {bekliyor ? 'Aktarılıyor…' : `${yazilacak} satırı aktar`}
+            {bekliyor ? 'Aktarılıyor…' : `${yazilacak} mahalleyi güncelle`}
           </button>
         </section>
       ) : null}
@@ -350,8 +339,8 @@ export function RayicSihirbazi() {
           <h2>Sonuç</h2>
           {sonuc.basarili ? (
             <p className="aktarim-basari">
-              {sonuc.olusturulan} yeni kayıt açıldı, {sonuc.guncellenen} kayıt güncellendi,{' '}
-              {sonuc.atlanan} satır elendi, {sonuc.hatali} satır hatalı olduğu için aktarılmadı.
+              {sonuc.guncellenen} mahalle güncellendi, {sonuc.atlanan} satır elendi, {sonuc.hatali}{' '}
+              satır hatalı olduğu için aktarılmadı.
             </p>
           ) : (
             <p className="aktarim-hata">{sonuc.genelHata}</p>

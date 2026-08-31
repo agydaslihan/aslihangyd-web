@@ -28,7 +28,15 @@ import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
 import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
-import { konumuCoz } from '@/lib/veri/ilgiNoktalari'
+import { MiniHarita } from '@/components/mahalle/MiniHarita'
+import type { HaritaNoktasi } from '@/components/harita/Harita3B'
+import { geometriCoz } from '@/lib/harita/geometri'
+import { haritaStilAdresi } from '@/lib/harita/sunucu'
+import { KATMAN_PORTFOY, POI_GRUPLARI, noktaKatmanTanimlari } from '@/lib/harita/noktaKatmanlari'
+import { kusUcusuMesafe } from '@/lib/eslestirme/motor'
+import { POI_TIPLERI } from '@/collections/IlgiNoktalari'
+import { bolumAcikMi } from '@/lib/veri/siteBolumleri'
+import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
 import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
@@ -66,8 +74,24 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
   if (!mahalle) notFound()
 
-  const [ilanlar, digerMahalleler, kurumsal, cevre, googlePlacesAcik, rayic] = await Promise.all([
-    mahalledekiIlanlariGetir(mahalle.id, 3),
+  const [
+    mahalleIlanlari,
+    digerMahalleler,
+    kurumsal,
+    cevre,
+    googlePlacesAcik,
+    rayic,
+    poiler,
+    haritaAcik,
+  ] = await Promise.all([
+    /**
+     * ⚠️ 50, 3 DEĞİL — ama kartlarda yine 3 gösteriliyor.
+     *
+     * Mini harita bu mahalledeki TÜM portföyü nokta olarak gösteriyor;
+     * kart listesi ise üç taneyle sınırlı. İki ayrı sorgu atmak, mahalle
+     * sayfasına her istekte fazladan bir tur eklerdi.
+     */
+    mahalledekiIlanlariGetir(mahalle.id, 50),
     karsilastirilabilirMahalleler(mahalle.slug, 3),
     kurumsalBilgileriGetir(),
     // Merkez noktası girilmemişse sorgu hiç çalışmaz, boş dizi döner.
@@ -76,11 +100,83 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
     googlePlacesEtkinMi(),
     // Rayiç bedel girilmemişse `null` döner; bileşen boş durumunu gösterir.
     mahalleRayiciGetir(mahalle.id),
+    ilgiNoktalariniGetir(),
+    /**
+     * ⚠️ Mini harita, `/harita` ile AYNI bölüm anahtarına bağlı. Harita
+     * bölümü kapatıldığında tam ekran harita 404 verip mahalle sayfasındaki
+     * harita çizilmeye devam etseydi, anahtarın ne yaptığı belirsizleşirdi.
+     */
+    bolumAcikMi('harita'),
   ])
+
+  const ilanlar = mahalleIlanlari.slice(0, 3)
 
   /** Güneş haritası için mahalle merkezi. */
   const mahalleKonumu = konumuCoz(mahalle.merkez)
 
+  /* ── Mini harita verisi ─────────────────────────────────────────────── */
+
+  /**
+   * ⚠️ POI'LER MAHALLE ÇEVRESİYLE SINIRLI.
+   *
+   * Çorlu'nun tamamındaki ilgi noktalarını tek bir mahallenin haritasına
+   * basmak, çerçevenin dışında kalan yüzlerce noktayı boşuna çizmek olurdu.
+   * Yarıçap mahalle ölçeğinden biraz geniş: mahallenin hemen dışındaki
+   * hastane ya da OSB, o mahallenin değer sürücüsüdür ve haritada
+   * görünmelidir.
+   */
+  const POI_YARICAPI_METRE = 3_000
+
+  const mahalleSiniri = geometriCoz(mahalle.sinir)
+  // ⚠️ `mahalleKonumu` yukarıda zaten çözüldü ({ boylam, enlem }); ikinci
+  // bir çözüm, iki farklı biçimin (tuple / nesne) karışmasına açık kapı.
+
+  const haritaNoktalari: HaritaNoktasi[] = []
+
+  if (mahalleKonumu !== null) {
+    for (const poi of poiler) {
+      const grup = POI_GRUPLARI[poi.tip]
+      const konum = konumuCoz(poi.konum)
+      if (grup === undefined || konum === null) continue
+      if (kusUcusuMesafe(mahalleKonumu, konum) > POI_YARICAPI_METRE) continue
+
+      haritaNoktalari.push({
+        id: `poi-${poi.id}`,
+        ad: poi.ad,
+        katman: grup,
+        boylam: konum.boylam,
+        enlem: konum.enlem,
+        altBilgi: POI_TIPLERI.find((tip) => tip.value === poi.tip)?.label,
+      })
+    }
+  }
+
+  for (const ilan of mahalleIlanlari) {
+    const konum = konumuCoz(ilan.konum)
+    if (konum === null) continue
+
+    haritaNoktalari.push({
+      id: `ilan-${ilan.id}`,
+      ad: ilan.baslik,
+      katman: KATMAN_PORTFOY,
+      boylam: konum.boylam,
+      enlem: konum.enlem,
+      adres: `/portfoy/${ilan.slug}`,
+      altBilgi: paraYaz(ilan.fiyat, ilan.paraBirimi ?? 'TRY') ?? 'Fiyat görüşülür',
+    })
+  }
+
+  const haritaKatmanlari = noktaKatmanTanimlari(
+    (katman) => haritaNoktalari.filter((nokta) => nokta.katman === katman).length,
+  )
+
+  /**
+   * ⚠️ HARİTA YALNIZCA ÇİZECEK BİR ŞEY VARSA. Sınır da merkez de yoksa
+   * boş bir gri dikdörtgen çizmek yerine, neyin eksik olduğunu söyleyen
+   * mevcut boş durum kalıyor.
+   */
+  const haritaCizilebilir =
+    haritaAcik && (mahalleSiniri !== null || mahalleKonumu !== null) && haritaStilAdresi() !== null
   /** 360° panorama — yüklenmişse dış servis adresinin önüne geçer. */
   const turPanoramasi = medyaCoz(mahalle.sanalTurPanoramasi)
 
@@ -245,12 +341,29 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                   />
                 ) : null}
 
-                <YakindaBolumu
-                  oran="aspect-16/9"
-                  ikon={<KonumIkon width={30} height={30} />}
-                  baslik="Etkileşimli harita hazırlanıyor"
-                  aciklama="Yukarıdaki noktalar, mahalle sınırı ve katman filtreleriyle birlikte harita üzerinde de gösterilecek."
-                />
+                {haritaCizilebilir ? (
+                  <MiniHarita
+                    stilAdresi={haritaStilAdresi()}
+                    mahalle={{
+                      slug: mahalle.slug,
+                      ad: mahalle.ad,
+                      merkez: mahalleKonumu ? [mahalleKonumu.boylam, mahalleKonumu.enlem] : null,
+                      sinir: mahalleSiniri,
+                      /* ⚠️ Rakamları girilmemiş mahalle KESİK ÇİZGİYLE
+                         çiziliyor — haritanın kendi dili. */
+                      veriVar: typeof mahalle.ortalamaM2Satis === 'number',
+                    }}
+                    noktalar={haritaNoktalari}
+                    katmanlar={haritaKatmanlari}
+                  />
+                ) : (
+                  <YakindaBolumu
+                    oran="aspect-16/9"
+                    ikon={<KonumIkon width={30} height={30} />}
+                    baslik="Harita bu mahalle için çizilemiyor"
+                    aciklama="Mahallenin sınırı ve merkez noktası girildiğinde harita burada açılır."
+                  />
+                )}
               </section>
             </Sahne>
 
@@ -297,7 +410,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                     sade
                     eylem={
                       whatsapp ? (
-                        <Buton href={whatsapp} dis gorunum="ikincil">
+                        <Buton href={whatsapp} dis gorunum="whatsapp">
                           <WhatsappIkon width={16} height={16} />
                           Bu mahalleyi bize sorun
                         </Buton>

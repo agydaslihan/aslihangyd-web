@@ -113,34 +113,73 @@ describe('WhatsApp jetonları', () => {
     expect(yuvalar).not.toMatch(/whatsapp/i)
   })
 
-  it('yeşil YALNIZCA buton bileşeninde ve jeton dosyasında geçiyor', () => {
+  it('yeşili kullanan her yer ÜÇÜNÜ BİRDEN kullanıyor', () => {
     /**
-     * ⚠️ Bir bileşen `bg-[color:var(--color-whatsapp-yesil)]` yazdığı anda
-     * üzerindeki metnin mürekkep olması gerektiğini de bilmek zorunda
-     * kalıyor. O bilgi tek yerde dursun: `Buton`un `whatsapp` görünümü.
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ BU TEST BİR KEZ YANLIŞ YAZILDI VE BİR ARIZAYI ÜRETTİ.
+     *
+     * İlk hâli "yeşil YALNIZCA `Buton` bileşeninde geçebilir" diyordu.
+     * Gerekçesi makuldü — üzerindeki metnin mürekkep olması gerektiği
+     * bilgisi tek yerde dursun. Sonucu değildi: yüzen WhatsApp düğmesi bir
+     * `Buton` DEĞİL (sabit, dairesel bir bağlantı) ve kural onu jetondan
+     * men etti. #92 birleşti, jetonlar yayına çıktı ve sitedeki en görünür
+     * WhatsApp dokunuş noktası nötr cam yüzeyinde kaldı: "hâlâ eski".
+     *
+     * Doğru değişmez "nerede" değil, "birlikte": yeşil zemini kullanan her
+     * yer, üzerindeki ön planı ve kenarlığı da aynı üçlüden almak zorunda.
+     * Yeni bir WhatsApp yüzeyi eklemek artık serbest — eksik eklemek değil.
+     * ─────────────────────────────────────────────────────────────────────
      */
-    const izinli = new Set([
+    const adaylar = [
       'components/ui/Buton.tsx',
-      'app/(site)/globals.css',
-      'lib/tasarim/whatsapp.test.ts',
-    ])
-    const ihlaller: string[] = []
-
-    const tara = (goreli: string) => {
-      const tam = path.join(KOK, goreli)
-      const icerik = readFileSync(tam, 'utf8')
-      if (/whatsapp-yesil/.test(icerik) && !izinli.has(goreli)) ihlaller.push(goreli)
-    }
-
-    for (const goreli of [
+      'components/duzen/YuzenWhatsapp.tsx',
       'components/duzen/Baslik.tsx',
       'components/duzen/UstSerit.tsx',
-      'components/duzen/YuzenWhatsapp.tsx',
+      'components/duzen/Altbilgi.tsx',
       'app/(site)/page.tsx',
-    ]) {
-      tara(goreli)
+      'app/(site)/iletisim/page.tsx',
+    ]
+    const eksikler: string[] = []
+
+    for (const goreli of adaylar) {
+      const icerik = readFileSync(path.join(KOK, goreli), 'utf8')
+      if (!icerik.includes('--color-whatsapp-yesil')) continue
+      if (!icerik.includes('--color-whatsapp-uzeri')) eksikler.push(`${goreli}: ön plan yok`)
+      if (!icerik.includes('--color-whatsapp-kenar')) eksikler.push(`${goreli}: kenarlık yok`)
     }
 
-    expect(ihlaller, 'WhatsApp yeşili Buton dışında yazılmış').toEqual([])
+    expect(eksikler, 'WhatsApp yeşili eksik eşlikçiyle kullanılmış').toEqual([])
+  })
+
+  it('yüzen düğme marka yeşilini KULLANIYOR — jeton üretip bağlamamak sayılmaz', () => {
+    /**
+     * ⚠️ Bu iddia doğrudan bir kullanıcı şikâyetinden doğdu: "PR birleşti
+     * ama canlıda değişiklik yok". Jeton canlıdaydı; onu kullanan hiçbir
+     * görünür yüzey yoktu. Bir jetonun tanımlı olması, uygulanmış olması
+     * demek değil.
+     */
+    const yuzen = readFileSync(path.join(KOK, 'components/duzen/YuzenWhatsapp.tsx'), 'utf8')
+    expect(yuzen).toContain('--color-whatsapp-yesil')
+    // Eski nötr cam yüzey geri gelmesin.
+    expect(yuzen).not.toMatch(/'cam text-metin fixed/)
+  })
+
+  it('gerçek WhatsApp çağrıları `whatsapp` görünümünü kullanıyor', () => {
+    /**
+     * ⚠️ Görünüm yalnızca stil rehberinde ve eşleştirme testinde
+     * kullanılıyordu; ilan, mahalle, iletişim ve ticari sayfalarındaki
+     * asıl çağrılar varsayılan altın butondaydı.
+     */
+    const sayfalar = [
+      'app/(site)/portfoy/[slug]/page.tsx',
+      'app/(site)/mahalleler/[slug]/page.tsx',
+      'app/(site)/iletisim/page.tsx',
+      'app/(site)/ticari/page.tsx',
+    ]
+    const bagsizlar = sayfalar.filter((goreli) => {
+      const icerik = readFileSync(path.join(KOK, goreli), 'utf8')
+      return icerik.includes('href={whatsapp}') && !icerik.includes('gorunum="whatsapp"')
+    })
+    expect(bagsizlar, 'WhatsApp çağrısı var ama görünümü bağlanmamış').toEqual([])
   })
 })
