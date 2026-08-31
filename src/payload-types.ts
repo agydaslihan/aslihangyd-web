@@ -125,6 +125,7 @@ export interface Config {
     'menu-duzeni': MenuDuzeni;
     'portfoy-bolumleri': PortfoyBolumleri;
     'danisman-ol': DanismanOl;
+    'corlu-anlatisi': CorluAnlatisi;
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
     'bakim-durumu': BakimDurumu;
@@ -143,6 +144,7 @@ export interface Config {
     'menu-duzeni': MenuDuzeniSelect<false> | MenuDuzeniSelect<true>;
     'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
     'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
+    'corlu-anlatisi': CorluAnlatisiSelect<false> | CorluAnlatisiSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
     'bakim-durumu': BakimDurumuSelect<false> | BakimDurumuSelect<true>;
@@ -2645,6 +2647,48 @@ export interface DanismanOl {
   createdAt?: string | null;
 }
 /**
+ * ⚠️ HER İDDİANIN KAYNAĞI ZORUNLU. Bu bölüm tüm mahalle sayfalarında görünüyor ve burası bir yatırım sitesi. Kaynağı olmayan cümle yazmayın; emin olmadığınız şeyi atlayın. "Muhtemelen", "genelde", "bilinir" gibi ifadeler kullanmayın — bir rakam veriyorsanız yılını ve kaynağını yazın.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "corlu-anlatisi".
+ */
+export interface CorluAnlatisi {
+  id: number;
+  /**
+   * Kapatılırsa mahalle sayfalarında bu bölüm hiç çizilmez.
+   */
+  acik?: boolean | null;
+  baslik?: string | null;
+  giris?: string | null;
+  /**
+   * ⚠️ Her başlığın en az bir kaynağı olmalı. Kaynaksız bir başlık sitede GÖSTERİLMEZ — kod seviyesinde engellenir.
+   */
+  bloklar?:
+    | {
+        baslik: string;
+        /**
+         * Paragrafları boş satırla ayırın.
+         */
+        metin: string;
+        kaynaklar: {
+          ad: string;
+          /**
+           * Tam adres (https://...). Ekranda bağlantı olarak görünür.
+           */
+          adres: string;
+          /**
+           * Örn: 31 Ağustos 2026. Rakam veren kaynaklarda zorunlu sayılır.
+           */
+          erisim?: string | null;
+          id?: string | null;
+        }[];
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Değerleme modelinin katsayıları. Girilmeyen katsayı hesaba katılmaz — tahmini bir değer uydurulmaz. Katsayılar çarpımsaldır: 1,00 etkisiz demektir.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3095,6 +3139,33 @@ export interface DanismanOlSelect<T extends boolean = true> {
     | {
         gorsel?: T;
         aciklama?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "corlu-anlatisi_select".
+ */
+export interface CorluAnlatisiSelect<T extends boolean = true> {
+  acik?: T;
+  baslik?: T;
+  giris?: T;
+  bloklar?:
+    | T
+    | {
+        baslik?: T;
+        metin?: T;
+        kaynaklar?:
+          | T
+          | {
+              ad?: T;
+              adres?: T;
+              erisim?: T;
+              id?: T;
+            };
         id?: T;
       };
   updatedAt?: T;

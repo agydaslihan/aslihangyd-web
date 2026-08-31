@@ -28,6 +28,7 @@ import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
 import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
+import { CorluAnlatisi } from '@/components/mahalle/CorluAnlatisi'
 import { MiniHarita } from '@/components/mahalle/MiniHarita'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
 import { geometriCoz } from '@/lib/harita/geometri'
@@ -41,6 +42,7 @@ import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 import { medyaCoz } from '@/lib/medya/coz'
+import { corluAnlatisiniGetir } from '@/lib/veri/corluAnlatisi'
 
 type SayfaOzellikleri = { params: Promise<{ slug: string }> }
 
@@ -83,6 +85,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
     rayic,
     poiler,
     haritaAcik,
+    corluAnlatisi,
   ] = await Promise.all([
     /**
      * ⚠️ 50, 3 DEĞİL — ama kartlarda yine 3 gösteriliyor.
@@ -107,6 +110,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
      * harita çizilmeye devam etseydi, anahtarın ne yaptığı belirsizleşirdi.
      */
     bolumAcikMi('harita'),
+    corluAnlatisiniGetir(),
   ])
 
   const ilanlar = mahalleIlanlari.slice(0, 3)
@@ -390,6 +394,20 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                 </section>
               </Sahne>
             ) : null}
+
+            {/*
+              7a ── Çorlu ortak anlatısı
+
+              ⚠️ MAHALLE ANLATISINDAN ÖNCE. Ziyaretçi önce "Çorlu neden
+              değerli" sorusunun cevabını, sonra "bu mahalle neden" sorusunu
+              okuyor; tersi, mahalleyi bağlamsız anlatmak olurdu.
+
+              ⚠️ Kaynaksız blok siteye çıkmıyor; bölüm tamamen boşsa hiç
+              çizilmiyor (bkz. `corluAnlatisiniGetir`).
+            */}
+            <Sahne>
+              <CorluAnlatisi anlati={corluAnlatisi} />
+            </Sahne>
 
             {/* 7 ── Neden bu mahalle? */}
             <Sahne>
