@@ -108,9 +108,18 @@ describe('slaytlar tekrarlanmıyor', () => {
   })
 
   it('yalnızca metin kipinde slider hiç çizilmiyor', () => {
-    // Aynı koşul bunu da sağlıyor: `metin_once` değilse bant yok ve
-    // `slayt_once` değilse hero slider'ı da yok.
-    expect(sayfa).toContain("heroAcilisi === 'slayt_once' ? (")
+    /**
+     * ⚠️ İDDİA BİÇİMLENDİRİCİYE BAĞLI OLMAMALI. İlk hâl
+     * `"heroAcilisi === 'slayt_once' ? ("` arıyordu; Prettier koşulu tek
+     * satıra topladığında açılış parantezi kayboldu ve test kırıldı —
+     * kodda hiçbir şey değişmemişken.
+     *
+     * Aynı koşul iki şeyi birden sağlıyor: `slayt_once` değilse hero
+     * slider'ı yok, `metin_once` değilse bant yok. "Yalnızca metin"
+     * kipinde ikisi de sağlanıyor.
+     */
+    expect(sayfa).toMatch(/heroAcilisi === 'slayt_once' \?/)
+    expect(sayfa).toContain('<HeroBolumu ayarlar={hero} sayfaHerosu />')
   })
 })
 
