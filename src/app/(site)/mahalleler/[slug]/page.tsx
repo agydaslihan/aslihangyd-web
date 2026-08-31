@@ -29,6 +29,7 @@ import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahallel
 import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
 import { MiniHarita } from '@/components/mahalle/MiniHarita'
+import { OlgusalIskelet } from '@/components/mahalle/OlgusalIskelet'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
 import { geometriCoz } from '@/lib/harita/geometri'
 import { haritaStilAdresi } from '@/lib/harita/sunucu'
@@ -37,7 +38,9 @@ import { kusUcusuMesafe } from '@/lib/eslestirme/motor'
 import { POI_TIPLERI } from '@/collections/IlgiNoktalari'
 import { bolumAcikMi } from '@/lib/veri/siteBolumleri'
 import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
-import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
+import { corluMerkeziGetir, mahalleCevresiGetir, sanayiMesafeleri } from '@/lib/veri/yakinlik'
+import { ilceOlgulariniGetir } from '@/lib/veri/ilceOlgulari'
+import { olgusalIskelet } from '@/lib/mahalle/olgusal'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 import { medyaCoz } from '@/lib/medya/coz'
@@ -83,6 +86,8 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
     rayic,
     poiler,
     haritaAcik,
+    corluMerkezi,
+    ilceOlgusu,
   ] = await Promise.all([
     /**
      * ⚠️ 50, 3 DEĞİL — ama kartlarda yine 3 gösteriliyor.
@@ -107,12 +112,42 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
      * harita çizilmeye devam etseydi, anahtarın ne yaptığı belirsizleşirdi.
      */
     bolumAcikMi('harita'),
+    corluMerkeziGetir(),
+    ilceOlgulariniGetir(),
   ])
 
   const ilanlar = mahalleIlanlari.slice(0, 3)
 
   /** Güneş haritası için mahalle merkezi. */
   const mahalleKonumu = konumuCoz(mahalle.merkez)
+
+  /* ── Olgusal iskelet ────────────────────────────────────────────────── */
+
+  /**
+   * ⚠️ Sanayi mesafeleri AYRI SORGU ve yalnızca merkez biliniyorsa.
+   * Merkezi girilmemiş mahallede bu bölüm hiç çizilmiyor — tahmini bir
+   * koordinattan hesaplanan mesafe, yanlış olduğu belli olmayan bir sayı
+   * üretirdi.
+   */
+  const sanayiListesi =
+    mahalleKonumu === null ? [] : await sanayiMesafeleri(mahalleKonumu.boylam, mahalleKonumu.enlem)
+
+  const olgular = olgusalIskelet({
+    cevre,
+    sanayi: sanayiListesi,
+    merkezeMetre:
+      mahalleKonumu === null || corluMerkezi === null
+        ? null
+        : kusUcusuMesafe(mahalleKonumu, corluMerkezi),
+    nufus: typeof mahalle.nufus === 'number' ? mahalle.nufus : null,
+    ilceNufusu: ilceOlgusu.nufus,
+    ilceNufusuKaynagi:
+      ilceOlgusu.kaynak === null
+        ? null
+        : ilceOlgusu.yil === null
+          ? ilceOlgusu.kaynak
+          : `${ilceOlgusu.kaynak}`,
+  })
 
   /* ── Mini harita verisi ─────────────────────────────────────────────── */
 
@@ -390,6 +425,19 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
                 </section>
               </Sahne>
             ) : null}
+
+            {/*
+              6b ── Olgusal iskelet
+
+              ⚠️ MAHALLE ANLATISINDAN ÖNCE. Önce ölçülebilen, sonra
+              anlatılan: rakamı gördükten sonra okunan bir yorum,
+              yorumdan sonra gösterilen bir rakamdan daha dürüst.
+
+              ⚠️ Boşsa hiç çizilmiyor (bileşen `null` dönüyor).
+            */}
+            <Sahne>
+              <OlgusalIskelet bolumler={olgular} />
+            </Sahne>
 
             {/* 7 ── Neden bu mahalle? */}
             <Sahne>

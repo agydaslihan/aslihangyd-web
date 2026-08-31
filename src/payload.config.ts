@@ -36,6 +36,7 @@ import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
 import { BakimDurumu } from '@/globals/BakimDurumu'
 import { DanismanOl } from '@/globals/DanismanOl'
+import { IlceOlgulari } from '@/globals/IlceOlgulari'
 import { GooglePlacesKullanimi } from '@/globals/GooglePlacesKullanimi'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
 import { Hakkimizda } from '@/globals/Hakkimizda'
@@ -272,6 +273,7 @@ export default buildConfig({
     MenuDuzeni,
     PortfoyBolumleri,
     DanismanOl,
+    IlceOlgulari,
     DegerlemeAyarlari,
     EndeksAyarlari,
     BakimDurumu,

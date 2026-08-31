@@ -123,6 +123,7 @@ export interface Config {
     'menu-duzeni': MenuDuzeni;
     'portfoy-bolumleri': PortfoyBolumleri;
     'danisman-ol': DanismanOl;
+    'ilce-olgulari': IlceOlgulari;
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
     'bakim-durumu': BakimDurumu;
@@ -141,6 +142,7 @@ export interface Config {
     'menu-duzeni': MenuDuzeniSelect<false> | MenuDuzeniSelect<true>;
     'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
     'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
+    'ilce-olgulari': IlceOlgulariSelect<false> | IlceOlgulariSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
     'bakim-durumu': BakimDurumuSelect<false> | BakimDurumuSelect<true>;
@@ -2589,6 +2591,29 @@ export interface DanismanOl {
   createdAt?: string | null;
 }
 /**
+ * Mahalle sayfalarındaki "ilçe nüfusundaki payı" hesabının paydası. ⚠️ Kaynak yazılmadan rakam girmeyin.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilce-olgulari".
+ */
+export interface IlceOlgulari {
+  id: number;
+  /**
+   * ⚠️ BİNLİK AYIRICI KULLANMAYIN: sayı alanı noktayı ondalık ayırıcı sayar. Doğrusu: 306939.
+   */
+  nufus?: number | null;
+  /**
+   * Yılsız bir nüfus rakamı anlamsızdır.
+   */
+  nufusYili?: number | null;
+  /**
+   * Ekranda rakamın yanında aynen gösterilir.
+   */
+  nufusKaynagi?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Değerleme modelinin katsayıları. Girilmeyen katsayı hesaba katılmaz — tahmini bir değer uydurulmaz. Katsayılar çarpımsaldır: 1,00 etkisiz demektir.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3041,6 +3066,18 @@ export interface DanismanOlSelect<T extends boolean = true> {
         aciklama?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilce-olgulari_select".
+ */
+export interface IlceOlgulariSelect<T extends boolean = true> {
+  nufus?: T;
+  nufusYili?: T;
+  nufusKaynagi?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;
