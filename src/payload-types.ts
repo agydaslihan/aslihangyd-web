@@ -321,7 +321,7 @@ export interface Ilanlar {
    */
   gizliPortfoy?: boolean | null;
   /**
-   * Örn: "Muhittin Mahallesi'nde 3+1, 135 m², asansörlü". Rakam ve mahalle adı geçsin — arama motorunda fark eder.
+   * Örn: "Muhittin Mahallesi'nde 3+1, 135 m², asansörlü". Rakam ve mahalle adı geçsin — arama motorunda fark eder. ⚠️ CÜMLE DÜZENİNDE yazın: tamamı büyük harf başlıklar arama sonuçlarında bağırıyor gibi görünür. Büyük harfle yazılmış bir başlık sitede otomatik düzeltilir, ama kayıttaki metin sizin yazdığınız gibi kalır.
    */
   baslik: string;
   tip: 'satilik' | 'kiralik';

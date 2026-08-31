@@ -5,7 +5,15 @@ import { Feragat } from '@/components/ui/Feragat'
 import { GrafikIkon } from '@/components/ui/Ikon'
 import { Rozet } from '@/components/ui/Rozet'
 import { YakindaBolumu } from '@/components/mahalle/YakindaBolumu'
-import { ASGARI_KAPSAM, yatirimSkoruHesapla, type SkorGirdisi } from '@/lib/skorlama/yatirimSkoru'
+import {
+  ASGARI_KAPSAM,
+  BILESEN_ETIKETLERI,
+  yatirimSkoruHesapla,
+  type SkorGirdisi,
+} from '@/lib/skorlama/yatirimSkoru'
+
+/** Altı bileşen — mesajda "altı bileşenden N'i" derken payda. */
+const TOPLAM_BILESEN = Object.keys(BILESEN_ETIKETLERI).length
 
 /**
  * Mahalle yatırım skoru bloğu.
@@ -32,11 +40,21 @@ export function MahalleSkoru({
       <YakindaBolumu
         oran="aspect-auto"
         ikon={<GrafikIkon width={30} height={30} />}
-        baslik="Yatırım skoru için yeterli veri yok"
+        baslik={`Yatırım skoru: altı bileşenden ${
+          TOPLAM_BILESEN - sonuc.eksikBilesenler.length
+        }'i hazır`}
         aciklama={
-          `Skorun yayınlanabilmesi için altı bileşenin en az %${ASGARI_KAPSAM * 100}` +
-          `'lik ağırlığı gerekiyor; şu an %${Math.round(sonuc.kapsam * 100)}. ` +
+          /**
+           * ⚠️ "YETERLİ VERİ YOK" HİÇBİR ŞEY SÖYLEMİYORDU.
+           *
+           * Eski başlık bir durum bildiriyordu ama ne yapılacağını
+           * söylemiyordu. Yeni hâl üç şeyi birden veriyor: kaçının hazır
+           * olduğu, hangilerinin eksik olduğu ve eşiğin ne olduğu —
+           * yani "bir tane daha girersem görünür mü" sorusunun cevabı.
+           */
           `Eksik olanlar: ${sonuc.eksikBilesenler.join(', ')}. ` +
+          `Skorun görünmesi için ağırlığın en az %${Math.round(ASGARI_KAPSAM * 100)}'i ` +
+          `dolmalı; şu an %${Math.round(sonuc.kapsam * 100)}. ` +
           'Yarım veriyle puan vermek, puanı değersizleştirir.'
         }
       />

@@ -119,7 +119,7 @@ describe('yükseklik ölçeklemesi', () => {
   })
 
   it('en büyük değer azami yüksekliği alır', () => {
-    const sonuc = yukseklikleriHesapla([girdi('a', 100), girdi('b', 50)], yaz)
+    const sonuc = yukseklikleriHesapla([girdi('a', 100), girdi('b', 50), girdi('c', 75)], yaz)
     expect(sonuc.find((s) => s.slug === 'a')?.yukseklik).toBe(AZAMI_SUTUN_M)
   })
 
@@ -128,7 +128,10 @@ describe('yükseklik ölçeklemesi', () => {
    * dramatik gösterir — yatırım sitesinde bu doğrudan yanıltmadır.
    */
   it('ölçek sıfırdan başlar, eksen kırpılmaz', () => {
-    const sonuc = yukseklikleriHesapla([girdi('a', 44_000), girdi('b', 42_000)], yaz)
+    const sonuc = yukseklikleriHesapla(
+      [girdi('a', 44_000), girdi('b', 42_000), girdi('c', 43_000)],
+      yaz,
+    )
     const a = sonuc.find((s) => s.slug === 'a')?.yukseklik ?? 0
     const b = sonuc.find((s) => s.slug === 'b')?.yukseklik ?? 0
 
@@ -137,19 +140,44 @@ describe('yükseklik ölçeklemesi', () => {
   })
 
   it('çok küçük değerler asgari yükseklikte görünür kalır', () => {
-    const sonuc = yukseklikleriHesapla([girdi('a', 100_000), girdi('b', 1)], yaz)
+    const sonuc = yukseklikleriHesapla([girdi('a', 100_000), girdi('b', 1), girdi('c', 2)], yaz)
     expect(sonuc.find((s) => s.slug === 'b')?.yukseklik).toBe(ASGARI_SUTUN_M)
   })
 
   /** ⚠️ CLAUDE.md kural 2: veri yoksa uydurma yükseklik gösterilmez. */
   it('verisi olmayan mahalle için sütun ÜRETİLMEZ', () => {
-    const sonuc = yukseklikleriHesapla([girdi('a', 100), girdi('bos', null)], yaz)
-    expect(sonuc.map((s) => s.slug)).toEqual(['a'])
+    const sonuc = yukseklikleriHesapla(
+      [girdi('a', 100), girdi('b', 90), girdi('c', 80), girdi('bos', null)],
+      yaz,
+    )
+    expect(sonuc.map((s) => s.slug)).toEqual(['a', 'b', 'c'])
   })
 
   it('sıfır ve negatif değerler de sütun üretmez', () => {
-    const sonuc = yukseklikleriHesapla([girdi('sifir', 0), girdi('eksi', -5)], yaz)
-    expect(sonuc).toEqual([])
+    const sonuc = yukseklikleriHesapla(
+      [girdi('sifir', 0), girdi('eksi', -5), girdi('a', 10), girdi('b', 20), girdi('c', 30)],
+      yaz,
+    )
+    expect(sonuc.map((s) => s.slug)).toEqual(['a', 'b', 'c'])
+  })
+
+  /**
+   * ⚠️ TEK SÜTUN BİR KIYAS DEĞİL, BİR LEKE.
+   *
+   * Sütun yüksekliği bir ORANDIR: mahalleyi diğerleriyle kıyaslıyor. Veri
+   * girilmiş tek mahalle varsa o mahalle kendisiyle kıyaslanıyor ve daima
+   * en yüksek sütunu alıyor — haritanın ortasında sebebi anlaşılmayan dev
+   * bir kule. 31 Ağustos 2026'da üretimde tam olarak bu görüldü: 26
+   * mahalleden yalnızca birinde rakam vardı.
+   */
+  it('üçten az veride HİÇ sütun çizilmiyor', () => {
+    expect(yukseklikleriHesapla([girdi('a', 100)], yaz)).toEqual([])
+    expect(yukseklikleriHesapla([girdi('a', 100), girdi('b', 50)], yaz)).toEqual([])
+  })
+
+  it('üç veride sütunlar çiziliyor', () => {
+    const sonuc = yukseklikleriHesapla([girdi('a', 100), girdi('b', 50), girdi('c', 75)], yaz)
+    expect(sonuc).toHaveLength(3)
   })
 
   it('hiç veri yoksa boş dizi', () => {
@@ -157,7 +185,10 @@ describe('yükseklik ölçeklemesi', () => {
   })
 
   it('etiketi verilen biçimlendiriciyle üretir', () => {
-    const sonuc = yukseklikleriHesapla([girdi('a', 42_500)], (d) => `${d / 1000} B ₺`)
+    const sonuc = yukseklikleriHesapla(
+      [girdi('a', 42_500), girdi('b', 40_000), girdi('c', 38_000)],
+      (d) => `${d / 1000} B ₺`,
+    )
     expect(sonuc[0]?.etiket).toBe('42.5 B ₺')
   })
 })
@@ -168,6 +199,7 @@ describe('sütun katmanı', () => {
       [
         { slug: 'a', ad: 'A', merkez: CORLU, deger: 10, gozlemSayisi: null },
         { slug: 'b', ad: 'B', merkez: CORLU, deger: 20, gozlemSayisi: null },
+        { slug: 'c', ad: 'C', merkez: CORLU, deger: 30, gozlemSayisi: null },
       ],
       String,
     )
@@ -179,7 +211,11 @@ describe('sütun katmanı', () => {
 
   it('yükseklik ve etiket özellik olarak taşınır', () => {
     const sutunlar = yukseklikleriHesapla(
-      [{ slug: 'a', ad: 'Muhittin', merkez: CORLU, deger: 10, gozlemSayisi: 8 }],
+      [
+        { slug: 'a', ad: 'Muhittin', merkez: CORLU, deger: 10, gozlemSayisi: 8 },
+        { slug: 'b', ad: 'B', merkez: CORLU, deger: 5, gozlemSayisi: 8 },
+        { slug: 'c', ad: 'C', merkez: CORLU, deger: 3, gozlemSayisi: 8 },
+      ],
       () => '10 ₺',
     )
     const ozellikler = sutunKatmani(sutunlar, () => CORLU).features[0]?.properties

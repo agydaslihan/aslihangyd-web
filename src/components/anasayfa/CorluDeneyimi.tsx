@@ -166,6 +166,24 @@ export function CorluDeneyimi({
             />
           )}
 
+          {/*
+            ⚠️ SÜTUN YOKSA SEBEBİ YAZILI.
+
+            `yukseklikleriHesapla` üçten az veride boş dizi döndürüyor
+            (tek sütun bir kıyas değil, bir leke). Haritayı sessizce
+            sütunsuz bırakmak, ziyaretçiye "burada bir şey yok" dedirtir;
+            sınırlar zaten çiziliyor ve eksik olan şey veri.
+          */}
+          {sutunlar.length === 0 ? (
+            <div className="cam rounded-kart shadow-kalkik absolute inset-x-4 bottom-4 p-4 sm:inset-x-auto sm:right-4 sm:left-auto sm:w-80">
+              <p className="text-metin text-govde-kucuk font-medium">Veri toplanıyor</p>
+              <p className="text-metin-2 mt-1 text-mikro leading-relaxed">
+                Mahalle sınırları haritada; fiyat sütunları en az üç mahallede rakam girildiğinde
+                çizilir. Tek bir sütun kıyas üretmez, yanıltır.
+              </p>
+            </div>
+          ) : null}
+
           {secili ? (
             <div className="cam rounded-kart shadow-kalkik absolute right-4 bottom-4 left-4 p-5 sm:left-auto sm:w-80">
               <p className="text-metin font-baslik text-baslik-3 font-medium">{secili.ad}</p>

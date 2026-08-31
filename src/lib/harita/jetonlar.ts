@@ -73,7 +73,15 @@ export function haritaRenkleri(): HaritaRenkleri {
     mahalleDolgu: jetonRengi('--color-notr-100'),
     mahalleDolguKoyu: jetonRengi('--color-notr-200'),
     // ⚠️ Sütunlar TEK RENK. Fiyat yalnızca yükseklikle kodlanır.
-    sutun: jetonRengi('--color-notr-600'),
+    /**
+     * ⚠️ SÜTUN ALTIN, NÖTR DEĞİL.
+     *
+     * Önceki renk `--color-notr-600` idi: haritada neredeyse siyah bir
+     * kule. Aurora'nın vurgu rengi altın ve sütun sayfadaki en dikkat
+     * çeken öğe; nötr koyu bir blok, markanın hiçbir yerinde olmayan bir
+     * renk olarak duruyordu.
+     */
+    sutun: jetonRengi('--color-gold-600'),
     // Tek istisna: seçili mahalle. Vurgu için, veri için değil.
     sutunSecili: jetonRengi('--color-aksan'),
     etiket: jetonRengi('--color-metin'),

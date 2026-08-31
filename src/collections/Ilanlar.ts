@@ -132,8 +132,14 @@ export const Ilanlar: CollectionConfig = {
               required: true,
               maxLength: 120,
               admin: {
+                // ⚠️ Başlık gösterimde cümle düzenine çevriliyor (SEO); kayıt
+                // değiştirilmiyor. Bkz. `lib/metin/baslik.ts`.
                 description:
-                  'Örn: "Muhittin Mahallesi\'nde 3+1, 135 m², asansörlü". Rakam ve mahalle adı geçsin — arama motorunda fark eder.',
+                  'Örn: "Muhittin Mahallesi\'nde 3+1, 135 m², asansörlü". Rakam ve mahalle adı ' +
+                  'geçsin — arama motorunda fark eder. ' +
+                  '⚠️ CÜMLE DÜZENİNDE yazın: tamamı büyük harf başlıklar arama sonuçlarında ' +
+                  'bağırıyor gibi görünür. Büyük harfle yazılmış bir başlık sitede otomatik ' +
+                  'düzeltilir, ama kayıttaki metin sizin yazdığınız gibi kalır.',
               },
             },
             {
