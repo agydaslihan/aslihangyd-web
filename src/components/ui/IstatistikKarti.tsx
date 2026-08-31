@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react'
 
 import { TrendIkon } from '@/components/ui/Ikon'
+import { GUVEN_ESIGI } from '@/lib/mahalle/guven'
 import { sinif } from '@/lib/sinif'
 
 /**
@@ -55,7 +56,25 @@ export interface IstatistikKartiOzellikleri {
   sinifAdi?: string
 }
 
-/** Gözlem satırı — her istatistikte görünür, istisnasız. */
+/**
+ * Gözlem satırı — her istatistikte görünür, istisnasız.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ EŞİĞİN ALTINDAKİ RAKAM GİZLENMİYOR, İŞARETLENİYOR.
+ *
+ * Aslıhan'ın gönderdiği tabloda beş mahalle metodolojimizin 8 gözlem
+ * eşiğinin altında (bir tanesi 2 gözlemle 63.064 ₺/m² diyor). O rakamları
+ * saklamak, mahalle sayfasını boş bırakmak olurdu; olduğu gibi göstermek
+ * ise 2 gözlemi 24 gözlemle aynı görünürlükte sunmak.
+ *
+ * Üçüncü yol: göster ve neye dayandığını yaz. "n = 2 · tahmini" cümlesi,
+ * rakamı zayıflatmıyor — okuyanın ona ne kadar güveneceğini söylüyor.
+ *
+ * ⚠️ Eşik `lib/mahalle/guven.ts`ten, oradan da endeksin
+ * `KATMAN_MINIMUM_GOZLEM`inden geliyor. Buraya sayı yazılmıyor: aynı
+ * projede iki farklı "yeterli veri" tanımı olamaz.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
 function GozlemSatiri({ sayi, altBilgi }: { sayi: number | null; altBilgi?: ReactNode }) {
   const parca =
     sayi === null ? (
@@ -66,9 +85,22 @@ function GozlemSatiri({ sayi, altBilgi }: { sayi: number | null; altBilgi?: Reac
       </>
     )
 
+  const tahmini = sayi === null || sayi < GUVEN_ESIGI
+
   return (
     <dd className="text-metin-3 text-mikro flex flex-wrap items-center gap-x-1.5 leading-snug">
       <span>{parca}</span>
+      {tahmini ? (
+        <>
+          <span aria-hidden>·</span>
+          <span
+            className="text-uyari"
+            title={`Bu rakam ${GUVEN_ESIGI} gözlemlik eşiğin altında bir veriye dayanıyor.`}
+          >
+            tahmini
+          </span>
+        </>
+      ) : null}
       {altBilgi ? (
         <>
           <span aria-hidden>·</span>
