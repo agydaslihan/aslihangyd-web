@@ -465,7 +465,11 @@ export interface Ilanlar {
    */
   droneVideoPosteri?: (number | null) | Medya;
   /**
-   * Tam adres (https://...). Boşsa tur bölümü gösterilmez.
+   * Taşınmazın içinden çekilmiş küresel panorama. Yüklenirse tur kendi oynatıcımızda açılır ve üçüncü bir servise hiçbir istek gitmez. Equirectangular (küresel) panorama gerekiyor — sıradan geniş açı fotoğraf DEĞİL. En-boy oranı tam 2:1 olmalı (örn. 6000×3000). Farklı oran, oynatıcıda eğri bir dünya üretir. Önerilen çözünürlük 6000×3000 ile 8000×4000 arası; altı bulanık, üstü mobilde ağır olur. Biçim: JPEG ya da WebP. Telefonda "Panorama" kipi YETMEZ — 360° kamera ya da Google Street View uygulamasının "Fotoğraf küresi" özelliği kullanılmalı.
+   */
+  sanalTurPanoramasi?: (number | null) | Medya;
+  /**
+   * Kuula, Matterport ya da Google Street View gömme adresi. Tam adres (https://...). ⚠️ Yukarıya panorama yüklendiyse O kullanılır; bu alan yedek kalır. İkisi de boşsa tur bölümü hiç gösterilmez.
    */
   sanalTurUrl?: string | null;
   yetkilendirmeSozlesmesi?: (number | null) | Medya;
@@ -726,6 +730,13 @@ export interface Mahalleler {
    * Video oynatılmadan önce görünen kare. Boş bırakırsanız servisin kendi kapağı kullanılır — ama kendi kapağınız daha iyi görünür. ⚠️ Sayfanın en büyük görseli budur; LCP'yi belirler.
    */
   droneVideoPosteri?: (number | null) | Medya;
+  /**
+   * Mahallenin ana caddesinden çekilmiş küresel panorama. Yüklenirse tur kendi oynatıcımızda açılır ve üçüncü bir servise hiçbir istek gitmez. Equirectangular (küresel) panorama gerekiyor — sıradan geniş açı fotoğraf DEĞİL. En-boy oranı tam 2:1 olmalı (örn. 6000×3000). Farklı oran, oynatıcıda eğri bir dünya üretir. Önerilen çözünürlük 6000×3000 ile 8000×4000 arası; altı bulanık, üstü mobilde ağır olur. Biçim: JPEG ya da WebP. Telefonda "Panorama" kipi YETMEZ — 360° kamera ya da Google Street View uygulamasının "Fotoğraf küresi" özelliği kullanılmalı.
+   */
+  sanalTurPanoramasi?: (number | null) | Medya;
+  /**
+   * Kuula, Matterport ya da Google Street View gömme adresi. Tam adres (https://...). ⚠️ Yukarıya panorama yüklendiyse O kullanılır; bu alan yedek kalır. İkisi de boşsa tur bölümü hiç gösterilmez.
+   */
   sanalTurUrl?: string | null;
   yatirimSkoru?: {
     /**
@@ -1472,6 +1483,7 @@ export interface IlanlarSelect<T extends boolean = true> {
   droneVideoYoutube?: T;
   droneVideoId?: T;
   droneVideoPosteri?: T;
+  sanalTurPanoramasi?: T;
   sanalTurUrl?: T;
   yetkilendirmeSozlesmesi?: T;
   gostermeBelgesi?: T;
@@ -1526,6 +1538,7 @@ export interface MahallelerSelect<T extends boolean = true> {
   droneVideoYoutube?: T;
   droneVideoId?: T;
   droneVideoPosteri?: T;
+  sanalTurPanoramasi?: T;
   sanalTurUrl?: T;
   yatirimSkoru?:
     | T

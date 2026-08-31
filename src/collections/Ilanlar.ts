@@ -1,3 +1,4 @@
+import { turAlanlari } from '@/lib/medya/turAlanlari'
 import { videoAlanlari } from '@/lib/medya/videoAlanlari'
 import type { CollectionConfig } from 'payload'
 
@@ -606,14 +607,7 @@ export const Ilanlar: CollectionConfig = {
               label: 'Kat planı',
             },
             ...videoAlanlari('ilan'),
-            {
-              name: 'sanalTurUrl',
-              type: 'text',
-              label: '360° sanal tur adresi',
-              admin: {
-                description: 'Tam adres (https://...). Boşsa tur bölümü gösterilmez.',
-              },
-            },
+            ...turAlanlari('ilan'),
           ],
         },
 

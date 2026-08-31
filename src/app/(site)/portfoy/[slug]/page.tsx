@@ -7,7 +7,7 @@ import { KiraGetirisiFormu } from '@/components/hesaplayici/KiraGetirisiFormu'
 import { IlanGalerisi } from '@/components/ilan/IlanGalerisi'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
 import { DroneVideo, videoGosterilebilirMi } from '@/components/medya/DroneVideo'
-import { SanalTur } from '@/components/medya/SanalTur'
+import { TurBolumu } from '@/components/medya/SanalTur'
 import { Sahne } from '@/components/hareket/Sahne'
 import { Bolum, BolumBasligi } from '@/components/ui/Bolum'
 import { Buton } from '@/components/ui/Buton'
@@ -43,6 +43,7 @@ import { tarihiYaz } from '@/lib/tarih'
 import { ilanGetir } from '@/lib/veri/ilanlar'
 import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Ilanlar } from '@/payload-types'
+import { medyaCoz } from '@/lib/medya/coz'
 
 type SayfaOzellikleri = { params: Promise<{ slug: string }> }
 
@@ -93,6 +94,9 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
     ? 'taşınmazın konumundan'
     : `${mahalle?.ad ?? 'mahalle'} merkezinden`
   const paraBirimi = ilan.paraBirimi ?? 'TRY'
+  /** 360° panorama — yüklenmişse dış servis adresinin önüne geçer. */
+  const ilanPanoramasi = medyaCoz(ilan.sanalTurPanoramasi)
+
   const whatsapp = whatsappBaglantisi(
     whatsappNumarasi(kurumsal),
     `Merhaba, "${ilan.baslik}" ilanı hakkında bilgi almak istiyorum. (${mutlakAdres(`/portfoy/${ilan.slug}`)})`,
@@ -220,11 +224,16 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             ) : null}
 
             {/* ── 360° sanal tur ── */}
-            {ilan.sanalTurUrl ? (
+            {ilanPanoramasi !== null || ilan.sanalTurUrl ? (
               <Sahne className="mt-10">
                 <section>
                   <h2 className="mb-3 font-sans text-baslik-3 font-medium">360° sanal tur</h2>
-                  <SanalTur adres={ilan.sanalTurUrl} baslik={`${ilan.baslik} 360° turu`} />
+                  <TurBolumu
+                    panoramaUrl={ilanPanoramasi?.url ?? null}
+                    panoramaAlt={ilanPanoramasi?.alt ?? null}
+                    adres={ilan.sanalTurUrl}
+                    baslik={`${ilan.baslik} 360° turu`}
+                  />
                 </section>
               </Sahne>
             ) : null}

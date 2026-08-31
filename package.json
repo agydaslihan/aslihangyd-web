@@ -40,6 +40,7 @@
     "lenis": "^1.3.26",
     "maplibre-gl": "^6.1.0",
     "next": "16.2.12",
+    "pannellum": "2.5.7",
     "payload": "3.87.0",
     "react": "19.2.8",
     "react-dom": "19.2.8",

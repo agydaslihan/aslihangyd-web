@@ -1,3 +1,4 @@
+import { turAlanlari } from '@/lib/medya/turAlanlari'
 import { videoAlanlari } from '@/lib/medya/videoAlanlari'
 import type { CollectionConfig } from 'payload'
 
@@ -364,14 +365,7 @@ export const Mahalleler: CollectionConfig = {
           label: 'Medya',
           description:
             'Drone ve 360° içerik hazır olana kadar bu alanlar boş kalır; sayfa boş durum tasarımıyla çalışır.',
-          fields: [
-            ...videoAlanlari('mahalle'),
-            {
-              name: 'sanalTurUrl',
-              type: 'text',
-              label: '360° sokak turu adresi',
-            },
-          ],
+          fields: [...videoAlanlari('mahalle'), ...turAlanlari('mahalle')],
         },
 
         {
