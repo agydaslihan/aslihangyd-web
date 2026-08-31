@@ -35,6 +35,7 @@ import { VergiParametreleri } from '@/collections/VergiParametreleri'
 import { DegerlemeAyarlari } from '@/globals/DegerlemeAyarlari'
 import { EndeksAyarlari } from '@/globals/EndeksAyarlari'
 import { BakimDurumu } from '@/globals/BakimDurumu'
+import { CorluAnlatisi } from '@/globals/CorluAnlatisi'
 import { DanismanOl } from '@/globals/DanismanOl'
 import { GooglePlacesKullanimi } from '@/globals/GooglePlacesKullanimi'
 import { KurumsalBilgiler } from '@/globals/KurumsalBilgiler'
@@ -272,6 +273,7 @@ export default buildConfig({
     MenuDuzeni,
     PortfoyBolumleri,
     DanismanOl,
+    CorluAnlatisi,
     DegerlemeAyarlari,
     EndeksAyarlari,
     BakimDurumu,
