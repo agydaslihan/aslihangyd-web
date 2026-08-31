@@ -37,16 +37,34 @@ Talimat açıktı: kaynağı bulunamayan cümleyi yazma. Aşağıdakiler
 
 | Konu | Neden yazılmadı |
 | --- | --- |
-| **Çorlu hızlı tren istasyonu** | İncelenen resmî açıklamada (AA, 31 Ocak 2025) hattın istasyonları arasında **Çorlu geçmiyor**. Sayılan istasyonlar Kapıkule ve Edirne. Çorlu'da YHT istasyonu olacağına dair kaynak bulunamadı. Metin bunu **açıkça söylüyor**. |
+| **Çorlu hızlı tren istasyonu** | İncelenen resmî açıklamada (AA, 31 Ocak 2025) hattın istasyonları arasında **Çorlu geçmiyor**. Çorlu'da YHT istasyonu olacağına dair kaynak bulunamadı. Metin bunu **açıkça söylüyor**. |
+| **Güncel tren sefer sıklığı** | Elimizdeki kaynak (Çorlu Kaymakamlığı) 2016 tarihli; bugünkü sefer sayısı için TCDD tarifesi gerekiyor. |
 | **Havalimanı sefer durumu** | DHMİ'nin havalimanı sayfasında tarifeli sefer bilgisi yayınlanmıyor. "Aktif seferler var" demek kaynaksız olurdu. |
 | **Hastane yatak kapasitesi** | Çorlu Devlet Hastanesi'nin kendi sayfasında rakam yok. Haber ve toplayıcı sitelerden alıp resmîymiş gibi yazmak, tam da yasaklanan şey. |
 | **D-100 / TEM mesafe ve süreleri** | Resmî bir kaynağa bağlanamadı; D maddesindeki PostGIS hesabı bunu ölçülebilir biçimde verecek. |
 | **NKÜ ana kampüsünün konumu** | Fakültenin kendi sitesinde adres yazmıyor. Çorlu'da **Mühendislik Fakültesi** olduğu söyleniyor; Çorlu'da üniversite hastanesi olduğu iddia **edilmiyor**. |
 
 ⚠️ CLAUDE.md'nin Çorlu bağlamı bölümü "Halkalı–Kapıkule hızlı tren ve
-Çorlu istasyonu"nu değer sürücüsü olarak sayıyor. **Bu araştırma o
-maddeyi doğrulayamadı.** Aynı bölüm zaten "bu sürücülerin güncel durumunu
-doğrulamadan içerikte kesin ifade kullanma" diyor; kural işledi.
+Çorlu istasyonu"nu değer sürücüsü olarak sayıyordu. **Bu araştırma o
+maddeyi doğrulayamadı** ve madde Aslıhan'ın kararıyla **güncellendi**:
+hızlı tren artık değer sürücüsü sayılmıyor, yerine kaynağın
+bulunamadığını yazan bir not kondu.
+
+## ⚠️ Mevcut tren istasyonu AYRI BİR ŞEY — ve gerçek
+
+Hızlı tren istasyonu doğrulanamadı; ama Çorlu'nun **konvansiyonel hat
+üzerindeki istasyonu** belgeli:
+
+> Çorlu Kaymakamlığı, 27 Temmuz 2016: İstanbul (Halkalı) – Edirne
+> (Kapıkule) günlük tren seferleri 25 Temmuz 2016'da başladı; duyuru
+> ilçeden geçiş saatlerini gösteren bir tabloya yer veriyor.
+
+İkisini karıştırmamak şart: biri doğrulanmamış bir varsayım, diğeri
+belgeli bir ulaşım bağlantısı.
+
+⚠️ **Güncel sefer sıklığı iddia edilmiyor.** Elimizdeki kaynak 2016
+tarihli; bugünkü tarife TCDD Taşımacılık'tan doğrulanmalı. Metin bunu
+açıkça söylüyor ve bir test kilitliyor.
 
 ## Nasıl kuruldu
 

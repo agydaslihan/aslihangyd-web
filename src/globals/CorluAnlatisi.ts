@@ -108,6 +108,13 @@ const VARSAYILAN_BLOKLAR = [
       '⚠️ Bu projenin istasyonları arasında Çorlu, incelediğimiz resmî açıklamalarda ' +
       'geçmiyor. Çorlu’da hızlı tren istasyonu olacağına dair bir kaynak bulunamadığı için ' +
       'böyle bir iddiada bulunmuyoruz.\n\n' +
+      'Çorlu’nun mevcut tren istasyonu ayrı bir şeydir ve konvansiyonel hat üzerindedir. ' +
+      'Çorlu Kaymakamlığı’nın 27 Temmuz 2016 tarihli duyurusuna göre İstanbul (Halkalı) – ' +
+      'Edirne (Kapıkule) günlük tren seferleri 25 Temmuz 2016’da başlamıştır ve trenler ' +
+      'Çorlu’dan geçmektedir; duyuru ilçeden geçiş saatlerini gösteren bir tabloya yer ' +
+      'veriyor. Güncel tarife ve sefer sıklığı için TCDD Taşımacılık’ın sefer sayfasına ' +
+      'bakılmalıdır; elimizdeki kaynak 2016 tarihli olduğu için bugünkü sefer sayısı ' +
+      'hakkında bir iddiada bulunmuyoruz.\n\n' +
       'Çorlu’da Devlet Hava Meydanları İşletmesi’ne (DHMİ) bağlı Tekirdağ Çorlu Atatürk ' +
       'Havalimanı bulunuyor. Havalimanının güncel tarifeli sefer durumu için DHMİ’nin uçuş ' +
       'bilgileri sayfasına bakılmalıdır; bu sayfada sefer bilgisi yayınlanmadığı için burada ' +
@@ -117,6 +124,12 @@ const VARSAYILAN_BLOKLAR = [
         ad: 'Anadolu Ajansı — Halkalı-Kapıkule Hızlı Tren Projesi açıklaması (31 Ocak 2025)',
         adres:
           'https://www.aa.com.tr/tr/gundem/bakan-uraloglu-halkali-kapikule-hizli-tren-projesinin-kapikule-cerkezkoy-etabinda-yuzde-95-fiziki-ilerleme-sagladik/3467770',
+        erisim: '31 Ağustos 2026',
+      },
+      {
+        ad: 'T.C. Çorlu Kaymakamlığı — Halkalı–Kapıkule hattında tren seferleri (27 Temmuz 2016)',
+        adres:
+          'https://www.corlu.gov.tr/edirne--kapi-kule-istanbul-halkali-hattinda-tren-seferleri-baslamistir',
         erisim: '31 Ağustos 2026',
       },
       {

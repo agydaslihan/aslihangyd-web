@@ -149,6 +149,25 @@ describe('⚠️ araştırmada doğrulanan düzeltmeler', () => {
     expect(ulasim?.metin).not.toMatch(/Çorlu(’|')?(ya|da) hızlı tren istasyonu (olacak|var)/)
   })
 
+  it('MEVCUT tren istasyonu kaynaklı olarak yazılıyor', () => {
+    /**
+     * ⚠️ Hızlı tren istasyonu iddia edilmiyor ama Çorlu'nun KONVANSİYONEL
+     * hat üzerindeki istasyonu gerçek ve kaynaklı: Çorlu Kaymakamlığı'nın
+     * 27 Temmuz 2016 duyurusu. İkisini karıştırmamak şart — biri
+     * doğrulanmamış bir varsayım, diğeri belgeli bir ulaşım bağlantısı.
+     */
+    const ulasim = bloklar.find((b) => b.baslik === 'Ulaşım')
+    expect(ulasim?.metin).toMatch(/konvansiyonel hat/)
+    expect(ulasim?.metin).toMatch(/27 Temmuz 2016/)
+    expect(ulasim?.kaynaklar.some((k) => k.adres.includes('corlu.gov.tr'))).toBe(true)
+  })
+
+  it('güncel sefer sıklığı İDDİA EDİLMİYOR', () => {
+    // Elimizdeki kaynak 2016 tarihli; bugünkü sefer sayısı bilinmiyor.
+    const ulasim = bloklar.find((b) => b.baslik === 'Ulaşım')
+    expect(ulasim?.metin).toMatch(/bugünkü sefer sayısı[\s\S]*?iddiada bulunmuyoruz/)
+  })
+
   it('çelişen iki kaynak da yazılıyor', () => {
     // Deri OSB'nin fabrika sayısı ve istihdamı iki resmî kaynakta farklı.
     const sanayi = bloklar.find((b) => b.baslik === 'Sanayi ve istihdam')
