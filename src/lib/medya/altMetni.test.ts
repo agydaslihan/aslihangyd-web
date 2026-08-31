@@ -119,9 +119,17 @@ describe('sihirbazda toplu yükleme', () => {
   })
 
   it('boyut bütçesi uyarısı ENGEL DEĞİL', () => {
-    // Kaç fotoğrafın gerektiğini bilen kişi Aslıhan; sayı görünür bir sınır.
+    /**
+     * ⚠️ KISA PARÇA ARANIYOR. İlk hâl "sayfayı ağırlaştırıyor" cümlesini
+     * arıyordu ve Prettier o cümleyi iki satıra böldüğü an test kırıldı —
+     * metinde hiçbir şey değişmemişken. Satır sonuna dayanmayan bir
+     * denetim, biçimlendiriciye bağımlı bir denetimdir.
+     */
     expect(bilesen).toContain('GORSEL_UYARI_ESIGI')
-    expect(bilesen).toContain('sayfayı ağırlaştırıyor')
+    expect(bilesen).toContain('ağırlaştırıyor')
+    // Uyarı bir engel değil: koşul yalnızca metni gösteriyor, düğmeyi
+    // pasifleştirmiyor.
+    expect(bilesen).toMatch(/gorseller\.length > GORSEL_UYARI_ESIGI \? \(/)
   })
 
   it('alt metin BOŞ gönderiliyor — türetme tek yerde', () => {
