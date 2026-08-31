@@ -1,5 +1,6 @@
 'use client'
 
+import dynamic from 'next/dynamic'
 import { useState } from 'react'
 
 /**
@@ -18,6 +19,55 @@ import { useState } from 'react'
  * anlamaz.
  * ─────────────────────────────────────────────────────────────────────────
  */
+/**
+ * Panorama oynatıcısı TEMBEL.
+ *
+ * ⚠️ `SanalTur` her tur bölümünde çiziliyor; Pannellum'u statik içe
+ * aktarmak, dış servis turu kullanan sayfalara da o kütüphaneyi sokardı.
+ */
+const PanoramaTuru = dynamic(() => import('./PanoramaTuru').then((modul) => modul.PanoramaTuru), {
+  ssr: false,
+  loading: () => <div className="iskelet aspect-video w-full" aria-hidden />,
+})
+
+/**
+ * Tur bölümünün yönlendiricisi.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ PANORAMA VARSA O KAZANIR — VE SIRA BELİRSİZ BIRAKILMADI.
+ *
+ * Panorama bizim dosyamız; dış servis üçüncü tarafa istek demek. İkisi de
+ * doluyken hangisinin görüneceği yazılı olmasaydı, "hangisi görünüyor?"
+ * sorusunun cevabı olmayan bir ekran olurdu.
+ *
+ * ⚠️ İKİSİ DE BOŞSA `null` — bölüm HİÇ ÇİZİLMEZ. Çağıran taraf da bunu
+ * biliyor ve başlığı basmıyor: "360° tur yakında" yazan bir kutu, her
+ * sayfada duran ve hiç dolmayan bir vaat olurdu.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function TurBolumu({
+  panoramaUrl,
+  panoramaAlt,
+  adres,
+  baslik,
+}: {
+  panoramaUrl?: string | null
+  panoramaAlt?: string | null
+  adres?: string | null
+  baslik: string
+}) {
+  if (typeof panoramaUrl === 'string' && panoramaUrl !== '') {
+    return <PanoramaTuru panoramaUrl={panoramaUrl} baslik={baslik} altMetin={panoramaAlt ?? null} />
+  }
+
+  if (typeof adres === 'string' && adres !== '') {
+    return <SanalTur adres={adres} baslik={baslik} />
+  }
+
+  return null
+}
+
+/** Dış servis turu — Kuula, Matterport, Street View. */
 export function SanalTur({ adres, baslik }: { adres: string; baslik: string }) {
   const [acik, setAcik] = useState(false)
 

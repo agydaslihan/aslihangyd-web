@@ -7,7 +7,7 @@ import { IlanKarti } from '@/components/ilan/IlanKarti'
 import { CevreBolumu } from '@/components/mahalle/CevreBolumu'
 import { RayicPiyasaOrani } from '@/components/mahalle/RayicPiyasaOrani'
 import { DroneVideo, videoGosterilebilirMi } from '@/components/medya/DroneVideo'
-import { SanalTur } from '@/components/medya/SanalTur'
+import { TurBolumu } from '@/components/medya/SanalTur'
 import { MahalleSkoru } from '@/components/skor/MahalleSkoru'
 import { YakindaBolumu } from '@/components/mahalle/YakindaBolumu'
 import { Sahne } from '@/components/hareket/Sahne'
@@ -32,6 +32,7 @@ import { konumuCoz } from '@/lib/veri/ilgiNoktalari'
 import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
+import { medyaCoz } from '@/lib/medya/coz'
 
 type SayfaOzellikleri = { params: Promise<{ slug: string }> }
 
@@ -79,6 +80,9 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
 
   /** Güneş haritası için mahalle merkezi. */
   const mahalleKonumu = konumuCoz(mahalle.merkez)
+
+  /** 360° panorama — yüklenmişse dış servis adresinin önüne geçer. */
+  const turPanoramasi = medyaCoz(mahalle.sanalTurPanoramasi)
 
   const whatsapp = whatsappBaglantisi(
     whatsappNumarasi(kurumsal),
@@ -250,23 +254,29 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
               </section>
             </Sahne>
 
-            {/* 6 ── 360° tur */}
-            <Sahne>
-              <section aria-labelledby="tur">
-                <h2 id="tur" className="mb-4 font-baslik text-baslik-3 font-medium">
-                  360° sokak turu
-                </h2>
-                {mahalle.sanalTurUrl ? (
-                  <SanalTur adres={mahalle.sanalTurUrl} baslik={`${mahalle.ad} 360° turu`} />
-                ) : (
-                  <YakindaBolumu
-                    oran="aspect-16/9"
-                    baslik="360° tur çekimi planlanıyor"
-                    aciklama="Mahallenin ana caddelerinde 360° çekim yapıldığında burada gezilebilir olacak."
+            {/*
+              6 ── 360° tur
+
+              ⚠️ TUR YOKSA BÖLÜM HİÇ ÇİZİLMİYOR — eskiden "360° tur çekimi
+              planlanıyor" yazan bir kutu duruyordu. Her mahalle sayfasında
+              duran ve hiç dolmayan bir vaat, boş durum tasarımı değil
+              gürültüdür; ilan sayfasındaki kuralın aynısı.
+            */}
+            {turPanoramasi !== null || mahalle.sanalTurUrl ? (
+              <Sahne>
+                <section aria-labelledby="tur">
+                  <h2 id="tur" className="mb-4 font-baslik text-baslik-3 font-medium">
+                    360° sokak turu
+                  </h2>
+                  <TurBolumu
+                    panoramaUrl={turPanoramasi?.url ?? null}
+                    panoramaAlt={turPanoramasi?.alt ?? null}
+                    adres={mahalle.sanalTurUrl}
+                    baslik={`${mahalle.ad} 360° turu`}
                   />
-                )}
-              </section>
-            </Sahne>
+                </section>
+              </Sahne>
+            ) : null}
 
             {/* 7 ── Neden bu mahalle? */}
             <Sahne>
