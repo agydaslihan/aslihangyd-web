@@ -2,7 +2,7 @@
 
 import { useFormFields } from '@payloadcms/ui'
 
-import './olcekUyarisi.css'
+import './nitelikDurumu.css'
 
 import { NITELIK_ALANLARI } from '@/lib/mahalle/nitelikler'
 
@@ -38,12 +38,8 @@ export default function NitelikDurumu() {
   const eksikler = durumlar.filter((d) => !d.dolu).map((d) => d.etiket)
 
   return (
-    <div
-      className="olcek-uyari"
-      role="status"
-      style={{ borderColor: 'var(--theme-elevation-200)' }}
-    >
-      <p className="olcek-uyari-baslik">
+    <div className="nitelik-durumu" role="status">
+      <p className="nitelik-durumu-baslik">
         Niteliksel profil: %{yuzde} ({dolu}/{durumlar.length} alan)
       </p>
 
@@ -52,7 +48,7 @@ export default function NitelikDurumu() {
       ) : (
         <>
           <p>Eksik: {eksikler.join(', ')}.</p>
-          <p className="olcek-uyari-neden">
+          <p className="nitelik-durumu-neden">
             ⚠️ Bu bölüm siz doldurmadan sitede <strong>hiç gösterilmiyor</strong>. Yarım bir profil
             yayınlamaktansa, boş durum metni doğru şeyi söylüyor.
           </p>

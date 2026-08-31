@@ -1,0 +1,35 @@
+/*
+ * Niteliksel profil tamamlanma göstergesi.
+ *
+ * ⚠️ KENDİ STİL DOSYASI — başka bir bileşenin dosyasına bağlanmıyor.
+ *
+ * İlk sürüm `olcekUyarisi.css`i içe aktarıyordu ve o dosya başka bir
+ * daldaydı: yerelde vardı, CI'da yoktu ve derleme kırıldı. Tip kontrolü,
+ * lint ve testler geçti — CSS çözümünü yalnızca derleme denetliyor.
+ *
+ * ⚠️ Renk tek taşıyıcı değil (WCAG 1.4.1): yüzde ve eksik listesi metinle
+ * yazılı.
+ */
+.nitelik-durumu {
+  border: 1px solid var(--theme-elevation-200);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: var(--theme-elevation-50);
+  color: var(--theme-elevation-800);
+  padding: 0.9rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.nitelik-durumu-baslik {
+  margin: 0 0 0.4rem;
+  font-weight: 600;
+}
+
+.nitelik-durumu p {
+  margin: 0.3rem 0 0;
+}
+
+.nitelik-durumu-neden {
+  font-size: 0.85rem;
+  color: var(--theme-elevation-600);
+}
