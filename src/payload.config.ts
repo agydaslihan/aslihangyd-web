@@ -18,6 +18,7 @@ import { GOZLEM_ICE_AKTARMA_YOLU } from '@/components/gozlem/yol'
 import { GOOGLE_YOLU } from '@/components/google/yol'
 import { MAHALLE_VERISI_YOLU } from '@/components/mahalleVerisi/yol'
 import { OSM_YOLU } from '@/components/osm/yol'
+import { MAHALLE_RAKAM_YOLU } from '@/components/mahalleRakam/yol'
 import { RAYIC_YOLU } from '@/components/rayic/yol'
 import { YAKINLIK_YOLU } from '@/components/yakinlik/yol'
 import { GozlemGunluk } from '@/collections/GozlemGunluk'
@@ -195,6 +196,22 @@ export default buildConfig({
         },
 
         /**
+         * Mahalle rakamları CSV içe aktarma.
+         *
+         * ⚠️ Yalnızca YÖNETİCİ: m², kira, çarpan ve değişim rakamları
+         * yatırım skorunu, mahalle karşılaştırmasını ve sitedeki her
+         * "ortalama" ifadesini besliyor. Yanlış rakam ziyaretçiye yanlış
+         * yatırım kararı aldırır.
+         *
+         * ⚠️ Araç var, veri yok — bilinçli. Rakamları Aslıhan giriyor;
+         * koda yazmak CLAUDE.md kural 2'nin ihlali olurdu.
+         */
+        mahalleRakamlari: {
+          Component: '@/components/mahalleRakam/RakamGorunumu#default',
+          path: MAHALLE_RAKAM_YOLU,
+        },
+
+        /**
          * Yakınlıktan skor önerileri.
          *
          * ⚠️ Bu ekran da hiçbir şey KAYDETMEZ. İlgi noktası
@@ -217,6 +234,7 @@ export default buildConfig({
         '@/components/olcum/OlcumNavBaglantisi#OlcumNavBaglantisi',
         '@/components/anasayfa/AnaSayfaNavBaglantisi#AnaSayfaNavBaglantisi',
         '@/components/mahalleVerisi/MahalleVerisiNavBaglantisi#MahalleVerisiNavBaglantisi',
+        '@/components/mahalleRakam/RakamNavBaglantisi#RakamNavBaglantisi',
         '@/components/osm/OsmNavBaglantisi#OsmNavBaglantisi',
         '@/components/google/GoogleNavBaglantisi#GoogleNavBaglantisi',
         '@/components/rayic/RayicNavBaglantisi#RayicNavBaglantisi',

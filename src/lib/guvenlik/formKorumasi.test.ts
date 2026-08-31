@@ -106,6 +106,11 @@ const PANEL_ARKASI: Record<string, string> = {
     'Ziyaretçiye açık detay çağrısı ayrı dosyada: lib/google/detayEylemi.ts.',
   'lib/rayic/eylemler.ts':
     'Rayiç bedel CSV içe aktarma — yalnızca YÖNETİCİ (alım maliyeti hesabını besliyor).',
+  'lib/mahalle/rakamEylemleri.ts':
+    'Mahalle rakamları CSV içe aktarma — yalnızca YÖNETİCİ (m², kira ve çarpan ' +
+    'yatırım skorunu ve sitedeki her ortalamayı besliyor).',
+  'lib/mahalle/rakamIceAktarmaCekirdegi.ts':
+    'Yukarıdakinin çekirdeği; kendi kapısı yok, çağıranınki geçerli.',
   'app/(payload)/layout.tsx': 'Payload panelinin kendi düzeni; form eylemi değil.',
 }
 
