@@ -1218,3 +1218,53 @@
     height: var(--logo-boy, 3rem);
   }
 }
+
+/*
+ * Vitrinin yüksekliği — çerez bandı kadar kısalır.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BU KURAL BİR TASARIM TERCİHİ DEĞİL, ÖLÇÜLMÜŞ BİR ARIZANIN KAPISI.
+ *
+ * Vitrin `100svh` ve içeriğini dikeyde ortalıyor; çerez bandı ekranın
+ * altına sabit. 1440×900'de ikisi çakışıyordu ve sayfanın ilk ekranındaki
+ * iki çağrı butonu da (Portföyü incele / Ücretsiz değerleme) bandın
+ * arkasında kalıp tıklanamıyordu.
+ *
+ * Değişken bant açıkken `CerezBanneri` tarafından ÖLÇÜLEREK yazılıyor;
+ * kapalıyken hiç tanımlı değil ve yedek `0px` devreye giriyor. Yani bant
+ * yokken bu kural `min-height: 100svh` ile birebir aynı.
+ *
+ * ⚠️ `svh`, `vh` DEĞİL: mobilde adres çubuğu büyüyüp küçülürken `vh`
+ * vitrini zıplatıyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+.vitrin-boy {
+  min-height: calc(100svh - var(--cerez-bandi-yuksekligi, 0px));
+}
+
+/*
+ * Çerez bandı açıkken vitrin sıkışır.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ `.vitrin-boy` TEK BAŞINA YETMEDİ — ÖLÇÜMLE GÖRÜLDÜ.
+ *
+ * Yalnızca `min-height` kısaltıldığında 1440×900 düzeldi ama 1280×720 ve
+ * mobil hâlâ örtülüydü: vitrinin kendi dikey boşluğu (py-24 = 192 px) artı
+ * kaydırma göstergesi, bant çıktıktan sonra kalan alanı tek başına aşıyor.
+ * İçerik sığmayınca bölüm büyüyor ve butonlar yine bandın altına düşüyor.
+ *
+ * Bant açıkken boşluk daralıyor ve kaydırma göstergesi gizleniyor —
+ * gösterge zaten hiçbir bilgi taşımıyor (`aria-hidden`) ve bant açıkken
+ * söylediği şey de doğru değil: kaydırılacak yer bandın altında.
+ *
+ * ⚠️ Bu KALICI bir tasarım değişikliği değil. Bayrak yalnızca bant
+ * ekrandayken var; onay verilir verilmez vitrin eski hâline dönüyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+[data-cerez-bandi='acik'] .vitrin-govde {
+  padding-block: 2.5rem;
+}
+
+[data-cerez-bandi='acik'] .vitrin-ipucu {
+  display: none;
+}

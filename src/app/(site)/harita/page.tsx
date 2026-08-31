@@ -2,14 +2,11 @@ import type { Metadata } from 'next'
 
 import { POI_TIPLERI } from '@/collections/IlgiNoktalari'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
-import {
-  HaritaSahnesi,
-  type KatmanTanimi,
-  type MahalleVerisi,
-} from '@/components/harita/HaritaSahnesi'
+import { HaritaSahnesi, type MahalleVerisi } from '@/components/harita/HaritaSahnesi'
 import { paraKisaYaz } from '@/lib/bicimlendirme'
 import { haritaStilAdresi } from '@/lib/harita/sunucu'
 import { mahalleyiHaritaVerisineCevir } from '@/lib/harita/mahalleVerisi'
+import { KATMAN_PORTFOY, POI_GRUPLARI, noktaKatmanTanimlari } from '@/lib/harita/noktaKatmanlari'
 import { mutlakAdres } from '@/lib/site'
 import { ilanlariGetir } from '@/lib/veri/ilanlar'
 import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
@@ -31,19 +28,6 @@ export const metadata: Metadata = {
  * POI tipleri tek tek katman olmak yerine üç anlamlı gruba toplanıyor:
  * on bir ayrı onay kutusu paneli listeye çevirir ve kimse okumaz.
  */
-
-const KATMAN_OKUL_SAGLIK = 'okul-saglik'
-const KATMAN_SANAYI = 'sanayi'
-const KATMAN_PORTFOY = 'portfoyum'
-const KATMAN_PROJELER = 'projeler'
-
-/** POI tipi → katman grubu. Listede olmayan tip haritada gösterilmez. */
-const POI_GRUPLARI: Record<string, string> = {
-  okul: KATMAN_OKUL_SAGLIK,
-  universite: KATMAN_OKUL_SAGLIK,
-  hastane: KATMAN_OKUL_SAGLIK,
-  sanayi: KATMAN_SANAYI,
-}
 
 export default async function HaritaSayfasi() {
   // ⚠️ Bölüm kapısı EN BAŞTA: kapalıysa hiçbir veri sorgusu çalışmasın.
@@ -104,27 +88,7 @@ export default async function HaritaSayfasi() {
    * "Projeler" için henüz koleksiyon yok — Faz 3'te gelecek. Bugün sıfır
    * öğeyle, sebebi yazılı duruyor.
    */
-  const noktaKatmanlari: KatmanTanimi[] = [
-    {
-      anahtar: KATMAN_PORTFOY,
-      etiket: 'Portföyüm',
-      renk: 'var(--color-gold-guclu)',
-      adet: say(KATMAN_PORTFOY),
-    },
-    {
-      anahtar: KATMAN_OKUL_SAGLIK,
-      etiket: 'Okul / sağlık',
-      renk: 'var(--color-notr-500)',
-      adet: say(KATMAN_OKUL_SAGLIK),
-    },
-    {
-      anahtar: KATMAN_SANAYI,
-      etiket: 'Sanayi',
-      renk: 'var(--color-uyari)',
-      adet: say(KATMAN_SANAYI),
-    },
-    { anahtar: KATMAN_PROJELER, etiket: 'Projeler', renk: 'var(--color-basari)', adet: 0 },
-  ]
+  const noktaKatmanlari = noktaKatmanTanimlari(say)
 
   return (
     <>
