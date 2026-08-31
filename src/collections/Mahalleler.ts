@@ -216,14 +216,20 @@ export const Mahalleler: CollectionConfig = {
                   type: 'number',
                   label: 'Ortalama m² satış (₺/m²)',
                   min: 0,
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
                 {
                   name: 'ortalamaKira',
                   type: 'number',
                   label: 'Ortalama aylık kira (₺/ay)',
                   min: 0,
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
               ],
             },
@@ -235,13 +241,20 @@ export const Mahalleler: CollectionConfig = {
                   type: 'number',
                   label: 'Kira çarpanı (yıl)',
                   min: 0,
-                  admin: { width: '50%', description: 'Kaç yıllık kira, satış fiyatına eşit.' },
+                  admin: {
+                    width: '50%',
+                    description: 'Kaç yıllık kira, satış fiyatına eşit.',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
                 {
                   name: 'degisim12Ay',
                   type: 'number',
                   label: '12 aylık değişim (%)',
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
               ],
             },
@@ -250,7 +263,10 @@ export const Mahalleler: CollectionConfig = {
               type: 'number',
               label: 'Nüfus (kişi)',
               min: 0,
-              admin: { description: 'Resmî kaynaktan (TÜİK/belediye) teyit edilmeden girme.' },
+              admin: {
+                description: 'Resmî kaynaktan (TÜİK/belediye) teyit edilmeden girme.',
+                components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+              },
             },
             {
               type: 'row',
@@ -261,6 +277,7 @@ export const Mahalleler: CollectionConfig = {
                   label: 'Gözlem sayısı (n)',
                   min: 0,
                   admin: {
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
                     width: '50%',
                     description:
                       'Bu rakamlar kaç gözleme dayanıyor? Sitede her rakamın yanında gösterilir. ' +

@@ -348,6 +348,7 @@ export const Ilanlar: CollectionConfig = {
                   min: 0,
                   index: true,
                   admin: {
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
                     width: '50%',
                     description: 'Kiralık ilanlarda aylık kira bedelidir.',
                   },
@@ -375,6 +376,7 @@ export const Ilanlar: CollectionConfig = {
                   label: 'Tahmini aylık kira (₺/ay)',
                   min: 0,
                   admin: {
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
                     width: '50%',
                     description:
                       'Satılık ilanlarda yatırım göstergelerini bu alan besler. ' +
@@ -387,7 +389,10 @@ export const Ilanlar: CollectionConfig = {
                   type: 'number',
                   label: 'Aylık aidat (₺/ay)',
                   min: 0,
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
               ],
             },
@@ -415,6 +420,11 @@ export const Ilanlar: CollectionConfig = {
                     {
                       name: 'kiraCarpani',
                       type: 'number',
+                      /**
+                       * ⚠️ Türkçe sayı girdisi BURADA YOK — bu alan kancayla
+                       * hesaplanıyor, insan yazmıyor. Yazılamayan bir alanda
+                       * ayrıştırıcının yapacağı iş de yok.
+                       */
                       label: 'Kira çarpanı',
                       admin: {
                         width: '33%',
@@ -452,14 +462,20 @@ export const Ilanlar: CollectionConfig = {
                   type: 'number',
                   label: 'Brüt m²',
                   min: 0,
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
                 {
                   name: 'netM2',
                   type: 'number',
                   label: 'Net m²',
                   min: 0,
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
               ],
             },
