@@ -252,6 +252,14 @@ export function RayicSihirbazi() {
             </table>
           </div>
 
+          {(onizleme.eslemeUyarilari?.length ?? 0) > 0
+            ? onizleme.eslemeUyarilari?.map((uyari) => (
+                <p key={uyari} className="aktarim-hata" role="status">
+                  ⚠️ {uyari}
+                </p>
+              ))
+            : null}
+
           {(onizleme.eksikAlanlar?.length ?? 0) > 0 ? (
             <p className="aktarim-hata">
               Şu zorunlu alanlar bir sütuna bağlanmadı: {onizleme.eksikAlanlar?.join(', ')}.

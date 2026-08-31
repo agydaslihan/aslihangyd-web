@@ -58,6 +58,8 @@ export interface OnizlemeSonucu {
   kullanilmayanSutunlar?: { sira: number; baslik: string }[]
   eksikAlanlar?: string[]
   atlananBosSatir?: number
+  /** Eşleme düzeyindeki uyarılar — satır bazlı değil. */
+  eslemeUyarilari?: string[]
 }
 
 export interface IceAktarmaGirdisi extends OnizlemeGirdisi {
@@ -160,11 +162,35 @@ export async function cozumle(
     guncellemeTarihi: girdi.ayarlar.guncellemeTarihi ?? null,
   })
 
+  /**
+   * ⚠️ AYNI SÜTUNU İKİ ALANA BAĞLAMAK SESSİZ BİR VERİ HATASI.
+   *
+   * 31 Ağustos 2026'da üretimde ölçüldü: 3.366 rayiç kaydının HEPSİNDE
+   * bina rayiç bedeli ile arsa rayiç bedeli birebir aynıydı. Belediye
+   * tablosunda tek bir değer sütunu vardı ve içe aktarmada ikisine birden
+   * bağlanmıştı. Sonuç: var olmayan bir "bina rayiç bedeli" verisi.
+   *
+   * Hata hiçbir yerde görünmüyordu — iki alan da doluydu, satır başına
+   * hata yoktu. Eşleme düzeyinde bakmadan görülemezdi.
+   */
+  const eslemeUyarilari: string[] = []
+  const binaSutun = eslesme.metrekareRayicBedel ?? null
+  const arsaSutun = eslesme.arsaRayicBedel ?? null
+  if (binaSutun !== null && binaSutun === arsaSutun) {
+    eslemeUyarilari.push(
+      `Bina ve arsa rayiç bedeli AYNI sütuna (${binaSutun + 1}. sütun) bağlı. ` +
+        'Belediye tabloları genellikle tek bir birim değer yayınlar; onu iki alana birden ' +
+        'yazmak, var olmayan bir veri üretir. Tabloda tek değer varsa yalnızca uygun olanı ' +
+        'bağlayın, diğerini “eşlenmedi” bırakın.',
+    )
+  }
+
   return {
     basarili: true,
     basliklar: cikti.basliklar,
     ayirici: cikti.ayirici,
     eslesme,
+    eslemeUyarilari,
     satirlar: cozum.satirlar,
     hazirSayisi: cozum.hazirSayisi,
     uyariliSayisi: cozum.uyariliSayisi,
