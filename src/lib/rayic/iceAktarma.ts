@@ -150,6 +150,15 @@ export interface CozulmusSatir {
 
 export interface CozumlemeBaglami {
   mahalleler: readonly { id: number; ad: string; slug: string }[]
+  /**
+   * CSV'nin başlık satırı.
+   *
+   * ⚠️ HATA MESAJININ SÜTUNU ADIYLA SÖYLEYEBİLMESİ İÇİN ŞART.
+   * "Bina rayiç bedeli okunamadı" cümlesi, dosyasında altı sütun olan
+   * kişiye hangisine bakacağını söylemiyor. "4. sütun (Bina m² Rayiç)"
+   * söylüyor.
+   */
+  basliklar?: readonly string[]
   /** CSV'de yıl sütunu yoksa ya da hücre boşsa kullanılır. */
   varsayilanYil: number
   /** CSV'de kaynak sütunu yoksa ya da hücre boşsa kullanılır. */
@@ -173,6 +182,27 @@ export interface CozumlemeSonucu {
  * ENGELLENMİYOR ama uyarı üretiyor: bir sıfır fazlası ya da eksiği,
  * rayiç/piyasa oranını on kat saptırır ve fark edilmesi aylar sürer.
  */
+/**
+ * Hata mesajlarında sütunu ADIYLA ve SIRASIYLA anmak için.
+ *
+ * ⚠️ İkisi birden veriliyor: dosyada aynı başlıktan iki tane olabiliyor
+ * (belediye tablolarında "Değer" sütunu iki kez geçebiliyor) ve yalnızca
+ * ad, hangisini kastettiğimizi söylemiyor.
+ */
+function sutunAdi(
+  eslesme: SutunEslemesi,
+  alan: AlanAnahtari,
+  basliklar: readonly string[] | undefined,
+): string {
+  const sira = eslesme[alan]
+  const etiket = ALAN_TANIMLARI.find((tanim) => tanim.anahtar === alan)?.etiket ?? alan
+  if (typeof sira !== 'number') return `“${etiket}” sütunu`
+  const baslik = basliklar?.[sira]
+  return baslik === undefined || baslik === ''
+    ? `${sira + 1}. sütun (${etiket})`
+    : `${sira + 1}. sütun “${baslik}” (${etiket})`
+}
+
 const MAKUL_ALT = 100
 const MAKUL_UST = 500_000
 
@@ -191,14 +221,17 @@ export function satirlariCozumle(
     const hatalar: string[] = []
     const uyarilar: string[] = []
 
+    const ad = (alan: AlanAnahtari) => sutunAdi(eslesme, alan, baglam.basliklar)
+
     const mahalleHam = hucre(satir, eslesme.mahalle)
     const mahalle = mahalleyiCozGenel(mahalleHam, baglam.mahalleler)
     if (!mahalle) {
       hatalar.push(
         mahalleHam === ''
-          ? 'Mahalle boş.'
-          : `"${mahalleHam}" sistemdeki hiçbir mahalleyle eşleşmedi. ` +
-              'Mahalleyi önce Mahalleler koleksiyonuna ekleyin.',
+          ? `${ad('mahalle')} boş. Mahalle adı zorunlu.`
+          : `${ad('mahalle')}: “${mahalleHam}” sistemdeki hiçbir mahalleyle eşleşmedi. ` +
+              'Beklenen: Mahalleler koleksiyonundaki adlardan biri. ' +
+              'Yazım farklıysa düzeltin, mahalle gerçekten yoksa önce koleksiyona ekleyin.',
       )
     }
 
@@ -207,7 +240,10 @@ export function satirlariCozumle(
     if (yilHam !== '') {
       const cozulen = sayiyaCevir(yilHam)
       if (cozulen === null || !Number.isInteger(cozulen) || cozulen < 1990 || cozulen > 2100) {
-        hatalar.push(`Yıl okunamadı: "${yilHam}".`)
+        hatalar.push(
+          `${ad('yil')}: “${yilHam}” yıl olarak okunamadı. ` +
+            'Beklenen: 1990–2100 arası dört haneli bir sayı (örn. 2026).',
+        )
       } else {
         yil = cozulen
       }
@@ -218,11 +254,31 @@ export function satirlariCozumle(
     const bina = binaHam === '' ? null : sayiyaCevir(binaHam)
     const arsa = arsaHam === '' ? null : sayiyaCevir(arsaHam)
 
-    if (binaHam !== '' && bina === null) hatalar.push(`Bina rayiç bedeli okunamadı: "${binaHam}".`)
-    if (arsaHam !== '' && arsa === null) hatalar.push(`Arsa rayiç bedeli okunamadı: "${arsaHam}".`)
+    /**
+     * ⚠️ BEKLENEN BİÇİM MESAJDA YAZIYOR — VE İKİ BİÇİM DE GEÇERLİ.
+     *
+     * Belediye tabloları bazen `12.500,50`, bazen `12,500.50` yazıyor;
+     * ayrıştırıcı ikisini de tanıyor (`lib/csv/ayristir.ts`). Okunamayan
+     * bir hücre bu yüzden neredeyse hep BAŞKA bir şey içeriyor: birim
+     * ("12.500 TL/m²"), açıklama ya da birleştirilmiş hücre artığı.
+     * Mesaj bunu söylemezse kullanıcı ondalık ayracıyla uğraşıp durur.
+     */
+    const sayiBeklentisi =
+      'Beklenen: yalnızca sayı. `12.500,50` ve `12,500.50` biçimleri de okunur; ' +
+      'ama hücrede birim (“TL”, “₺/m²”) ya da açıklama varsa okunamaz.'
+
+    if (binaHam !== '' && bina === null) {
+      hatalar.push(`${ad('metrekareRayicBedel')}: “${binaHam}” okunamadı. ${sayiBeklentisi}`)
+    }
+    if (arsaHam !== '' && arsa === null) {
+      hatalar.push(`${ad('arsaRayicBedel')}: “${arsaHam}” okunamadı. ${sayiBeklentisi}`)
+    }
 
     if (bina === null && arsa === null && hatalar.length === 0) {
-      hatalar.push('Satırda ne bina ne arsa rayiç bedeli var — yazılacak bir rakam yok.')
+      hatalar.push(
+        `Satırda yazılacak rakam yok: ${ad('metrekareRayicBedel')} ve ` +
+          `${ad('arsaRayicBedel')} birlikte boş. En az biri dolu olmalı.`,
+      )
     }
 
     for (const [etiket, deger] of [
@@ -231,7 +287,10 @@ export function satirlariCozumle(
     ] as const) {
       if (deger === null) continue
       if (deger <= 0) {
-        hatalar.push(`${etiket} rayiç bedeli sıfır ya da negatif.`)
+        hatalar.push(
+          `${etiket} rayiç bedeli sıfır ya da negatif (${deger}). ` +
+            'Beklenen: sıfırdan büyük bir sayı.',
+        )
       } else if (deger < MAKUL_ALT || deger > MAKUL_UST) {
         uyarilar.push(
           `${etiket} rayiç bedeli olağandışı (${deger.toLocaleString('tr-TR')} ₺/m²). ` +
@@ -245,7 +304,10 @@ export function satirlariCozumle(
     if (kaynakHam !== '') {
       const cozulen = kaynagiCoz(kaynakHam)
       if (cozulen === null) {
-        uyarilar.push(`Kaynak tanınmadı ("${kaynakHam}"); varsayılan kullanıldı.`)
+        uyarilar.push(
+          `${ad('kaynak')}: “${kaynakHam}” tanınmadı; varsayılan kullanıldı. ` +
+            `Tanınan değerler: ${RAYIC_KAYNAKLARI.map((k) => k.label).join(', ')}.`,
+        )
       } else {
         kaynak = cozulen
       }
@@ -294,4 +356,36 @@ export function satirlariCozumle(
 /** Kullanıcının girdiği tablo tarihini ISO'ya çevirir. */
 export function tabloTarihiniCoz(ham: string): string | null {
   return tariheCevir(ham)
+}
+
+/**
+ * Örnek CSV — panelden indirilir.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ ÖRNEK DOSYA BİR SÜS DEĞİL, HATA MESAJININ TAMAMLAYICISI.
+ *
+ * "Sütun adları tanınmadı" hatasının en ucuz çözümü, doğru sütun adlarını
+ * içeren bir dosyayı kullanıcının eline vermek. Belediye tabloları PDF ya
+ * da Excel geliyor ve sütun adları her belediyede farklı; elle yazılacak
+ * başlık satırını tahmin ettirmek yerine göstermek gerekiyor.
+ *
+ * ⚠️ İKİ SAYI BİÇİMİ DE ÖRNEKTE VAR: `12.500,50` ve `9,750.25`. Ayrıştırıcı
+ * ikisini de tanıyor ve bunu dosyada GÖSTERMEK, "ondalık ayracını
+ * değiştireyim mi?" sorusunu baştan kapatıyor.
+ *
+ * ⚠️ Rakamlar açıkça ÖRNEK ve dosyanın ilk satırı bunu yazıyor (kural 2).
+ * Rayiç bedel gerçek bir belediye verisidir; uydurma bir rakamın gerçek
+ * sanılması, yanlış tapu harcı hesabı demektir.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function ornekCsv(): string {
+  return [
+    '# ÖRNEK VERİ — YAYINLANMAYACAK. Rakamlar gerçek değildir, biçimi gösterir.',
+    '# Bu satırlar (#) içe aktarmada yok sayılır.',
+    '# Sayılar iki biçimde de yazılabilir: 12.500,50 ya da 12,500.50',
+    'Mahalle;Sokak;Yıl;Bina m² rayiç;Arsa m² rayiç;Kaynak;Not',
+    'Muhittin;Atatürk Caddesi;2026;12.500,50;8.200,00;Belediye;',
+    'Muhittin;;2026;11.000;7.400;Belediye;Sokak boşsa mahallenin geneli sayılır',
+    'Alipaşa;İstasyon Caddesi;2026;9,750.25;6,100.00;Belediye;İngilizce biçim de okunur',
+  ].join('\n')
 }
