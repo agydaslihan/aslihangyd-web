@@ -49,6 +49,8 @@ export function SinematikHero({
   birincilEylem,
   ikincilEylem,
   arkaplan,
+  sayfaHerosu = true,
+  sonrakiBolumId,
 }: {
   ustBaslik: string
   baslik: string
@@ -59,6 +61,24 @@ export function SinematikHero({
   birincilEylem: { ad: string; adres: string }
   ikincilEylem: { ad: string; adres: string }
   arkaplan: { url: string; alt: string } | null
+  /**
+   * Vitrin sayfanın hero'su mu?
+   *
+   * ⚠️ TEK BAYRAK, İKİ SONUÇ — `HeroBolumu`daki ayrımın aynısı ve aynı
+   * sebeple tek: `<h1>` mi `<h2>` mi, ve arka plan `priority` mi değil mi.
+   * Sayfada tek bir `<h1>` ve tek bir LCP adayı olabilir; ayrı iki prop
+   * olsaydı biri unutulduğunda ekranda hiçbir iz bırakmayan bir gerileme
+   * çıkardı.
+   */
+  sayfaHerosu?: boolean
+  /**
+   * "Metin önce" kipinde kaydırma göstergesinin götüreceği bölüm.
+   *
+   * ⚠️ AÇILIR KATMAN DEĞİL, SAYFA İÇİ BAĞLANTI. Karşılama katmanı
+   * kurmak Google'ın mobilde cezalandırdığı desendir; buradaki gösterge
+   * yalnızca sayfanın devamına kaydırıyor.
+   */
+  sonrakiBolumId?: string
 }) {
   return (
     <section className="bg-zemin vitrin-boy relative isolate flex flex-col overflow-hidden">
@@ -68,7 +88,8 @@ export function SinematikHero({
             src={arkaplan.url}
             alt={arkaplan.alt}
             fill
-            priority
+            // ⚠️ LCP adayı tektir: vitrin hero değilse öncelik ona ait değil.
+            priority={sayfaHerosu}
             sizes="100vw"
             className="-z-20 object-cover"
           />
@@ -105,10 +126,17 @@ export function SinematikHero({
 
         <Sahne gecikme={60}>
           {/* ⚠️ 72px masaüstü / 40px mobil — şartname §3'ün hero ölçeği. */}
-          <h1 className="text-metin font-baslik text-hero-mobil mt-6 max-w-4xl font-medium text-balance sm:text-hero">
-            {baslik} <span className="text-[color:var(--color-vurgu-baslik)]">{vurgu}</span>{' '}
-            {baslikDevam}
-          </h1>
+          {sayfaHerosu ? (
+            <h1 className="text-metin font-baslik text-hero-mobil mt-6 max-w-4xl font-medium text-balance sm:text-hero">
+              {baslik} <span className="text-[color:var(--color-vurgu-baslik)]">{vurgu}</span>{' '}
+              {baslikDevam}
+            </h1>
+          ) : (
+            <h2 className="text-metin font-baslik text-hero-mobil mt-6 max-w-4xl font-medium text-balance sm:text-hero">
+              {baslik} <span className="text-[color:var(--color-vurgu-baslik)]">{vurgu}</span>{' '}
+              {baslikDevam}
+            </h2>
+          )}
         </Sahne>
 
         <Sahne gecikme={120}>
@@ -155,11 +183,32 @@ export function SinematikHero({
         ⚠️ Animasyon `transform` üzerinden ve `prefers-reduced-motion`
         bloğunda duruyor.
       */}
-      <div aria-hidden="true" className="vitrin-ipucu relative flex justify-center pb-10">
-        <span className="bg-kenar-guclu relative block h-14 w-px overflow-hidden">
-          <span className="bg-gold-cizgi kaydirma-ipucu absolute inset-x-0 top-0 block h-6" />
-        </span>
-      </div>
+      {sonrakiBolumId === undefined ? (
+        <div aria-hidden="true" className="vitrin-ipucu relative flex justify-center pb-10">
+          <span className="bg-kenar-guclu relative block h-14 w-px overflow-hidden">
+            <span className="bg-gold-cizgi kaydirma-ipucu absolute inset-x-0 top-0 block h-6" />
+          </span>
+        </div>
+      ) : (
+        /*
+          ⚠️ ÇİZGİ BAĞLANTIYA DÖNÜŞÜYOR — VE `aria-hidden` KALKIYOR.
+
+          "Metin önce" kipinde bir sonraki ekran slaytlar; oraya gitmenin
+          tek yolu kaydırmak olmamalı. Bağlantı klavyeyle de çalışıyor ve
+          ekran okuyucuya adıyla görünüyor.
+        */
+        <div className="vitrin-ipucu relative flex justify-center pb-10">
+          <a
+            href={`#${sonrakiBolumId}`}
+            className="text-metin-3 hover:text-metin flex flex-col items-center gap-2 text-mikro transition-colors"
+          >
+            <span>Slaytlara geç</span>
+            <span aria-hidden className="bg-kenar-guclu relative block h-14 w-px overflow-hidden">
+              <span className="bg-gold-cizgi kaydirma-ipucu absolute inset-x-0 top-0 block h-6" />
+            </span>
+          </a>
+        </div>
+      )}
     </section>
   )
 }

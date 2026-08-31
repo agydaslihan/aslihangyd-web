@@ -3,6 +3,8 @@ import type { GlobalConfig } from 'payload'
 
 import {
   ANASAYFA_SIRA_SECENEKLERI,
+  HERO_ACILISLARI,
+  VARSAYILAN_HERO_ACILISI,
   BOLUM_BOSLUKLARI,
   BOLUM_HIZALAMALARI,
   BOLUM_ZEMINLERI,
@@ -93,6 +95,20 @@ export const AnaSayfaDuzeni: GlobalConfig = {
   },
 
   fields: [
+    {
+      name: 'heroAcilisi',
+      type: 'select',
+      label: 'Hero açılışı',
+      defaultValue: VARSAYILAN_HERO_ACILISI,
+      options: HERO_ACILISLARI.map((k) => ({ value: k.value, label: k.label })),
+      admin: {
+        description:
+          'Sayfanın ilk ekranı neyle başlasın. ' +
+          '⚠️ Üçü de gerçek bir sayfa bölümü — hiçbiri açılır katman (pop-up) değil; ' +
+          'araya giren katmanlar mobil arama sıralamasını düşürür. ' +
+          'Hangi kip seçiliyse sayfanın tek H1 başlığı orada olur.',
+      },
+    },
     {
       name: 'sira',
       type: 'array',

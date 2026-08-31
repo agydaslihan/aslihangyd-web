@@ -2226,6 +2226,10 @@ export interface HeroSlider {
 export interface AnasayfaDuzeni {
   id: number;
   /**
+   * Sayfanın ilk ekranı neyle başlasın. ⚠️ Üçü de gerçek bir sayfa bölümü — hiçbiri açılır katman (pop-up) değil; araya giren katmanlar mobil arama sıralamasını düşürür. Hangi kip seçiliyse sayfanın tek H1 başlığı orada olur.
+   */
+  heroAcilisi?: ('metin_once' | 'slayt_once' | 'yalnizca_metin') | null;
+  /**
    * Yukarıdan aşağı ana sayfa sırası. Listeden silinen bölüm kaybolmaz — varsayılan yerinde çizilmeye devam eder.
    */
   sira?:
@@ -2898,6 +2902,7 @@ export interface HeroSliderSelect<T extends boolean = true> {
  * via the `definition` "anasayfa-duzeni_select".
  */
 export interface AnasayfaDuzeniSelect<T extends boolean = true> {
+  heroAcilisi?: T;
   sira?:
     | T
     | {

@@ -33,34 +33,44 @@ import { mahalleleriGetir } from '@/lib/veri/mahalleler'
 import { bolumDurumlariniGetir } from '@/lib/veri/siteBolumleri'
 import { heroAyarlari } from '@/lib/hero/sunucu'
 import { hakkimizdaGetir, type HakkimizdaGorseli } from '@/lib/veri/hakkimizda'
-import { anaSayfaDuzeniniGetir } from '@/lib/veri/anaSayfaDuzeni'
+import { anaSayfaDuzeniniGetir, heroAcilisiniGetir } from '@/lib/veri/anaSayfaDuzeni'
 
 export default async function AnaSayfa() {
-  const [ilanlar, mahalleler, kurumsal, sayimIcinIlanlar, bolumler, hero, hakkimizda, duzen] =
-    await Promise.all([
-      oneCikanIlanlariGetir(3),
-      mahalleleriGetir(),
-      kurumsalBilgileriGetir(),
-      /**
-       * ⚠️ Sayfa boyutu 200: hem toplam sayaç hem de mahalle başına dağılım
-       * bu tek sorgudan çıkıyor (`portfoySayilari`). Ayrı bir gruplama
-       * sorgusu, ana sayfaya her istekte ikinci bir veritabanı turu eklerdi.
-       */
-      ilanlariGetir({}, 1, 200),
-      bolumDurumlariniGetir(),
-      heroAyarlari(),
-      /**
-       * ⚠️ Portre HAKKIMIZDA GLOBALİNDEN. Aslıhan fotoğrafını oraya
-       * yüklüyordu ve ana sayfa onu hiç okumuyordu: panelde dolu, sayfada
-       * "Fotoğraf hazırlanıyor" yazan boş bir çerçeve duruyordu.
-       */
-      hakkimizdaGetir(),
-      /**
-       * ⚠️ Bölüm sırası PANELDEN. Okuma başarısız olursa varsayılan kod
-       * sırasına düşüyor — ana sayfa düzen kaydına bağımlı değil.
-       */
-      anaSayfaDuzeniniGetir(),
-    ])
+  const [
+    ilanlar,
+    mahalleler,
+    kurumsal,
+    sayimIcinIlanlar,
+    bolumler,
+    hero,
+    hakkimizda,
+    duzen,
+    heroAcilisi,
+  ] = await Promise.all([
+    oneCikanIlanlariGetir(3),
+    mahalleleriGetir(),
+    kurumsalBilgileriGetir(),
+    /**
+     * ⚠️ Sayfa boyutu 200: hem toplam sayaç hem de mahalle başına dağılım
+     * bu tek sorgudan çıkıyor (`portfoySayilari`). Ayrı bir gruplama
+     * sorgusu, ana sayfaya her istekte ikinci bir veritabanı turu eklerdi.
+     */
+    ilanlariGetir({}, 1, 200),
+    bolumDurumlariniGetir(),
+    heroAyarlari(),
+    /**
+     * ⚠️ Portre HAKKIMIZDA GLOBALİNDEN. Aslıhan fotoğrafını oraya
+     * yüklüyordu ve ana sayfa onu hiç okumuyordu: panelde dolu, sayfada
+     * "Fotoğraf hazırlanıyor" yazan boş bir çerçeve duruyordu.
+     */
+    hakkimizdaGetir(),
+    /**
+     * ⚠️ Bölüm sırası PANELDEN. Okuma başarısız olursa varsayılan kod
+     * sırasına düşüyor — ana sayfa düzen kaydına bağımlı değil.
+     */
+    anaSayfaDuzeniniGetir(),
+    heroAcilisiniGetir(),
+  ])
 
   /**
    * ⚠️ Hero ayarları BURADA okunuyor, `HeroBolumu` içinde ikinci kez değil.
@@ -292,8 +302,17 @@ export default async function AnaSayfa() {
             burada dönüyor; tek slayt varsa bant hiç çizilmiyor — aynı fotoğrafı
             iki kez göstermenin anlamı yok.
           */}
-        {hero.slaytlar.length > 1 ? (
-          <div className="py-16 sm:py-20">
+        {/*
+            ⚠️ BANT YALNIZCA "METİN ÖNCE" KİPİNDE.
+
+            Bandın varlık sebebi, vitrinin yalnızca İLK slaydı zemin olarak
+            kullanması: kalan kareler burada dönüyor. "Slayt önce" kipinde
+            slider zaten sayfanın hero'su ve TÜM slaytları gösteriyor;
+            bandı da çizmek aynı fotoğrafları ikinci kez basmak olurdu.
+            "Yalnızca metin" kipinde slider tümden kapalı.
+          */}
+        {heroAcilisi === 'metin_once' && hero.slaytlar.length > 1 ? (
+          <div id="hero-slaytlari" className="py-16 sm:py-20">
             {/*
                 ⚠️ İLK SLAYT BANTTAN ÇIKARILIYOR — ÖLÇÜMLE BULUNDU.
 
@@ -386,7 +405,26 @@ export default async function AnaSayfa() {
         giriyor ve bu bir boş durum değil, tasarlanmış ikinci basamak.
         ─────────────────────────────────────────────────────────────────
       */}
+      {/*
+        ─────────────────────────────────────────────────────────────────
+        ⚠️ HERO AÇILIŞI PANELDEN — ÜÇ KİP, ÜÇÜ DE GERÇEK SAYFA BÖLÜMÜ.
+
+        Hiçbiri açılır katman (interstitial) değil: Google mobilde araya
+        giren katmanları cezalandırıyor, katmanın kendisi LCP öğesi olur
+        ve odak tuzağı gerektirir — hiçbiri gerekmeyen bir sorun için.
+
+        ⚠️ HANGİ KİP AKTİFSE `<h1>` ORADA. Sayfada iki `<h1>` olamaz;
+        `sayfaHerosu` bayrağı `<h1>`/`<h2>` ile `priority`yi BİRLİKTE
+        taşıyor, ikisi asla ayrışmasın diye.
+        ─────────────────────────────────────────────────────────────────
+      */}
+      {heroAcilisi === 'slayt_once' ? <HeroBolumu ayarlar={hero} sayfaHerosu /> : null}
+
       <SinematikHero
+        sayfaHerosu={heroAcilisi !== 'slayt_once'}
+        sonrakiBolumId={
+          heroAcilisi === 'metin_once' && hero.slaytlar.length > 1 ? 'hero-slaytlari' : undefined
+        }
         ustBaslik="Çorlu · Tekirdağ"
         baslik="Gayrimenkulün gerçek değerini"
         vurgu="birlikte"
