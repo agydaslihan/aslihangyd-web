@@ -24,6 +24,25 @@
   list-style: none;
 }
 
+.sihirbaz-adimlar li button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: none;
+  border: 0;
+  padding: 0;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.sihirbaz-adimlar li button:focus-visible {
+  outline: 2px solid var(--theme-success-500);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
 .sihirbaz-adimlar li {
   display: flex;
   align-items: center;
@@ -32,12 +51,12 @@
   color: var(--theme-elevation-500, #888);
 }
 
-.sihirbaz-adimlar li.etkin {
+.sihirbaz-adimlar li button.etkin {
   color: var(--theme-text, #111);
   font-weight: 600;
 }
 
-.sihirbaz-adimlar li.tamam {
+.sihirbaz-adimlar li button.tamam {
   color: var(--theme-elevation-700, #555);
 }
 
@@ -53,11 +72,11 @@
   font-variant-numeric: tabular-nums;
 }
 
-.sihirbaz-adimlar li.etkin .sihirbaz-adim-no {
+.sihirbaz-adimlar li button.etkin .sihirbaz-adim-no {
   border-color: var(--theme-text, #111);
 }
 
-.sihirbaz-adimlar li.tamam .sihirbaz-adim-no {
+.sihirbaz-adimlar li button.tamam .sihirbaz-adim-no {
   background: var(--theme-elevation-100, #eee);
 }
 
@@ -384,4 +403,187 @@ textarea.sihirbaz-girdi {
   display: flex;
   flex-direction: column;
   gap: 1rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   İlerleme, görseller, öneriler ve kontrol listesi
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.sihirbaz-ilerleme {
+  margin-bottom: 1rem;
+}
+
+.sihirbaz-ilerleme-cubuk {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--theme-elevation-100);
+  overflow: hidden;
+}
+
+.sihirbaz-ilerleme-cubuk span {
+  display: block;
+  height: 100%;
+  background: var(--theme-success-500);
+  transition: width 200ms ease-out;
+}
+
+.sihirbaz-ilerleme-metin {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--theme-elevation-600);
+}
+
+.sihirbaz-adim-yuzde {
+  font-size: 0.72rem;
+  color: var(--theme-elevation-500);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ⚠️ Mobil öncelikli: sahada telefondan kullanılıyor. Dar ekranda adımlar
+   yatay kayan bir şerit; alt alta dizilmeleri formu ekrandan taşırıyordu. */
+@media (max-width: 40rem) {
+  .sihirbaz-adimlar {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    scrollbar-width: thin;
+  }
+
+  .sihirbaz-adimlar li {
+    flex: 0 0 auto;
+  }
+
+  .sihirbaz-adim-ad {
+    display: none;
+  }
+}
+
+.sihirbaz-secenekler {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  border: 0;
+  padding: 0;
+  margin: 0;
+}
+
+.sihirbaz-gorseller {
+  list-style: none;
+  margin: 0.75rem 0 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.sihirbaz-gorseller li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+  background: var(--theme-elevation-50);
+}
+
+/* ⚠️ Kapak, sıranın başı olduğu için ayrıca işaretleniyor: "ilk fotoğraf
+   kapaktır" kuralı ekranda görünmüyorsa kural yoktur. */
+.sihirbaz-gorseller li.kapak {
+  border-color: var(--theme-success-500);
+}
+
+.sihirbaz-gorseller img {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+.sihirbaz-gorsel-govde {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.sihirbaz-gorsel-ad {
+  font-size: 0.8rem;
+  color: var(--theme-elevation-600);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.sihirbaz-gorsel-dugmeler {
+  display: flex;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+.sihirbaz-gorsel-dugmeler button {
+  /* ⚠️ 44 px dokunma hedefi — sahada telefonla kullanılıyor. */
+  min-width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: var(--theme-elevation-0);
+  cursor: pointer;
+}
+
+.sihirbaz-gorsel-dugmeler button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.sihirbaz-oneri {
+  margin: -0.25rem 0 0.75rem;
+  font-size: 0.82rem;
+  color: var(--theme-elevation-600);
+}
+
+.sihirbaz-oneri-dugme {
+  border: 0;
+  background: none;
+  padding: 0;
+  font: inherit;
+  color: var(--theme-success-600);
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sihirbaz-sablonlar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+.sihirbaz-kontrol {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.sihirbaz-kontrol li.tamam {
+  color: var(--theme-success-600);
+}
+
+.sihirbaz-kontrol li.eksik {
+  color: var(--theme-error-600);
+  font-weight: 600;
+}
+
+.sihirbaz-gosterge {
+  margin: 0.5rem 0 1rem;
+  padding: 0.75rem;
+  border-radius: 6px;
+  background: var(--theme-elevation-50);
+}
+
+.sihirbaz-gosterge p {
+  margin: 0;
 }

@@ -16,7 +16,7 @@ import './sihirbaz.css'
  *
  * ⚠️ Görünüm herkese açık değil. Payload, `admin.user` koleksiyonunda
  * oturumu olmayan isteği giriş ekranına yönlendirir. Yine de sunucu eylemi
- * (`ilanTaslagiOlustur`) kendi başına da oturum doğrular — görünüm
+ * (`ilanTaslaginiKaydet`) kendi başına da oturum doğrular — görünüm
  * korumasının atlanabileceği bir yol kalmasın diye.
  */
 export default async function SihirbazGorunumu({ initPageResult }: AdminViewServerProps) {
@@ -60,8 +60,11 @@ export default async function SihirbazGorunumu({ initPageResult }: AdminViewServ
       <header className="sihirbaz-basliklar">
         <h1>Portföy giriş sihirbazı</h1>
         <p className="sihirbaz-aciklama">
-          Yeni bir taşınmazı adım adım sisteme girin. Sihirbaz ilanı <strong>taslak olarak</strong>{' '}
-          kaydeder; fotoğraf, uzun açıklama ve yayına alma işlemi ilan sayfasında yapılır.
+          Yeni bir taşınmazı adım adım sisteme girin.{' '}
+          <strong>Mahalle dışında hiçbir alan zorunlu değil</strong> — istediğiniz adımdan başlayıp
+          yarım bırakabilirsiniz; sihirbaz 30 saniyede bir kendiliğinden kaydeder. Kayıt daima{' '}
+          <strong>taslak</strong> olarak açılır; yayına alma, EİDS koşullarının denetlendiği ilan
+          sayfasında yapılır.
         </p>
       </header>
 

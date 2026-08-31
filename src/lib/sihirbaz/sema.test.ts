@@ -1,13 +1,22 @@
 import { describe, expect, it } from 'vitest'
 
+import { readFileSync } from 'node:fs'
+import path from 'node:path'
+import { fileURLToPath } from 'node:url'
+
 import {
+  ADIMLAR,
+  VARSAYILAN_KATEGORI,
+  VARSAYILAN_TIP,
   adimHatalari,
-  eidsSemasi,
-  konumSemasi,
-  rakamlarSemasi,
+  fiyatSemasi,
+  nitelikSemasi,
   sihirbazSemasi,
+  tapuSemasi,
   temelSemasi,
 } from './sema'
+
+const KOK = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..')
 
 /**
  * ⚠️ Buradaki değerler UYDURMADIR; şema mantığını sınamak içindir.
@@ -44,114 +53,118 @@ function tamGirdi(degisiklik: Record<string, unknown> = {}) {
 
 // ═══════════════════════════════════════════════════════════════════════════
 describe('temelSemasi', () => {
-  it('kısa başlığı reddeder — arama sonuçlarında bu metin görünecek', () => {
-    const sonuc = temelSemasi.safeParse({ baslik: 'Ev', tip: 'satilik', kategori: 'konut' })
-    expect(sonuc.success).toBe(false)
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ BAŞLIK ARTIK ZORUNLU DEĞİL — VE BU BİLİNÇLİ BİR KARAR.
+   *
+   * Sihirbaz sahada, telefondan, taşınmazın içinde kullanılıyor. Girişe
+   * fotoğraftan ya da oda sayısından başlayan biri başlığı en sona
+   * bırakıyor. Zorunlu tutmak, o anda girilebilecek bilgiyi de girilemez
+   * yapardı: yarım bırakılamayan bir form, hiç başlanmayan bir formdur.
+   *
+   * Payload'da `baslik` zorunlu; eylem boş başlık için tarihli bir taslak
+   * adı üretiyor ve bunu kullanıcıya söylüyor.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  it('kısa başlığı KABUL eder — tüm alanlar isteğe bağlı', () => {
+    expect(temelSemasi.safeParse({ baslik: 'Ev' }).success).toBe(true)
+    expect(temelSemasi.safeParse({}).success).toBe(true)
+  })
+
+  it('çok uzun başlığı reddeder', () => {
+    expect(temelSemasi.safeParse({ baslik: 'x'.repeat(161) }).success).toBe(false)
   })
 
   it('geçersiz tip değerini reddeder', () => {
-    const sonuc = temelSemasi.safeParse({
-      baslik: 'Yeterince uzun bir ilan başlığı',
-      tip: 'devren',
-      kategori: 'konut',
-    })
-    expect(sonuc.success).toBe(false)
+    expect(temelSemasi.safeParse({ tip: 'devren' }).success).toBe(false)
+  })
+})
+
+describe('varsayılanlar koleksiyonla aynı', () => {
+  /**
+   * ⚠️ `tip` ve `kategori` koleksiyonda `required` ve `defaultValue`
+   * taşıyor. Sihirbaz aynı değerleri ekranda seçili gösteriyor ve
+   * göndermiyorsa aynı değerleri yazıyor. İkisi ayrışırsa, kullanıcının
+   * ekranda gördüğüyle kaydedilen farklı olurdu.
+   */
+  const koleksiyon = readFileSync(path.join(KOK, 'collections/Ilanlar.ts'), 'utf8')
+
+  it('ilan tipi varsayılanı koleksiyondakiyle aynı', () => {
+    expect(koleksiyon).toContain(`defaultValue: '${VARSAYILAN_TIP}'`)
   })
 
-  it('özet isteğe bağlıdır', () => {
-    const sonuc = temelSemasi.safeParse({
-      baslik: 'Yeterince uzun bir ilan başlığı',
-      tip: 'satilik',
-      kategori: 'konut',
-    })
-    expect(sonuc.success).toBe(true)
+  it('kategori varsayılanı koleksiyondakiyle aynı', () => {
+    expect(koleksiyon).toContain(`defaultValue: '${VARSAYILAN_KATEGORI}'`)
   })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
-describe('konumSemasi', () => {
-  it('mahalle seçilmeden geçmez', () => {
-    const sonuc = konumSemasi.safeParse({ il: 'Tekirdağ', ilce: 'Çorlu', mahalle: '' })
-    expect(sonuc.success).toBe(false)
+describe('tapuSemasi', () => {
+  /**
+   * Ada, parsel ve EİDS alanları yayın için gerekli ama TASLAK için değil.
+   * Zorunlu kılmak, "yetkiyi henüz almadım, önce taşınmazı gireyim" gibi
+   * tamamen meşru bir akışı imkânsız kılardı.
+   */
+  it('tapu ve EİDS alanları taslak için zorunlu değildir', () => {
+    expect(tapuSemasi.safeParse({}).success).toBe(true)
+  })
+
+  it('geçersiz tarih biçimini reddeder', () => {
+    expect(tapuSemasi.safeParse({ eidsYetkiBitis: '31.12.2099' }).success).toBe(false)
+    expect(tapuSemasi.safeParse({ eidsYetkiBitis: '2099-12-31' }).success).toBe(true)
+  })
+
+  it('tanınmayan yetki durumunu reddeder', () => {
+    expect(tapuSemasi.safeParse({ eidsDurum: 'belki' }).success).toBe(false)
   })
 
   /**
-   * Ada ve parsel EİDS için gerekli ama TASLAK için değil. Burada zorunlu
-   * kılmak, "yetkiyi henüz almadım, önce taşınmazı gireyim" gibi tamamen
-   * meşru bir akışı imkânsız kılardı.
+   * ⚠️ GPS'ten gelen koordinat sayı olmak zorunda. Metin kabul edilseydi
+   * haritaya çizilemeyen bir "konum" kaydedilirdi.
    */
-  it('ada ve parsel taslak için zorunlu değildir', () => {
-    const sonuc = konumSemasi.safeParse({ il: 'Tekirdağ', ilce: 'Çorlu', mahalle: '3' })
-    expect(sonuc.success).toBe(true)
+  it('koordinat sayı olmalı', () => {
+    expect(tapuSemasi.safeParse({ boylam: 'kuzey' }).success).toBe(false)
+    expect(tapuSemasi.safeParse({ boylam: '27.81', enlem: '41.15' }).success).toBe(true)
   })
 })
 
 // ═══════════════════════════════════════════════════════════════════════════
-describe('rakamlarSemasi — girilmedi ile sıfır ayrımı', () => {
+describe('fiyatSemasi — girilmedi ile sıfır ayrımı', () => {
   /**
    * Bu ayrım motorların temel varsayımı. Boş alan sıfıra düşerse yatırım
    * göstergeleri sessizce yanlış hesaplanır (CLAUDE.md kural 2).
    */
   it('boş sayı alanı undefined olur, sıfır DEĞİL', () => {
-    const sonuc = rakamlarSemasi.safeParse({ fiyat: '', brutM2: '' })
-    expect(sonuc.success).toBe(true)
-    if (!sonuc.success) return
+    const fiyat = fiyatSemasi.safeParse({ fiyat: '' })
+    const nitelik = nitelikSemasi.safeParse({ brutM2: '' })
+    expect(fiyat.success).toBe(true)
+    expect(nitelik.success).toBe(true)
+    if (!fiyat.success || !nitelik.success) return
 
-    expect(sonuc.data.fiyat).toBeUndefined()
-    expect(sonuc.data.brutM2).toBeUndefined()
+    expect(fiyat.data.fiyat).toBeUndefined()
+    expect(nitelik.data.brutM2).toBeUndefined()
   })
 
   it('açıkça girilen sıfır korunur', () => {
-    const sonuc = rakamlarSemasi.safeParse({ aidat: '0' })
+    const sonuc = fiyatSemasi.safeParse({ aidat: '0' })
     expect(sonuc.success).toBe(true)
     if (!sonuc.success) return
     expect(sonuc.data.aidat).toBe(0)
   })
 
   it('sayı olmayan değeri reddeder', () => {
-    expect(rakamlarSemasi.safeParse({ fiyat: 'beş milyon' }).success).toBe(false)
+    expect(fiyatSemasi.safeParse({ fiyat: 'beş milyon' }).success).toBe(false)
   })
 
   it('negatif değeri reddeder', () => {
-    expect(rakamlarSemasi.safeParse({ fiyat: '-100' }).success).toBe(false)
+    expect(fiyatSemasi.safeParse({ fiyat: '-100' }).success).toBe(false)
   })
 
   it('para birimi girilmezse TRY varsayılır', () => {
-    const sonuc = rakamlarSemasi.safeParse({})
+    const sonuc = fiyatSemasi.safeParse({})
     expect(sonuc.success).toBe(true)
     if (!sonuc.success) return
     expect(sonuc.data.paraBirimi).toBe('TRY')
-  })
-})
-
-// ═══════════════════════════════════════════════════════════════════════════
-describe('eidsSemasi', () => {
-  /**
-   * ⚠️ Sihirbaz taslak üretir; taslak için EİDS aranmaz. Bu gevşeklik
-   * yayın kapısını GEVŞETMEZ — kapı `eidsYayinEngeli` kancasındadır ve
-   * entegrasyon testiyle ayrıca kanıtlanır.
-   */
-  it('EİDS alanları boş bırakılabilir — taslak için zorunlu değil', () => {
-    const sonuc = eidsSemasi.safeParse({
-      eidsDurum: '',
-      tasinmazNo: '',
-      eidsYetkiBaslangic: '',
-      eidsYetkiBitis: '',
-    })
-    // Boş dize enum'a uymaz; alan hiç gönderilmemiş sayılmalı.
-    expect(sonuc.success).toBe(false)
-
-    const bossuz = eidsSemasi.safeParse({ tasinmazNo: '' })
-    expect(bossuz.success).toBe(true)
-  })
-
-  it('geçersiz tarih biçimini reddeder', () => {
-    expect(eidsSemasi.safeParse({ eidsYetkiBitis: '31.12.2099' }).success).toBe(false)
-    expect(eidsSemasi.safeParse({ eidsYetkiBitis: '2099-12-31' }).success).toBe(true)
-  })
-
-  it('tanınmayan yetki durumunu reddeder', () => {
-    expect(eidsSemasi.safeParse({ eidsDurum: 'belki' }).success).toBe(false)
   })
 })
 
@@ -194,27 +207,56 @@ describe('sihirbazSemasi', () => {
 // ═══════════════════════════════════════════════════════════════════════════
 describe('adimHatalari', () => {
   it('hata yoksa boş nesne döner', () => {
-    expect(
-      adimHatalari(temelSemasi, {
-        baslik: 'Yeterince uzun bir ilan başlığı',
-        tip: 'satilik',
-        kategori: 'konut',
-      }),
-    ).toEqual({})
+    expect(adimHatalari(temelSemasi, { baslik: 'Bir ilan başlığı' })).toEqual({})
   })
 
   it('alan başına tek mesaj döndürür', () => {
-    const hatalar = adimHatalari(temelSemasi, { baslik: 'Ev', tip: 'satilik', kategori: 'konut' })
+    const hatalar = adimHatalari(temelSemasi, { baslik: 'x'.repeat(200) })
 
     expect(Object.keys(hatalar)).toEqual(['baslik'])
     expect(typeof hatalar.baslik).toBe('string')
   })
 
   it('mesajlar Türkçedir — Zod varsayılanı sızmaz', () => {
-    const hatalar = adimHatalari(temelSemasi, {})
+    const hatalar = adimHatalari(tapuSemasi, { eidsYetkiBitis: '31.12.2099', boylam: 'kuzey' })
 
+    expect(Object.keys(hatalar).length).toBeGreaterThan(0)
     for (const mesaj of Object.values(hatalar)) {
       expect(mesaj).not.toMatch(/Invalid|expected|required/i)
     }
+  })
+})
+
+// ═══════════════════════════════════════════════════════════════════════════
+describe('adımlar', () => {
+  it('sekiz adım ve hepsinin şeması var', () => {
+    expect(ADIMLAR).toHaveLength(8)
+    for (const adim of ADIMLAR) expect(adim.sema).toBeDefined()
+  })
+
+  it('adım anahtarları benzersiz', () => {
+    const anahtarlar = ADIMLAR.map((a) => a.anahtar)
+    expect(new Set(anahtarlar).size).toBe(anahtarlar.length)
+  })
+
+  /**
+   * ⚠️ Yüzde göstergesinin paydası bu liste. Şemada olmayan bir alan adı
+   * yazılırsa yüzde asla %100 olmaz ve kullanıcı hiç bitmeyen bir adım
+   * görür.
+   */
+  it('doluluk alanları gerçekten şemada var', () => {
+    const tumAlanlar = new Set([
+      ...Object.keys(temelSemasi.shape),
+      ...Object.keys(tapuSemasi.shape),
+      ...Object.keys(nitelikSemasi.shape),
+      ...Object.keys(fiyatSemasi.shape),
+    ])
+    const bilinmeyen: string[] = []
+    for (const adim of ADIMLAR) {
+      if (adim.anahtar === 'gorseller' || adim.anahtar === 'aciklama') continue
+      if (adim.anahtar === 'medya' || adim.anahtar === 'yayin') continue
+      for (const alan of adim.alanlar) if (!tumAlanlar.has(alan)) bilinmeyen.push(alan)
+    }
+    expect(bilinmeyen).toEqual([])
   })
 })
