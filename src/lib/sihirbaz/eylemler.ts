@@ -204,3 +204,58 @@ function hataMesaji(hata: unknown): string {
   }
   return 'İlan kaydedilemedi. Bilgileri kontrol edip tekrar deneyin.'
 }
+
+/**
+ * Taslağı yayına alır.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BU EYLEM EİDS KAPISINI ATLAMIYOR — ONU ÇAĞIRIYOR.
+ *
+ * Sihirbazın son adımında "Yayına al" düğmesi var ve EİDS eksikse pasif.
+ * Ama pasif bir düğme bir kapı değildir: DOM'dan etkinleştirilebilir,
+ * eylem doğrudan çağrılabilir.
+ *
+ * Gerçek kapı yine `eidsYayinEngeli` kancası. Bu eylem `durum`u sunucuda
+ * yazıyor ve yazma Local API + `overrideAccess: false` ile gidiyor; kanca
+ * koşulları sağlanmıyorsa Payload kaydı reddediyor ve hata mesajı
+ * kullanıcıya aynen gösteriliyor.
+ *
+ * ⚠️ `durum` HÂLÂ İSTEMCİDEN GELMİYOR. İstemci yalnızca "bu ilanı yayına
+ * al" diyor; hangi değerin yazılacağına sunucu karar veriyor. Şemada
+ * `durum` alanı yok ve olmayacak.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export async function ilaniYayinaAl(ilanId: string): Promise<SihirbazSonucu> {
+  const payload = await getPayload({ config })
+  const { user } = await payload.auth({ headers: await headers() })
+
+  if (!user) {
+    return {
+      basarili: false,
+      genelHata: 'Oturumunuz sona ermiş görünüyor. Sayfayı yenileyip tekrar giriş yapın.',
+    }
+  }
+
+  const kimlik = typeof ilanId === 'string' ? ilanId.trim() : ''
+  if (kimlik === '') {
+    return { basarili: false, genelHata: 'Önce taslağı kaydedin.' }
+  }
+
+  try {
+    const ilan = await payload.update({
+      collection: 'ilanlar',
+      id: kimlik,
+      // ⚠️ Sabit. İstemci hangi duruma geçileceğini seçemiyor.
+      data: { durum: 'yayinda' },
+      user,
+      overrideAccess: false,
+    })
+
+    return { basarili: true, ilanId: String(ilan.id), ilanBasligi: ilan.baslik, yeniMi: false }
+  } catch (hata) {
+    // ⚠️ Kancanın mesajı AYNEN gösteriliyor: hangi EİDS koşulunun eksik
+    // olduğunu en iyi o biliyor ve burada ikinci bir metin yazmak, iki
+    // mesajın ayrıştığı bir gün üretirdi.
+    return { basarili: false, genelHata: hataMesaji(hata) }
+  }
+}

@@ -587,3 +587,221 @@ textarea.sihirbaz-girdi {
 .sihirbaz-gosterge p {
   margin: 0;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Modal kabuk, kategori sütunları ve ön izleme
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.sihirbaz-modal-ortu {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+  padding: 2rem 1rem;
+  overflow-y: auto;
+  background: color-mix(in oklab, #000 55%, transparent);
+}
+
+.sihirbaz-modal {
+  background: var(--theme-elevation-0);
+  border-radius: 10px;
+  width: min(64rem, 100%);
+  box-shadow: 0 24px 60px rgb(0 0 0 / 35%);
+}
+
+.sihirbaz-modal-baslik {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  border-bottom: 1px solid var(--theme-elevation-150);
+  position: sticky;
+  top: 0;
+  background: var(--theme-elevation-0);
+  border-radius: 10px 10px 0 0;
+}
+
+.sihirbaz-modal-baslik h2 {
+  margin: 0;
+  font-size: 1.05rem;
+}
+
+/* ⚠️ 44 px dokunma hedefi — modal mobilde de kullanılıyor. */
+.sihirbaz-modal-kapat {
+  min-width: 44px;
+  min-height: 44px;
+  border: 0;
+  background: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  color: var(--theme-elevation-700);
+}
+
+.sihirbaz-modal-govde {
+  padding: 1.25rem;
+}
+
+/* ⚠️ Mobilde modal tam ekran: 64rem'lik bir kart dar ekranda kenarlardan
+   taşıyor ve içerik okunmaz hâle geliyor. */
+@media (max-width: 48rem) {
+  .sihirbaz-modal-ortu {
+    padding: 0;
+  }
+
+  .sihirbaz-modal {
+    width: 100%;
+    min-height: 100svh;
+    border-radius: 0;
+  }
+
+  .sihirbaz-modal-baslik {
+    border-radius: 0;
+  }
+}
+
+/* ── Kategori sütunları ─────────────────────────────────────────────── */
+
+.sihirbaz-sutunlar {
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+
+.sihirbaz-sutun h3 {
+  margin: 0 0 0.5rem;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--theme-elevation-600);
+}
+
+.sihirbaz-sutun ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.sihirbaz-sutun button {
+  width: 100%;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  padding: 0.55rem 0.75rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+  background: var(--theme-elevation-0);
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+/*
+ * ⚠️ SEÇİM RENKLE TEK BAŞINA ANLATILMIYOR (WCAG 1.4.1): onay işareti ve
+ * `aria-pressed` da var. Renk körü bir kullanıcı da hangisinin seçili
+ * olduğunu görüyor.
+ */
+.sihirbaz-sutun button.secili {
+  border-color: var(--theme-success-500);
+  background: var(--theme-elevation-50);
+  font-weight: 600;
+}
+
+.sihirbaz-sutun button:focus-visible {
+  outline: 2px solid var(--theme-success-500);
+  outline-offset: 2px;
+}
+
+/* ── Ön izleme ──────────────────────────────────────────────────────── */
+
+.sihirbaz-onizleme {
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.sihirbaz-onizleme h3 {
+  margin: 0.75rem 0 0;
+}
+
+.sihirbaz-onizleme-kapak {
+  width: 100%;
+  max-height: 16rem;
+  object-fit: cover;
+  border-radius: 6px;
+}
+
+.sihirbaz-onizleme-bos {
+  height: 8rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 6px;
+  background: var(--theme-elevation-50);
+  color: var(--theme-elevation-600);
+}
+
+.sihirbaz-onizleme-liste {
+  margin: 0.75rem 0 0;
+  display: grid;
+  gap: 0.35rem 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(12rem, 1fr));
+}
+
+.sihirbaz-onizleme-liste > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 0.5rem;
+  border-bottom: 1px solid var(--theme-elevation-100);
+  padding-bottom: 0.25rem;
+}
+
+.sihirbaz-onizleme-liste dt {
+  color: var(--theme-elevation-600);
+}
+
+.sihirbaz-onizleme-liste dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+/* ── Adım göstergesi: tamamlananlar yeşil onaylı ────────────────────── */
+
+.sihirbaz-adim-onay {
+  color: var(--theme-success-600);
+}
+
+/* ── Panel ana ekranındaki hızlı giriş ──────────────────────────────── */
+
+.sihirbaz-hizli-giris {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  margin-bottom: 1.5rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 8px;
+  background: var(--theme-elevation-50);
+}
+
+.sihirbaz-hizli-giris h2 {
+  margin: 0 0 0.25rem;
+  font-size: 1rem;
+}
+
+.sihirbaz-hizli-giris p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--theme-elevation-600);
+  max-width: 46ch;
+}

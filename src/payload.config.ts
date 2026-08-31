@@ -87,7 +87,16 @@ export default buildConfig({
        * kimsenin bakmadığı bir dosya. Uyarı, işin yapıldığı yerde
        * görünmezse yok sayılır.
        */
-      beforeDashboard: ['@/components/panel/BildirimSeridi#default'],
+      beforeDashboard: [
+        '@/components/panel/BildirimSeridi#default',
+        /**
+         * ⚠️ "İlan ver" panelin ANA EKRANINDA. Yan menüdeki bağlantı
+         * duruyor ama ilan girmek panelin en sık yapılan işi; onu bir
+         * menü satırının arkasına koymak, her seferinde bir tık fazla
+         * demek.
+         */
+        '@/components/sihirbaz/IlanVerBolumu#default',
+      ],
 
       views: {
         portfoySihirbazi: {

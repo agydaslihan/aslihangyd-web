@@ -148,14 +148,25 @@ const istegeBagliTarih = istegeBagliMetin.refine(
  * ve bunu kullanıcıya söylüyor. Uydurma bir başlık değil, açıkça geçici
  * bir ad.
  */
+/**
+ * 1 · Kategori — kademeli seçim.
+ *
+ * ⚠️ AYRI ADIM OLMASININ SEBEBİ SIRA DEĞİL, SONUÇ. İşlem türü ve kategori
+ * sonraki adımların NE SORACAĞINI belirliyor: kiralıkta "tahmini kira"
+ * sorulmuyor, arsada oda sayısı anlamsız. İkisini formun ortasına
+ * gömmek, kullanıcıyı doldurduğu alanların bir kısmının silineceği bir
+ * seçime sonradan götürürdü.
+ */
+export const kategoriSemasi = z.object({
+  tip: z.enum(ILAN_TIP_DEGERLERI).optional(),
+  kategori: z.enum(KATEGORI_DEGERLERI).optional(),
+})
+
 export const temelSemasi = z.object({
   baslik: istegeBagliMetin.refine(
     (deger) => deger.length <= 160,
     'Başlık en fazla 160 karakter olabilir.',
   ),
-
-  tip: z.enum(ILAN_TIP_DEGERLERI).optional(),
-  kategori: z.enum(KATEGORI_DEGERLERI).optional(),
 
   // Payload ilişki alanı sayı bekliyor; dize olarak taşınıp eylemde çözülüyor.
   mahalle: istegeBagliMetin,
@@ -268,7 +279,8 @@ export const yayinSemasi = z.object({
  * pazarlıksız uygulanır; sihirbazın burada gevşek olması o kapıyı
  * gevşetmez.
  */
-export const sihirbazSemasi = temelSemasi
+export const sihirbazSemasi = kategoriSemasi
+  .and(temelSemasi)
   .and(tapuSemasi)
   .and(nitelikSemasi)
   .and(fiyatSemasi)
@@ -296,11 +308,18 @@ export type SihirbazVerisi = z.output<typeof sihirbazSemasi>
  */
 export const ADIMLAR = [
   {
+    anahtar: 'kategori',
+    baslik: 'Kategori',
+    aciklama: 'İşlem türü ve kategori — sonraki adımların ne soracağını belirler.',
+    sema: kategoriSemasi,
+    alanlar: ['tip', 'kategori'],
+  },
+  {
     anahtar: 'temel',
     baslik: 'Temel',
-    aciklama: 'İşlem türü, kategori ve mahalle.',
+    aciklama: 'Mahalle ve başlık.',
     sema: temelSemasi,
-    alanlar: ['baslik', 'tip', 'kategori', 'mahalle'],
+    alanlar: ['mahalle', 'baslik'],
   },
   {
     anahtar: 'tapu',
@@ -325,8 +344,8 @@ export const ADIMLAR = [
   },
   {
     anahtar: 'gorseller',
-    baslik: 'Görseller',
-    aciklama: 'Fotoğraflar, sıralama, kapak seçimi.',
+    baslik: 'Fotoğraflar',
+    aciklama: 'Toplu yükleme, sıralama, kapak seçimi.',
     sema: gorselSemasi,
     alanlar: ['gorseller'],
   },
@@ -343,6 +362,13 @@ export const ADIMLAR = [
     aciklama: 'YouTube/Bunny videosu, 360° tur adresi.',
     sema: medyaSemasi,
     alanlar: ['videoKaynagi', 'sanalTurUrl'],
+  },
+  {
+    anahtar: 'onizleme',
+    baslik: 'Ön izleme',
+    aciklama: 'İlan sayfasında nasıl görüneceği.',
+    sema: yayinSemasi,
+    alanlar: [],
   },
   {
     anahtar: 'yayin',

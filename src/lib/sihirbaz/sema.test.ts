@@ -10,6 +10,7 @@ import {
   VARSAYILAN_TIP,
   adimHatalari,
   fiyatSemasi,
+  kategoriSemasi,
   nitelikSemasi,
   sihirbazSemasi,
   tapuSemasi,
@@ -75,8 +76,10 @@ describe('temelSemasi', () => {
     expect(temelSemasi.safeParse({ baslik: 'x'.repeat(161) }).success).toBe(false)
   })
 
-  it('geçersiz tip değerini reddeder', () => {
-    expect(temelSemasi.safeParse({ tip: 'devren' }).success).toBe(false)
+  it('geçersiz tip değerini KATEGORİ şeması reddeder', () => {
+    // `tip` ve `kategori` artık ayrı bir adımda (bkz. `kategoriSemasi`).
+    expect(kategoriSemasi.safeParse({ tip: 'devren' }).success).toBe(false)
+    expect(kategoriSemasi.safeParse({ tip: 'satilik' }).success).toBe(true)
   })
 })
 
@@ -229,8 +232,14 @@ describe('adimHatalari', () => {
 
 // ═══════════════════════════════════════════════════════════════════════════
 describe('adımlar', () => {
-  it('sekiz adım ve hepsinin şeması var', () => {
-    expect(ADIMLAR).toHaveLength(8)
+  it('on adım ve hepsinin şeması var', () => {
+    /**
+     * ⚠️ Şartname dokuz adım sayıyor; koddaki onuncu "Ön izleme" ile
+     * "Yayın"ın ayrı ekranlar olması. Şartnamenin 8. ve 9. maddeleri
+     * bunlar; ayrı tutuldular çünkü biri gösteriyor, diğeri karar
+     * aldırıyor.
+     */
+    expect(ADIMLAR).toHaveLength(10)
     for (const adim of ADIMLAR) expect(adim.sema).toBeDefined()
   })
 
@@ -246,6 +255,7 @@ describe('adımlar', () => {
    */
   it('doluluk alanları gerçekten şemada var', () => {
     const tumAlanlar = new Set([
+      ...Object.keys(kategoriSemasi.shape),
       ...Object.keys(temelSemasi.shape),
       ...Object.keys(tapuSemasi.shape),
       ...Object.keys(nitelikSemasi.shape),
@@ -255,6 +265,7 @@ describe('adımlar', () => {
     for (const adim of ADIMLAR) {
       if (adim.anahtar === 'gorseller' || adim.anahtar === 'aciklama') continue
       if (adim.anahtar === 'medya' || adim.anahtar === 'yayin') continue
+      if (adim.anahtar === 'onizleme') continue
       for (const alan of adim.alanlar) if (!tumAlanlar.has(alan)) bilinmeyen.push(alan)
     }
     expect(bilinmeyen).toEqual([])

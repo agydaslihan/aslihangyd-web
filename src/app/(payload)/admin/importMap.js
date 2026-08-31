@@ -42,6 +42,7 @@ import { GoogleNavBaglantisi as GoogleNavBaglantisi_ca9f8221f15dfad689ec5efd4754
 import { RayicNavBaglantisi as RayicNavBaglantisi_c571122dd791c971fb00b2df03414de9 } from '@/components/rayic/RayicNavBaglantisi'
 import { YakinlikNavBaglantisi as YakinlikNavBaglantisi_ebdf29bfda9ee39d0a886776559b4f9f } from '@/components/yakinlik/YakinlikNavBaglantisi'
 import { default as default_ac4995af7e2bbcdcd73ea0a7c441a293 } from '@/components/panel/BildirimSeridi'
+import { default as default_fd81f3d3ae232c5eed007d0c031aeda1 } from '@/components/sihirbaz/IlanVerBolumu'
 import { default as default_1aab0adce7828f318eceac0ff9d4de43 } from '@/components/sihirbaz/SihirbazGorunumu'
 import { default as default_fc64a4b67468114393aad077308e5041 } from '@/components/olcum/OlcumGorunumu'
 import { default as default_a801d3c59a10fd57ac9e84c64e4242e0 } from '@/components/anasayfa/AnaSayfaGorunumu'
@@ -101,6 +102,7 @@ export const importMap = {
   "@/components/rayic/RayicNavBaglantisi#RayicNavBaglantisi": RayicNavBaglantisi_c571122dd791c971fb00b2df03414de9,
   "@/components/yakinlik/YakinlikNavBaglantisi#YakinlikNavBaglantisi": YakinlikNavBaglantisi_ebdf29bfda9ee39d0a886776559b4f9f,
   "@/components/panel/BildirimSeridi#default": default_ac4995af7e2bbcdcd73ea0a7c441a293,
+  "@/components/sihirbaz/IlanVerBolumu#default": default_fd81f3d3ae232c5eed007d0c031aeda1,
   "@/components/sihirbaz/SihirbazGorunumu#default": default_1aab0adce7828f318eceac0ff9d4de43,
   "@/components/olcum/OlcumGorunumu#default": default_fc64a4b67468114393aad077308e5041,
   "@/components/anasayfa/AnaSayfaGorunumu#default": default_a801d3c59a10fd57ac9e84c64e4242e0,
