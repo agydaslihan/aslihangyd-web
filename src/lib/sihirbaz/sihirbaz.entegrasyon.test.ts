@@ -28,6 +28,7 @@ import { getPayload, type Payload } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
 import { sihirbazSemasi } from './sema'
+import { gorunumuVeriyeCevir } from './veriyeCevir'
 
 let payload: Payload
 let mahalleId: number
@@ -65,38 +66,25 @@ function formGirdisi(degisiklik: Record<string, unknown> = {}) {
 }
 
 /**
- * Eylemin yazma yolunun birebir taklidi.
+ * Eylemin yazma yolu — TAKLİT DEĞİL, AYNI KOD.
  *
- * `durum: 'taslak'` burada da SABİT — eylemdeki gibi. Testin bu satırı
- * eylemdekiyle aynı olmalı; ayrışırsa test yanlış şeyi doğrular hale gelir.
+ * ⚠️ Eskiden bu fonksiyon eşlemeyi KOPYALIYORDU ve buradaki yorum riski
+ * kendisi yazıyordu: "ayrışırsa test yanlış şeyi doğrular hale gelir."
+ * Eşleme `veriyeCevir.ts`e taşındı; artık eylem de test de aynı kodu
+ * çağırıyor ve ayrışma imkânsız.
+ *
+ * `durum: 'taslak'` eşlemenin içinde ve sabit.
  */
 async function sihirbazlaKaydet(ham: Record<string, unknown>) {
   const sonuc = sihirbazSemasi.safeParse(ham)
   if (!sonuc.success) throw new Error(`Şema reddetti: ${sonuc.error.issues[0]?.message}`)
 
   const veri = sonuc.data
+  const baslik = veri.baslik.trim() === '' ? 'Taslak — entegrasyon sınaması' : veri.baslik.trim()
 
   return payload.create({
     collection: 'ilanlar',
-    data: {
-      durum: 'taslak',
-      slug: '',
-      baslik: veri.baslik,
-      tip: veri.tip,
-      kategori: veri.kategori,
-      il: veri.il,
-      ilce: veri.ilce,
-      mahalle: Number(veri.mahalle),
-      ada: veri.ada === '' ? undefined : veri.ada,
-      parsel: veri.parsel === '' ? undefined : veri.parsel,
-      fiyat: veri.fiyat,
-      tahminiKira: veri.tahminiKira,
-      eidsDurum: veri.eidsDurum,
-      tasinmazNo: veri.tasinmazNo === '' ? undefined : veri.tasinmazNo,
-      eidsYetkiBaslangic: veri.eidsYetkiBaslangic === '' ? undefined : veri.eidsYetkiBaslangic,
-      eidsYetkiBitis: veri.eidsYetkiBitis === '' ? undefined : veri.eidsYetkiBitis,
-      gizliPortfoy: veri.gizliPortfoy,
-    },
+    data: gorunumuVeriyeCevir(veri, Number(veri.mahalle), baslik),
     overrideAccess: false,
     user: { id: 1, collection: 'kullanicilar' } as never,
   })
