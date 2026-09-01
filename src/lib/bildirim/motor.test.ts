@@ -12,6 +12,7 @@ import {
 const SIMDI = new Date('2026-08-06T12:00:00.000Z')
 
 const temiz = (ek: Partial<BildirimGirdisi> = {}): BildirimGirdisi => ({
+  surumDurumu: null,
   yetkisiBitecekIlan: 0,
   yetkisiDolmusYayindaIlan: 0,
   bakimGorevleri: [],

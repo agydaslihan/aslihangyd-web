@@ -171,3 +171,28 @@
     padding: 0.75rem 0.75rem;
   }
 }
+
+/*
+  Sürüm satırı — şeridin altındaki kalıcı bilgi.
+
+  ⚠️ Uyarı değil, bağlam: sessiz durur ama hep görünür. Uyarı gibi
+  görünseydi her panel açılışında bir alarm izlenimi verir ve gerçek
+  uyarıların ağırlığını düşürürdü.
+*/
+.panel-bildirim-surum {
+  margin: 0.75rem 0 0;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--theme-elevation-100);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  color: var(--theme-elevation-500);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Şeritte hiç uyarı yokken satır tek başına kalıyor; çerçevesi kendinde. */
+.panel-bildirim-surum-yalniz {
+  margin: 0 0 1.5rem;
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--theme-elevation-100);
+  border-radius: 6px;
+}

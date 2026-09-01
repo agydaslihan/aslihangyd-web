@@ -62,3 +62,8 @@ docker/certs/
 # `payload migrate:create` dosyayı yeniden üretmeye devam ediyor; sorun
 # değil, git'e girmiyor. Kuralı `src/lib/gocIndeksi.test.ts` denetliyor.
 /src/migrations/index.ts
+
+# İmaja gömülen sürüm damgası — derleme çıktısı, kaynak değil.
+# ⚠️ Depoda durursa geliştirme kabuğu onu "yayındaki sürüm" sanar ve
+# panel yanlış bir SHA gösterir. Damgayı docker/Dockerfile yazıyor.
+/surum.json

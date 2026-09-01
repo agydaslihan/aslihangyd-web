@@ -1,6 +1,7 @@
 import 'server-only'
 
 import { semaDurumu } from '@/lib/sema/denetim'
+import { surumDurumu, surumTazelemeyiTetikle } from '@/lib/surum/uzak'
 
 import type { Payload } from 'payload'
 
@@ -218,6 +219,14 @@ export async function bildirimleriGetir(
   simdi: Date = new Date(),
   yoneticiMi = true,
 ): Promise<Bildirim[]> {
+  /**
+   * ⚠️ `try` DIŞINDA ve BEKLENMEDEN. Tazeleme bir sonraki turun verisini
+   * hazırlıyor; bu turun sonucunu değiştirmiyor. Sorgular hata verse bile
+   * sürüm denetimi ilerlemeye devam etmeli — çünkü sorguların yanlış
+   * cevap vermesinin sebebi eski sürüm olabilir.
+   */
+  surumTazelemeyiTetikle(simdi)
+
   try {
     const [
       yetkisiBitecek,
@@ -317,6 +326,13 @@ export async function bildirimleriGetir(
          * eklenirdi.
          */
         semaDurumu: semaDurumu(),
+        /**
+         * ⚠️ Burada da AĞ BEKLENMİYOR. Tetikleyici bayat kutuyu
+         * tazelemeye başlıyor ama sonucu beklemiyor; okunan değer
+         * önceki turdan geliyor. Bir GitHub yavaşlaması panelin
+         * açılışını geciktirmemeli.
+         */
+        surumDurumu: surumDurumu(),
       },
       simdi,
     )

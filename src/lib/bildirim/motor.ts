@@ -15,6 +15,7 @@
  */
 
 import { gunFarki, gunAnahtari, type GunAnahtari } from '@/lib/tarih'
+import { imajHazirMi, kisaCommit, type SurumDurumu } from '@/lib/surum/durum'
 
 /**
  * Öncelik — sıralamayı bu belirler.
@@ -171,6 +172,15 @@ export interface BildirimGirdisi {
    * olması da bir bilgi, çünkü tam olarak bu sessizlik yüzünden buradayız.
    */
   semaDurumu: { eksikTablolar: string[]; beklenenSayi: number; hata: string | null } | null
+
+  /**
+   * Yayındaki sürüm ile `main` arasındaki fark.
+   *
+   * ⚠️ `null` = hiç denetlenmedi — şema durumuyla aynı gerekçe. "Geride
+   * değil" ile "bakmadık" farklı şeyler ve ikincisini birincisi gibi
+   * göstermek tam olarak 1 Eylül 2026'da yaşananı üretir.
+   */
+  surumDurumu: SurumDurumu | null
 }
 
 /* ══════════════════════════════════════════════════════════════════════════
@@ -196,6 +206,67 @@ export const ALAN_BAYAT_SAAT = 26
 
 export function bildirimleriUret(girdi: BildirimGirdisi, simdi: Date = new Date()): Bildirim[] {
   const bildirimler: Bildirim[] = []
+
+  /* ── Sürüm uyumsuzluğu ────────────────────────────────────────────────
+   *
+   * ⚠️ ŞEMA BÜTÜNLÜĞÜNDEN ÖNCE, VE SEBEBİ ŞEMANINKİYLE AYNI AİLEDEN.
+   *
+   * 1 Eylül 2026: canlıdaki uygulama 35 commit geride kaldı ve bu ancak
+   * elle bakılarak fark edildi. O sürede sitede yapılan bütün denemeler
+   * eski sürüme bakıyordu — yani şerit yalnızca gecikmiyor, YANLIŞ
+   * BİLGİ üretiyordu: aşağıdaki uyarıların hepsini eski kod hesaplıyor.
+   *
+   * Eksik tablo dağıtımın YARIM kaldığını, sürüm farkı HİÇ yapılmadığını
+   * söylüyor. İkisi de diğer uyarıların doğruluğunu belirlediği için
+   * `butunluk` seviyesinde.
+   * ─────────────────────────────────────────────────────────────────── */
+  const surum = girdi.surumDurumu
+
+  if (surum !== null && surum.gerideCommit !== null && surum.gerideCommit > 0) {
+    const hazir = imajHazirMi(surum)
+    const kisa = kisaCommit(surum.calisanCommit)
+
+    /**
+     * ⚠️ İMAJ HAZIR DEĞİLSE DAĞITIM İŞE YARAMAZ ve bu cümle olmadan
+     * kullanıcı komutu çalıştırıp hiçbir şeyin değişmediğini görürdü.
+     */
+    const imajNotu =
+      hazir === false
+        ? ' ⚠️ GHCR’daki :latest henüz en son commit’i göstermiyor — imaj yayımlanmadan ' +
+          'dağıtım eski sürümü kurar. Önce “Üretim imajı” iş akışının bitmesini bekleyin.'
+        : hazir === null
+          ? ' İmaj kaydı okunamadı; dağıtımdan önce “Üretim imajı” iş akışının yeşil ' +
+            'olduğunu doğrulayın.'
+          : ''
+
+    bildirimler.push({
+      anahtar: 'surum-geride',
+      oncelik: 'butunluk',
+      baslik: `Yayında olmayan ${surum.gerideCommit} commit var — deploy bekliyor`,
+      aciklama:
+        `Çalışan sürüm ${kisa ?? 'bilinmiyor'}, ${surum.gerideCommit} commit geride. ` +
+        '⚠️ Sitede yaptığınız her deneme ESKİ sürüme bakıyor: düzeltildi denen şeyler ' +
+        'yayında olmayabilir. Dağıtım komutu: ' +
+        'sudo -u deploy bash /srv/aslihangyd/app/scripts/dagit.sh' +
+        imajNotu,
+    })
+  }
+
+  /**
+   * ⚠️ Denetim yapılamadıysa da SÖYLENİYOR. Sessiz kalmak "geride değil"
+   * demekle aynı ekrana çıkardı ve bu bildirimin var olma sebebi tam
+   * olarak o karışıklık.
+   */
+  if (surum !== null && surum.hata !== null) {
+    bildirimler.push({
+      anahtar: 'surum-denetlenemedi',
+      oncelik: 'bilgi',
+      baslik: 'Yayındaki sürüm karşılaştırılamadı',
+      aciklama:
+        `${surum.hata} Bu, sürümün güncel OLDUĞU anlamına gelmez — yalnızca ` +
+        'bakılamadığı anlamına gelir.',
+    })
+  }
 
   /* ── Şema bütünlüğü ───────────────────────────────────────────────────
    *

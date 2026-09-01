@@ -77,6 +77,13 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
+      # ⚠️ `github.event.repository.updated_at` KULLANILMIYOR: o deponun
+      # güncellenme anı, imajın derlenme anı değil. Bir yıldız (star)
+      # bile onu ileri alır ve panelde "imaj şu an derlendi" yazardı.
+      - name: Derleme anı
+        id: an
+        run: echo "iso=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> "$GITHUB_OUTPUT"
+
       - name: Etiketleri hazırla
         id: etiket
         uses: docker/metadata-action@v5
@@ -102,6 +109,18 @@ jobs:
           push: ${{ github.event_name != 'pull_request' }}
           tags: ${{ steps.etiket.outputs.tags }}
           labels: ${{ steps.etiket.outputs.labels }}
+          # ⚠️ SÜRÜM DAMGASI — panelin "kaç commit geride" uyarısı buna dayanıyor.
+          #
+          # Etiketler zaten commit SHA'sını taşıyor ama çalışan kap kendi
+          # etiketini okuyamıyor: `:latest` ile başlatılan bir kap, hangi
+          # commit'ten geldiğini bilmez. Damga imajın İÇİNE giriyor.
+          #
+          # Boş geçilirse panel "sürüm damgası eklenmeden derlenmiş" der;
+          # sessizce yanlış bir SHA yazmaktan iyidir.
+          build-args: |
+            KAYNAK_COMMIT=${{ github.sha }}
+            DERLEME_ANI=${{ steps.an.outputs.iso }}
+            KAYNAK_DEPO=${{ github.repository }}
           # ⚠️ Önbellek GHA'da tutuluyor, imaj kayıtında DEĞİL.
           #
           # `type=registry` önbelleği ara katmanları da kayıta iter. Ara
