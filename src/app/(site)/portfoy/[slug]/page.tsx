@@ -38,6 +38,7 @@ import {
 } from '@/lib/secenekler'
 import { sinif } from '@/lib/sinif'
 import { konumuCoz } from '@/lib/veri/ilgiNoktalari'
+import { cumleDuzenineCevir } from '@/lib/metin/baslik'
 import { mutlakAdres } from '@/lib/site'
 import { tarihiYaz } from '@/lib/tarih'
 import { ilanGetir } from '@/lib/veri/ilanlar'
@@ -60,11 +61,11 @@ export async function generateMetadata({ params }: SayfaOzellikleri): Promise<Me
     `${mahalle ? `${mahalle} Mahallesi'nde ` : ''}${ilan.baslik}. Kira çarpanı, brüt getiri ve amortisman bilgileriyle.`
 
   return {
-    title: ilan.seoBaslik ?? ilan.baslik,
+    title: ilan.seoBaslik ?? cumleDuzenineCevir(ilan.baslik),
     description: aciklama,
     alternates: { canonical: mutlakAdres(`/portfoy/${ilan.slug}`) },
     openGraph: {
-      title: ilan.seoBaslik ?? ilan.baslik,
+      title: ilan.seoBaslik ?? cumleDuzenineCevir(ilan.baslik),
       description: aciklama,
       url: mutlakAdres(`/portfoy/${ilan.slug}`),
       type: 'article',
@@ -142,7 +143,8 @@ export default async function IlanDetayi({ params }: SayfaOzellikleri) {
             </div>
 
             <h1 className="mt-3 font-baslik text-baslik-1-mobil font-medium sm:text-baslik-1">
-              {ilan.baslik}
+              {/* ⚠️ Gösterimde cümle düzeni; kayıttaki başlığa dokunulmuyor. */}
+              {cumleDuzenineCevir(ilan.baslik)}
             </h1>
 
             {mahalle ? (

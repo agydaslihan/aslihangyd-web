@@ -27,6 +27,45 @@ import { sinif } from '@/lib/sinif'
  * ─────────────────────────────────────────────────────────────────────────
  */
 
+/**
+ * Değerin uzunluğuna göre yazı boyu.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ "+%23,0" KUTUDAN TAŞIYORDU.
+ *
+ * İstatistik kartları ızgarada yan yana duruyor ve değer alanı sabit
+ * boyda yazılıyordu; uzun bir değer ("1.250.000 ₺", "+%23,0 · n=142")
+ * hücreyi aşıp komşusunun üstüne biniyordu.
+ *
+ * Üç koruma birlikte çalışıyor:
+ *   · `[overflow-wrap:anywhere]` — sayı kırpılmıyor, gerekirse sarıyor
+ *   · `min-w-0` — ızgara hücresi içeriğinden küçülebilsin; olmadan
+ *     flex/grid hücresi taşmayı dışarı taşır
+ *   · karakter sayısına göre kademe (bu fonksiyon)
+ *
+ * ⚠️ KIRPMA (`truncate`) KULLANILMADI: kırpılan bir rakam yanlış bir
+ * rakamdır. "1.250.0…" hiçbir şey söylemiyor.
+ *
+ * ⚠️ Eşikler ölçümle seçildi: kart genişliği en dar kırılmada ~10ch.
+ * "12.345.678 ₺" tam 12 karakter ve o boyda zaten taşıyor; eşik bu
+ * yüzden 10, 12 değil. İkinci kademe 16 karakterde ("1.250.000 ₺/m²"
+ * ve üstü).
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export function degerBoyu(deger: string, vurgulu: boolean): string {
+  const uzunluk = deger.length
+
+  if (vurgulu) {
+    if (uzunluk > 16) return 'text-baslik-3'
+    if (uzunluk > 10) return 'text-rakam'
+    return 'text-rakam-buyuk'
+  }
+
+  if (uzunluk > 16) return 'text-govde-kucuk'
+  if (uzunluk > 10) return 'text-govde'
+  return 'text-rakam'
+}
+
 type Ton = 'notr' | 'artis' | 'azalis'
 
 const DEGER_TONLARI: Record<Ton, string> = {
@@ -143,10 +182,13 @@ export function IstatistikKarti({
         </dd>
       ) : (
         <>
+          {/*
+            ⚠️ UZUN DEĞER KUTUDAN TAŞIYORDU — gerekçe `degerBoyu`da.
+          */}
           <dd
             className={sinif(
-              'rakam font-medium',
-              vurgulu ? 'text-rakam-buyuk' : 'text-rakam',
+              'rakam min-w-0 font-medium [overflow-wrap:anywhere]',
+              degerBoyu(deger, vurgulu),
               DEGER_TONLARI[ton],
             )}
           >

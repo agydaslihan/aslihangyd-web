@@ -3,6 +3,8 @@
 import dynamic from 'next/dynamic'
 import { useState } from 'react'
 
+import { turAdresiniDenetle } from '@/lib/medya/turAdresi'
+
 /**
  * 360° sanal tur — tıkla-aç.
  *
@@ -71,17 +73,20 @@ export function TurBolumu({
 export function SanalTur({ adres, baslik }: { adres: string; baslik: string }) {
   const [acik, setAcik] = useState(false)
 
-  let guvenli = false
-  try {
-    guvenli = new URL(adres).protocol === 'https:'
-  } catch {
-    guvenli = false
-  }
+  /**
+   * ⚠️ `https` OLMAK GÖMÜLEBİLİR OLMAK DEĞİL.
+   *
+   * Eski kontrol yalnızca protokole bakıyordu ve üretimde bir Google Maps
+   * PAYLAŞIM linki (`maps.app.goo.gl/…`) geçti: adres https'ti, çerçeveye
+   * kondu, Google gömülmeyi reddetti ve ziyaretçi boş/kırık bir kutu
+   * gördü — sebebi hiçbir yerde yazmadan.
+   */
+  const durum = turAdresiniDenetle(adres)
 
-  if (!guvenli) {
+  if (!durum.gecerli) {
     return (
-      <div className="cerceve bg-yuzey-2 text-metin-3 flex aspect-video items-center justify-center px-6 text-center text-mikro">
-        360° tur adresi geçersiz. Adres <code>https://</code> ile başlamalı.
+      <div className="cerceve bg-yuzey-2 text-metin-3 flex aspect-video items-center justify-center px-6 text-center text-mikro leading-relaxed">
+        {durum.mesaj}
       </div>
     )
   }

@@ -9,6 +9,7 @@ import { sinif } from '@/lib/sinif'
 import type { Ilanlar, Medya } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 import { KART_SIZES } from '@/lib/medya/boyutlar'
+import { cumleDuzenineCevir } from '@/lib/metin/baslik'
 
 /**
  * İlan kartı — listelerin ve tema sıralarının birimi.
@@ -191,7 +192,8 @@ export function IlanKarti({
             data-gozlem="ilan_karti_tikla"
             className="after:absolute after:inset-0 after:z-10 after:rounded-kart after:content-['']"
           >
-            {ilan.baslik}
+            {/* ⚠️ Gösterimde cümle düzeni — gerekçe `lib/metin/baslik.ts`. */}
+            {cumleDuzenineCevir(ilan.baslik)}
           </Link>
         </h3>
 

@@ -33,6 +33,26 @@ export const AZAMI_SUTUN_M = 2500
 /** En düşük görünür sütun — veri var ama küçük olduğunda kaybolmasın. */
 export const ASGARI_SUTUN_M = 220
 
+/**
+ * Sütun çizilebilmesi için gereken en az veri sayısı.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ TEK SÜTUN BİR KIYAS DEĞİL, BİR LEKE.
+ *
+ * Sütunların işi mahalleleri BİRBİRİYLE kıyaslamak: yükseklik bir orandır,
+ * mutlak bir değer değil. Veri girilmiş tek mahalle varsa o mahalle
+ * kendisiyle kıyaslanıyor ve daima en yüksek sütunu alıyor — haritanın
+ * ortasında sebebi anlaşılmayan dev bir kule.
+ *
+ * 31 Ağustos 2026'da üretimde tam olarak bu görüldü: 26 mahalleden
+ * yalnızca birinde rakam vardı.
+ *
+ * Üç, kıyasın anlam kazandığı en küçük sayı: iki sütun yalnızca "hangisi
+ * daha yüksek" der, üç sütun bir dağılım gösterir.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const ASGARI_SUTUN_SAYISI = 3
+
 export type VeriKipi = 'satisM2' | 'kira' | 'kiraCarpani' | 'yatirimSkoru'
 
 export interface VeriKipiTanimi {
@@ -204,7 +224,11 @@ export function yukseklikleriHesapla(
       typeof girdi.deger === 'number' && Number.isFinite(girdi.deger) && girdi.deger > 0,
   )
 
-  if (veriliOlanlar.length === 0) return []
+  /**
+   * ⚠️ Yetersiz veride HİÇ SÜTUN ÇİZİLMİYOR — sınırlar ve mesaj kalıyor.
+   * Çağıran taraf boş diziyi görüp "veri toplanıyor" diyor.
+   */
+  if (veriliOlanlar.length < ASGARI_SUTUN_SAYISI) return []
 
   const azami = Math.max(...veriliOlanlar.map((girdi) => girdi.deger))
 
