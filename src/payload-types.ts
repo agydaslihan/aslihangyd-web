@@ -76,6 +76,7 @@ export interface Config {
     degerlemeler: Degerlemeler;
     gozlemler: Gozlemler;
     'rayic-degerler': RayicDegerler;
+    'olcek-duzeltmeleri': OlcekDuzeltmeleri;
     'vergi-parametreleri': VergiParametreleri;
     sayfalar: Sayfalar;
     medya: Medya;
@@ -97,6 +98,7 @@ export interface Config {
     degerlemeler: DegerlemelerSelect<false> | DegerlemelerSelect<true>;
     gozlemler: GozlemlerSelect<false> | GozlemlerSelect<true>;
     'rayic-degerler': RayicDegerlerSelect<false> | RayicDegerlerSelect<true>;
+    'olcek-duzeltmeleri': OlcekDuzeltmeleriSelect<false> | OlcekDuzeltmeleriSelect<true>;
     'vergi-parametreleri': VergiParametreleriSelect<false> | VergiParametreleriSelect<true>;
     sayfalar: SayfalarSelect<false> | SayfalarSelect<true>;
     medya: MedyaSelect<false> | MedyaSelect<true>;
@@ -123,6 +125,8 @@ export interface Config {
     'menu-duzeni': MenuDuzeni;
     'portfoy-bolumleri': PortfoyBolumleri;
     'danisman-ol': DanismanOl;
+    'corlu-anlatisi': CorluAnlatisi;
+    'ilce-olgulari': IlceOlgulari;
     'degerleme-ayarlari': DegerlemeAyarlari;
     'endeks-ayarlari': EndeksAyarlari;
     'bakim-durumu': BakimDurumu;
@@ -141,6 +145,8 @@ export interface Config {
     'menu-duzeni': MenuDuzeniSelect<false> | MenuDuzeniSelect<true>;
     'portfoy-bolumleri': PortfoyBolumleriSelect<false> | PortfoyBolumleriSelect<true>;
     'danisman-ol': DanismanOlSelect<false> | DanismanOlSelect<true>;
+    'corlu-anlatisi': CorluAnlatisiSelect<false> | CorluAnlatisiSelect<true>;
+    'ilce-olgulari': IlceOlgulariSelect<false> | IlceOlgulariSelect<true>;
     'degerleme-ayarlari': DegerlemeAyarlariSelect<false> | DegerlemeAyarlariSelect<true>;
     'endeks-ayarlari': EndeksAyarlariSelect<false> | EndeksAyarlariSelect<true>;
     'bakim-durumu': BakimDurumuSelect<false> | BakimDurumuSelect<true>;
@@ -519,9 +525,13 @@ export interface Kullanicilar {
 export interface Medya {
   id: number;
   /**
-   * Görselde ne olduğunu bir cümleyle yaz. Ekran okuyucu kullananlar ve görsel yüklenmediğinde herkes bunu görür. Örn: "Muhittin Mahallesi'nde 3+1 dairenin salonu".
+   * Görselde ne olduğunu bir cümleyle yaz. Ekran okuyucu kullananlar ve görsel yüklenmediğinde herkes bunu görür. Örn: "Muhittin Mahallesi'nde 3+1 dairenin salonu". ⚠️ Boş bırakırsanız dosya adından geçici bir metin üretilir ve görsel "alt metni eksik" olarak işaretlenir — sonra toplu olarak düzeltebilirsiniz.
    */
-  alt: string;
+  alt?: string | null;
+  /**
+   * İşaretliyse bu görselin alt metni insan eliyle yazılmadı. Ekran okuyucu için yeterli değil; fırsat bulunca düzeltin.
+   */
+  altOtomatik?: boolean | null;
   /**
    * Görsel size ait değilse kaynağını yazın. Boş bırakılırsa kendi çekimimiz sayılır.
    */
@@ -638,6 +648,26 @@ export interface Mahalleler {
    * WhatsApp ve sosyal medyada paylaşıldığında görünecek görsel. Önerilen: 1200×630 piksel.
    */
   seoGorsel?: (number | null) | Medya;
+  /**
+   * Birden fazla seçebilirsiniz. Emin olmadığınızı işaretlemeyin — yanlış bir eşleşme, mahalleyi hiç anlatmamaktan kötüdür.
+   */
+  kimlerIcin?: ('aile' | 'ogrenci' | 'yatirimci' | 'isci' | 'emekli')[] | null;
+  /**
+   * Neden? Örn: "İki ilkokul ve pazar yeri yürüme mesafesinde."
+   */
+  kimlerIcinNotu?: string | null;
+  /**
+   * Mahallenin geneli. Tek bir sokağa göre değil; mahallede gezerken edindiğiniz izlenim.
+   */
+  sokakDokusu?: ('sessiz' | 'orta' | 'islek') | null;
+  /**
+   * Yeni yol, yeni okul, dönüşen bina, değişen kiracı profili… Rakam veriyorsanız nereden bildiğinizi de yazın.
+   */
+  sonUcYil?: string | null;
+  /**
+   * ⚠️ Bu alan mahallenin ZAYIF tarafını yazdığınız yer. Boş bırakılan bir "dikkat" alanı, mahallede hiçbir sorun olmadığı izlenimi verir — ve o izlenim ilk ziyarette bozulur.
+   */
+  dikkatEdilmeli?: string | null;
   icerik?: {
     root: {
       type: string;
@@ -1067,6 +1097,34 @@ export interface RayicDegerler {
   createdAt: string;
 }
 /**
+ * Toplu ölçek düzeltmelerinin kaydı. Geri alma bu kayıtlardan okunur; silmeyin — silinen bir parti geri alınamaz.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "olcek-duzeltmeleri".
+ */
+export interface OlcekDuzeltmeleri {
+  id: number;
+  /**
+   * Otomatik üretilir.
+   */
+  ozet?: string | null;
+  geriAlindi?: boolean | null;
+  geriAlinmaTarihi?: string | null;
+  satirlar?:
+    | {
+        koleksiyon: 'mahalleler' | 'ilanlar';
+        kayitId: number;
+        alan: string;
+        eskiDeger: number;
+        yeniDeger: number;
+        kayitAdi?: string | null;
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt: string;
+  createdAt: string;
+}
+/**
  * Hesaplayıcıların kullandığı oran ve tutarlar. Bir parametre girilmemişse ilgili hesaplayıcı çalışmaz ve ziyaretçiye eksik olanı söyler — yanlış rakam üretmez.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -1256,6 +1314,10 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'rayic-degerler';
         value: number | RayicDegerler;
+      } | null)
+    | ({
+        relationTo: 'olcek-duzeltmeleri';
+        value: number | OlcekDuzeltmeleri;
       } | null)
     | ({
         relationTo: 'vergi-parametreleri';
@@ -1513,6 +1575,11 @@ export interface MahallelerSelect<T extends boolean = true> {
   seoBaslik?: T;
   seoAciklama?: T;
   seoGorsel?: T;
+  kimlerIcin?: T;
+  kimlerIcinNotu?: T;
+  sokakDokusu?: T;
+  sonUcYil?: T;
+  dikkatEdilmeli?: T;
   icerik?: T;
   sikSorulanlar?:
     | T
@@ -1705,6 +1772,28 @@ export interface RayicDegerlerSelect<T extends boolean = true> {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "olcek-duzeltmeleri_select".
+ */
+export interface OlcekDuzeltmeleriSelect<T extends boolean = true> {
+  ozet?: T;
+  geriAlindi?: T;
+  geriAlinmaTarihi?: T;
+  satirlar?:
+    | T
+    | {
+        koleksiyon?: T;
+        kayitId?: T;
+        alan?: T;
+        eskiDeger?: T;
+        yeniDeger?: T;
+        kayitAdi?: T;
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "vergi-parametreleri_select".
  */
 export interface VergiParametreleriSelect<T extends boolean = true> {
@@ -1747,6 +1836,7 @@ export interface SayfalarSelect<T extends boolean = true> {
  */
 export interface MedyaSelect<T extends boolean = true> {
   alt?: T;
+  altOtomatik?: T;
   kaynak?: T;
   kullanim?: T;
   tahminiKartBayt?: T;
@@ -2589,6 +2679,71 @@ export interface DanismanOl {
   createdAt?: string | null;
 }
 /**
+ * ⚠️ HER İDDİANIN KAYNAĞI ZORUNLU. Bu bölüm tüm mahalle sayfalarında görünüyor ve burası bir yatırım sitesi. Kaynağı olmayan cümle yazmayın; emin olmadığınız şeyi atlayın. "Muhtemelen", "genelde", "bilinir" gibi ifadeler kullanmayın — bir rakam veriyorsanız yılını ve kaynağını yazın.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "corlu-anlatisi".
+ */
+export interface CorluAnlatisi {
+  id: number;
+  /**
+   * Kapatılırsa mahalle sayfalarında bu bölüm hiç çizilmez.
+   */
+  acik?: boolean | null;
+  baslik?: string | null;
+  giris?: string | null;
+  /**
+   * ⚠️ Her başlığın en az bir kaynağı olmalı. Kaynaksız bir başlık sitede GÖSTERİLMEZ — kod seviyesinde engellenir.
+   */
+  bloklar?:
+    | {
+        baslik: string;
+        /**
+         * Paragrafları boş satırla ayırın.
+         */
+        metin: string;
+        kaynaklar: {
+          ad: string;
+          /**
+           * Tam adres (https://...). Ekranda bağlantı olarak görünür.
+           */
+          adres: string;
+          /**
+           * Örn: 31 Ağustos 2026. Rakam veren kaynaklarda zorunlu sayılır.
+           */
+          erisim?: string | null;
+          id?: string | null;
+        }[];
+        id?: string | null;
+      }[]
+    | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
+ * Mahalle sayfalarındaki "ilçe nüfusundaki payı" hesabının paydası. ⚠️ Kaynak yazılmadan rakam girmeyin.
+ *
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilce-olgulari".
+ */
+export interface IlceOlgulari {
+  id: number;
+  /**
+   * ⚠️ BİNLİK AYIRICI KULLANMAYIN: sayı alanı noktayı ondalık ayırıcı sayar. Doğrusu: 306939.
+   */
+  nufus?: number | null;
+  /**
+   * Yılsız bir nüfus rakamı anlamsızdır.
+   */
+  nufusYili?: number | null;
+  /**
+   * Ekranda rakamın yanında aynen gösterilir.
+   */
+  nufusKaynagi?: string | null;
+  updatedAt?: string | null;
+  createdAt?: string | null;
+}
+/**
  * Değerleme modelinin katsayıları. Girilmeyen katsayı hesaba katılmaz — tahmini bir değer uydurulmaz. Katsayılar çarpımsaldır: 1,00 etkisiz demektir.
  *
  * This interface was referenced by `Config`'s JSON-Schema
@@ -3041,6 +3196,45 @@ export interface DanismanOlSelect<T extends boolean = true> {
         aciklama?: T;
         id?: T;
       };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "corlu-anlatisi_select".
+ */
+export interface CorluAnlatisiSelect<T extends boolean = true> {
+  acik?: T;
+  baslik?: T;
+  giris?: T;
+  bloklar?:
+    | T
+    | {
+        baslik?: T;
+        metin?: T;
+        kaynaklar?:
+          | T
+          | {
+              ad?: T;
+              adres?: T;
+              erisim?: T;
+              id?: T;
+            };
+        id?: T;
+      };
+  updatedAt?: T;
+  createdAt?: T;
+  globalType?: T;
+}
+/**
+ * This interface was referenced by `Config`'s JSON-Schema
+ * via the `definition` "ilce-olgulari_select".
+ */
+export interface IlceOlgulariSelect<T extends boolean = true> {
+  nufus?: T;
+  nufusYili?: T;
+  nufusKaynagi?: T;
   updatedAt?: T;
   createdAt?: T;
   globalType?: T;

@@ -1,0 +1,25 @@
+/*
+  ⚠️ Payload'ın kendi `field-type number` sınıfları korunuyor; buradaki
+  kurallar yalnızca okuma satırını ekliyor. Girdinin görünümünü baştan
+  yazmak, panel temasının koyu/açık kipiyle ayrışmasına yol açardı.
+*/
+
+.turkce-sayi-okunan {
+  margin: 0.25rem 0 0;
+  font-size: 0.8125rem;
+  line-height: 1.4;
+  color: var(--theme-elevation-600);
+}
+
+.turkce-sayi-okunan strong {
+  color: var(--theme-elevation-800);
+  font-variant-numeric: tabular-nums;
+}
+
+.turkce-sayi-hata {
+  color: var(--theme-error-500);
+}
+
+.turkce-sayi-bos {
+  color: var(--theme-elevation-450);
+}
