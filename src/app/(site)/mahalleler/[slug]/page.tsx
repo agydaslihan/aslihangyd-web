@@ -31,6 +31,7 @@ import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
 import { CorluAnlatisi } from '@/components/mahalle/CorluAnlatisi'
 import { MiniHarita } from '@/components/mahalle/MiniHarita'
 import { NitelikProfili } from '@/components/mahalle/NitelikProfili'
+import { OlgusalIskelet } from '@/components/mahalle/OlgusalIskelet'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
 import { geometriCoz } from '@/lib/harita/geometri'
 import { haritaStilAdresi } from '@/lib/harita/sunucu'
@@ -40,7 +41,9 @@ import { POI_TIPLERI } from '@/collections/IlgiNoktalari'
 import { bolumAcikMi } from '@/lib/veri/siteBolumleri'
 import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
 import { nitelikBloklari } from '@/lib/mahalle/nitelikler'
-import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
+import { corluMerkeziGetir, mahalleCevresiGetir, sanayiMesafeleri } from '@/lib/veri/yakinlik'
+import { ilceOlgulariniGetir } from '@/lib/veri/ilceOlgulari'
+import { olgusalIskelet } from '@/lib/mahalle/olgusal'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 import { medyaCoz } from '@/lib/medya/coz'
@@ -88,6 +91,8 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
     poiler,
     haritaAcik,
     corluAnlatisi,
+    corluMerkezi,
+    ilceOlgusu,
   ] = await Promise.all([
     /**
      * ⚠️ 50, 3 DEĞİL — ama kartlarda yine 3 gösteriliyor.
@@ -113,12 +118,42 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
      */
     bolumAcikMi('harita'),
     corluAnlatisiniGetir(),
+    corluMerkeziGetir(),
+    ilceOlgulariniGetir(),
   ])
 
   const ilanlar = mahalleIlanlari.slice(0, 3)
 
   /** Güneş haritası için mahalle merkezi. */
   const mahalleKonumu = konumuCoz(mahalle.merkez)
+
+  /* ── Olgusal iskelet ────────────────────────────────────────────────── */
+
+  /**
+   * ⚠️ Sanayi mesafeleri AYRI SORGU ve yalnızca merkez biliniyorsa.
+   * Merkezi girilmemiş mahallede bu bölüm hiç çizilmiyor — tahmini bir
+   * koordinattan hesaplanan mesafe, yanlış olduğu belli olmayan bir sayı
+   * üretirdi.
+   */
+  const sanayiListesi =
+    mahalleKonumu === null ? [] : await sanayiMesafeleri(mahalleKonumu.boylam, mahalleKonumu.enlem)
+
+  const olgular = olgusalIskelet({
+    cevre,
+    sanayi: sanayiListesi,
+    merkezeMetre:
+      mahalleKonumu === null || corluMerkezi === null
+        ? null
+        : kusUcusuMesafe(mahalleKonumu, corluMerkezi),
+    nufus: typeof mahalle.nufus === 'number' ? mahalle.nufus : null,
+    ilceNufusu: ilceOlgusu.nufus,
+    ilceNufusuKaynagi:
+      ilceOlgusu.kaynak === null
+        ? null
+        : ilceOlgusu.yil === null
+          ? ilceOlgusu.kaynak
+          : `${ilceOlgusu.kaynak}`,
+  })
 
   /**
    * ⚠️ Niteliksel profil — Aslıhan doldurmadıysa boş dizi ve bölüm hiç
@@ -405,11 +440,25 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             ) : null}
 
             {/*
+              6b ── Olgusal iskelet
+
+              ⚠️ MAHALLE ANLATISINDAN ÖNCE. Önce ölçülebilen, sonra
+              anlatılan: rakamı gördükten sonra okunan bir yorum,
+              yorumdan sonra gösterilen bir rakamdan daha dürüst.
+
+              ⚠️ Boşsa hiç çizilmiyor (bileşen `null` dönüyor).
+            */}
+            <Sahne>
+              <OlgusalIskelet bolumler={olgular} />
+            </Sahne>
+
+            {/*
               6c ── Yerinde gözlem (niteliksel profil)
 
-              ⚠️ UZUN ANALİZDEN ÖNCE. Yapılandırılmış gözlemler kısa ve
-              taranabilir; uzun metin arkasına konsaydı, onu okumayan
-              ziyaretçi hiçbirini görmezdi.
+              ⚠️ OLGULARDAN SONRA, ANLATIDAN ÖNCE. 6b ölçülen, 6c gözlenen,
+              7 yorumlanan: kesinlik azaldıkça aşağı iniyor. Yapılandırılmış
+              gözlemler kısa ve taranabilir; uzun metin arkasına konsaydı,
+              onu okumayan ziyaretçi hiçbirini görmezdi.
 
               ⚠️ Aslıhan doldurmadıysa bileşen `null` dönüyor ve bölüm hiç
               çizilmiyor.
@@ -421,10 +470,11 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             {/*
               7a ── Çorlu ortak anlatısı
 
-              ⚠️ ŞEHİR BAĞLAMI DOĞRUDAN 7'NİN ÖNÜNDE. 7 tam olarak "Çorlu
-              neden değerli"den "peki neden BU mahalle"ye daralan adım;
-              mahalleye özgü bölümler (6b, 6c) yukarıdaki ölçüm ve gözlem
-              bloklarının devamı olarak kalıyor.
+              ⚠️ SIRA: ölçülen (6b) → gözlenen (6c) → şehir bağlamı (7a) →
+              mahallenin yorumu (7). Üç bölüm de "mahalle anlatısından
+              önce" diye yazılmıştı; şehir bağlamı doğrudan 7'nin önünde
+              duruyor çünkü 7 tam olarak "Çorlu neden değerli"den "peki
+              neden BU mahalle"ye daralan adım.
 
               ⚠️ Kaynaksız blok siteye çıkmıyor; bölüm tamamen boşsa hiç
               çizilmiyor (bkz. `corluAnlatisiniGetir`).

@@ -2282,89 +2282,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.mahalleler_kimler_icin": {
-      "name": "mahalleler_kimler_icin",
-      "schema": "",
-      "columns": {
-        "order": {
-          "name": "order",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parent_id": {
-          "name": "parent_id",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "value": {
-          "name": "value",
-          "type": "enum_mahalleler_kimler_icin",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        }
-      },
-      "indexes": {
-        "mahalleler_kimler_icin_order_idx": {
-          "name": "mahalleler_kimler_icin_order_idx",
-          "columns": [
-            {
-              "expression": "order",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "mahalleler_kimler_icin_parent_idx": {
-          "name": "mahalleler_kimler_icin_parent_idx",
-          "columns": [
-            {
-              "expression": "parent_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "mahalleler_kimler_icin_parent_fk": {
-          "name": "mahalleler_kimler_icin_parent_fk",
-          "tableFrom": "mahalleler_kimler_icin",
-          "tableTo": "mahalleler",
-          "columnsFrom": [
-            "parent_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "cascade",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.mahalleler_sik_sorulanlar": {
       "name": "mahalleler_sik_sorulanlar",
       "schema": "",
@@ -2530,31 +2447,6 @@
         "seo_gorsel_id": {
           "name": "seo_gorsel_id",
           "type": "integer",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "kimler_icin_notu": {
-          "name": "kimler_icin_notu",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "sokak_dokusu": {
-          "name": "sokak_dokusu",
-          "type": "enum_mahalleler_sokak_dokusu",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "son_uc_yil": {
-          "name": "son_uc_yil",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "dikkat_edilmeli": {
-          "name": "dikkat_edilmeli",
-          "type": "varchar",
           "primaryKey": false,
           "notNull": false
         },
@@ -10268,32 +10160,12 @@
         "bunny"
       ]
     },
-    "public.enum_mahalleler_kimler_icin": {
-      "name": "enum_mahalleler_kimler_icin",
-      "schema": "public",
-      "values": [
-        "aile",
-        "ogrenci",
-        "yatirimci",
-        "isci",
-        "emekli"
-      ]
-    },
     "public.enum_mahalleler_yerlesim_turu": {
       "name": "enum_mahalleler_yerlesim_turu",
       "schema": "public",
       "values": [
         "merkez",
         "kirsal"
-      ]
-    },
-    "public.enum_mahalleler_sokak_dokusu": {
-      "name": "enum_mahalleler_sokak_dokusu",
-      "schema": "public",
-      "values": [
-        "sessiz",
-        "orta",
-        "islek"
       ]
     },
     "public.enum_mahalleler_sinir_kaynagi": {
@@ -10705,6 +10577,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "10a10660-436e-48cb-bc3a-f97052eac7cc",
+  "id": "80599a45-97d8-4601-a875-8c13dc1d2209",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
