@@ -30,6 +30,7 @@ import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
 import { CorluAnlatisi } from '@/components/mahalle/CorluAnlatisi'
 import { MiniHarita } from '@/components/mahalle/MiniHarita'
+import { NitelikProfili } from '@/components/mahalle/NitelikProfili'
 import { OlgusalIskelet } from '@/components/mahalle/OlgusalIskelet'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
 import { geometriCoz } from '@/lib/harita/geometri'
@@ -39,6 +40,7 @@ import { kusUcusuMesafe } from '@/lib/eslestirme/motor'
 import { POI_TIPLERI } from '@/collections/IlgiNoktalari'
 import { bolumAcikMi } from '@/lib/veri/siteBolumleri'
 import { ilgiNoktalariniGetir, konumuCoz } from '@/lib/veri/ilgiNoktalari'
+import { nitelikBloklari } from '@/lib/mahalle/nitelikler'
 import { corluMerkeziGetir, mahalleCevresiGetir, sanayiMesafeleri } from '@/lib/veri/yakinlik'
 import { ilceOlgulariniGetir } from '@/lib/veri/ilceOlgulari'
 import { olgusalIskelet } from '@/lib/mahalle/olgusal'
@@ -152,6 +154,13 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
           ? ilceOlgusu.kaynak
           : `${ilceOlgusu.kaynak}`,
   })
+
+  /**
+   * ⚠️ Niteliksel profil — Aslıhan doldurmadıysa boş dizi ve bölüm hiç
+   * çizilmiyor. Yarım bir profil yayınlamaktansa boş durum metni doğru
+   * şeyi söylüyor.
+   */
+  const nitelikler = nitelikBloklari(mahalle)
 
   /* ── Mini harita verisi ─────────────────────────────────────────────── */
 
@@ -444,14 +453,28 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             </Sahne>
 
             {/*
+              6c ── Yerinde gözlem (niteliksel profil)
+
+              ⚠️ OLGULARDAN SONRA, ANLATIDAN ÖNCE. 6b ölçülen, 6c gözlenen,
+              7 yorumlanan: kesinlik azaldıkça aşağı iniyor. Yapılandırılmış
+              gözlemler kısa ve taranabilir; uzun metin arkasına konsaydı,
+              onu okumayan ziyaretçi hiçbirini görmezdi.
+
+              ⚠️ Aslıhan doldurmadıysa bileşen `null` dönüyor ve bölüm hiç
+              çizilmiyor.
+            */}
+            <Sahne>
+              <NitelikProfili bloklar={nitelikler} mahalleAdi={mahalle.ad} />
+            </Sahne>
+
+            {/*
               7a ── Çorlu ortak anlatısı
 
-              ⚠️ İKİ BÖLÜMÜN SIRASI: önce bu mahallenin ÖLÇÜLEN olguları
-              (6b), sonra şehir bağlamı (7a), sonra mahallenin yorumu (7).
-              İkisi de "mahalle anlatısından önce" diye yazılmıştı; şehir
-              bağlamı doğrudan 7'nin önünde duruyor çünkü 7 tam olarak
-              "Çorlu neden değerli"den "peki neden BU mahalle"ye daralan
-              adım. Olgular ise yukarıdaki ölçüm bölümlerinin devamı.
+              ⚠️ SIRA: ölçülen (6b) → gözlenen (6c) → şehir bağlamı (7a) →
+              mahallenin yorumu (7). Üç bölüm de "mahalle anlatısından
+              önce" diye yazılmıştı; şehir bağlamı doğrudan 7'nin önünde
+              duruyor çünkü 7 tam olarak "Çorlu neden değerli"den "peki
+              neden BU mahalle"ye daralan adım.
 
               ⚠️ Kaynaksız blok siteye çıkmıyor; bölüm tamamen boşsa hiç
               çizilmiyor (bkz. `corluAnlatisiniGetir`).

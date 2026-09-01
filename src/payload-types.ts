@@ -644,6 +644,26 @@ export interface Mahalleler {
    * WhatsApp ve sosyal medyada paylaşıldığında görünecek görsel. Önerilen: 1200×630 piksel.
    */
   seoGorsel?: (number | null) | Medya;
+  /**
+   * Birden fazla seçebilirsiniz. Emin olmadığınızı işaretlemeyin — yanlış bir eşleşme, mahalleyi hiç anlatmamaktan kötüdür.
+   */
+  kimlerIcin?: ('aile' | 'ogrenci' | 'yatirimci' | 'isci' | 'emekli')[] | null;
+  /**
+   * Neden? Örn: "İki ilkokul ve pazar yeri yürüme mesafesinde."
+   */
+  kimlerIcinNotu?: string | null;
+  /**
+   * Mahallenin geneli. Tek bir sokağa göre değil; mahallede gezerken edindiğiniz izlenim.
+   */
+  sokakDokusu?: ('sessiz' | 'orta' | 'islek') | null;
+  /**
+   * Yeni yol, yeni okul, dönüşen bina, değişen kiracı profili… Rakam veriyorsanız nereden bildiğinizi de yazın.
+   */
+  sonUcYil?: string | null;
+  /**
+   * ⚠️ Bu alan mahallenin ZAYIF tarafını yazdığınız yer. Boş bırakılan bir "dikkat" alanı, mahallede hiçbir sorun olmadığı izlenimi verir — ve o izlenim ilk ziyarette bozulur.
+   */
+  dikkatEdilmeli?: string | null;
   icerik?: {
     root: {
       type: string;
@@ -1551,6 +1571,11 @@ export interface MahallelerSelect<T extends boolean = true> {
   seoBaslik?: T;
   seoAciklama?: T;
   seoGorsel?: T;
+  kimlerIcin?: T;
+  kimlerIcinNotu?: T;
+  sokakDokusu?: T;
+  sonUcYil?: T;
+  dikkatEdilmeli?: T;
   icerik?: T;
   sikSorulanlar?:
     | T
