@@ -1509,14 +1509,14 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Tekirdağ'"
+          "default": "'Tekirda\u011f'"
         },
         "ilce": {
           "name": "ilce",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Çorlu'"
+          "default": "'\u00c7orlu'"
         },
         "mahalle_id": {
           "name": "mahalle_id",
@@ -4407,6 +4407,202 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.olcek_duzeltmeleri_satirlar": {
+      "name": "olcek_duzeltmeleri_satirlar",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "koleksiyon": {
+          "name": "koleksiyon",
+          "type": "enum_olcek_duzeltmeleri_satirlar_koleksiyon",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kayit_id": {
+          "name": "kayit_id",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alan": {
+          "name": "alan",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eski_deger": {
+          "name": "eski_deger",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "yeni_deger": {
+          "name": "yeni_deger",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kayit_adi": {
+          "name": "kayit_adi",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "olcek_duzeltmeleri_satirlar_order_idx": {
+          "name": "olcek_duzeltmeleri_satirlar_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "olcek_duzeltmeleri_satirlar_parent_id_idx": {
+          "name": "olcek_duzeltmeleri_satirlar_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "olcek_duzeltmeleri_satirlar_parent_id_fk": {
+          "name": "olcek_duzeltmeleri_satirlar_parent_id_fk",
+          "tableFrom": "olcek_duzeltmeleri_satirlar",
+          "tableTo": "olcek_duzeltmeleri",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.olcek_duzeltmeleri": {
+      "name": "olcek_duzeltmeleri",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ozet": {
+          "name": "ozet",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geri_alindi": {
+          "name": "geri_alindi",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "geri_alinma_tarihi": {
+          "name": "geri_alinma_tarihi",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "olcek_duzeltmeleri_updated_at_idx": {
+          "name": "olcek_duzeltmeleri_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "olcek_duzeltmeleri_created_at_idx": {
+          "name": "olcek_duzeltmeleri_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.vergi_parametreleri_dilimler": {
       "name": "vergi_parametreleri_dilimler",
       "schema": "",
@@ -5754,6 +5950,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "olcek_duzeltmeleri_id": {
+          "name": "olcek_duzeltmeleri_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "vergi_parametreleri_id": {
           "name": "vergi_parametreleri_id",
           "type": "integer",
@@ -5966,6 +6168,21 @@
           "method": "btree",
           "with": {}
         },
+        "payload_locked_documents_rels_olcek_duzeltmeleri_id_idx": {
+          "name": "payload_locked_documents_rels_olcek_duzeltmeleri_id_idx",
+          "columns": [
+            {
+              "expression": "olcek_duzeltmeleri_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "payload_locked_documents_rels_vergi_parametreleri_id_idx": {
           "name": "payload_locked_documents_rels_vergi_parametreleri_id_idx",
           "columns": [
@@ -6166,6 +6383,19 @@
           "tableTo": "rayic_degerler",
           "columnsFrom": [
             "rayic_degerler_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_olcek_duzeltmeleri_fk": {
+          "name": "payload_locked_documents_rels_olcek_duzeltmeleri_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "olcek_duzeltmeleri",
+          "columnsFrom": [
+            "olcek_duzeltmeleri_id"
           ],
           "columnsTo": [
             "id"
@@ -8889,14 +9119,14 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'Çorlu neden değerli?'"
+          "default": "'\u00c7orlu neden de\u011ferli?'"
         },
         "giris": {
           "name": "giris",
           "type": "varchar",
           "primaryKey": false,
           "notNull": false,
-          "default": "'Aşağıdaki bilgiler Çorlu’nun tamamı için geçerlidir ve resmî kaynaklara dayanır. Her başlığın altında kullandığımız kaynaklar listelenmiştir.'"
+          "default": "'A\u015fa\u011f\u0131daki bilgiler \u00c7orlu\u2019nun tamam\u0131 i\u00e7in ge\u00e7erlidir ve resm\u00ee kaynaklara dayan\u0131r. Her ba\u015fl\u0131\u011f\u0131n alt\u0131nda kulland\u0131\u011f\u0131m\u0131z kaynaklar listelenmi\u015ftir.'"
         },
         "updated_at": {
           "name": "updated_at",
@@ -10064,6 +10294,14 @@
         "belediye",
         "tkgm",
         "elle"
+      ]
+    },
+    "public.enum_olcek_duzeltmeleri_satirlar_koleksiyon": {
+      "name": "enum_olcek_duzeltmeleri_satirlar_koleksiyon",
+      "schema": "public",
+      "values": [
+        "mahalleler",
+        "ilanlar"
       ]
     },
     "public.enum_vergi_parametreleri_anahtar": {
