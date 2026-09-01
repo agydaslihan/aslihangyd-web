@@ -69,13 +69,14 @@ describe('durum alanı istemciden gelmiyor', () => {
   })
 })
 
-describe('sekiz adım ve şartname karşılığı', () => {
+describe('adımlar ve şartname karşılığı', () => {
   /**
    * ⚠️ Şartname sekiz adım sayıyor. Bir adımın sessizce düşmesi, o adıma
    * ait alanların panelde hiç doldurulamaması demek.
    */
-  it('adım sırası şartnamedeki gibi', () => {
+  it('adım sırası şartnamedeki gibi — dokuz adım', () => {
     expect(ADIMLAR.map((a) => a.anahtar)).toEqual([
+      'kategori',
       'temel',
       'tapu',
       'nitelikler',
@@ -83,6 +84,7 @@ describe('sekiz adım ve şartname karşılığı', () => {
       'gorseller',
       'aciklama',
       'medya',
+      'onizleme',
       'yayin',
     ])
   })
