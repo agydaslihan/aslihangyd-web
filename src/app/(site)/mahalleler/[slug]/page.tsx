@@ -28,6 +28,7 @@ import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
 import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
+import { CorluAnlatisi } from '@/components/mahalle/CorluAnlatisi'
 import { MiniHarita } from '@/components/mahalle/MiniHarita'
 import { OlgusalIskelet } from '@/components/mahalle/OlgusalIskelet'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
@@ -44,6 +45,7 @@ import { olgusalIskelet } from '@/lib/mahalle/olgusal'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 import { medyaCoz } from '@/lib/medya/coz'
+import { corluAnlatisiniGetir } from '@/lib/veri/corluAnlatisi'
 
 type SayfaOzellikleri = { params: Promise<{ slug: string }> }
 
@@ -86,6 +88,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
     rayic,
     poiler,
     haritaAcik,
+    corluAnlatisi,
     corluMerkezi,
     ilceOlgusu,
   ] = await Promise.all([
@@ -112,6 +115,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
      * harita çizilmeye devam etseydi, anahtarın ne yaptığı belirsizleşirdi.
      */
     bolumAcikMi('harita'),
+    corluAnlatisiniGetir(),
     corluMerkeziGetir(),
     ilceOlgulariniGetir(),
   ])
@@ -437,6 +441,23 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             */}
             <Sahne>
               <OlgusalIskelet bolumler={olgular} />
+            </Sahne>
+
+            {/*
+              7a ── Çorlu ortak anlatısı
+
+              ⚠️ İKİ BÖLÜMÜN SIRASI: önce bu mahallenin ÖLÇÜLEN olguları
+              (6b), sonra şehir bağlamı (7a), sonra mahallenin yorumu (7).
+              İkisi de "mahalle anlatısından önce" diye yazılmıştı; şehir
+              bağlamı doğrudan 7'nin önünde duruyor çünkü 7 tam olarak
+              "Çorlu neden değerli"den "peki neden BU mahalle"ye daralan
+              adım. Olgular ise yukarıdaki ölçüm bölümlerinin devamı.
+
+              ⚠️ Kaynaksız blok siteye çıkmıyor; bölüm tamamen boşsa hiç
+              çizilmiyor (bkz. `corluAnlatisiniGetir`).
+            */}
+            <Sahne>
+              <CorluAnlatisi anlati={corluAnlatisi} />
             </Sahne>
 
             {/* 7 ── Neden bu mahalle? */}

@@ -128,6 +128,18 @@ jobs:
       # `< /dev/null` şart — fark yokken açılan onay sorusu CI'da yanıtsız
       # kalır; EOF'u "hayır" sayıp sessizce çıkıyor.
       # ─────────────────────────────────────────────────────────────────
+      # ⚠️ 31 Ağustos 2026 — BU KAPI BİR KEZ YANLIŞ YERE KIRILDI, SEBEBİ
+      # ANLAŞILMADAN "eksik göç yaz" diye okunmamalı.
+      #
+      # `migrate:create` ayrışmayı veritabanına değil, en son göçün `.json`
+      # ŞEMA ANLIK GÖRÜNTÜSÜNE bakarak buluyor ve her göç kendi dalının
+      # gördüğü şemanın TAMAMINI yazıyor. İki dal paralel göç ürettiğinde
+      # sonra merge olan, diğerinin tablolarını anlık görüntüden düşürüyor:
+      # göç dosyası doğru, veritabanı doğru, kapı yine de kırılıyor.
+      #
+      # Çözüm göç yazmak DEĞİL, en son anlık görüntüyü tamamlamak.
+      # `src/lib/dokuman/gocAnlikGoruntusu.test.ts` bunu artık testte de
+      # yakalıyor — kapı kırılmadan önce.
       - name: Göç tazeliği (kod ile şema ayrışmasın)
         run: |
           pnpm payload migrate:create ci_goc_denetimi < /dev/null

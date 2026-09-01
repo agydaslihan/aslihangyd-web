@@ -9149,58 +9149,6 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
-    "public.ilce_olgulari": {
-      "name": "ilce_olgulari",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "serial",
-          "primaryKey": true,
-          "notNull": true
-        },
-        "nufus": {
-          "name": "nufus",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 306939
-        },
-        "nufus_yili": {
-          "name": "nufus_yili",
-          "type": "numeric",
-          "primaryKey": false,
-          "notNull": false,
-          "default": 2025
-        },
-        "nufus_kaynagi": {
-          "name": "nufus_kaynagi",
-          "type": "varchar",
-          "primaryKey": false,
-          "notNull": false,
-          "default": "'T\u00dc\u0130K ADNKS 2025'"
-        },
-        "updated_at": {
-          "name": "updated_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp(3) with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {},
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": false
-    },
     "public.degerleme_ayarlari_kat_katsayilari": {
       "name": "degerleme_ayarlari_kat_katsayilari",
       "schema": "",
@@ -10577,6 +10525,6 @@
     "tables": {},
     "columns": {}
   },
-  "id": "80599a45-97d8-4601-a875-8c13dc1d2209",
+  "id": "13b75727-4ae8-43ff-b73d-c323035838db",
   "prevId": "00000000-0000-0000-0000-000000000000"
 }
