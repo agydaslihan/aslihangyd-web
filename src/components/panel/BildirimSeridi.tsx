@@ -3,6 +3,8 @@ import type { ServerProps } from 'payload'
 import './bildirimSeridi.css'
 
 import { yoneticiMi } from '@/lib/erisim'
+import { surumOzeti } from '@/lib/surum/durum'
+import { surumDurumu } from '@/lib/surum/uzak'
 import { bildirimleriGetir } from '@/lib/veri/bildirimler'
 
 import type { Bildirim, Oncelik } from '@/lib/bildirim/motor'
@@ -72,9 +74,22 @@ export default async function BildirimSeridi({ payload, user }: ServerProps) {
   // Onay kuyruğu bildirimi yalnızca yöneticiye — danışman kuyruğa bakıp
   // bir şey yapamaz.
   const bildirimler = await bildirimleriGetir(payload, new Date(), yoneticiMi(user))
-  if (bildirimler.length === 0) return null
 
+  /**
+   * ⚠️ SÜRÜM SATIRI, UYARI OLMASA DA ÇİZİLİYOR.
+   *
+   * Şerit temizken `null` dönüyordu; sürüm bilgisi de o zaman kaybolurdu
+   * ve "yayında ne var?" sorusunun cevabı yalnızca bir sorun varken
+   * okunabilirdi. Oysa asıl ihtiyaç, sorun OLMADIĞINDAN emin olmak —
+   * 1 Eylül 2026'da 35 commit'lik fark tam olarak burada görünmediği
+   * için gözden kaçtı.
+   */
+  const surumSatiri = surumOzeti(surumDurumu())
   const adminYolu = payload.config.routes.admin
+
+  if (bildirimler.length === 0) {
+    return <p className="panel-bildirim-surum panel-bildirim-surum-yalniz">{surumSatiri}</p>
+  }
 
   return (
     <section className="panel-bildirim" aria-labelledby="panel-bildirim-baslik">
@@ -89,6 +104,8 @@ export default async function BildirimSeridi({ payload, user }: ServerProps) {
           <BildirimSatiri key={bildirim.anahtar} bildirim={bildirim} adminYolu={adminYolu} />
         ))}
       </ul>
+
+      <p className="panel-bildirim-surum">{surumSatiri}</p>
     </section>
   )
 }

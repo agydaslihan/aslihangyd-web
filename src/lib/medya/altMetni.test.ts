@@ -63,6 +63,7 @@ describe('borç görünür kalıyor', () => {
     eskiAdliAyarlar: [],
     siteAdresindePortVar: false,
     semaDurumu: { eksikTablolar: [], beklenenSayi: 63, hata: null },
+    surumDurumu: null,
     alanSagligi: {
       saglik: 'saglikli',
       ozet: 'Alan adı sağlıklı.',

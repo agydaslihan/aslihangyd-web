@@ -96,6 +96,30 @@ COPY --from=derleyici --chown=uygulama:uygulama /uygulama/public ./public
 RUN mkdir -p /uygulama/medya && chown uygulama:uygulama /uygulama/medya
 ENV MEDYA_DIZINI=/uygulama/medya
 
+# ── Sürüm damgası ───────────────────────────────────────────────────────────
+#
+# ⚠️ NEDEN VAR: 1 Eylül 2026'da canlıdaki uygulama 35 commit geride kaldı ve
+# bu ancak elle bakılarak fark edildi. O sürede sitede yapılan bütün
+# denemeler eski sürüme bakıyordu — yani sistem yalnızca gecikmiyor, yanlış
+# bilgi üretiyordu.
+#
+# ⚠️ ORTAM DEĞİŞKENİ DEĞİL, DOSYA. compose'daki bir `KAYNAK_COMMIT:
+# ${KAYNAK_COMMIT:-}` satırı gömülü değeri boş dizeyle ezerdi ve sürümü
+# söylemesi gereken alan sessizce boşalırdı. Ayrıca bu bir yapılandırma
+# değil, imajın kimliği: çalışma zamanında değiştirilebilir olması
+# "hangi kod çalışıyor" sorusunun cevabını yalanlanabilir yapardı.
+#
+# ⚠️ Argümanlar BOŞ GEÇİLEBİLİR. Elle `docker build` yapan biri için derleme
+# kırılmamalı; o durumda dosya yazılır ama `commit` boş kalır ve panel
+# "sürüm damgası eklenmeden derlenmiş" der. Sessizce yanlış bir SHA
+# yazmaktan iyidir.
+ARG KAYNAK_COMMIT=""
+ARG DERLEME_ANI=""
+ARG KAYNAK_DEPO=""
+RUN printf '{"commit":"%s","derlemeAni":"%s","depo":"%s"}\n' \
+      "$KAYNAK_COMMIT" "$DERLEME_ANI" "$KAYNAK_DEPO" > /uygulama/surum.json \
+  && chown uygulama:uygulama /uygulama/surum.json
+
 USER uygulama
 EXPOSE 3000
 
