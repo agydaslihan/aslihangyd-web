@@ -30,6 +30,7 @@ const temiz = (ek: Partial<BildirimGirdisi> = {}): BildirimGirdisi => ({
     sorguZamani: new Date().toISOString(),
   },
   onayBekleyenIlan: 0,
+  altMetniEksikGorsel: 0,
   ...ek,
 })
 
