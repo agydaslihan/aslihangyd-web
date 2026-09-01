@@ -95,6 +95,9 @@ const HERKESE_ACIK = new Set([
 const PANEL_ARKASI: Record<string, string> = {
   'lib/sihirbaz/eylemler.ts': 'Portföy giriş sihirbazı — yalnızca panel kullanıcısı.',
   'lib/osm/eylemler.ts': 'OSM içe aktarma — yalnızca panel kullanıcısı.',
+  'lib/veri/olcekEylemleri.ts':
+    'Toplu ölçek düzeltme — yalnızca YÖNETİCİ (tek çağrıda 26 mahallenin rakamını ' +
+    'bin katına çıkarabiliyor).',
   'lib/sihirbaz/gorselEylemleri.ts':
     'Sihirbazın görsel yüklemesi — yalnızca panel kullanıcısı; medya koleksiyonuna yazıyor.',
   'lib/sihirbaz/oneriEylemleri.ts':
