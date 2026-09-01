@@ -129,6 +129,17 @@ export interface BildirimGirdisi {
   onayBekleyenIlan: number
 
   /**
+   * Alt metni otomatik üretilmiş görsel sayısı.
+   *
+   * ⚠️ BU BİR ERİŞİLEBİLİRLİK BORCU SAYACI. Sahada yirmi fotoğraf yükleyen
+   * kişi yirmi kez metin yazamıyor; alan zorunlu olmaktan çıkarıldı ve boş
+   * kalanlar dosya adından türetiliyor. Türetilmiş metin ekran okuyucu için
+   * yeterli değil — kaç tanesinin insan eliyle yazılması gerektiği GÖRÜNÜR
+   * kalmalı, yoksa borç sessizce büyür.
+   */
+  altMetniEksikGorsel: number
+
+  /**
    * Hiçbir adla tanımlanmamış çalışma zamanı ayarları.
    *
    * ⚠️ Bu alan `lib/ayarlar.ts` üzerinden geliyor ve bir arıza listesidir:
@@ -504,6 +515,24 @@ export function bildirimleriUret(girdi: BildirimGirdisi, simdi: Date = new Date(
         'yayına girme tarihi uzuyor.',
       adres: '/admin/collections/gozlemler',
       adresEtiketi: 'Gözlemler',
+    })
+  }
+
+  /**
+   * ⚠️ ÖNCELİK "BİLGİ": yasal bir sonucu yok ve acil değil. Ama şeritte
+   * durması şart — otomatik alt metin, kimsenin bakmadığı bir borç olarak
+   * birikirse erişilebilirlik sessizce düşer.
+   */
+  if (girdi.altMetniEksikGorsel > 0) {
+    bildirimler.push({
+      anahtar: 'alt-metni-eksik',
+      oncelik: 'bilgi',
+      baslik: `${girdi.altMetniEksikGorsel} görselde alt metin eksik`,
+      aciklama:
+        'Bu görsellerin alt metni dosya adından otomatik üretildi; ekran okuyucu için ' +
+        'yeterli değil. Fırsat buldukça görselde ne olduğunu bir cümleyle yazın.',
+      adres: '/admin/collections/medya?where[altOtomatik][equals]=true',
+      adresEtiketi: 'Eksik olanları listele',
     })
   }
 

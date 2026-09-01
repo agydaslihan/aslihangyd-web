@@ -589,6 +589,43 @@ textarea.sihirbaz-girdi {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
+   Toplu fotoğraf yükleme
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/*
+ * ⚠️ Sürükle-bırak alanı, dosya seçicinin YERİNE değil YANINDA duruyor:
+ * sürükleme dokunmatikte ve klavyeyle yok.
+ */
+.sihirbaz-birakma {
+  border: 2px dashed var(--theme-elevation-200);
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  margin-bottom: 0.75rem;
+  transition:
+    border-color 120ms ease-out,
+    background 120ms ease-out;
+}
+
+.sihirbaz-birakma.uzerinde {
+  border-color: var(--theme-success-500);
+  background: var(--theme-elevation-50);
+}
+
+.sihirbaz-birakma p {
+  margin: 0;
+}
+
+.sihirbaz-gorsel-arac {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
    Modal kabuk, kategori sütunları ve ön izleme
    ═══════════════════════════════════════════════════════════════════════ */
 

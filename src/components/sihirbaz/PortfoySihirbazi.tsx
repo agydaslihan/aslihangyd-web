@@ -105,6 +105,15 @@ const BASLANGIC: Form = {
   oneCikan: false,
 }
 
+/**
+ * Kaç fotoğraftan sonra uyarılır.
+ *
+ * ⚠️ ENGEL DEĞİL, SINIR. Yirmi fotoğraflı bir ilan sayfası mobilde LCP
+ * hedefini tek başına bozabiliyor; ama kaç fotoğrafın gerektiğini bilen
+ * kişi Aslıhan.
+ */
+const GORSEL_UYARI_ESIGI = 15
+
 /** Otomatik kaydetme aralığı. */
 const OTOMATIK_KAYIT_MS = 30_000
 
@@ -458,8 +467,6 @@ export function PortfoySihirbazi({
                 setGorseller(yeni)
                 setKirli(true)
               }}
-              baslik={form.baslik as string}
-              mahalleAdi={mahalleAdiniBul(mahalleler, form.mahalle as string)}
             />
           ) : null}
           {adim?.anahtar === 'aciklama' ? (
@@ -965,48 +972,76 @@ function FiyatAdimi({
  * düzeltiyor.
  * ─────────────────────────────────────────────────────────────────────────
  */
+/**
+ * ⚠️ `baslik` ve `mahalleAdi` PROPLARI KALDIRILDI.
+ *
+ * Eskiden alt metni bunlardan türetiyordu ("Muhittin — fotoğraf 3").
+ * Artık alt metin boş gönderiliyor ve türetme `medya` koleksiyonunun
+ * kancasında, dosya adından yapılıyor: tek yerde, panelden yüklenen
+ * görseller için de geçerli.
+ */
 function GorselAdimi({
   gorseller,
   onDegisim,
-  baslik,
-  mahalleAdi,
 }: {
   gorseller: YuklenmisGorsel[]
   onDegisim: (yeni: YuklenmisGorsel[]) => void
-  baslik: string
-  mahalleAdi: string | null
 }) {
-  const [yukleniyor, setYukleniyor] = useState(false)
   const [hata, setHata] = useState<string | null>(null)
   const [suruklenen, setSuruklenen] = useState<number | null>(null)
+  const [suruklemeUstunde, setSuruklemeUstunde] = useState(false)
+  /** Yüklenen / toplam — ilerleme göstergesi. */
+  const [ilerleme, setIlerleme] = useState<{ biten: number; toplam: number } | null>(null)
+  const [secilenler, setSecilenler] = useState<Set<number>>(new Set())
 
-  const taslakAlt = (sira: number): string => {
-    const konu = baslik.trim() !== '' ? baslik.trim() : (mahalleAdi ?? 'taşınmaz')
-    return `${konu} — fotoğraf ${sira}`
-  }
-
-  async function dosyalariYukle(dosyalar: FileList | null): Promise<void> {
-    if (!dosyalar || dosyalar.length === 0) return
+  /**
+   * ⚠️ ALT METİN BOŞ GÖNDERİLİYOR — VE BU BİLİNÇLİ.
+   *
+   * Sahada yirmi fotoğraf çeken kişi yirmi kez metin yazamıyor. `medya`
+   * koleksiyonu boş alt metni dosya adından türetiyor ve "otomatik"
+   * işaretini koyuyor; panel kaç görselin gerçek metne ihtiyacı olduğunu
+   * sayıyor. Otomatik metin, boş alt metinden iyidir.
+   *
+   * Kullanıcı isterse her fotoğrafın metnini burada yazabiliyor; yazarsa
+   * işaret kalkıyor.
+   */
+  async function dosyalariYukle(dosyalar: FileList | File[] | null): Promise<void> {
+    const liste = dosyalar === null ? [] : [...dosyalar]
+    if (liste.length === 0) return
     setHata(null)
-    setYukleniyor(true)
+    setIlerleme({ biten: 0, toplam: liste.length })
 
     const eklenen: YuklenmisGorsel[] = []
-    for (const [sira, dosya] of [...dosyalar].entries()) {
-      const alt = taslakAlt(gorseller.length + sira + 1)
+    for (const [sira, dosya] of liste.entries()) {
       const form = new FormData()
       form.set('dosya', dosya)
-      form.set('alt', alt)
+      // Boş: sunucu dosya adından türetiyor ve "otomatik" işaretliyor.
+      form.set('alt', '')
       const cevap = await sihirbazGorseliYukle(form)
       if (cevap.basarili && cevap.id !== undefined) {
-        eklenen.push({ id: cevap.id, url: cevap.url ?? '', ad: cevap.ad ?? dosya.name, alt })
+        eklenen.push({
+          id: cevap.id,
+          url: cevap.url ?? '',
+          ad: cevap.ad ?? dosya.name,
+          alt: '',
+        })
       } else {
         setHata(cevap.genelHata ?? 'Görsel yüklenemedi.')
       }
+      setIlerleme({ biten: sira + 1, toplam: liste.length })
     }
 
     if (eklenen.length > 0) onDegisim([...gorseller, ...eklenen])
-    setYukleniyor(false)
+    setIlerleme(null)
   }
+
+  const secimiCevir = (id: number) =>
+    setSecilenler((onceki) => {
+      const yeni = new Set(onceki)
+      if (yeni.has(id)) yeni.delete(id)
+      else yeni.add(id)
+      return yeni
+    })
 
   function tasi(kaynak: number, hedef: number): void {
     if (kaynak === hedef) return
@@ -1019,9 +1054,33 @@ function GorselAdimi({
 
   return (
     <>
+      {/*
+        ⚠️ SÜRÜKLE-BIRAK ALANI DOSYA SEÇİCİNİN YERİNE DEĞİL, YANINDA.
+        Sürükleme dokunmatikte ve klavyeyle yok; tek yol yapmak masaüstü
+        dışındaki herkesi dışarıda bırakırdı.
+      */}
+      <div
+        onDragOver={(olay) => {
+          olay.preventDefault()
+          setSuruklemeUstunde(true)
+        }}
+        onDragLeave={() => setSuruklemeUstunde(false)}
+        onDrop={(olay) => {
+          olay.preventDefault()
+          setSuruklemeUstunde(false)
+          void dosyalariYukle(olay.dataTransfer.files)
+        }}
+        className={`sihirbaz-birakma${suruklemeUstunde ? ' uzerinde' : ''}`}
+      >
+        <p>Fotoğrafları buraya sürükleyin</p>
+        <p className="sihirbaz-ipucu">
+          ya da aşağıdan seçin. Birden fazla dosya seçebilirsiniz; telefonda kamera da açılır.
+        </p>
+      </div>
+
       <Alan
         etiket="Fotoğraf ekle"
-        ipucu="Birden fazla seçebilirsiniz. Telefonda kamera doğrudan açılır."
+        ipucu="Alt metin ZORUNLU DEĞİL — boş bırakırsanız dosya adından geçici bir metin üretilir ve panelde “eksik” olarak işaretlenir."
       >
         {/* ⚠️ `capture` YOK, `accept` VAR: `capture` yazmak galeriyi
             kapatıp yalnızca kamerayı açar. Sahada çekilen fotoğraf kadar,
@@ -1035,7 +1094,16 @@ function GorselAdimi({
         />
       </Alan>
 
-      {yukleniyor ? <p className="sihirbaz-ipucu">Yükleniyor…</p> : null}
+      {ilerleme !== null ? (
+        <div className="sihirbaz-ilerleme" role="status" aria-live="polite">
+          <div className="sihirbaz-ilerleme-cubuk">
+            <span style={{ width: `${Math.round((ilerleme.biten / ilerleme.toplam) * 100)}%` }} />
+          </div>
+          <p className="sihirbaz-ilerleme-metin">
+            {ilerleme.biten}/{ilerleme.toplam} fotoğraf yüklendi
+          </p>
+        </div>
+      ) : null}
       {hata ? (
         <p className="sihirbaz-genel-hata" role="alert">
           {hata}
@@ -1047,72 +1115,113 @@ function GorselAdimi({
           Henüz fotoğraf yok. Fotoğrafsız da kaydedebilirsiniz; ilan sayfası boş durum gösterir.
         </p>
       ) : (
-        <ol className="sihirbaz-gorseller">
-          {gorseller.map((gorsel, sira) => (
-            <li
-              key={gorsel.id}
-              draggable
-              onDragStart={() => setSuruklenen(sira)}
-              onDragOver={(olay) => olay.preventDefault()}
-              onDrop={() => {
-                if (suruklenen !== null) tasi(suruklenen, sira)
-                setSuruklenen(null)
+        <>
+          <div className="sihirbaz-gorsel-arac">
+            <span className="sihirbaz-ipucu">
+              {gorseller.length} fotoğraf · ilk sıradaki kapak
+              {secilenler.size > 0 ? ` · ${secilenler.size} seçili` : ''}
+            </span>
+            <button
+              type="button"
+              className="sihirbaz-dugme sessiz"
+              onClick={() => {
+                onDegisim(gorseller.filter((g) => !secilenler.has(g.id)))
+                setSecilenler(new Set())
               }}
-              className={sira === 0 ? 'kapak' : undefined}
+              disabled={secilenler.size === 0}
             >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={gorsel.url} alt="" width={96} height={72} />
-              <div className="sihirbaz-gorsel-govde">
-                <span className="sihirbaz-gorsel-ad">
-                  {sira === 0 ? 'Kapak · ' : `${sira + 1}. · `}
-                  {gorsel.ad}
-                </span>
+              Seçilenleri kaldır
+            </button>
+          </div>
+
+          {/*
+            ⚠️ BOYUT BÜTÇESİ UYARISI — SAYFA HIZI BİR TASARIM KISITI.
+            Yirmi fotoğraflı bir ilan sayfası, mobilde ölçülen LCP
+            hedefini tek başına bozabiliyor. Sayı bir engel değil,
+            görünür bir sınır.
+          */}
+          {gorseller.length > GORSEL_UYARI_ESIGI ? (
+            <p className="sihirbaz-ipucu">
+              ⚠️ {gorseller.length} fotoğraf yüklendi. {GORSEL_UYARI_ESIGI}&apos;den sonrası sayfayı
+              ağırlaştırıyor; en iyi {GORSEL_UYARI_ESIGI} tanesini bırakmayı düşünün. Görseller
+              sunucuda küçültülüyor ama indirilecek dosya sayısı yine de artıyor.
+            </p>
+          ) : null}
+
+          <ol className="sihirbaz-gorseller">
+            {gorseller.map((gorsel, sira) => (
+              <li
+                key={gorsel.id}
+                draggable
+                onDragStart={() => setSuruklenen(sira)}
+                onDragOver={(olay) => olay.preventDefault()}
+                onDrop={() => {
+                  if (suruklenen !== null) tasi(suruklenen, sira)
+                  setSuruklenen(null)
+                }}
+                className={sira === 0 ? 'kapak' : undefined}
+              >
                 <input
-                  className="sihirbaz-girdi"
-                  value={gorsel.alt}
-                  aria-label={`${sira + 1}. fotoğrafın alternatif metni`}
-                  onChange={(olay) =>
-                    onDegisim(
-                      gorseller.map((g) =>
-                        g.id === gorsel.id ? { ...g, alt: olay.target.value } : g,
-                      ),
-                    )
-                  }
+                  type="checkbox"
+                  checked={secilenler.has(gorsel.id)}
+                  onChange={() => secimiCevir(gorsel.id)}
+                  aria-label={`${sira + 1}. fotoğrafı seç`}
                 />
-              </div>
-              {/*
+                {/* eslint-disable-next-line @next/next/no-img-element */}
+                <img src={gorsel.url} alt="" width={96} height={72} />
+                <div className="sihirbaz-gorsel-govde">
+                  <span className="sihirbaz-gorsel-ad">
+                    {sira === 0 ? 'Kapak · ' : `${sira + 1}. · `}
+                    {gorsel.ad}
+                  </span>
+                  <input
+                    className="sihirbaz-girdi"
+                    value={gorsel.alt}
+                    placeholder="Alt metin (isteğe bağlı)"
+                    aria-label={`${sira + 1}. fotoğrafın alternatif metni (isteğe bağlı)`}
+                    onChange={(olay) =>
+                      onDegisim(
+                        gorseller.map((g) =>
+                          g.id === gorsel.id ? { ...g, alt: olay.target.value } : g,
+                        ),
+                      )
+                    }
+                  />
+                </div>
+                {/*
                 ⚠️ SÜRÜKLE-BIRAK TEK YOL DEĞİL. Sürükleme klavyeyle
                 kullanılamıyor; yukarı/aşağı düğmeleri aynı işi yapıyor ve
                 dokunmatikte de daha güvenilir.
               */}
-              <div className="sihirbaz-gorsel-dugmeler">
-                <button
-                  type="button"
-                  onClick={() => tasi(sira, sira - 1)}
-                  disabled={sira === 0}
-                  aria-label={`${sira + 1}. fotoğrafı yukarı taşı`}
-                >
-                  ↑
-                </button>
-                <button
-                  type="button"
-                  onClick={() => tasi(sira, sira + 1)}
-                  disabled={sira === gorseller.length - 1}
-                  aria-label={`${sira + 1}. fotoğrafı aşağı taşı`}
-                >
-                  ↓
-                </button>
-                <button
-                  type="button"
-                  onClick={() => onDegisim(gorseller.filter((g) => g.id !== gorsel.id))}
-                  aria-label={`${sira + 1}. fotoğrafı listeden çıkar`}
-                >
-                  ✕
-                </button>
-              </div>
-            </li>
-          ))}
-        </ol>
+                <div className="sihirbaz-gorsel-dugmeler">
+                  <button
+                    type="button"
+                    onClick={() => tasi(sira, sira - 1)}
+                    disabled={sira === 0}
+                    aria-label={`${sira + 1}. fotoğrafı yukarı taşı`}
+                  >
+                    ↑
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => tasi(sira, sira + 1)}
+                    disabled={sira === gorseller.length - 1}
+                    aria-label={`${sira + 1}. fotoğrafı aşağı taşı`}
+                  >
+                    ↓
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onDegisim(gorseller.filter((g) => g.id !== gorsel.id))}
+                    aria-label={`${sira + 1}. fotoğrafı listeden çıkar`}
+                  >
+                    ✕
+                  </button>
+                </div>
+              </li>
+            ))}
+          </ol>
+        </>
       )}
     </>
   )
