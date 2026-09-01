@@ -70,7 +70,28 @@ export function RayicPiyasaOrani({
           <dd className="text-baslik-3 mt-1 font-sans font-medium tabular-nums">
             {paraYaz(rayicM2)}/m²
           </dd>
-          <p className="text-metin-3 text-mikro mt-1">Vergiye esas asgari değer</p>
+          {/*
+            ⚠️ KAPSAM RAKAMIN YANINDA YAZILI.
+
+            Bir mahallenin rayiç bedeli yüzlerce sokak kaydından
+            türetiliyor olabilir; ortancanın kaç kayda dayandığını
+            söylemeden göstermek, tek bir sokağın rakamını mahallenin
+            geneli sanmak kadar yanıltıcı. Sitenin her rakamda uyguladığı
+            n kuralı burada da geçerli.
+          */}
+          <p className="text-metin-3 text-mikro mt-1">
+            Vergiye esas asgari değer
+            {rayic?.kapsam === 'sokak_ortancasi'
+              ? ` · ${rayic.kayitSayisi} sokak kaydının ortancası`
+              : ' · mahalle geneli kaydı'}
+          </p>
+          {rayic?.kapsam === 'sokak_ortancasi' &&
+          rayic.enDusuk !== null &&
+          rayic.enYuksek !== null ? (
+            <p className="text-metin-3 text-mikro mt-0.5">
+              Sokaklar arası: {paraYaz(rayic.enDusuk)} – {paraYaz(rayic.enYuksek)}/m²
+            </p>
+          ) : null}
         </div>
 
         <div>
@@ -110,6 +131,15 @@ export function RayicPiyasaOrani({
         değerdir; piyasanın çoğu yerde altındadır. Tapu harcı bu değerin altına düşemez. Kaynak:{' '}
         {kaynak}
         {kaynakTarihi ? ` · ${kaynakTarihi} itibarıyla` : ''}.
+        {rayic?.kapsam === 'sokak_ortancasi' ? (
+          <>
+            {' '}
+            Belediye tablosu sokak sokak yayınlanıyor; buradaki rakam mahalledeki{' '}
+            {rayic.kayitSayisi} sokak kaydının{' '}
+            <strong className="text-metin-2 font-medium">ortancasıdır</strong> — ortalama değil,
+            çünkü birkaç ana cadde ortalamayı yukarı çeker.
+          </>
+        ) : null}
       </p>
 
       <p className="text-metin-3 text-mikro mt-2 leading-relaxed">
