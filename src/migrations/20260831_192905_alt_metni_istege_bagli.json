@@ -1509,14 +1509,14 @@
           "type": "varchar",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Tekirdağ'"
+          "default": "'Tekirda\u011f'"
         },
         "ilce": {
           "name": "ilce",
           "type": "varchar",
           "primaryKey": false,
           "notNull": true,
-          "default": "'Çorlu'"
+          "default": "'\u00c7orlu'"
         },
         "mahalle_id": {
           "name": "mahalle_id",
@@ -4407,6 +4407,202 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.olcek_duzeltmeleri_satirlar": {
+      "name": "olcek_duzeltmeleri_satirlar",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "koleksiyon": {
+          "name": "koleksiyon",
+          "type": "enum_olcek_duzeltmeleri_satirlar_koleksiyon",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kayit_id": {
+          "name": "kayit_id",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "alan": {
+          "name": "alan",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "eski_deger": {
+          "name": "eski_deger",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "yeni_deger": {
+          "name": "yeni_deger",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "kayit_adi": {
+          "name": "kayit_adi",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "olcek_duzeltmeleri_satirlar_order_idx": {
+          "name": "olcek_duzeltmeleri_satirlar_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "olcek_duzeltmeleri_satirlar_parent_id_idx": {
+          "name": "olcek_duzeltmeleri_satirlar_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "olcek_duzeltmeleri_satirlar_parent_id_fk": {
+          "name": "olcek_duzeltmeleri_satirlar_parent_id_fk",
+          "tableFrom": "olcek_duzeltmeleri_satirlar",
+          "tableTo": "olcek_duzeltmeleri",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.olcek_duzeltmeleri": {
+      "name": "olcek_duzeltmeleri",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ozet": {
+          "name": "ozet",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "geri_alindi": {
+          "name": "geri_alindi",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": false
+        },
+        "geri_alinma_tarihi": {
+          "name": "geri_alinma_tarihi",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "olcek_duzeltmeleri_updated_at_idx": {
+          "name": "olcek_duzeltmeleri_updated_at_idx",
+          "columns": [
+            {
+              "expression": "updated_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "olcek_duzeltmeleri_created_at_idx": {
+          "name": "olcek_duzeltmeleri_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.vergi_parametreleri_dilimler": {
       "name": "vergi_parametreleri_dilimler",
       "schema": "",
@@ -5761,6 +5957,12 @@
           "primaryKey": false,
           "notNull": false
         },
+        "olcek_duzeltmeleri_id": {
+          "name": "olcek_duzeltmeleri_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": false
+        },
         "vergi_parametreleri_id": {
           "name": "vergi_parametreleri_id",
           "type": "integer",
@@ -5973,6 +6175,21 @@
           "method": "btree",
           "with": {}
         },
+        "payload_locked_documents_rels_olcek_duzeltmeleri_id_idx": {
+          "name": "payload_locked_documents_rels_olcek_duzeltmeleri_id_idx",
+          "columns": [
+            {
+              "expression": "olcek_duzeltmeleri_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "payload_locked_documents_rels_vergi_parametreleri_id_idx": {
           "name": "payload_locked_documents_rels_vergi_parametreleri_id_idx",
           "columns": [
@@ -6173,6 +6390,19 @@
           "tableTo": "rayic_degerler",
           "columnsFrom": [
             "rayic_degerler_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        },
+        "payload_locked_documents_rels_olcek_duzeltmeleri_fk": {
+          "name": "payload_locked_documents_rels_olcek_duzeltmeleri_fk",
+          "tableFrom": "payload_locked_documents_rels",
+          "tableTo": "olcek_duzeltmeleri",
+          "columnsFrom": [
+            "olcek_duzeltmeleri_id"
           ],
           "columnsTo": [
             "id"
@@ -8692,6 +8922,292 @@
       "checkConstraints": {},
       "isRLSEnabled": false
     },
+    "public.corlu_anlatisi_bloklar_kaynaklar": {
+      "name": "corlu_anlatisi_bloklar_kaynaklar",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "ad": {
+          "name": "ad",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "adres": {
+          "name": "adres",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "erisim": {
+          "name": "erisim",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "corlu_anlatisi_bloklar_kaynaklar_order_idx": {
+          "name": "corlu_anlatisi_bloklar_kaynaklar_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "corlu_anlatisi_bloklar_kaynaklar_parent_id_idx": {
+          "name": "corlu_anlatisi_bloklar_kaynaklar_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "corlu_anlatisi_bloklar_kaynaklar_parent_id_fk": {
+          "name": "corlu_anlatisi_bloklar_kaynaklar_parent_id_fk",
+          "tableFrom": "corlu_anlatisi_bloklar_kaynaklar",
+          "tableTo": "corlu_anlatisi_bloklar",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.corlu_anlatisi_bloklar": {
+      "name": "corlu_anlatisi_bloklar",
+      "schema": "",
+      "columns": {
+        "_order": {
+          "name": "_order",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "_parent_id": {
+          "name": "_parent_id",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "id": {
+          "name": "id",
+          "type": "varchar",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "baslik": {
+          "name": "baslik",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "metin": {
+          "name": "metin",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "corlu_anlatisi_bloklar_order_idx": {
+          "name": "corlu_anlatisi_bloklar_order_idx",
+          "columns": [
+            {
+              "expression": "_order",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "corlu_anlatisi_bloklar_parent_id_idx": {
+          "name": "corlu_anlatisi_bloklar_parent_id_idx",
+          "columns": [
+            {
+              "expression": "_parent_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "corlu_anlatisi_bloklar_parent_id_fk": {
+          "name": "corlu_anlatisi_bloklar_parent_id_fk",
+          "tableFrom": "corlu_anlatisi_bloklar",
+          "tableTo": "corlu_anlatisi",
+          "columnsFrom": [
+            "_parent_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "cascade",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.corlu_anlatisi": {
+      "name": "corlu_anlatisi",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "acik": {
+          "name": "acik",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": false,
+          "default": true
+        },
+        "baslik": {
+          "name": "baslik",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'\u00c7orlu neden de\u011ferli?'"
+        },
+        "giris": {
+          "name": "giris",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'A\u015fa\u011f\u0131daki bilgiler \u00c7orlu\u2019nun tamam\u0131 i\u00e7in ge\u00e7erlidir ve resm\u00ee kaynaklara dayan\u0131r. Her ba\u015fl\u0131\u011f\u0131n alt\u0131nda kulland\u0131\u011f\u0131m\u0131z kaynaklar listelenmi\u015ftir.'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
+    "public.ilce_olgulari": {
+      "name": "ilce_olgulari",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "serial",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "nufus": {
+          "name": "nufus",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 306939
+        },
+        "nufus_yili": {
+          "name": "nufus_yili",
+          "type": "numeric",
+          "primaryKey": false,
+          "notNull": false,
+          "default": 2025
+        },
+        "nufus_kaynagi": {
+          "name": "nufus_kaynagi",
+          "type": "varchar",
+          "primaryKey": false,
+          "notNull": false,
+          "default": "'T\u00dc\u0130K ADNKS 2025'"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp(3) with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    },
     "public.degerleme_ayarlari_kat_katsayilari": {
       "name": "degerleme_ayarlari_kat_katsayilari",
       "schema": "",
@@ -9837,6 +10353,14 @@
         "belediye",
         "tkgm",
         "elle"
+      ]
+    },
+    "public.enum_olcek_duzeltmeleri_satirlar_koleksiyon": {
+      "name": "enum_olcek_duzeltmeleri_satirlar_koleksiyon",
+      "schema": "public",
+      "values": [
+        "mahalleler",
+        "ilanlar"
       ]
     },
     "public.enum_vergi_parametreleri_anahtar": {
