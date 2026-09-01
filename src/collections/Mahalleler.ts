@@ -264,24 +264,45 @@ export const Mahalleler: CollectionConfig = {
           label: 'Rakamlar',
           description:
             '⚠️ Bilmediğin rakamı BOŞ BIRAK. Boş alan arayüzde "veri bekleniyor" olarak ' +
-            'gösterilir; uydurma rakam hem itibar hem hukuki risktir.',
+            'gösterilir; uydurma rakam hem itibar hem hukuki risktir. ' +
+            '⚠️ BİNLİK AYIRICI KULLANMAYIN: sayı alanı noktayı ondalık ayırıcı sayar, ' +
+            '"39.704" yazdığınızda kaydedilen değer 39,704 olur. Doğrusu: 39704.',
           fields: [
+            /**
+             * ⚠️ ÖLÇEK UYARISI EN ÜSTTE — rakamlardan ÖNCE.
+             *
+             * Uyarı, doldurulan alanların altında dursaydı kaydet
+             * düğmesine giden kişi onu hiç görmezdi. 31 Ağustos 2026'da
+             * Alipaşa'nın üç rakamı da bindebir kaydedilmişti ve hata
+             * ancak sitede fark edildi.
+             */
+            {
+              name: 'olcekUyarisi',
+              type: 'ui',
+              admin: { components: { Field: '@/components/panel/OlcekUyarisi#default' } },
+            },
             {
               type: 'row',
               fields: [
                 {
                   name: 'ortalamaM2Satis',
                   type: 'number',
-                  label: 'Ortalama m² satış fiyatı (₺)',
+                  label: 'Ortalama m² satış (₺/m²)',
                   min: 0,
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
                 {
                   name: 'ortalamaKira',
                   type: 'number',
-                  label: 'Ortalama aylık kira (₺)',
+                  label: 'Ortalama aylık kira (₺/ay)',
                   min: 0,
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
               ],
             },
@@ -291,24 +312,34 @@ export const Mahalleler: CollectionConfig = {
                 {
                   name: 'kiraCarpani',
                   type: 'number',
-                  label: 'Kira çarpanı',
+                  label: 'Kira çarpanı (yıl)',
                   min: 0,
-                  admin: { width: '50%', description: 'Kaç yıllık kira, satış fiyatına eşit.' },
+                  admin: {
+                    width: '50%',
+                    description: 'Kaç yıllık kira, satış fiyatına eşit.',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
                 {
                   name: 'degisim12Ay',
                   type: 'number',
                   label: '12 aylık değişim (%)',
-                  admin: { width: '50%' },
+                  admin: {
+                    width: '50%',
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+                  },
                 },
               ],
             },
             {
               name: 'nufus',
               type: 'number',
-              label: 'Nüfus',
+              label: 'Nüfus (kişi)',
               min: 0,
-              admin: { description: 'Resmî kaynaktan (TÜİK/belediye) teyit edilmeden girme.' },
+              admin: {
+                description: 'Resmî kaynaktan (TÜİK/belediye) teyit edilmeden girme.',
+                components: { Field: '@/components/panel/TurkceSayiAlani#default' },
+              },
             },
             {
               type: 'row',
@@ -319,6 +350,7 @@ export const Mahalleler: CollectionConfig = {
                   label: 'Gözlem sayısı (n)',
                   min: 0,
                   admin: {
+                    components: { Field: '@/components/panel/TurkceSayiAlani#default' },
                     width: '50%',
                     description:
                       'Bu rakamlar kaç gözleme dayanıyor? Sitede her rakamın yanında gösterilir. ' +

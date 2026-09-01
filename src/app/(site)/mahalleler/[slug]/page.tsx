@@ -28,6 +28,7 @@ import { mahalledekiIlanlariGetir } from '@/lib/veri/ilanlar'
 import { karsilastirilabilirMahalleler, mahalleGetir } from '@/lib/veri/mahalleler'
 import { mahalleRayiciGetir } from '@/lib/veri/rayic'
 import { GunesHaritasi } from '@/components/gunes/GunesHaritasi'
+import { CorluAnlatisi } from '@/components/mahalle/CorluAnlatisi'
 import { MiniHarita } from '@/components/mahalle/MiniHarita'
 import { NitelikProfili } from '@/components/mahalle/NitelikProfili'
 import type { HaritaNoktasi } from '@/components/harita/Harita3B'
@@ -43,6 +44,7 @@ import { mahalleCevresiGetir } from '@/lib/veri/yakinlik'
 import type { Mahalleler } from '@/payload-types'
 import { bulanikOzellikleri } from '@/lib/medya/bulanik'
 import { medyaCoz } from '@/lib/medya/coz'
+import { corluAnlatisiniGetir } from '@/lib/veri/corluAnlatisi'
 
 type SayfaOzellikleri = { params: Promise<{ slug: string }> }
 
@@ -85,6 +87,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
     rayic,
     poiler,
     haritaAcik,
+    corluAnlatisi,
   ] = await Promise.all([
     /**
      * ⚠️ 50, 3 DEĞİL — ama kartlarda yine 3 gösteriliyor.
@@ -109,6 +112,7 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
      * harita çizilmeye devam etseydi, anahtarın ne yaptığı belirsizleşirdi.
      */
     bolumAcikMi('harita'),
+    corluAnlatisiniGetir(),
   ])
 
   const ilanlar = mahalleIlanlari.slice(0, 3)
@@ -412,6 +416,21 @@ export default async function MahalleDetayi({ params }: SayfaOzellikleri) {
             */}
             <Sahne>
               <NitelikProfili bloklar={nitelikler} mahalleAdi={mahalle.ad} />
+            </Sahne>
+
+            {/*
+              7a ── Çorlu ortak anlatısı
+
+              ⚠️ ŞEHİR BAĞLAMI DOĞRUDAN 7'NİN ÖNÜNDE. 7 tam olarak "Çorlu
+              neden değerli"den "peki neden BU mahalle"ye daralan adım;
+              mahalleye özgü bölümler (6b, 6c) yukarıdaki ölçüm ve gözlem
+              bloklarının devamı olarak kalıyor.
+
+              ⚠️ Kaynaksız blok siteye çıkmıyor; bölüm tamamen boşsa hiç
+              çizilmiyor (bkz. `corluAnlatisiniGetir`).
+            */}
+            <Sahne>
+              <CorluAnlatisi anlati={corluAnlatisi} />
             </Sahne>
 
             {/* 7 ── Neden bu mahalle? */}
