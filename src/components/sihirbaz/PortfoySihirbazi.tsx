@@ -5,7 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { eidsDegerlendir, EIDS_DURUMLARI, EIDS_DURUM_ETIKETLERI, type EidsDurum } from '@/lib/eids'
 import { CEPHE_YONLERI } from '@/lib/gunes/cephe'
 import { gostergeleriHesapla, type IlanGostergeleri } from '@/lib/ilan/hesaplamalar'
-import { ilanTaslaginiKaydet } from '@/lib/sihirbaz/eylemler'
+import { ilaniYayinaAl, ilanTaslaginiKaydet } from '@/lib/sihirbaz/eylemler'
 import { sihirbazGorseliYukle } from '@/lib/sihirbaz/gorselEylemleri'
 import { benzerIlanOnerileri } from '@/lib/sihirbaz/oneriEylemleri'
 import type { Oneri } from '@/lib/sihirbaz/oneriTipleri'
@@ -125,10 +125,18 @@ export interface MahalleSecenegi {
 export function PortfoySihirbazi({
   mahalleler,
   adminTemelAdresi,
+  onKapat,
 }: {
   mahalleler: MahalleSecenegi[]
   /** Payload admin kök yolu — kayıt sonrası yönlendirme için. */
   adminTemelAdresi: string
+  /**
+   * Modal kabuğunda çalışıyorsa "kaydet ve çık" bunu çağırıyor.
+   *
+   * ⚠️ Sayfa kabuğunda `undefined`: aynı bileşen iki kabukta da
+   * çalışıyor ve hangi kabukta olduğunu bilmek zorunda değil.
+   */
+  onKapat?: () => void
 }) {
   const [adimNo, setAdimNo] = useState(0)
   const [form, setForm] = useState<Form>(BASLANGIC)
@@ -138,6 +146,7 @@ export function PortfoySihirbazi({
   const [ilanId, setIlanId] = useState<string | null>(null)
   const [sonKayit, setSonKayit] = useState<string | null>(null)
   const [bitti, setBitti] = useState<{ id: string; baslik: string } | null>(null)
+  const [yayinlandi, setYayinlandi] = useState(false)
   const [oneriler, setOneriler] = useState<Oneri[]>([])
   const [kaydediliyor, basla] = useTransition()
 
@@ -328,12 +337,34 @@ export function PortfoySihirbazi({
     }
   }, [form.mahalle, form.kategori, form.odaSayisi])
 
+  /**
+   * Yayına al — EİDS kapısı SUNUCUDA.
+   *
+   * ⚠️ Düğme EİDS eksikken pasif ama pasiflik bir kapı değil: DOM'dan
+   * etkinleştirilebilir. Gerçek kapı `eidsYayinEngeli` kancası ve eylem
+   * onu çağırıyor; reddedilirse kancanın mesajı aynen gösteriliyor.
+   */
+  function yayinaAl(): void {
+    if (ilanId === null) return
+    setGenelHata(null)
+    basla(async () => {
+      const cevap = await ilaniYayinaAl(ilanId)
+      if (cevap.basarili) {
+        setYayinlandi(true)
+        setBitti({ id: ilanId, baslik: cevap.ilanBasligi ?? (formRef.current.baslik as string) })
+        return
+      }
+      setGenelHata(cevap.genelHata ?? 'Yayına alınamadı.')
+    })
+  }
+
   function sifirla(): void {
     setForm(BASLANGIC)
     setGorseller([])
     setHatalar({})
     setGenelHata(null)
     setBitti(null)
+    setYayinlandi(false)
     setIlanId(null)
     setSonKayit(null)
     setKirli(false)
@@ -347,13 +378,24 @@ export function PortfoySihirbazi({
         baslik={bitti.baslik}
         adminTemelAdresi={adminTemelAdresi}
         eidsHazir={eids.yayinlanabilir}
+        yayinlandi={yayinlandi}
         onYeni={sifirla}
+        onKapat={onKapat}
       />
     )
   }
 
   const doluluklar = ADIMLAR.map((a) => adimDolulugu(a, form, gorseller))
-  const genelDoluluk = Math.round(doluluklar.reduce((a, b) => a + b, 0) / ADIMLAR.length)
+  /**
+   * ⚠️ Genel yüzde YALNIZCA doldurulabilir adımlardan. Ön izleme ve yayın
+   * adımlarını paydaya katmak, hiçbir şey doldurmadan %20 göstermek
+   * olurdu.
+   */
+  const olculebilir = doluluklar.filter((d): d is number => d !== null)
+  const genelDoluluk =
+    olculebilir.length === 0
+      ? 0
+      : Math.round(olculebilir.reduce((a, b) => a + b, 0) / olculebilir.length)
 
   return (
     <div className="sihirbaz">
@@ -378,9 +420,21 @@ export function PortfoySihirbazi({
               className={sira === adimNo ? 'etkin' : doluluklar[sira] === 100 ? 'tamam' : undefined}
               onClick={() => adimaGit(sira)}
             >
-              <span className="sihirbaz-adim-no">{sira + 1}</span>
+              {/* ⚠️ Tamamlanan adım onay işaretiyle: renk tek taşıyıcı
+                  değil (WCAG 1.4.1). */}
+              <span className="sihirbaz-adim-no">
+                {doluluklar[sira] === 100 ? (
+                  <span className="sihirbaz-adim-onay" aria-hidden>
+                    ✓
+                  </span>
+                ) : (
+                  sira + 1
+                )}
+              </span>
               <span className="sihirbaz-adim-ad">{a.baslik}</span>
-              <span className="sihirbaz-adim-yuzde">%{doluluklar[sira]}</span>
+              {doluluklar[sira] === null ? null : (
+                <span className="sihirbaz-adim-yuzde">%{doluluklar[sira]}</span>
+              )}
             </button>
           </li>
         ))}
@@ -391,6 +445,9 @@ export function PortfoySihirbazi({
           <h2 className="sihirbaz-baslik">{adim?.baslik}</h2>
           <p className="sihirbaz-aciklama">{adim?.aciklama}</p>
 
+          {adim?.anahtar === 'kategori' ? (
+            <KategoriAdimi form={form} hatalar={hatalar} yaz={yaz} />
+          ) : null}
           {adim?.anahtar === 'temel' ? (
             <TemelAdimi form={form} hatalar={hatalar} yaz={yaz} mahalleler={mahalleler} />
           ) : null}
@@ -417,6 +474,14 @@ export function PortfoySihirbazi({
           ) : null}
           {adim?.anahtar === 'medya' ? (
             <MedyaAdimi form={form} hatalar={hatalar} yaz={yaz} />
+          ) : null}
+          {adim?.anahtar === 'onizleme' ? (
+            <OnizlemeAdimi
+              form={form}
+              gorseller={gorseller}
+              mahalleler={mahalleler}
+              gostergeler={gostergeler}
+            />
           ) : null}
           {adim?.anahtar === 'yayin' ? (
             <YayinAdimi
@@ -453,10 +518,20 @@ export function PortfoySihirbazi({
             <button
               type="button"
               className="sihirbaz-dugme sessiz"
-              onClick={() => kaydet()}
+              onClick={() => {
+                kaydet()
+                // ⚠️ Kapatma kaydetmeyi BEKLEMİYOR: geçiş zaten arka
+                // planda tamamlanıyor ve kullanıcıyı bekletmek, "çık"
+                // düğmesinin çıkmadığı bir an üretirdi.
+                if (onKapat !== undefined) onKapat()
+              }}
               disabled={kaydediliyor || (form.mahalle as string) === ''}
             >
-              {kaydediliyor ? 'Kaydediliyor…' : 'Taslak kaydet'}
+              {kaydediliyor
+                ? 'Kaydediliyor…'
+                : onKapat === undefined
+                  ? 'Taslak kaydet'
+                  : 'Taslak kaydet ve çık'}
             </button>
 
             {adimNo < ADIMLAR.length - 1 ? (
@@ -464,14 +539,36 @@ export function PortfoySihirbazi({
                 Devam
               </button>
             ) : (
-              <button
-                type="button"
-                className="sihirbaz-dugme"
-                onClick={() => kaydet({ bitir: true })}
-                disabled={kaydediliyor || (form.mahalle as string) === ''}
-              >
-                {kaydediliyor ? 'Kaydediliyor…' : 'Kaydet ve bitir'}
-              </button>
+              <>
+                <button
+                  type="button"
+                  className="sihirbaz-dugme sessiz"
+                  onClick={() => kaydet({ bitir: true })}
+                  disabled={kaydediliyor || (form.mahalle as string) === ''}
+                >
+                  {kaydediliyor ? 'Kaydediliyor…' : 'Taslak olarak bitir'}
+                </button>
+
+                {/*
+                  ⚠️ PASİF DÜĞME BİR KAPI DEĞİL. DOM'dan etkinleştirilebilir
+                  ve eylem doğrudan çağrılabilir. Gerçek kapı sunucudaki
+                  `eidsYayinEngeli` kancası; buradaki pasiflik yalnızca
+                  sebebi ÖNCEDEN söylemek için.
+                */}
+                <button
+                  type="button"
+                  className="sihirbaz-dugme"
+                  onClick={yayinaAl}
+                  disabled={kaydediliyor || ilanId === null || !eids.yayinlanabilir}
+                  title={
+                    eids.yayinlanabilir
+                      ? undefined
+                      : 'EİDS koşulları sağlanmadan yayına alınamaz — yasal zorunluluk.'
+                  }
+                >
+                  Yayına al
+                </button>
+              </>
             )}
           </div>
 
@@ -1378,6 +1475,156 @@ function YayinAdimi({
   )
 }
 
+/**
+ * 1 · Kategori — kademeli sütunlar.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ AÇILIR LİSTE DEĞİL, SÜTUN. Sahibinden'in akışındaki fikir doğru:
+ * seçenekler aynı anda görünür olduğunda karar tek bakışta veriliyor;
+ * açılır listede kullanıcı iki kez tıklayıp ne olduğunu hatırlamaya
+ * çalışıyor.
+ *
+ * ⚠️ ÜÇÜNCÜ SÜTUN ("alt tür") YOK ÇÜNKÜ VERİ MODELİNDE YOK. Boş bir
+ * üçüncü sütun çizmek, doldurulamayan bir alan göstermek olurdu. Alt tür
+ * gerekirse önce `Ilanlar` koleksiyonunda bir alan açılmalı.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+function KategoriAdimi({ form, yaz }: AdimOzellikleri) {
+  const tip = form.tip as string
+  const kategori = form.kategori as string
+
+  return (
+    <div className="sihirbaz-sutunlar">
+      <div className="sihirbaz-sutun">
+        <h3>İşlem türü</h3>
+        <ul>
+          {ILAN_TIPLERI.map((secenek) => (
+            <li key={secenek.value}>
+              <button
+                type="button"
+                className={secenek.value === tip ? 'secili' : undefined}
+                aria-pressed={secenek.value === tip}
+                onClick={() => yaz('tip', secenek.value)}
+              >
+                <span>{secenek.label}</span>
+                {secenek.value === tip ? <span aria-hidden>✓</span> : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <div className="sihirbaz-sutun">
+        <h3>Kategori</h3>
+        <ul>
+          {ILAN_KATEGORILERI.map((secenek) => (
+            <li key={secenek.value}>
+              <button
+                type="button"
+                className={secenek.value === kategori ? 'secili' : undefined}
+                aria-pressed={secenek.value === kategori}
+                onClick={() => yaz('kategori', secenek.value)}
+              >
+                <span>{secenek.label}</span>
+                {secenek.value === kategori ? <span aria-hidden>✓</span> : null}
+              </button>
+            </li>
+          ))}
+        </ul>
+      </div>
+
+      <p className="sihirbaz-ipucu">
+        Bu iki seçim sonraki adımların ne soracağını belirler: kiralık ilanda tahmini kira sorulmaz,
+        arsada oda sayısı gösterilmez. İkisi de önceden seçili gelir; değiştirmezseniz varsayılan
+        kaydedilir.
+      </p>
+    </div>
+  )
+}
+
+/**
+ * 8 · Ön izleme — ilan sayfasında ne görüneceği.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BU BİR "SAYFA KOPYASI" DEĞİL, BİR ÖZET.
+ *
+ * İlan sayfasının tamamını burada yeniden çizmek, o sayfanın ikinci bir
+ * kopyasını üretirdi: tasarım değiştiğinde biri güncellenir, diğeri
+ * eskir ve ön izleme yalan söylemeye başlar.
+ *
+ * Bunun yerine ön izleme, KAYDEDİLECEK VERİYİ gösteriyor — kullanıcının
+ * doğrulaması gereken şey de bu. Sayfanın gerçek hâli, kayıttan sonra
+ * "İlanı aç" ile bir tık uzakta.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+function OnizlemeAdimi({
+  form,
+  gorseller,
+  mahalleler,
+  gostergeler,
+}: {
+  form: Form
+  gorseller: YuklenmisGorsel[]
+  mahalleler: MahalleSecenegi[]
+  gostergeler: IlanGostergeleri | null
+}) {
+  const mahalleAdi = mahalleAdiniBul(mahalleler, form.mahalle as string)
+  const kapak = gorseller[0]
+  const paraBirimi = form.paraBirimi as string
+  const fiyat = (form.fiyat as string).trim()
+
+  const satirlar: [string, string][] = [
+    ['İşlem türü', ILAN_TIPLERI.find((t) => t.value === form.tip)?.label ?? '—'],
+    ['Kategori', ILAN_KATEGORILERI.find((k) => k.value === form.kategori)?.label ?? '—'],
+    ['Mahalle', mahalleAdi ?? '—'],
+    [
+      'Fiyat',
+      fiyat === '' ? 'Girilmedi' : `${Number(fiyat).toLocaleString('tr-TR')} ${paraBirimi}`,
+    ],
+    ['Brüt m²', (form.brutM2 as string) || '—'],
+    ['Oda sayısı', (form.odaSayisi as string) || '—'],
+    ['Fotoğraf', gorseller.length === 0 ? 'Yok' : `${gorseller.length} adet`],
+  ]
+
+  return (
+    <div className="sihirbaz-onizleme">
+      {kapak === undefined ? (
+        <div className="sihirbaz-onizleme-bos">Kapak fotoğrafı yok</div>
+      ) : (
+        // eslint-disable-next-line @next/next/no-img-element
+        <img src={kapak.url} alt="" className="sihirbaz-onizleme-kapak" />
+      )}
+
+      <h3>
+        {(form.baslik as string).trim() === '' ? 'Başlık girilmedi' : (form.baslik as string)}
+      </h3>
+
+      {(form.ozet as string).trim() === '' ? null : <p>{form.ozet as string}</p>}
+
+      <dl className="sihirbaz-onizleme-liste">
+        {satirlar.map(([etiket, deger]) => (
+          <div key={etiket}>
+            <dt>{etiket}</dt>
+            <dd>{deger}</dd>
+          </div>
+        ))}
+      </dl>
+
+      {gostergeler ? (
+        <p className="sihirbaz-ipucu">
+          Kira çarpanı {gostergeler.kiraCarpani?.toFixed(1)} yıl · brüt getiri %
+          {gostergeler.brutGetiri?.toFixed(2)}. Bu bilgiler yatırım tavsiyesi niteliğinde değildir.
+        </p>
+      ) : null}
+
+      <p className="sihirbaz-ipucu">
+        Burada kaydedilecek veri gösteriliyor. Sayfanın gerçek hâlini kaydettikten sonra &quot;İlanı
+        aç&quot; ile görebilirsiniz.
+      </p>
+    </div>
+  )
+}
+
 // ═══════════════════════════════════════════════════════════════════════════
 // Yardımcılar
 // ═══════════════════════════════════════════════════════════════════════════
@@ -1421,30 +1668,36 @@ function BasariEkrani({
   baslik,
   adminTemelAdresi,
   eidsHazir,
+  yayinlandi,
   onYeni,
+  onKapat,
 }: {
   ilanId: string
   baslik: string
   adminTemelAdresi: string
   eidsHazir: boolean
+  yayinlandi: boolean
   onYeni: () => void
+  onKapat?: () => void
 }) {
   return (
     <div className="sihirbaz-basari">
-      <h2>Taslak kaydedildi</h2>
+      <h2>{yayinlandi ? 'İlan yayında' : 'Taslak kaydedildi'}</h2>
       <p>
-        <strong>{baslik}</strong> taslak olarak kaydedildi.
+        <strong>{baslik}</strong> {yayinlandi ? 'yayına alındı.' : 'taslak olarak kaydedildi.'}
       </p>
 
-      {eidsHazir ? (
+      {yayinlandi ? (
+        <p>EİDS koşulları sağlandı ve ilan yayında. Doğrulanmış ilan rozeti görünüyor.</p>
+      ) : eidsHazir ? (
         <p>
-          EİDS koşulları sağlanıyor. Yayına almak için ilan sayfasını açıp durumu
-          &quot;Yayında&quot; yapın.
+          EİDS koşulları sağlanıyor. Son adımdaki &quot;Yayına al&quot; düğmesiyle ya da ilan
+          sayfasından yayınlayabilirsiniz.
         </p>
       ) : (
         <p>
           ⚠️ EİDS koşulları henüz sağlanmıyor; bu kayıt yayına alınamaz. Yetki bilgileri
-          tamamlandığında ilan sayfasından yayınlayabilirsiniz.
+          tamamlandığında yayınlayabilirsiniz.
         </p>
       )}
 
@@ -1455,6 +1708,11 @@ function BasariEkrani({
         <button type="button" className="sihirbaz-dugme sessiz" onClick={onYeni}>
           Yeni taşınmaz gir
         </button>
+        {onKapat === undefined ? null : (
+          <button type="button" className="sihirbaz-dugme sessiz" onClick={onKapat}>
+            Kapat
+          </button>
+        )}
       </div>
     </div>
   )
@@ -1472,9 +1730,17 @@ function adimDolulugu(
   adim: (typeof ADIMLAR)[number],
   form: Form,
   gorseller: YuklenmisGorsel[],
-): number {
+): number | null {
   if (adim.anahtar === 'gorseller') return gorseller.length > 0 ? 100 : 0
-  if (adim.alanlar.length === 0) return 100
+  /**
+   * ⚠️ DOLDURULACAK ALANI OLMAYAN ADIM YÜZDE GÖSTERMİYOR.
+   *
+   * İlk hâlde "Ön izleme" ve "Yayın" %100 ve yeşil onaylı görünüyordu —
+   * kullanıcı oraya hiç gitmemişken. Tamamlanmış görünen bir adım,
+   * atlanabilir görünen bir adımdır; üstelik onay işareti burada yalan
+   * söylüyordu. Bu adımlar bir şey doldurtmuyor, gösteriyor.
+   */
+  if (adim.alanlar.length === 0) return null
 
   const dolu = adim.alanlar.filter((alan) => {
     const deger = form[alan]
