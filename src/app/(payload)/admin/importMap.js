@@ -25,6 +25,7 @@ import { default as default_b534c54dd8a96115a0d2de28ce3c7a79 } from '@/component
 import { default as default_0f4febca8f6c4c5c827a2af593fe0366 } from '@/components/panel/TurkceSayiAlani'
 import { VideoDurumu as VideoDurumu_1e58a0690421ccebdda95f319e7a0509 } from '@/components/medya/VideoDurumu'
 import { default as default_0a37aa859b51d6fa563ad0cab51c8541 } from '@/components/panel/IlanEslesmeleri'
+import { default as default_6704e182342f943521fbcf8d2da4b1d0 } from '@/components/panel/NitelikDurumu'
 import { default as default_1e93637515c2cbbab351072f38d704e3 } from '@/components/panel/TalepEslesmeleri'
 import { GorselButceRozeti as GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0 } from '@/components/panel/GorselButceRozeti'
 import { LogoPaneli as LogoPaneli_f51691edd3b1b9b168fcc48a8cf2ad17 } from '@/components/marka/LogoPaneli'
@@ -88,6 +89,7 @@ export const importMap = {
   "@/components/panel/TurkceSayiAlani#default": default_0f4febca8f6c4c5c827a2af593fe0366,
   "@/components/medya/VideoDurumu#VideoDurumu": VideoDurumu_1e58a0690421ccebdda95f319e7a0509,
   "@/components/panel/IlanEslesmeleri#default": default_0a37aa859b51d6fa563ad0cab51c8541,
+  "@/components/panel/NitelikDurumu#default": default_6704e182342f943521fbcf8d2da4b1d0,
   "@/components/panel/TalepEslesmeleri#default": default_1e93637515c2cbbab351072f38d704e3,
   "@/components/panel/GorselButceRozeti#GorselButceRozeti": GorselButceRozeti_11f26a775cfc56c100dfbd928b098dc0,
   "@/components/marka/LogoPaneli#LogoPaneli": LogoPaneli_f51691edd3b1b9b168fcc48a8cf2ad17,
