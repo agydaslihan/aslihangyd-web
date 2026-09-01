@@ -287,3 +287,42 @@ export function anaSayfaSirasi(kayit: readonly DuzenSatiri[] | null | undefined)
 
   return sonuc
 }
+
+/**
+ * Hero açılış kipi — sayfanın ilk ekranı neyle başlıyor.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ ÜÇÜ DE GERÇEK BİR SAYFA BÖLÜMÜ. HİÇBİRİ AÇILIR KATMAN DEĞİL.
+ *
+ * "Metin önce" seçeneği bir karşılama katmanı (interstitial) gibi
+ * kurulabilirdi ve yanlış olurdu:
+ *   · Google mobilde araya giren katmanları cezalandırıyor,
+ *   · katmanın kendisi LCP öğesi olur ve gerçek içerik geç ölçülür,
+ *   · odak tuzağı ve kapatma düğmesi gerekir — hiçbiri gerekmeyen bir
+ *     sorun için.
+ *
+ * Üç kip de sayfanın normal akışında duruyor; fark yalnızca ilk ekranda
+ * NE OLDUĞU.
+ *
+ * ⚠️ HANGİ KİP AKTİFSE `<h1>` ORADA. Sayfada iki `<h1>` olamaz: ekran
+ * okuyucuda iki konu, arama motorunda belirsiz başlık. Bayrak tek ve
+ * `priority` (LCP adayı) ile birlikte taşınıyor — ikisi asla ayrışmasın
+ * diye.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const HERO_ACILISLARI = [
+  { value: 'metin_once', label: 'Metin önce (varsayılan)' },
+  { value: 'slayt_once', label: 'Slayt önce' },
+  { value: 'yalnizca_metin', label: 'Yalnızca metin (slider kapalı)' },
+] as const
+
+export type HeroAcilisi = (typeof HERO_ACILISLARI)[number]['value']
+
+export const VARSAYILAN_HERO_ACILISI: HeroAcilisi = 'metin_once'
+
+/** Tanınmayan değeri varsayılana düşürür. */
+export function heroAcilisiniCoz(deger: unknown): HeroAcilisi {
+  return HERO_ACILISLARI.some((k) => k.value === deger)
+    ? (deger as HeroAcilisi)
+    : VARSAYILAN_HERO_ACILISI
+}
