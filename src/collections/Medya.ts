@@ -52,13 +52,45 @@ export const Medya: CollectionConfig = {
       name: 'alt',
       type: 'text',
       label: 'Alternatif metin',
-      // Erişilebilirlik sonradan eklenen bir şey değil: alt metni olmayan
-      // görsel ekran okuyucuda kaybolur ve WCAG AA'yı düşürür.
-      required: true,
+      /**
+       * ─────────────────────────────────────────────────────────────────
+       * ⚠️ ZORUNLU DEĞİL — VE BU KARAR SAHADAN GELDİ.
+       *
+       * Alan önceden `required: true` idi ve gerekçesi doğruydu:
+       * erişilebilirlik sonradan eklenen bir şey değil. Ama sonucu şuydu:
+       * sahada bir dairede yirmi fotoğraf çeken kişi, yirmi kez metin
+       * yazmak zorunda kalıyor ve yüklemeyi bırakıyor. Yüklenmemiş bir
+       * fotoğrafın alt metni de yoktur.
+       *
+       * Yeni kural: boş bırakılabilir, ama BOŞ KALMAZ. Kanca bağlamdan
+       * bir metin türetiyor ve `altOtomatik` işaretini koyuyor. Otomatik
+       * metin, boş alt metinden iyidir — ve panel kaç görselin gerçek
+       * metne ihtiyacı olduğunu sayıyor.
+       *
+       * ⚠️ Bu bir erişilebilirlikten VAZGEÇİŞ değil, bir kademelendirme:
+       * her görselin bir alt metni var; hangilerinin insan eliyle
+       * yazılması gerektiği görünür durumda.
+       * ─────────────────────────────────────────────────────────────────
+       */
+      required: false,
       admin: {
         description:
           'Görselde ne olduğunu bir cümleyle yaz. Ekran okuyucu kullananlar ve ' +
-          'görsel yüklenmediğinde herkes bunu görür. Örn: "Muhittin Mahallesi\'nde 3+1 dairenin salonu".',
+          'görsel yüklenmediğinde herkes bunu görür. Örn: "Muhittin Mahallesi\'nde 3+1 dairenin salonu". ' +
+          '⚠️ Boş bırakırsanız dosya adından geçici bir metin üretilir ve görsel ' +
+          '"alt metni eksik" olarak işaretlenir — sonra toplu olarak düzeltebilirsiniz.',
+      },
+    },
+    {
+      name: 'altOtomatik',
+      type: 'checkbox',
+      label: 'Alt metin otomatik üretildi',
+      defaultValue: false,
+      admin: {
+        readOnly: true,
+        description:
+          'İşaretliyse bu görselin alt metni insan eliyle yazılmadı. Ekran okuyucu için ' +
+          'yeterli değil; fırsat bulunca düzeltin.',
       },
     },
     {
@@ -209,6 +241,38 @@ export const Medya: CollectionConfig = {
      * her kaydetmede AVIF kodlaması yapmak paneli yavaşlatırdı.
      */
     beforeChange: [
+      /**
+       * Boş alt metni doldurur.
+       *
+       * ⚠️ ÜRETİLEN METİN DOSYA ADINDAN — çünkü elimizdeki tek bağlam o.
+       * "Görsel" yazmak hiçbir şey söylemez; dosya adı en azından
+       * "salon-genis-aci.jpg" gibi bir ipucu taşıyabilir. Metin geçici
+       * olduğu `altOtomatik` işaretiyle belli.
+       *
+       * ⚠️ İNSAN YAZDIYSA DOKUNULMAZ: yalnızca boşken çalışıyor ve
+       * kullanıcı sonradan yazdığında işaret kalkıyor.
+       */
+      ({ data }) => {
+        const yazilan = typeof data?.alt === 'string' ? data.alt.trim() : ''
+
+        if (yazilan !== '') {
+          data.altOtomatik = false
+          return data
+        }
+
+        const dosyaAdi =
+          typeof data?.filename === 'string' && data.filename !== ''
+            ? data.filename
+                .replace(/\.[a-z0-9]+$/i, '')
+                .replace(/[-_]+/g, ' ')
+                .trim()
+            : ''
+
+        data.alt =
+          dosyaAdi === '' ? 'Görsel (alt metin eklenmedi)' : `${dosyaAdi} (alt metin eklenmedi)`
+        data.altOtomatik = true
+        return data
+      },
       async ({ data, req }) => {
         const dosya = req.file
         if (!dosya?.data) return data

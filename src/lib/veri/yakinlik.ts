@@ -267,3 +267,93 @@ export const mahalleCevresiGetir = cache(async (merkez: unknown): Promise<PoiMes
   if (typeof boylam !== 'number' || typeof enlem !== 'number') return []
   return noktayaGoreYakinlik(boylam, enlem)
 })
+
+/**
+ * Sanayi alanlarına kuş uçuşu mesafe.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ BURADA İLÇE BİLGİSİ ÜRETİLMİYOR — VE BU BİR ÖLÇÜMÜN SONUCU.
+ *
+ * İlk tasarım "nokta mahalle sınırlarımızın içine düşüyorsa Çorlu'dadır"
+ * diyordu. Zarif görünüyordu ve YANLIŞTI: mahalle poligonları ilçenin
+ * tamamını kaplamıyor. Üretimde ölçüldü — 544 ilgi noktasının yalnızca
+ * 438'i (%80) herhangi bir mahalle sınırının içinde. Aradaki kırsal ve
+ * sanayi alanları hiçbir mahalleye ait değil.
+ *
+ * Sonuç: Çorlu Deri OSB "sınır dışında" çıkıyordu; oysa Çorlu Ticaret ve
+ * Sanayi Odası onu Çorlu ilçesi altında listeliyor. Geometri "hangi
+ * ilçede" sorusunu değil, "hangi mahallede" sorusunu cevaplıyor.
+ *
+ * İlçe bilgisi artık kaynaklı bir eşlemeden geliyor (`lib/mahalle/olgusal.ts`).
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export interface SanayiMesafesi {
+  ad: string
+  metre: number
+}
+
+export async function sanayiMesafeleri(boylam: number, enlem: number): Promise<SanayiMesafesi[]> {
+  if (!Number.isFinite(boylam) || !Number.isFinite(enlem)) return []
+
+  try {
+    const payload = await payloadGetir()
+
+    const sonuc = await drizzleAl(payload).execute(sql`
+      WITH hedef AS (
+        SELECT ST_SetSRID(ST_MakePoint(${boylam}, ${enlem}), ${SRID})::geography AS g
+      )
+      SELECT
+        p."ad" AS ad,
+        ST_Distance(ST_SetSRID(p."konum", ${SRID})::geography, hedef.g) AS metre
+      FROM "ilgi_noktalari" p
+      CROSS JOIN hedef
+      WHERE p."tip" = 'sanayi'
+        AND (p."ad" ILIKE '%organize sanayi%' OR p."ad" ILIKE '%serbest bölge%')
+      ORDER BY metre
+    `)
+
+    const satirlar = (sonuc.rows ?? []) as Record<string, unknown>[]
+    return satirlar
+      .map((satir) => {
+        const ad = typeof satir.ad === 'string' ? satir.ad : ''
+        const metre = Number(satir.metre)
+        if (ad === '' || !Number.isFinite(metre)) return null
+        return { ad, metre }
+      })
+      .filter((s): s is SanayiMesafesi => s !== null)
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Çorlu'nun kaba merkezi — mahalle merkezlerinden TÜRETİLİR.
+ *
+ * ⚠️ KOORDİNAT KODA GÖMÜLMEZ (CLAUDE.md, OSM bölümü). Mahalle merkezleri
+ * zaten sistemde; ilçe merkezi onların ağırlık merkezi. Elle yazılmış bir
+ * koordinat, mahalle sınırları güncellendiğinde sessizce yanlışa döner.
+ */
+export const corluMerkeziGetir = cache(
+  async (): Promise<{ boylam: number; enlem: number } | null> => {
+    try {
+      const payload = await payloadGetir()
+
+      const sonuc = await drizzleAl(payload).execute(sql`
+        SELECT
+          ST_X(ST_Centroid(ST_Collect(ST_SetSRID(m."merkez", ${SRID})))) AS boylam,
+          ST_Y(ST_Centroid(ST_Collect(ST_SetSRID(m."merkez", ${SRID})))) AS enlem
+        FROM "mahalleler" m
+        WHERE m."merkez" IS NOT NULL
+      `)
+
+      const satir = (sonuc.rows ?? [])[0] as Record<string, unknown> | undefined
+      if (!satir) return null
+      const boylam = Number(satir.boylam)
+      const enlem = Number(satir.enlem)
+      if (!Number.isFinite(boylam) || !Number.isFinite(enlem)) return null
+      return { boylam, enlem }
+    } catch {
+      return null
+    }
+  },
+)

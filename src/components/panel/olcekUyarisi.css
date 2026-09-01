@@ -1,0 +1,43 @@
+/*
+ * Ölçek uyarısı — panel içi.
+ *
+ * ⚠️ Renk tek taşıyıcı değil (WCAG 1.4.1): uyarı metinle de başlıyor
+ * ("⚠️ N rakam bindebir görünüyor"). Rengi göremeyen için de anlaşılır.
+ */
+.olcek-uyari {
+  border: 1px solid var(--theme-warning-500, #b8860b);
+  border-left-width: 4px;
+  border-radius: 6px;
+  background: var(--theme-warning-50, #fff8e6);
+  color: var(--theme-elevation-800);
+  padding: 0.9rem 1rem;
+  margin: 0 0 1rem;
+}
+
+.olcek-uyari-baslik {
+  margin: 0 0 0.5rem;
+  font-weight: 600;
+}
+
+.olcek-uyari ul {
+  margin: 0 0 0.75rem;
+  padding-left: 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.olcek-uyari-oneri {
+  font-weight: 600;
+}
+
+.olcek-uyari-neden {
+  margin: 0.4rem 0 0;
+  font-size: 0.85rem;
+}
+
+.olcek-uyari code {
+  background: var(--theme-elevation-100);
+  border-radius: 3px;
+  padding: 0 0.25rem;
+}

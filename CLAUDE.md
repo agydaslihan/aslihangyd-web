@@ -327,9 +327,26 @@ ihtiyaç duymuyor (göçleri dizinden okuyor); göçmen imajında ölçüldü.
 - ENDEKS-VERI-YONETIMI.md            endeks metodolojisi ve veri operasyonu
 
 ## Çorlu bağlamı (içerik yazarken kullan)
-Değer sürücüleri: Çorlu ve Çerkezköy OSB · Halkalı–Kapıkule hızlı tren ve
-Çorlu istasyonu · Tekirdağ–Çorlu Atatürk Havalimanı · İstanbul yakınlığı ve
-TEM/D-100 bağlantısı · şehir hastanesi · öğrenci nüfusu
+Değer sürücüleri: Çorlu ve Çerkezköy OSB · Çorlu tren istasyonu
+(konvansiyonel hat) · Tekirdağ–Çorlu Atatürk Havalimanı · İstanbul
+yakınlığı ve TEM/D-100 bağlantısı · şehir hastanesi · öğrenci nüfusu
+
+⚠️ HIZLI TREN — DEĞER SÜRÜCÜSÜ SAYILMIYOR (31 Ağustos 2026'da güncellendi)
+
+Halkalı–Kapıkule hattı Çorlu yakınından geçiyor; **Çorlu'da YHT istasyonu
+planlandığına dair doğrulanmış kaynak bulunamadı (Ağustos 2026)**. Kaynak
+bulunursa eklenecek.
+
+Aranan yerler: Ulaştırma ve Altyapı Bakanı'nın 31 Ocak 2025 tarihli
+açıklaması (Anadolu Ajansı) hattın istasyonlarını sayıyor ve Çorlu
+geçmiyor. Bu madde ilk planda doğrulanmamış bir varsayım olarak yazılmıştı;
+kaynaklı araştırma onu doğrulayamadı.
+
+⚠️ Çorlu'nun MEVCUT tren istasyonu ayrı bir şey ve GERÇEK: Çorlu
+Kaymakamlığı'nın 27 Temmuz 2016 duyurusuna göre İstanbul (Halkalı) –
+Edirne (Kapıkule) günlük tren seferleri Çorlu'dan geçiyor. Güncel tarife
+TCDD Taşımacılık'tan doğrulanmalı; sefer sıklığı hakkında kaynaksız
+ifade kullanma.
 
 Pilot mahalleler: Muhittin, Alipaşa, Şeyhsinan, Hıdırağa, Velimeşe, Önerler
 

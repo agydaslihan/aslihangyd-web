@@ -228,6 +228,7 @@ export async function bildirimleriGetir(
       kurumsal,
       alanKaydi,
       onayBekleyen,
+      altMetniEksik,
     ] = await Promise.all([
       payload.count({
         collection: 'ilanlar',
@@ -268,6 +269,10 @@ export async function bildirimleriGetir(
             where: { durum: { equals: 'onay_bekliyor' } },
           })
         : Promise.resolve({ totalDocs: 0 }),
+      payload.count({
+        collection: 'medya',
+        where: { altOtomatik: { equals: true } },
+      }),
     ])
 
     const belgeNo = kurumsal.yetkiBelgesiNo
@@ -282,6 +287,12 @@ export async function bildirimleriGetir(
         gozlemsizMahalle,
         yetkiBelgesiVar,
         onayBekleyenIlan: onayBekleyen.totalDocs,
+        /**
+         * ⚠️ Alt metni otomatik üretilmiş görseller. Sayı, erişilebilirlik
+         * borcunu görünür tutuyor: alan zorunlu olmaktan çıkarıldı ama
+         * borç sessizce birikmemeli.
+         */
+        altMetniEksikGorsel: altMetniEksik.totalDocs,
         /**
          * ⚠️ Ayar durumu VERİTABANINDAN DEĞİL ortamdan geliyor ve bu
          * bilinçli: yapılandırma arızası tam da veritabanına hiç
