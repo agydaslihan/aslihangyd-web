@@ -15,6 +15,8 @@ import config from '@payload-config'
 import { getPayload, type Payload, type TypedUser } from 'payload'
 import { afterAll, beforeAll, describe, expect, it } from 'vitest'
 
+import { MUKERRER_GUN_PENCERESI } from '@/lib/endeks/kalite'
+
 import { cozumle, satirlariYaz } from './iceAktarmaCekirdegi'
 
 let payload: Payload
@@ -241,7 +243,24 @@ describe('satirlariYaz', () => {
   })
 
   it('daha önce girilmiş aynı kaydı mükerrer olarak uyarır', async () => {
-    const satir = `08.08.2026;${MAHALLE_ADI};Satılık;3+1;123;4.500.000`
+    /**
+     * ⚠️ TARİH SABİT YAZILAMAZ — BU TEST BİR ZAMAN BOMBASIYDI.
+     *
+     * Satır `08.08.2026` diye yazılmıştı ve yazıldığı gün geçiyordu.
+     * Mükerrer sorgusu son `MUKERRER_GUN_PENCERESI` (30) günü tarıyor;
+     * 7 Eylül 2026'da o tarih pencereden çıktı ve test, KODDA HİÇBİR
+     * DEĞİŞİKLİK OLMADAN kırmızıya döndü.
+     *
+     * Tarih artık pencerenin ortasından hesaplanıyor: test ne zaman
+     * koşarsa koşsun aynı şeyi ölçüyor.
+     */
+    const gun = new Date()
+    gun.setDate(gun.getDate() - Math.floor(MUKERRER_GUN_PENCERESI / 2))
+    const gunMetni = `${String(gun.getDate()).padStart(2, '0')}.${String(
+      gun.getMonth() + 1,
+    ).padStart(2, '0')}.${gun.getFullYear()}`
+
+    const satir = `${gunMetni};${MAHALLE_ADI};Satılık;3+1;123;4.500.000`
 
     await satirlariYaz(
       { csvMetni: csv(satir), ayarlar: AYARLAR, atlanacakSatirlar: [] },

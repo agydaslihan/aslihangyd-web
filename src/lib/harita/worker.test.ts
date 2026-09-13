@@ -1,4 +1,4 @@
-import { readFileSync } from 'node:fs'
+import { readdirSync, readFileSync } from 'node:fs'
 import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
@@ -38,12 +38,23 @@ import { describe, expect, it } from 'vitest'
 const KOK = path.resolve(path.join(import.meta.dirname, '..', '..', '..'))
 const oku = (yol: string) => readFileSync(path.join(KOK, yol), 'utf8')
 
+/** `src/` altındaki tüm TS/TSX dosyaları — depo yoluna göre. */
+function kaynakDosyalari(dizin = 'src'): string[] {
+  const sonuc: string[] = []
+  for (const girdi of readdirSync(path.join(KOK, dizin), { withFileTypes: true })) {
+    const yol = `${dizin}/${girdi.name}`
+    if (girdi.isDirectory()) sonuc.push(...kaynakDosyalari(yol))
+    else if (/\.tsx?$/.test(girdi.name)) sonuc.push(yol)
+  }
+  return sonuc
+}
+
 describe('MapLibre worker adresi', () => {
-  const bilesen = oku('src/components/harita/Harita3B.tsx')
+  const modul = oku('src/lib/harita/workerAdresi.ts')
 
   it('worker adresi elle veriliyor', () => {
-    expect(bilesen).toContain('setWorkerUrl(')
-    expect(bilesen).toContain('/maplibre-gl-worker.mjs')
+    expect(modul).toContain('setWorkerUrl(')
+    expect(modul).toContain('/maplibre-gl-worker.mjs')
   })
 
   /**
@@ -52,19 +63,54 @@ describe('MapLibre worker adresi', () => {
    * anlaşılmaz olurdu.
    */
   it('sürüm kütüphanenin kendisinden geliyor', () => {
-    expect(bilesen).toContain('getVersion()')
-    expect(bilesen).toMatch(/setWorkerUrl\(`\/maplibre\/\$\{getVersion\(\)\}\//)
+    expect(modul).toContain('getVersion()')
+    expect(modul).toMatch(/setWorkerUrl\(`\/maplibre\/\$\{getVersion\(\)\}\//)
   })
 
   /**
    * ⚠️ Modül düzeyinde olmalı — harita kurulmadan önce çalışsın.
    * `useEffect` içine alınsaydı ilk haritada geç kalabilirdi.
    */
-  it('çağrı bileşen gövdesinde değil modül düzeyinde', () => {
-    const satir = bilesen.split('\n').findIndex((s) => s.startsWith('setWorkerUrl('))
-    const bilesenBasi = bilesen.split('\n').findIndex((s) => s.includes('export function Harita3B'))
+  it('çağrı bir fonksiyonun içinde değil, modül düzeyinde', () => {
+    const satir = modul.split('\n').findIndex((s) => s.startsWith('setWorkerUrl('))
     expect(satir).toBeGreaterThan(-1)
-    expect(satir).toBeLessThan(bilesenBasi)
+  })
+
+  /**
+   * ⚠️ MAPLIBRE KULLANAN HER BİLEŞEN BU MODÜLÜ İÇE AKTARMALI.
+   *
+   * 13 Eylül 2026'da panele ikinci bir harita (koordinat seçici) eklendi.
+   * Kurulum `Harita3B` içinde kalsaydı yeni bileşen worker'sız kalır ve
+   * harita SESSİZCE boş çizerdi — aynı arıza, ikinci kez.
+   *
+   * Bu yüzden denetim tek bir dosyaya değil, `maplibre-gl` içe aktaran
+   * HER dosyaya bakıyor: liste kendi kendini genişletiyor.
+   */
+  it('maplibre içe aktaran her bileşen worker modülünü de alıyor', () => {
+    /**
+     * ⚠️ YALNIZCA DEĞER İÇE AKTARIMI SAYILIYOR. `import type { … } from
+     * 'maplibre-gl'` derlemede tamamen siliniyor: çalışma zamanında ne
+     * kütüphane yükleniyor ne worker gerekiyor. `lib/harita/stil.ts` tam
+     * olarak böyle — onu da şart koşmak, gerekçesi olmayan bir içe
+     * aktarım eklettirirdi.
+     */
+    const degerIceAktarimi = (kaynak: string): boolean =>
+      /from 'maplibre-gl'/.test(
+        kaynak.replace(/import type\s*\{[^}]*\}\s*from\s*'maplibre-gl'/g, ''),
+      )
+
+    const kullananlar = kaynakDosyalari().filter(
+      (yol) => degerIceAktarimi(oku(yol)) && !yol.endsWith('workerAdresi.ts'),
+    )
+
+    expect(kullananlar.length).toBeGreaterThan(0)
+    for (const yol of kullananlar) {
+      expect(
+        oku(yol),
+        `${yol} maplibre-gl kullanıyor ama worker adresi modülünü içe aktarmıyor — ` +
+          'worker başlamaz ve harita sessizce boş çizer',
+      ).toContain('@/lib/harita/workerAdresi')
+    }
   })
 })
 

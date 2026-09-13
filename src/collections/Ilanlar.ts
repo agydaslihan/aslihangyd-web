@@ -233,6 +233,7 @@ export const Ilanlar: CollectionConfig = {
               type: 'point',
               label: 'Harita konumu',
               admin: {
+                components: { Field: '@/components/panel/KonumAlani#default' },
                 description:
                   'Haritadaki konum. Gizli portföyde tam nokta yerine mahalle merkezi gösterilir.',
               },

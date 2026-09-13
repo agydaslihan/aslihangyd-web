@@ -842,3 +842,34 @@ textarea.sihirbaz-girdi {
   color: var(--theme-elevation-600);
   max-width: 46ch;
 }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Koordinat girişi
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/*
+  ⚠️ Sıra ENLEM ÖNCE — panelle aynı. İki ekranda iki farklı sıralama,
+  düzeltilmek istenen hatanın ta kendisini üretirdi.
+*/
+.sihirbaz-konum-kutular {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.sihirbaz-konum-uyari {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 6px;
+  border: 1px solid var(--theme-warning-250, var(--theme-elevation-150));
+  background: var(--theme-warning-50, var(--theme-elevation-50));
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.sihirbaz-konum-uyari p {
+  margin: 0 0 0.5rem;
+}

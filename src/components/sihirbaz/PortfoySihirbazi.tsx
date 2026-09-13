@@ -5,6 +5,7 @@ import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from
 import { eidsDegerlendir, EIDS_DURUMLARI, EIDS_DURUM_ETIKETLERI, type EidsDurum } from '@/lib/eids'
 import { CEPHE_YONLERI } from '@/lib/gunes/cephe'
 import { gostergeleriHesapla, type IlanGostergeleri } from '@/lib/ilan/hesaplamalar'
+import { konumuDenetle, koordinatCoz, koordinatYaz } from '@/lib/konum/dogrula'
 import { ilaniYayinaAl, ilanTaslaginiKaydet } from '@/lib/sihirbaz/eylemler'
 import { sihirbazGorseliYukle } from '@/lib/sihirbaz/gorselEylemleri'
 import { benzerIlanOnerileri } from '@/lib/sihirbaz/oneriEylemleri'
@@ -662,6 +663,15 @@ function TapuAdimi({ form, hatalar, yaz, oneriler }: AdimOzellikleri & { onerile
   const [konumDurumu, setKonumDurumu] = useState<string | null>(null)
 
   /**
+   * ⚠️ Panelle AYNI motor (`lib/konum/dogrula`). İki ayrı doğrulama
+   * yazılsaydı zamanla ayrışır ve biri yakalarken diğeri kaçırırdı.
+   */
+  const konumDenetimi = konumuDenetle(
+    koordinatCoz(form.enlem as string),
+    koordinatCoz(form.boylam as string),
+  )
+
+  /**
    * ⚠️ GPS SAHA İÇİN. Taşınmazın önünde duran biri için koordinatı elle
    * girmek pratikte imkânsız; tarayıcı zaten soruyor ve izin vermeyen
    * kullanıcı için hiçbir şey değişmiyor.
@@ -755,7 +765,46 @@ function TapuAdimi({ form, hatalar, yaz, oneriler }: AdimOzellikleri & { onerile
         <Metin deger={form.adres as string} onDegisim={(deger) => yaz('adres', deger)} />
       </Alan>
 
+      {/*
+        ⚠️ ELLE GİRİŞ EKLENDİ — daha önce SADECE GPS vardı.
+        Masaüstünde çalışan biri için koordinat girmenin hiçbir yolu yoktu;
+        alan boş kalıyor ya da panelden, ters sırayla dolduruluyordu.
+        Sıra burada da ENLEM ÖNCE.
+      */}
       <div className="sihirbaz-alan">
+        <div className="sihirbaz-konum-kutular">
+          <Alan etiket="Enlem (kuzey–güney)" ipucu="Çorlu için ~41.1">
+            <Metin deger={form.enlem as string} onDegisim={(deger) => yaz('enlem', deger)} />
+          </Alan>
+
+          <Alan etiket="Boylam (doğu–batı)" ipucu="Çorlu için ~27.8">
+            <Metin deger={form.boylam as string} onDegisim={(deger) => yaz('boylam', deger)} />
+          </Alan>
+        </div>
+
+        {konumDenetimi.mesaj !== null && (
+          <div className="sihirbaz-konum-uyari" role="status">
+            <span aria-hidden="true">⚠️</span>
+            <div>
+              <p>{konumDenetimi.mesaj}</p>
+              {konumDenetimi.takas !== null && (
+                <button
+                  type="button"
+                  className="sihirbaz-dugme sessiz"
+                  onClick={() => {
+                    const takas = konumDenetimi.takas
+                    if (takas === null) return
+                    yaz('enlem', koordinatYaz(takas.enlem))
+                    yaz('boylam', koordinatYaz(takas.boylam))
+                  }}
+                >
+                  Enlem ve boylamı takas et
+                </button>
+              )}
+            </div>
+          </div>
+        )}
+
         <button type="button" className="sihirbaz-dugme sessiz" onClick={konumuAl}>
           Konumu telefondan al (GPS)
         </button>
@@ -763,11 +812,6 @@ function TapuAdimi({ form, hatalar, yaz, oneriler }: AdimOzellikleri & { onerile
           {konumDurumu ??
             'Taşınmazın önündeyseniz koordinatı doğrudan alabilirsiniz; haritada bu nokta kullanılır.'}
         </p>
-        {(form.boylam as string) !== '' && (form.enlem as string) !== '' ? (
-          <p className="sihirbaz-ipucu">
-            Kayıtlı koordinat: {form.enlem as string}, {form.boylam as string}
-          </p>
-        ) : null}
       </div>
     </>
   )
