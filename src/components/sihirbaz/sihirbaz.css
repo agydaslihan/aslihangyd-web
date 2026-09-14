@@ -44,9 +44,8 @@
 }
 
 /*
-  ⚠️ Bekleyen adım `elevation-600` — `500` DEĞİL. `500` iki temada da aynı
-  gri (rgb 128): açık temada beyaz üstünde 3,95:1, koyu temada panel
-  zemininde ~4,0:1 — AA'nın altı. `600` açıkta 5,9:1, koyuda 7,8:1.
+  ⚠️ Bekleyen adım `--panel-metin-soluk` (`src/app/(payload)/panelJetonlari.css`).
+  Önceden `elevation-500` idi: iki temada da aynı gri, AA'nın altı.
   Gerçek tarayıcıda `scripts/gezinme-dumani.mjs` ölçüyor.
 */
 .sihirbaz-adimlar li {
@@ -54,7 +53,7 @@
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8125rem;
-  color: var(--theme-elevation-600, #666);
+  color: var(--panel-metin-soluk);
 }
 
 .sihirbaz-adimlar li button.etkin {
@@ -152,7 +151,7 @@
 
 .sihirbaz-gerekli {
   margin-left: 0.25rem;
-  color: var(--theme-error-500, #c33);
+  color: var(--panel-metin-hata);
 }
 
 .sihirbaz-girdi {
@@ -192,7 +191,7 @@ textarea.sihirbaz-girdi {
   display: flex;
   align-items: center;
   font-size: 0.875rem;
-  color: var(--theme-elevation-500, #888);
+  color: var(--panel-metin-soluk);
   pointer-events: none;
 }
 
@@ -215,12 +214,12 @@ textarea.sihirbaz-girdi {
 }
 
 .sihirbaz-ipucu {
-  /* ⚠️ Kaynak metinleri burada çiziliyor — `500` AA'nın altında (3,95:1). */
-  color: var(--theme-elevation-600, #666);
+  /* Kaynak metinleri burada çiziliyor. */
+  color: var(--panel-metin-soluk);
 }
 
 .sihirbaz-hata {
-  color: var(--theme-error-500, #c33);
+  color: var(--panel-metin-hata);
 }
 
 .sihirbaz-genel-hata {
@@ -228,7 +227,7 @@ textarea.sihirbaz-girdi {
   padding: 0.75rem 1rem;
   font-size: 0.875rem;
   line-height: 1.5;
-  color: var(--theme-error-500, #c33);
+  color: var(--panel-metin-hata);
   background: var(--theme-error-50, #fdf0f0);
   border: 1px solid var(--theme-error-100, #f5d0d0);
   border-radius: 4px;
@@ -301,7 +300,7 @@ textarea.sihirbaz-girdi {
 
 .sihirbaz-gostergeler dt {
   font-size: 0.75rem;
-  color: var(--theme-elevation-500, #888);
+  color: var(--panel-metin-soluk);
 }
 
 .sihirbaz-gostergeler dd {
@@ -314,7 +313,7 @@ textarea.sihirbaz-girdi {
 .sihirbaz-gostergeler-not {
   margin: 0.75rem 0 0;
   font-size: 0.75rem;
-  color: var(--theme-elevation-500, #888);
+  color: var(--panel-metin-soluk);
 }
 
 /* ── Özet ───────────────────────────────────────────────────────────── */
@@ -442,8 +441,7 @@ textarea.sihirbaz-girdi {
 
 .sihirbaz-adim-yuzde {
   font-size: 0.72rem;
-  /* ⚠️ `500` AA'nın altında — bekleyen adımla aynı gerekçe. */
-  color: var(--theme-elevation-600);
+  color: var(--panel-metin-soluk);
   font-variant-numeric: tabular-nums;
 }
 

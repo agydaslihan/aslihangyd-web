@@ -208,6 +208,10 @@ yoksa yetkisi dolan ilanı yayından kaldıran görev çalışamaz.
 - Zod ile tüm form ve API girdileri doğrulanır
 - PostGIS sorguları raw SQL ile, parametreli (SQL injection'a karşı)
 - Erişilebilirlik: semantik HTML, klavye navigasyonu, WCAG AA kontrast
+- Panel metin renkleri `--panel-metin-*` jetonlarından (`src/app/(payload)/panelJetonlari.css`).
+  ⚠️ Payload rampasının orta tonları (`--theme-elevation-500`, `--theme-error-500`)
+  metin rengi OLAMAZ: koyu tema onları ezmiyor, iki temada da AA altı.
+  `src/lib/tasarim/panelKontrast.test.ts` bütün panel CSS'ini iki temada ölçüyor.
 - Mobil öncelikli (trafiğin ~%75'i mobil)
 - Görseller: next/image, AVIF/WebP
 - Video: ASLA self-host etme, CDN (Bunny Stream) üzerinden HLS

@@ -113,7 +113,7 @@
 .aktarim-alan em {
   font-size: 0.6875rem;
   font-style: normal;
-  color: var(--theme-elevation-500, #777);
+  color: var(--panel-metin-soluk);
 }
 
 .aktarim-alan input,

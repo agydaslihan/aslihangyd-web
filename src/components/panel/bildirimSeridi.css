@@ -185,7 +185,7 @@
   border-top: 1px solid var(--theme-elevation-100);
   font-size: 0.8125rem;
   line-height: 1.5;
-  color: var(--theme-elevation-500);
+  color: var(--panel-metin-soluk);
   font-variant-numeric: tabular-nums;
 }
 

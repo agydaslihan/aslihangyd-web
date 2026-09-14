@@ -99,13 +99,13 @@
 .ice-aktar-zorunlu {
   font-style: normal;
   font-weight: 400;
-  color: var(--theme-error-500, #a33);
+  color: var(--panel-metin-hata);
 }
 
 .ice-aktar-ipucu {
   font-size: 0.6875rem;
   font-style: normal;
-  color: var(--theme-elevation-500, #777);
+  color: var(--panel-metin-soluk);
 }
 
 .ice-aktar-alan textarea,
@@ -266,7 +266,7 @@
 }
 
 .ice-aktar-durum-ok {
-  color: var(--theme-elevation-500, #777);
+  color: var(--panel-metin-soluk);
 }
 
 /* Durum yalnızca renkle anlatılmıyor: her satırda metin de var (WCAG 1.4.1). */
