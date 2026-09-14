@@ -250,7 +250,18 @@ olurdu. İlk gerçek koşumu CI'da.
 ### Süre
 
 Her turun süresi günlüğe, toplamı CI iş özetine yazılıyor; 900 sn'yi
-aşarsa `::warning::`. Ölçüm ilk CI koşumunda — sonuç bu kayda eklenecek.
+aşarsa `::warning::`.
+
+**Ölçüldü (4 CI koşumu):** toplam 209–236 sn; eşiğin (900 sn) dörtte biri.
+
+| Tur | Süre |
+| --- | --- |
+| hareket açık | 101–104 sn |
+| az hareket | 80–82 sn |
+| panel (oturumlu) | 23–25 sn |
+| panel davranışı | 5–27 sn (kararlı hâli 14 sn) |
+
+Paralelleştirme gerekmiyor.
 
 ### Hesaplayarak düzeltilen kontrastlar
 
@@ -268,3 +279,70 @@ okunarak hesaplandı; ölçülse kırılacaklardı:
 EZMİYOR. Aynı token üç yerde daha duruyor ve **bu PR'da değiştirilmedi**
 (kapsam dışı, ölçülmüyor): `.sihirbaz-birim`, `.sihirbaz-gostergeler dt`,
 `.sihirbaz-gostergeler-not`.
+
+## İlk CI koşumu kırmızı — teşhis CI çıktısından, sunucuda derleme yok
+
+PR #114 ve #115 açıldığında CI ve Lighthouse kırmızıydı, üretim imajı
+yeşildi. Tahmin edilmedi: iki tur teşhis kodu CI'a gönderildi, cevap
+çıktıdan okundu. **İki hata da testteydi, kodda değil.**
+
+### 1. Harita worker denetimi — desen eskimişti
+
+`scripts/harita-worker-duman.mjs` derleme çıktısında
+`WORKER_URL = \`/maplibre/` arıyordu ve iki koşumda da bulamadı. Teşhis
+çıktısı:
+
+```
+(0,i.setWorkerUrl)(`/maplibre/${(0,i.getVersion)()}/maplibre-gl-worker.mjs`)
+"setWorkerUrl",0,function(t){tB.WORKER_URL=t}
+```
+
+Çağrı derlemede duruyor. Kurulum `Harita3B`den `lib/harita/workerAdresi.ts`e
+taşınınca (13 Eylül) küçültücü MapLibre'nin tek satırlık fonksiyonunu
+çağrı yerine AÇMAYI bıraktı. Desen iki biçimi de kabul ediyor; hiçbiri
+yoksa çağrı gerçekten düşmüştür.
+
+### 2. Panel davranışı — Payload sekme yarışı
+
+Aynı kod üç koşumda üç sonuç verdi: geçti / "41." sonrası kutular `[]` /
+kutular hiç görünmedi. Zaman çizelgesi kutuların 3 sn boyunca hiç geri
+gelmediğini, istisna olmadığını gösterdi — çökme değil.
+
+Kaynak `@payloadcms/ui` (Tabs alanı + Preferences sağlayıcısı): sayfa
+açılınca kayıtlı sekme `/api/payload-preferences/…` ile soruluyor. İstek
+dönmeden tıklanan sekme, istek dönünce açılış etkisi tarafından ESKİ
+sekmeye geri alınıyor. Test sayfa açılır açılmaz tıklıyordu.
+
+Düzeltme testte: tercih isteği bekleniyor, sekme 1 sn gözlem penceresinde
+kalıcı olmalı, dönerse yeniden deneniyor. Sonraki iki koşumda ilk
+denemede kalıcı; çizelge `6ms ["41.","27.827424"] @Konum ve tapu` —
+yazılan korunuyor, 14 Eylül'deki silme düzeltmesi tarayıcıda kanıtlandı.
+
+⚠️ Aynı yarış, sayfa açılır açılmaz sekme değiştiren gerçek bir kullanıcıda
+da yaşanabilir (sekme geri zıplar). Payload'ın davranışı; bizim kodumuzda
+değil.
+
+### 3. Lighthouse — süre de gerileme de değildi
+
+Duman adımı engelleyici; kırılınca Lighthouse'a sıra gelmedi. Yeşil
+koşumlar main'e giren son PR'ın (#113, `d54f3af`) ölçümüyle karşılaştırıldı.
+Özet betiği runner hızı oynadığında skor yerine BAYT karşılaştırmayı
+şart koşuyor:
+
+| Sayfa (mobil) | Taban toplam | #114 | #115 |
+| --- | --- | --- | --- |
+| anasayfa | 391 kB | 392 kB | 391 kB |
+| mahalleler | 384 kB | 384 kB | 383 kB |
+| portfoy | 459 kB | 460 kB | 459 kB |
+
+JavaScript her sayfada birebir aynı (184 / 178 kB). Skorlar: masaüstü
+98–100, mobil 88–93, erişilebilirlik / en iyi uygulamalar / SEO 100.
+
+⚠️ **Hedefi tutmayan iki değer — bu PR'dan önce de vardı:**
+
+| | Taban (#113) | Bu PR | Hedef |
+| --- | --- | --- | --- |
+| Mobil LCP | 3,3–3,7 sn | 3,1–3,8 sn | < 2,5 sn |
+| Masaüstü anasayfa CLS | 0,088 | 0,088 | 0 (kapı) / < 0,1 (CLAUDE.md) |
+
+Ayrı iş olarak ele alınmalı; bu PR'da değiştirilmedi.
