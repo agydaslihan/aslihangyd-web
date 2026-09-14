@@ -1265,6 +1265,88 @@
   padding-block: 2.5rem;
 }
 
+/*
+ * Bandın ilk yüksekliği — CSS'ten, ölçülerek bulunmuş sabitler.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN JAVASCRIPT ÖLÇMÜYOR: CLS.
+ *
+ * Yükseklik önceden hidrasyondan sonra `ResizeObserver` ile ölçülüp
+ * yazılıyordu. Vitrin önce tam boy çiziliyor, sonra kısalıyordu: masaüstü
+ * CLS 0,0876, mobil 0,0517 (14 Eylül 2026, gerçek tarayıcıda ölçüldü;
+ * onay çerezi varken ikisi de 0).
+ *
+ * Değerler bandın KOMPAKT hâlinin (kart + 32 px) yayındaki sürümde
+ * 320–1920 px arasında 1 px adımla ölçülmüş yüksekliği. Sınırlar metnin
+ * kırıldığı genişlikler; yükseklik AZALAN sınırlar 2 px geç, ARTAN sınır
+ * (640, `sm` boşluğu) 2 px erken devreye giriyor — tahmin hiçbir
+ * genişlikte gerçeğin ALTINA düşmüyor, yani bant butonları örtmüyor.
+ *
+ *   320–336 → 418 · 337–398 → 393 · 399–439 → 369 · 440–522 → 317
+ *   523–625 → 293 · 626–639 → 241 · 640–649 → 313 · 650–752 → 261
+ *   753+    → 236
+ *
+ * ⚠️ Bandın metni ya da düzeni değişirse bu tablo eskir. Gezinme dumanı
+ * CSS değerini tarayıcıda ölçülen yükseklikle karşılaştırıyor ve tahmin
+ * gerçeğin altındaysa kırılıyor.
+ *
+ * "Ayrıntılı" görünüm (kullanıcı tıklayınca) yüksekliği `CerezBanneri`
+ * ölçüp satır içi yazıyor ve bu değeri eziyor — kullanıcı etkileşiminden
+ * hemen sonraki kayma CLS'e sayılmıyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+[data-cerez-bandi='acik'] {
+  --cerez-bandi-yuksekligi: 418px;
+}
+
+@media (min-width: 339px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 393px;
+  }
+}
+
+@media (min-width: 401px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 369px;
+  }
+}
+
+@media (min-width: 442px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 317px;
+  }
+}
+
+@media (min-width: 525px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 293px;
+  }
+}
+
+@media (min-width: 628px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 241px;
+  }
+}
+
+@media (min-width: 638px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 313px;
+  }
+}
+
+@media (min-width: 652px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 261px;
+  }
+}
+
+@media (min-width: 755px) {
+  [data-cerez-bandi='acik'] {
+    --cerez-bandi-yuksekligi: 236px;
+  }
+}
+
 [data-cerez-bandi='acik'] .vitrin-ipucu {
   display: none;
 }
