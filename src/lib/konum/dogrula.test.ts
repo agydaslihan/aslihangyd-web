@@ -289,6 +289,20 @@ describe('alan sırası ve bağlantılar', () => {
   })
 
   /** Uyarı ENGELLEMİYOR — `validate` ile kaydı reddeden bir yol yok. */
+  /**
+   * ⚠️ YAZILAN SİLİNMİYOR. Metin `value` değişince tazelenseydi, yeni
+   * kayıtta enlem yazıldığı anda (boylam boşken forma `null` gider) iki
+   * kutu da boşalırdı — 14 Eylül 2026'da gerçek tarayıcıda ölçüldü.
+   */
+  it('panel alanı metni yalnızca initialValue değişince tazeliyor', () => {
+    const kaynak = readFileSync(
+      join(process.cwd(), 'src/components/panel/KonumAlaniIstemci.tsx'),
+      'utf-8',
+    )
+    expect(kaynak).toContain('if (initialValue !== oncekiIlkDeger)')
+    expect(kaynak).not.toMatch(/if \(value !== /)
+  })
+
   it('koordinat uyarısı kaydı engellemiyor', () => {
     const bilesen = oku('src/components/panel/KonumAlaniIstemci.tsx')
     expect(bilesen).toContain('role="status"')

@@ -63,7 +63,7 @@ export interface KonumAlaniIstemciOzellikleri {
  */
 export default function KonumAlaniIstemci(props: KonumAlaniIstemciOzellikleri) {
   const { aciklama, etiket, path: yolProp, readOnly, stilAdresi, zorunlu } = props
-  const { disabled, path, setValue, value } = useField<[number, number] | null>({
+  const { disabled, initialValue, path, setValue, value } = useField<[number, number] | null>({
     potentiallyStalePath: yolProp,
   })
 
@@ -81,11 +81,24 @@ export default function KonumAlaniIstemci(props: KonumAlaniIstemciOzellikleri) {
     boylam: koordinatYaz(kayitli.boylam),
   }))
 
-  // Dışarıdan gelen değişiklik (haritadan seçim, sunucu yanıtı) metni tazeler.
-  const [oncekiDeger, setOncekiDeger] = useState(value)
-  if (value !== oncekiDeger) {
-    setOncekiDeger(value)
-    const yeni = noktadanCoz(value)
+  /**
+   * ⚠️ METİN `initialValue` DEĞİŞİNCE TAZELENİYOR — `value` DEĞİŞİNCE DEĞİL.
+   *
+   * 14 Eylül 2026'da gerçek tarayıcıda ölçüldü: bu dal `value`ya bakıyordu
+   * ve kullanıcının yazdığını SİLİYORDU. Yeni kayıtta enlem yazılınca
+   * boylam henüz boş olduğu için forma `null` gidiyor, `value` `undefined`
+   * → `null` değişiyor, dal bunu "dışarıdan gelen değişiklik" sanıp iki
+   * kutuyu da boşaltıyordu. Kayıtlı bir ilanda "41." yazmak da aynı yoldan
+   * iki kutuyu birden siliyordu.
+   *
+   * `TurkceSayiAlani` ile aynı kalıp: `initialValue` yalnızca yüklemede ve
+   * kayıttan sonra değişir. Haritadan seçim ve takas metni kendileri
+   * yazıyor; bu dala ihtiyaçları yok.
+   */
+  const [oncekiIlkDeger, setOncekiIlkDeger] = useState(initialValue)
+  if (initialValue !== oncekiIlkDeger) {
+    setOncekiIlkDeger(initialValue)
+    const yeni = noktadanCoz(initialValue)
     setMetin({ enlem: koordinatYaz(yeni.enlem), boylam: koordinatYaz(yeni.boylam) })
   }
 
