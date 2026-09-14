@@ -119,6 +119,25 @@ if (!existsSync(parcaDizini)) {
   const bulunan = parcalar.some((ad) =>
     ATAMA_DESENI.test(readFileSync(path.join(parcaDizini, ad), 'utf8')),
   )
+  /**
+   * ⚠️ TEŞHİS — 14 Eylül 2026. Worker kurulumu `Harita3B`den ayrı bir
+   * modüle (`lib/harita/workerAdresi.ts`) taşındıktan sonra bu denetim CI'da
+   * iki kez kırıldı. İki ihtimal var ve yalnızca çıktıya bakarak ayrılıyor:
+   * çağrı paketlemede DÜŞTÜ (harita kırık) ya da küçültücü fonksiyonu artık
+   * satır içine açmıyor ve atama `setWorkerUrl(\`/maplibre/…\`)` çağrısı
+   * olarak duruyor (denetim yanlış). Adresin geçtiği her yer basılıyor.
+   */
+  const izler = []
+  for (const ad of parcalar) {
+    const metin = readFileSync(path.join(parcaDizini, ad), 'utf8')
+    for (const eslesme of metin.matchAll(/maplibre-gl-worker\.mjs/g)) {
+      const bas = Math.max(0, (eslesme.index ?? 0) - 160)
+      izler.push(`${ad}: …${metin.slice(bas, (eslesme.index ?? 0) + 30).replace(/\s+/g, ' ')}…`)
+    }
+  }
+  console.log(`  ℹ derleme çıktısında "maplibre-gl-worker.mjs" geçen yer: ${izler.length}`)
+  for (const iz of izler.slice(0, 4)) console.log(`    ${iz}`)
+
   if (bulunan) {
     gecti('yerel derleme çıktısı worker adresini atıyor (WORKER_URL = /maplibre/…)')
   } else {
