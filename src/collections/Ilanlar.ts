@@ -7,6 +7,7 @@ import { CEPHE_YONLERI } from '@/lib/gunes/cephe'
 import {
   EIDS_DURUMLARI,
   EIDS_DURUM_ETIKETLERI,
+  eidsKaynagi,
   ILAN_DURUMLARI,
   ILAN_DURUM_ETIKETLERI,
 } from '@/lib/eids'
@@ -82,6 +83,12 @@ export const Ilanlar: CollectionConfig = {
       options: ILAN_DURUMLARI.map((value) => ({ value, label: ILAN_DURUM_ETIKETLERI[value] })),
       admin: {
         position: 'sidebar',
+        /**
+         * ⚠️ Liste sütununda durumun yanında EİDS eksiği de gösteriliyor.
+         * Bir ilanın neden taslakta kaldığını öğrenmek için onu açmak
+         * gerekiyordu; on ilan için on kez.
+         */
+        components: { Cell: '@/components/panel/IlanDurumHucresi#default' },
         description:
           'Danışmansanız: ilanı hazırlayıp "Onay bekliyor" seçin — yönetici EİDS ' +
           'bilgilerini doğrulayıp yayınlar. Vazgeçerseniz "Taslak"a geri çekebilirsiniz. ' +
@@ -247,7 +254,8 @@ export const Ilanlar: CollectionConfig = {
                   label: 'Ada',
                   admin: {
                     width: '50%',
-                    description: 'Tapu bilgisi. Yayın için zorunludur (EİDS).',
+                    // ⚠️ Kaynak metni sihirbazla ORTAK — `lib/eids/ilerleme.ts`.
+                    description: `${eidsKaynagi('ada')} Yayın için zorunludur (EİDS).`,
                   },
                 },
                 {
@@ -256,7 +264,7 @@ export const Ilanlar: CollectionConfig = {
                   label: 'Parsel',
                   admin: {
                     width: '50%',
-                    description: 'Tapu bilgisi. Yayın için zorunludur (EİDS).',
+                    description: `${eidsKaynagi('parsel')} Yayın için zorunludur (EİDS).`,
                   },
                 },
               ],
@@ -298,6 +306,7 @@ export const Ilanlar: CollectionConfig = {
               index: true,
               admin: {
                 description:
+                  `${eidsKaynagi('tasinmazNo')} ` +
                   'İlan sayfasında "Doğrulanmış İlan" rozetiyle birlikte ziyaretçiye gösterilir.',
               },
             },
@@ -310,6 +319,7 @@ export const Ilanlar: CollectionConfig = {
                   label: 'Yetki başlangıcı',
                   admin: {
                     width: '50%',
+                    description: eidsKaynagi('yetkiBaslangic'),
                     date: { pickerAppearance: 'dayOnly', displayFormat: 'd MMMM yyyy' },
                   },
                 },
@@ -322,7 +332,8 @@ export const Ilanlar: CollectionConfig = {
                     width: '50%',
                     date: { pickerAppearance: 'dayOnly', displayFormat: 'd MMMM yyyy' },
                     description:
-                      'Yetki en az 3 ay verilir. Süre dolduğunda ilan otomatik olarak yayından kaldırılır.',
+                      `${eidsKaynagi('yetkiBitis')} ` +
+                      'Süre dolduğunda ilan otomatik olarak yayından kaldırılır.',
                   },
                 },
               ],

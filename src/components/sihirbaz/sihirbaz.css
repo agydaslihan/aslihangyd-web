@@ -873,3 +873,49 @@ textarea.sihirbaz-girdi {
 .sihirbaz-konum-uyari p {
   margin: 0 0 0.5rem;
 }
+
+/* ── EİDS ilerleme sayacı ────────────────────────────────────────────── */
+
+.sihirbaz-eids-sayac {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+  ⚠️ Çubuk tek taşıyıcı DEĞİL (WCAG 1.4.1): yanındaki metin aynı bilgiyi
+  sayıyla veriyor ve `role="progressbar"` ekran okuyucuya anlatıyor.
+*/
+.sihirbaz-eids-cubuk {
+  display: block;
+  height: 6px;
+  border-radius: 3px;
+  background: var(--theme-elevation-150);
+  overflow: hidden;
+}
+
+.sihirbaz-eids-cubuk > span {
+  display: block;
+  height: 100%;
+  background: var(--theme-success-500);
+  transition: width 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sihirbaz-eids-cubuk > span {
+    transition: none;
+  }
+}
+
+/* Eksiğin nereden bulunacağı — mesajın altında, sönük. */
+.sihirbaz-eids-kaynak {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--theme-elevation-600);
+}

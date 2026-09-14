@@ -2,7 +2,14 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from 'react'
 
-import { eidsDegerlendir, EIDS_DURUMLARI, EIDS_DURUM_ETIKETLERI, type EidsDurum } from '@/lib/eids'
+import {
+  eidsDegerlendir,
+  eidsIlerlemesi,
+  eidsKaynagi,
+  EIDS_DURUMLARI,
+  EIDS_DURUM_ETIKETLERI,
+  type EidsDurum,
+} from '@/lib/eids'
 import { CEPHE_YONLERI } from '@/lib/gunes/cephe'
 import { gostergeleriHesapla, type IlanGostergeleri } from '@/lib/ilan/hesaplamalar'
 import { konumuDenetle, koordinatCoz, koordinatYaz } from '@/lib/konum/dogrula'
@@ -190,6 +197,32 @@ export function PortfoySihirbazi({
   const eids = useMemo(
     () =>
       eidsDegerlendir({
+        eidsDurum: eidsDurumuCoz(form.eidsDurum as string),
+        tasinmazNo: (form.tasinmazNo as string) || undefined,
+        ada: (form.ada as string) || undefined,
+        parsel: (form.parsel as string) || undefined,
+        eidsYetkiBaslangic: (form.eidsYetkiBaslangic as string) || undefined,
+        eidsYetkiBitis: (form.eidsYetkiBitis as string) || undefined,
+      }),
+    [
+      form.eidsDurum,
+      form.tasinmazNo,
+      form.ada,
+      form.parsel,
+      form.eidsYetkiBaslangic,
+      form.eidsYetkiBitis,
+    ],
+  )
+
+  /**
+   * EİDS ilerlemesi — "altı eksikten kaçı tamamlandı".
+   *
+   * ⚠️ Girdiler `eids` ile AYNI; ikisi de `eidsDegerlendir` çağırıyor.
+   * Ayrı bir veri yolu kursaydık sayaç ile liste ayrışabilirdi.
+   */
+  const eidsIlerleme = useMemo(
+    () =>
+      eidsIlerlemesi({
         eidsDurum: eidsDurumuCoz(form.eidsDurum as string),
         tasinmazNo: (form.tasinmazNo as string) || undefined,
         ada: (form.ada as string) || undefined,
@@ -515,10 +548,17 @@ export function PortfoySihirbazi({
 
             {/* ⚠️ "Taslak kaydet" HER ADIMDA. Sonu beklemek zorunda kalan
                 kullanıcı, yarıda bırakmak istediğinde hiçbir şey
-                kaydedememiş olurdu. */}
+                kaydedememiş olurdu.
+
+                ⚠️ EİDS EKSİKKEN BU DÜĞME ASIL EYLEM — "sessiz" stilini
+                bırakıyor. Eksik yetki belgesi dakikalar içinde
+                halledilmiyor: mülk sahibinden e-Devlet üzerinden gelmesi
+                gerekiyor. O durumda kullanıcının yapabileceği tek şey
+                taslağı kaydetmek ve sonra dönmek; düğmenin sönük durması
+                "burada yapılacak bir şey yok" izlenimi veriyordu. */}
             <button
               type="button"
-              className="sihirbaz-dugme sessiz"
+              className={`sihirbaz-dugme ${eids.yayinlanabilir ? 'sessiz' : ''}`}
               onClick={() => {
                 kaydet()
                 // ⚠️ Kapatma kaydetmeyi BEKLEMİYOR: geçiş zaten arka
@@ -543,7 +583,7 @@ export function PortfoySihirbazi({
               <>
                 <button
                   type="button"
-                  className="sihirbaz-dugme sessiz"
+                  className={`sihirbaz-dugme ${eids.yayinlanabilir ? 'sessiz' : ''}`}
                   onClick={() => kaydet({ bitir: true })}
                   disabled={kaydediliyor || (form.mahalle as string) === ''}
                 >
@@ -582,7 +622,7 @@ export function PortfoySihirbazi({
         </div>
 
         <aside className="sihirbaz-yan">
-          <EidsHazirlikPaneli degerlendirme={eids} />
+          <EidsHazirlikPaneli degerlendirme={eids} ilerleme={eidsIlerleme} />
         </aside>
       </div>
     </div>
@@ -698,11 +738,11 @@ function TapuAdimi({ form, hatalar, yaz, oneriler }: AdimOzellikleri & { onerile
 
   return (
     <>
-      <Alan etiket="Ada" hata={hatalar.ada} ipucu="Tapu belgenizde “Ada” satırında yazar.">
+      <Alan etiket="Ada" hata={hatalar.ada} ipucu={eidsKaynagi('ada')}>
         <Metin deger={form.ada as string} onDegisim={(deger) => yaz('ada', deger)} />
       </Alan>
 
-      <Alan etiket="Parsel" hata={hatalar.parsel} ipucu="Tapu belgenizde “Parsel” satırında yazar.">
+      <Alan etiket="Parsel" hata={hatalar.parsel} ipucu={eidsKaynagi('parsel')}>
         <Metin deger={form.parsel as string} onDegisim={(deger) => yaz('parsel', deger)} />
       </Alan>
 
@@ -720,10 +760,7 @@ function TapuAdimi({ form, hatalar, yaz, oneriler }: AdimOzellikleri & { onerile
 
       <OneriSeridi oneriler={oneriler} alan="tapuDurumu" secenekler={TAPU_DURUMLARI} yaz={yaz} />
 
-      <Alan
-        etiket="EİDS yetki durumu"
-        ipucu="Mülk sahibi e-Devlet üzerinden yetki verdiyse “Yetkili” seçin."
-      >
+      <Alan etiket="EİDS yetki durumu" ipucu={eidsKaynagi('durum')}>
         <Secim
           deger={form.eidsDurum as string}
           onDegisim={(deger) => yaz('eidsDurum', deger)}
@@ -738,12 +775,16 @@ function TapuAdimi({ form, hatalar, yaz, oneriler }: AdimOzellikleri & { onerile
       <Alan
         etiket="Taşınmaz numarası"
         hata={hatalar.tasinmazNo}
-        ipucu="EİDS'te taşınmaza verilen numara. İlan sayfasında rozetle birlikte görünür."
+        ipucu={`${eidsKaynagi('tasinmazNo')} İlan sayfasında rozetle birlikte görünür.`}
       >
         <Metin deger={form.tasinmazNo as string} onDegisim={(deger) => yaz('tasinmazNo', deger)} />
       </Alan>
 
-      <Alan etiket="Yetki başlangıcı" hata={hatalar.eidsYetkiBaslangic}>
+      <Alan
+        etiket="Yetki başlangıcı"
+        hata={hatalar.eidsYetkiBaslangic}
+        ipucu={eidsKaynagi('yetkiBaslangic')}
+      >
         <Tarih
           deger={form.eidsYetkiBaslangic as string}
           onDegisim={(deger) => yaz('eidsYetkiBaslangic', deger)}
@@ -753,7 +794,7 @@ function TapuAdimi({ form, hatalar, yaz, oneriler }: AdimOzellikleri & { onerile
       <Alan
         etiket="Yetki bitişi"
         hata={hatalar.eidsYetkiBitis}
-        ipucu="Süresi dolan yetki, ilanı otomatik olarak yayından kaldırır."
+        ipucu={`${eidsKaynagi('yetkiBitis')} Süresi dolan yetki, ilanı otomatik olarak yayından kaldırır.`}
       >
         <Tarih
           deger={form.eidsYetkiBitis as string}
