@@ -7,6 +7,8 @@ import { importMap } from './admin/importMap.js'
 import type { ServerFunctionClient } from 'payload'
 
 import '@payloadcms/next/css'
+// ⚠️ Payload stillerinden SONRA: panel metin jetonları onun rampasına dayanıyor.
+import './panelJetonlari.css'
 
 type Args = {
   children: React.ReactNode

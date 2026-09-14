@@ -1,0 +1,34 @@
+/*
+  Panel metin jetonları — Payload tema rampasının ÜSTÜNDE anlamsal katman.
+
+  ─────────────────────────────────────────────────────────────────────────
+  ⚠️ NEDEN VAR: AYNI SOLUK RENK ON DOSYADA AA'NIN ALTINDAYDI (14 Eylül 2026).
+
+  Panel bileşenleri ikincil metin için `--theme-elevation-500`, hata metni
+  için `--theme-error-500` kullanıyordu. İkisi de Payload rampasının TAM
+  ORTASI: yalnızca `:root`'ta tanımlı, koyu tema onları ezmiyor, iki temada
+  da aynı renk (gri 128; kırmızı 218,75,72). Tanımı gereği hem açık hem koyu
+  zeminde 4,5:1'i geçemezler — açıkta 3,3–3,9, koyuda 3,2–3,4 ölçüldü.
+
+  Sorun tek tek kurallarda değil, rampanın orta tonunu METİN rengi olarak
+  kullanmaktaydı. Bu yüzden tek tek düzeltilmedi: renk burada, bir kez
+  seçiliyor ve test bu dosyadaki değerleri iki temada ölçüyor.
+
+  ⚠️ Değerler (standart panel zeminleri elevation-0/50/100'ün en kötüsü):
+    --panel-metin-soluk  elevation-600   açık 4,89 · koyu 6,53
+    --panel-metin-hata   error-650       açık 5,94 · koyu 5,55
+  `error-600` iki temada da sınırdaydı (4,93 / 4,66); hata metni kritik
+  bilgi taşıdığı için bir basamak koyusu seçildi.
+
+  ⚠️ `:root` üzerinde tanımlı ve Payload temayı `html[data-theme]` ile
+  değiştiriyor: `var()` html öğesinde çözüldüğü için jeton temayı izliyor.
+
+  Denetim: `src/lib/tasarim/panelKontrast.test.ts` panelin bütün CSS
+  dosyalarındaki metin renklerini Payload'ın YÜKLÜ sürümündeki tema
+  değerlerine çözüp ölçüyor.
+  ─────────────────────────────────────────────────────────────────────────
+*/
+:root {
+  --panel-metin-soluk: var(--theme-elevation-600);
+  --panel-metin-hata: var(--theme-error-650);
+}

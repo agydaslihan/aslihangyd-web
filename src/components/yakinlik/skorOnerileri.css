@@ -111,7 +111,7 @@
 
 .skor-oneri-kayit {
   font-size: 0.75rem;
-  color: var(--theme-elevation-500, #777);
+  color: var(--panel-metin-soluk);
   font-variant-numeric: tabular-nums;
 }
 
@@ -161,7 +161,7 @@
 .skor-oneri-puan--yok {
   font-size: 0.75rem;
   font-weight: 400;
-  color: var(--theme-elevation-500, #777);
+  color: var(--panel-metin-soluk);
 }
 
 .skor-oneri-gerekce,

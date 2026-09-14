@@ -17,9 +17,9 @@
 }
 
 .turkce-sayi-hata {
-  color: var(--theme-error-500);
+  color: var(--panel-metin-hata);
 }
 
 .turkce-sayi-bos {
-  color: var(--theme-elevation-450);
+  color: var(--panel-metin-soluk);
 }

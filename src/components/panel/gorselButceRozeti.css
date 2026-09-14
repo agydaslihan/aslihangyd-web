@@ -22,7 +22,7 @@
   margin: 0.5rem 0 0;
   font-size: 0.75rem;
   line-height: 1.5;
-  color: var(--theme-elevation-500, #888);
+  color: var(--panel-metin-soluk);
 }
 
 .gbr-satir {
@@ -56,7 +56,7 @@
 .gbr-alt {
   margin-top: 0.125rem;
   font-size: 0.6875rem;
-  color: var(--theme-elevation-500, #888);
+  color: var(--panel-metin-soluk);
   font-variant-numeric: tabular-nums;
 }
 

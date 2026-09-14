@@ -63,7 +63,7 @@
 }
 
 .marka-renk__uyari {
-  color: var(--theme-error-500);
+  color: var(--panel-metin-hata);
   font-size: 0.8rem;
 }
 
@@ -141,7 +141,7 @@
 .marka-panel__gerekce {
   display: block;
   margin-top: 0.2rem;
-  color: var(--theme-elevation-500);
+  color: var(--panel-metin-soluk);
   font-size: 0.75rem;
   line-height: 1.4;
 }
@@ -322,6 +322,6 @@
 }
 
 .marka-ozet__uyari {
-  color: var(--theme-error-500);
+  color: var(--panel-metin-hata);
   font-weight: 600;
 }
