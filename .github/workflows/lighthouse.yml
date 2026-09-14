@@ -146,11 +146,36 @@ jobs:
       #
       # Maliyet: ~76 rota, üç tur, ~6 dakika. Bu yüzden `timeout-minutes`
       # 25'ten 40'a çıkarıldı.
+      #
+      # ⚠️ DÖRDÜNCÜ TUR — PANEL DAVRANIŞI (14 Eylül 2026). Koordinat alanına
+      # gerçek klavyeyle yazıyor, EİDS sayacını ve iyelik ekini adım adım
+      # izliyor, liste rozetini okuyor, rozet/çubuk/adım göstergesinin
+      # ÇİZİLEN kontrastını iki temada ölçüyor. Sebep: panel koordinat alanı
+      # yazılanı siliyordu ve bütün rotalar yine 200 dönüyordu.
+      #
+      # ⚠️ SÜRE ÖLÇÜLÜYOR, TAHMİN EDİLMİYOR. Her turun süresi günlüğe, toplam
+      # iş özetine yazılıyor. 15 dakikayı aşarsa uyarı düşer: turlar
+      # paralelleştirilmeli (her tur kendi sekmesini açıyor, ortak durum yok).
       - name: Gezinme dumanı (engelleyici)
         run: |
+          baslangic=$(date +%s)
+          set +e
           node scripts/gezinme-dumani.mjs http://localhost:3000 \
             --eposta=duman@ornek.test \
-            --sifre='DumanTesti!2026'
+            --sifre='DumanTesti!2026' 2>&1 | tee gezinme-dumani.log
+          cikis=${PIPESTATUS[0]}
+          set -e
+          sure=$(( $(date +%s) - baslangic ))
+          {
+            echo "### Gezinme dumanı: $(( sure / 60 )) dk $(( sure % 60 )) sn (eşik 15 dk)"
+            echo '```'
+            grep -E '^(✓|✗) ' gezinme-dumani.log || true
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"
+          if [ "$sure" -gt 900 ]; then
+            echo "::warning title=Gezinme dumanı 15 dakikayı aştı::${sure} sn. Turları paralelleştirmeyi değerlendir (scripts/gezinme-dumani.mjs)."
+          fi
+          exit "$cikis"
 
       # ⚠️ ÜÇ KOŞUM VE İKİ CİHAZ — ikisi de bilinçli, ikisi de bedeli var.
       #

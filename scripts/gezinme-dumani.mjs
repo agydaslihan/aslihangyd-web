@@ -45,6 +45,7 @@
  *   --eposta=…      panel oturumu için kullanıcı. Verilmezse panel rotaları
  *   --sifre=…       ATLANIR ve bu açıkça bildirilir (sessizce atlanmaz).
  *   --sadece=genel  yalnızca genel rotalar | --sadece=panel yalnızca panel
+ *   --sadece=davranis  yalnızca panel davranışı (form, sayaç, rozet, kontrast)
  *
  * ⚠️ Ayarlar ORTAM DEĞİŞKENİ DEĞİL, BAYRAK. `src/lib/ortam.test.ts` kodun
  * okuduğu her ortam değişkeninin `.env.example` ve `compose.prod.yml` ile
@@ -799,6 +800,501 @@ async function panelTuru(wsAdresi, rotalar, cerez) {
   return { etiket: 'panel (oturumlu)', sorunlar }
 }
 
+/* ══════════════════════════════════════════════════════════════════════
+   PANEL DAVRANIŞI — form, EİDS sayacı, rozet, çizilen kontrast
+   ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN VAR: "SAYFA AÇILDI" BİR FORMUN ÇALIŞTIĞINI KANITLAMIYOR.
+ *
+ * 14 Eylül 2026'da panelin koordinat alanı yazılanı SİLİYORDU: yeni ilanda
+ * enlem yazıp boylama geçince enlem boşalıyor, kayıtlı ilanda "41." yazmak
+ * iki kutuyu birden temizliyordu. Bütün panel rotaları bu betikte 200 ve
+ * dolu gövdeyle geçiyordu; hiçbir denetim bir kutuya YAZMIYORDU.
+ *
+ * Aynı gün sayaç "0’si" yazıyordu ve ilerleme çubuğunun dolgusu izinden
+ * ayırt edilemiyordu (2,7:1). Kontrast testi jetonları hesaplıyor; çizilen
+ * hâli (tema değişkeni + gerçek zemin) hiçbir şey ölçmüyordu.
+ *
+ * Bu tur üçünü de gerçek tarayıcıda, iki temada ölçüyor. Kalıcı: CI'da her
+ * PR'da koşuyor ve kayıt bırakıyor.
+ *
+ * ⚠️ Yazma GERÇEK KLAVYE OLAYIYLA (`Input.insertText`, `Tab`). Değeri
+ * `input.value = …` ile basmak React'in olay yolunu atlar ve silme hatası
+ * tam da o yolda yaşanıyordu.
+ *
+ * ⚠️ Deneme kaydı `DUMAN-DAVRANIS` önekiyle REST'ten açılıyor ve `finally`
+ * içinde siliniyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
+const DAVRANIS_ONEKI = 'DUMAN-DAVRANIS'
+
+/**
+ * Tarayıcı içinde kontrast ölçer. Renk biçimi ne olursa olsun (rgb, oklch,
+ * color-mix) kanvasa boyanıp sRGB olarak geri okunuyor; zemin, ata zinciri
+ * boyunca yarı saydam katmanlar üst üste bindirilerek bulunuyor.
+ */
+const KONTRAST_OLCER = `(() => {
+  const cv = document.createElement('canvas'); cv.width = cv.height = 1
+  const cx = cv.getContext('2d', { willReadFrequently: true })
+  const rgba = (renk) => { cx.clearRect(0, 0, 1, 1); cx.fillStyle = '#000'; cx.fillStyle = renk; cx.fillRect(0, 0, 1, 1); const d = cx.getImageData(0, 0, 1, 1).data; return [d[0], d[1], d[2], d[3] / 255] }
+  const saydam = (renk) => renk === 'transparent' || /rgba\\([^)]*,\\s*0\\)$/.test(renk)
+  const parlaklik = ([r, g, b]) => { const f = (v) => { v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4 }; return 0.2126 * f(r) + 0.7152 * f(g) + 0.0722 * f(b) }
+  const oran = (a, b) => { const [x, y] = [parlaklik(a), parlaklik(b)].sort((p, q) => q - p); return (x + 0.05) / (y + 0.05) }
+  const zemin = (el) => {
+    const katman = []
+    for (let e = el; e; e = e.parentElement) { const b = getComputedStyle(e).backgroundColor; if (!saydam(b)) { const c = rgba(b); katman.push(c); if (c[3] >= 1) break } }
+    katman.push([255, 255, 255, 1])
+    let [r, g, b] = katman[katman.length - 1]
+    for (let i = katman.length - 2; i >= 0; i--) { const [kr, kg, kb, ka] = katman[i]; r = kr * ka + r * (1 - ka); g = kg * ka + g * (1 - ka); b = kb * ka + b * (1 - ka) }
+    return [r, g, b]
+  }
+  const yuvarla = (x) => Math.round(x * 100) / 100
+  return {
+    metin: (secici) => {
+      const el = document.querySelector(secici)
+      if (!el) return null
+      const st = getComputedStyle(el)
+      const px = parseFloat(st.fontSize)
+      const buyuk = px >= 24 || (Number(st.fontWeight) >= 700 && px >= 18.66)
+      return { oran: yuvarla(oran(rgba(st.color), zemin(el))), esik: buyuk ? 3 : 4.5 }
+    },
+    cubuk: (secici) => {
+      const iz = document.querySelector(secici)
+      const dolgu = iz?.firstElementChild
+      if (!iz || !dolgu) return null
+      const izRengi = rgba(getComputedStyle(iz).backgroundColor)
+      return {
+        dolguIz: yuvarla(oran(rgba(getComputedStyle(dolgu).backgroundColor), izRengi)),
+        cerceveZemin: yuvarla(oran(rgba(getComputedStyle(iz).borderTopColor), zemin(iz.parentElement))),
+      }
+    },
+  }
+})()`
+
+async function davranisTuru(wsAdresi, cerez) {
+  const sorunlar = []
+  const bilgi = []
+  const api = async (yol, yontem = 'GET', govde) => {
+    const yanit = await fetch(`${TABAN}${yol}`, {
+      method: yontem,
+      headers: { 'content-type': 'application/json', cookie: cerez },
+      body: govde === undefined ? undefined : JSON.stringify(govde),
+    })
+    return { durum: yanit.status, veri: await yanit.json().catch(() => null) }
+  }
+
+  const sekmeyleCalis = async (is) => {
+    const sekme = await sekmeAc(wsAdresi, { azHareket: true, cerez })
+    try {
+      return await is(sekme)
+    } finally {
+      await sekme.kapat()
+    }
+  }
+  const git = async (sekme, rota, kosul) => {
+    await sekme.S('Page.navigate', { url: `${TABAN}${rota}` })
+    return sekme.kosulBekle(kosul, 20000)
+  }
+
+  /** Gerçek klavye: odakla, içeriği seç, metni tuş olayı olarak yaz. */
+  const klavyeyleYaz = async (sekme, secici, metin) => {
+    const odak = await sekme.deger(
+      `(() => { const i = document.querySelector(${JSON.stringify(secici)}); if (!i) return false; i.focus(); i.select?.(); return document.activeElement === i })()`,
+    )
+    if (!odak) return false
+    await sekme.S('Input.insertText', { text: metin })
+    return true
+  }
+  const tabBas = async (sekme) => {
+    const tus = { key: 'Tab', code: 'Tab', windowsVirtualKeyCode: 9, nativeVirtualKeyCode: 9 }
+    await sekme.S('Input.dispatchKeyEvent', { type: 'keyDown', ...tus })
+    await sekme.S('Input.dispatchKeyEvent', { type: 'keyUp', ...tus })
+  }
+  /** Tarih ve seçim kutuları klavyeyle yazılamıyor — React'in değer yolu. */
+  const degerVer = (sekme, etiket, deger) =>
+    sekme.deger(`(() => {
+      const l = [...document.querySelectorAll('label')].find((x) => x.textContent.trim().startsWith(${JSON.stringify(etiket)}))
+      const alan = (l?.closest('.sihirbaz-alan') ?? l?.parentElement)?.querySelector('input, select')
+      if (!alan) return false
+      const ayarla = Object.getOwnPropertyDescriptor(Object.getPrototypeOf(alan), 'value').set
+      ayarla.call(alan, ${JSON.stringify(deger)})
+      alan.dispatchEvent(new Event('input', { bubbles: true }))
+      alan.dispatchEvent(new Event('change', { bubbles: true }))
+      return true
+    })()`)
+  const etiketliGirdi = (etiket) =>
+    `(() => { const l = [...document.querySelectorAll('label')].find((x) => x.textContent.trim().startsWith(${JSON.stringify(etiket)})); const i = (l?.closest('.sihirbaz-alan') ?? l?.parentElement)?.querySelector('input'); if (i && !i.id) i.id = 'duman-' + Math.random().toString(36).slice(2); return i ? '#' + CSS.escape(i.id) : null })()`
+
+  /**
+   * Payload sekmesine KALICI geçiş.
+   *
+   * ⚠️ PAYLOAD YARIŞI — 14 Eylül 2026'da CI'da ölçüldü, kaynağında
+   * doğrulandı (`@payloadcms/ui` Tabs alanı + Preferences sağlayıcısı).
+   * Sayfa açılınca Tabs alanı kayıtlı sekmeyi `/api/payload-preferences/…`
+   * isteğiyle soruyor. İstek dönmeden sekmeye tıklanırsa tıklama sekmeyi
+   * değiştiriyor, sonra AYNI isteği bekliyor; istek dönünce önce açılış
+   * etkisi ESKİ sekmeyi geri yüklüyor. Sonuç: kutular bir an görünüp
+   * kayboluyor ya da hiç görünmüyor — istisna yok.
+   *
+   * İlk koşumlarda tıklama sayfa açılır açılmaz yapılıyordu ve iddia üç
+   * koşumda üç farklı sonuç verdi (geçti / "41." sonrası [] / kutular hiç
+   * yok). Kodumuzun hatası değildi; testin zamanlamasıydı.
+   *
+   * Şimdi: tercih isteğinin bitmesi bekleniyor, tıklanıyor, sekme 1 sn
+   * GÖZLEM penceresi boyunca etkin kalmalı (bu hazır olmayı değil geri
+   * dönüşü bekliyor); dönerse yeniden deneniyor. Deneme sayısı günlüğe.
+   */
+  const sekmeyeGec = async (sekme, ad, hazirKosulu) => {
+    await sekme.kosulBekle(
+      `performance.getEntriesByType('resource').some((e) => e.name.includes('/payload-preferences/'))`,
+      5000,
+    )
+    for (let deneme = 1; deneme <= 3; deneme++) {
+      await sekme.deger(
+        `[...document.querySelectorAll('[class*="tabs-field__tab-button"]')].find((b) => b.textContent.trim() === ${JSON.stringify(ad)})?.click()`,
+      )
+      if (!(await sekme.kosulBekle(hazirKosulu, 5000))) continue
+      await uyu(1000)
+      const etkin = await sekme.deger(
+        `document.querySelector('[class*="tabs-field__tab-button--active"]')?.textContent.trim() ?? ''`,
+      )
+      if (etkin === ad && (await sekme.deger(hazirKosulu))) {
+        if (deneme > 1)
+          bilgi.push(`"${ad}" sekmesi ${deneme}. denemede kalıcı oldu (Payload tercih yarışı)`)
+        return true
+      }
+    }
+    return false
+  }
+
+  const temadaOlc = async (sekme, olcumler) => {
+    const sonuc = {}
+    for (const tema of ['light', 'dark']) {
+      await sekme.deger(`document.documentElement.setAttribute('data-theme', '${tema}')`)
+      await uyu(250)
+      sonuc[tema] = await sekme.deger(
+        `(() => { const o = ${KONTRAST_OLCER}; return ${olcumler} })()`,
+      )
+    }
+    return sonuc
+  }
+  const kontrastDenetle = (ad, olcum) => {
+    for (const [tema, deger] of Object.entries(olcum)) {
+      if (deger === null) {
+        sorunlar.push(`kontrast ${ad} (${tema}): öğe bulunamadı`)
+      } else if (deger.oran < deger.esik) {
+        sorunlar.push(`kontrast ${ad} (${tema}): ${deger.oran}:1 < ${deger.esik}:1`)
+      }
+    }
+  }
+
+  // ── Deneme kaydı ────────────────────────────────────────────────────
+  const ALIPASA = { enlem: 41.14893, boylam: 27.827424 }
+  let mahalleId = (await api('/api/mahalleler?limit=1&depth=0')).veri?.docs?.[0]?.id ?? null
+  let geciciMahalle = null
+  if (mahalleId === null) {
+    const m = await api('/api/mahalleler', 'POST', {
+      ad: `${DAVRANIS_ONEKI} Mahallesi`,
+      slug: 'duman-davranis-mahallesi',
+      yayinda: false,
+    })
+    geciciMahalle = m.veri?.doc?.id ?? null
+    mahalleId = geciciMahalle
+  }
+  const olusan = await api('/api/ilanlar', 'POST', {
+    baslik: `${DAVRANIS_ONEKI} deneme ilanı`,
+    tip: 'satilik',
+    kategori: 'konut',
+    durum: 'taslak',
+    mahalle: mahalleId,
+    konum: [ALIPASA.boylam, ALIPASA.enlem],
+  })
+  const ilanId = olusan.veri?.doc?.id ?? null
+  if (ilanId === null) {
+    return {
+      etiket: 'panel davranışı',
+      sorunlar: [`deneme ilanı açılamadı (HTTP ${olusan.durum})`],
+    }
+  }
+
+  try {
+    // ── 1. Koordinat alanı — yeni ilan: enlem yaz, boylama geç ─────────
+    await sekmeyleCalis(async (sekme) => {
+      const hazir = await git(
+        sekme,
+        '/admin/collections/ilanlar/create',
+        `document.querySelector('[class*="tabs-field__tab-button"]') !== null`,
+      )
+      if (!hazir) return void sorunlar.push('yeni ilan formu açılmadı')
+      if (
+        !(await sekmeyeGec(
+          sekme,
+          'Konum ve tapu',
+          `document.querySelectorAll('.konum-kutu input').length === 2`,
+        ))
+      ) {
+        return void sorunlar.push('koordinat kutuları bulunamadı (Konum ve tapu sekmesi, 3 deneme)')
+      }
+      if (!(await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.1'))) {
+        return void sorunlar.push('koordinat (yeni ilan): enlem kutusuna odaklanılamadı')
+      }
+      await tabBas(sekme)
+      const odak = await sekme.deger(`document.activeElement?.id ?? ''`)
+      if (!String(odak).endsWith('-boylam'))
+        sorunlar.push(`koordinat: Tab boylama geçmedi (odak: "${odak}")`)
+      await sekme.S('Input.insertText', { text: '27.8' })
+      // Koşul bekle — sabit süre değil; ulaşılmazsa son hâl raporlanıyor.
+      await sekme.kosulBekle(
+        `JSON.stringify([...document.querySelectorAll('.konum-kutu input')].map((i) => i.value)) === '["41.1","27.8"]'`,
+        3000,
+      )
+      const kutular = await sekme.deger(
+        `[...document.querySelectorAll('.konum-kutu input')].map((i) => i.value)`,
+      )
+      if (kutular?.[0] !== '41.1' || kutular?.[1] !== '27.8') {
+        sorunlar.push(
+          `koordinat (yeni ilan): enlem yazılıp boylama geçilince kutular ${JSON.stringify(kutular)} — beklenen ["41.1","27.8"]`,
+        )
+      }
+    })
+
+    // ── 2. Koordinat alanı — kayıtlı ilan: "41." ─────────────────────────
+    await sekmeyleCalis(async (sekme) => {
+      const hazir = await git(
+        sekme,
+        `/admin/collections/ilanlar/${ilanId}`,
+        `document.querySelector('[class*="tabs-field__tab-button"]') !== null`,
+      )
+      if (!hazir) return void sorunlar.push('kayıtlı ilan formu açılmadı')
+      if (
+        !(await sekmeyeGec(
+          sekme,
+          'Konum ve tapu',
+          `document.querySelector('.konum-kutu input')?.value === '${ALIPASA.enlem}'`,
+        ))
+      ) {
+        return void sorunlar.push(
+          'kayıtlı ilanın enlemi kutuya gelmedi (Konum ve tapu sekmesi, 3 deneme)',
+        )
+      }
+      if (!(await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.'))) {
+        return void sorunlar.push('koordinat (kayıtlı ilan): enlem kutusuna odaklanılamadı')
+      }
+
+      /**
+       * ⚠️ SABİT BEKLEME YOK, ZAMAN ÇİZELGESİ VAR. İlk CI koşumunda (#114)
+       * bu iddia 500 ms sonra kutuları `[]` — sayfada HİÇ kutu yok — buldu;
+       * aynı kod #115'te geçti. Kutular ya kısa süre kaybolup aynı değerle
+       * dönüyor (alan yeniden çiziliyor: test zamanlaması) ya da dönünce
+       * yazılan değer gitmiş oluyor (kod hatası). 3 sn boyunca 50 ms'de bir
+       * örnek alınıyor, iddia SON duruma bakıyor ve çizelge her koşumda
+       * günlüğe yazılıyor.
+       */
+      const beklenen = JSON.stringify(['41.', String(ALIPASA.boylam)])
+      const cizelge = await sekme.deger(`new Promise((bitir) => {
+        const ornekler = []
+        const t0 = performance.now()
+        const al = () => {
+          const kutular = JSON.stringify([...document.querySelectorAll('.konum-kutu input')].map((i) => i.value))
+          const etkin = document.querySelector('[class*="tabs-field__tab-button--active"]')?.textContent.trim() ?? '?'
+          const imza = kutular + ' @' + etkin
+          const son = ornekler[ornekler.length - 1]
+          if (!son || son.imza !== imza) ornekler.push({ ms: Math.round(performance.now() - t0), imza, kutular })
+          if (performance.now() - t0 < 3000) setTimeout(al, 50)
+          else bitir(ornekler)
+        }
+        al()
+      })`)
+      const ozet = (cizelge ?? []).map((o) => `${o.ms}ms ${o.imza}`).join(' → ')
+      const son = cizelge?.[cizelge.length - 1]?.kutular ?? 'null'
+      bilgi.push(`koordinat (kayıtlı ilan) "41." sonrası kutular: ${ozet}`)
+      // Kutular bir çökmeyle kayboluyorsa istisna burada görünür.
+      const istisnalar = sekme
+        .olaylariBosalt()
+        .filter((e) => e.method === 'Runtime.exceptionThrown')
+        .map(
+          (e) =>
+            (
+              e.params.exceptionDetails.exception?.description ?? e.params.exceptionDetails.text
+            ).split('\n')[0],
+        )
+      if (istisnalar.length > 0)
+        bilgi.push(`koordinat (kayıtlı ilan) istisnalar: ${istisnalar.join(' | ')}`)
+      if (son !== beklenen) {
+        sorunlar.push(
+          `koordinat (kayıtlı ilan): "41." yazıldıktan 3 sn sonra kutular ${son} — beklenen ${beklenen} · çizelge: ${ozet}`,
+        )
+      }
+    })
+
+    // ── 3. Liste rozeti ─────────────────────────────────────────────────
+    const rozetOku = (sekme) =>
+      sekme.deger(
+        `(() => { const s = [...document.querySelectorAll('tr')].find((t) => t.textContent.includes(${JSON.stringify(DAVRANIS_ONEKI)})); const h = s?.querySelector('.ilan-durum-hucre'); return h ? { hucre: h.textContent.replace(/\\s+/g, ' ').trim(), rozet: h.querySelector('.ilan-durum-rozet')?.textContent.trim() ?? null } : null })()`,
+      )
+    const listeRotasi = `/admin/collections/ilanlar?limit=100&where[baslik][like]=${DAVRANIS_ONEKI}`
+    await sekmeyleCalis(async (sekme) => {
+      const hazir = await git(
+        sekme,
+        listeRotasi,
+        `[...document.querySelectorAll('tr')].some((t) => t.textContent.includes(${JSON.stringify(DAVRANIS_ONEKI)}))`,
+      )
+      if (!hazir) return void sorunlar.push('ilan listesinde deneme ilanı görünmedi')
+      const ilk = await rozetOku(sekme)
+      if (!ilk?.hucre.startsWith('Taslak') || ilk?.rozet !== 'EİDS eksik (6)') {
+        sorunlar.push(
+          `rozet: boş EİDS'li taslakta ${JSON.stringify(ilk)} — beklenen "Taslak" + "EİDS eksik (6)"`,
+        )
+      }
+      kontrastDenetle('rozet', await temadaOlc(sekme, `o.metin('.ilan-durum-rozet')`))
+
+      await api(`/api/ilanlar/${ilanId}`, 'PATCH', { ada: '1847' })
+      await git(
+        sekme,
+        `${listeRotasi}&_=${Date.now()}`,
+        `document.querySelector('.ilan-durum-rozet')?.textContent.trim() === 'EİDS eksik (5)'`,
+      )
+      const ikinci = await rozetOku(sekme)
+      if (ikinci?.rozet !== 'EİDS eksik (5)')
+        sorunlar.push(`rozet: ada girilince ${JSON.stringify(ikinci)} — beklenen "EİDS eksik (5)"`)
+
+      // Yayındaki ilanda rozet olmamalı — varsa tohum verisinden.
+      await git(
+        sekme,
+        '/admin/collections/ilanlar?limit=100',
+        `document.querySelector('.ilan-durum-hucre') !== null`,
+      )
+      const yayindaRozet = await sekme.deger(
+        `[...document.querySelectorAll('.ilan-durum-hucre')].filter((h) => /^(Yayında|Rezerve)/.test(h.textContent.trim()) && h.querySelector('.ilan-durum-rozet')).length`,
+      )
+      const yayindaSayisi = await sekme.deger(
+        `[...document.querySelectorAll('.ilan-durum-hucre')].filter((h) => /^(Yayında|Rezerve)/.test(h.textContent.trim())).length`,
+      )
+      if (yayindaRozet > 0)
+        sorunlar.push(`rozet: ${yayindaRozet} yayındaki/rezerve ilanda rozet var`)
+      if (yayindaSayisi === 0)
+        bilgi.push('yayında ilan yok — "yayında rozet yok" iddiası denenemedi')
+    })
+
+    // ── 4. EİDS sayacı, iyelik eki, sihirbaz kontrastı ───────────────────
+    await sekmeyleCalis(async (sekme) => {
+      const hazir = await git(
+        sekme,
+        '/admin/portfoy-sihirbazi',
+        `document.querySelectorAll('.sihirbaz-adimlar li').length > 3`,
+      )
+      if (!hazir) return void sorunlar.push('sihirbaz açılmadı')
+
+      // Adım göstergesi kontrastı — ilk adımdayken (etkin + bekleyen hâller)
+      const adim = await temadaOlc(
+        sekme,
+        `({ etkin: o.metin('.sihirbaz-adimlar button.etkin .sihirbaz-adim-ad'), bekleyen: o.metin('.sihirbaz-adimlar button:not(.etkin):not(.tamam) .sihirbaz-adim-ad'), bekleyenNo: o.metin('.sihirbaz-adimlar button:not(.etkin):not(.tamam) .sihirbaz-adim-no'), ilerleme: o.metin('.sihirbaz-ilerleme-metin') })`,
+      )
+      for (const parca of ['etkin', 'bekleyen', 'bekleyenNo', 'ilerleme']) {
+        kontrastDenetle(`adım göstergesi/${parca}`, {
+          light: adim.light?.[parca] ?? null,
+          dark: adim.dark?.[parca] ?? null,
+        })
+      }
+
+      await sekme.deger(`document.querySelectorAll('.sihirbaz-adimlar button')[1]?.click()`)
+      if (
+        !(await sekme.kosulBekle(
+          `[...document.querySelectorAll('label')].some((l) => l.textContent.trim().startsWith('Parsel'))`,
+        ))
+      ) {
+        return void sorunlar.push('sihirbaz: Tapu ve EİDS adımı açılmadı')
+      }
+      const sayac = () =>
+        sekme.deger(
+          `(() => { const c = document.querySelector('.sihirbaz-eids-cubuk'); return { ozet: document.querySelector('.sihirbaz-eids-sayac > span')?.textContent.trim() ?? null, simdi: c?.getAttribute('aria-valuenow') ?? null, eksik: document.querySelectorAll('.sihirbaz-eids-liste:not(.uyari) li').length } })()`,
+        )
+      const bekle = async (adimAdi, beklenen) => {
+        const tuttu = await sekme.kosulBekle(
+          `document.querySelector('.sihirbaz-eids-sayac > span')?.textContent.trim() === ${JSON.stringify(beklenen.ozet)}`,
+          6000,
+        )
+        const gorulen = await sayac()
+        if (!tuttu || gorulen.simdi !== beklenen.simdi || gorulen.eksik !== beklenen.eksik) {
+          sorunlar.push(
+            `sayaç (${adimAdi}): ${JSON.stringify(gorulen)} — beklenen ${JSON.stringify(beklenen)}`,
+          )
+        }
+      }
+
+      await bekle('boş', { ozet: 'EİDS: 6 eksikten 0’ı tamamlandı', simdi: '0', eksik: 6 })
+
+      const bugun = new Date()
+      const gun = (fark) => new Date(bugun.getTime() + fark * 86_400_000).toISOString().slice(0, 10)
+      const adimlar = [
+        ['Ada', '1847', { ozet: 'EİDS: 6 eksikten 1’i tamamlandı', simdi: '1', eksik: 5 }],
+        ['Parsel', '12', { ozet: 'EİDS: 6 eksikten 2’si tamamlandı', simdi: '2', eksik: 4 }],
+        [
+          'Taşınmaz numarası',
+          '1234567',
+          { ozet: 'EİDS: 6 eksikten 3’ü tamamlandı', simdi: '3', eksik: 3 },
+        ],
+      ]
+      for (const [etiket, metin, beklenen] of adimlar) {
+        const secici = await sekme.deger(etiketliGirdi(etiket))
+        if (!secici || !(await klavyeyleYaz(sekme, secici, metin))) {
+          sorunlar.push(`sihirbaz: "${etiket}" kutusuna yazılamadı`)
+          continue
+        }
+        await bekle(etiket, beklenen)
+      }
+      await degerVer(sekme, 'EİDS yetki durumu', 'yetkili')
+      await bekle('yetki durumu', { ozet: 'EİDS: 6 eksikten 4’ü tamamlandı', simdi: '4', eksik: 2 })
+      await degerVer(sekme, 'Yetki başlangıcı', gun(-1))
+      await bekle('yetki başlangıcı', {
+        ozet: 'EİDS: 6 eksikten 5’i tamamlandı',
+        simdi: '5',
+        eksik: 1,
+      })
+
+      // Çubuk ve metin kontrastı — eksik varken (panel "eksik" zemininde)
+      const eids = await temadaOlc(
+        sekme,
+        `({ cubuk: o.cubuk('.sihirbaz-eids-cubuk'), sayac: o.metin('.sihirbaz-eids-sayac > span'), kaynak: o.metin('.sihirbaz-eids-kaynak'), ipucu: o.metin('.sihirbaz-ipucu') })`,
+      )
+      for (const parca of ['sayac', 'kaynak', 'ipucu']) {
+        kontrastDenetle(`sihirbaz/${parca}`, {
+          light: eids.light?.[parca] ?? null,
+          dark: eids.dark?.[parca] ?? null,
+        })
+      }
+      for (const tema of ['light', 'dark']) {
+        const c = eids[tema]?.cubuk
+        if (!c) sorunlar.push(`kontrast ilerleme çubuğu (${tema}): öğe bulunamadı`)
+        else {
+          if (c.dolguIz < 3)
+            sorunlar.push(`kontrast ilerleme çubuğu dolgu–iz (${tema}): ${c.dolguIz}:1 < 3:1`)
+          if (c.cerceveZemin < 3)
+            sorunlar.push(
+              `kontrast ilerleme çubuğu çerçeve–zemin (${tema}): ${c.cerceveZemin}:1 < 3:1`,
+            )
+        }
+      }
+
+      await degerVer(sekme, 'Yetki bitişi', gun(200))
+      await bekle('yetki bitişi', {
+        ozet: 'EİDS: 6 koşulun hepsi tamamlandı',
+        simdi: '6',
+        eksik: 0,
+      })
+    })
+  } finally {
+    await api(`/api/ilanlar/${ilanId}`, 'DELETE')
+    if (geciciMahalle !== null) await api(`/api/mahalleler/${geciciMahalle}`, 'DELETE')
+  }
+
+  for (const b of bilgi) console.log(`  ℹ ${b}`)
+  return { etiket: 'panel davranışı', sorunlar }
+}
+
 /** Panel oturumu: REST ile giriş yap, çerezi tarayıcıya taşı. */
 async function panelCerezi() {
   const yanit = await fetch(`${TABAN}/api/kullanicilar/login`, {
@@ -817,22 +1313,40 @@ async function panelCerezi() {
    ÇALIŞTIR
    ══════════════════════════════════════════════════════════════════════ */
 
-const genel = SADECE === 'panel' ? [] : await genelRotalar()
-const panel = SADECE === 'genel' ? [] : panelRotalari()
+const genel = SADECE === 'panel' || SADECE === 'davranis' ? [] : await genelRotalar()
+const panel = SADECE === 'genel' || SADECE === 'davranis' ? [] : panelRotalari()
+const davranis = SADECE !== 'genel'
 
 console.log(`Taban: ${TABAN}`)
-console.log(`Genel rota: ${genel.length} · Panel rotası: ${panel.length}\n`)
+console.log(
+  `Genel rota: ${genel.length} · Panel rotası: ${panel.length} · Panel davranışı: ${davranis ? 'evet' : 'hayır'}\n`,
+)
 
 const { wsAdresi, kapat } = await tarayiciyaBaglan()
 let hataliMi = false
 
-const raporla = ({ etiket, sorunlar, tiklanan, tiklanamayan }) => {
+/**
+ * ⚠️ HER TURUN SÜRESİ YAZILIYOR. Panel davranışı turu eklendiğinde CI
+ * süresinin ne kadar uzadığı ölçülmek zorundaydı; tahmin değil. Toplam
+ * 15 dakikayı aşarsa turlar paralelleştirilmeli (her tur kendi sekmesini
+ * açıyor, ortak durum yok).
+ */
+const baslangic = Date.now()
+const sureYaz = (ms) => `${Math.round(ms / 1000)} sn`
+const zamanla = async (is) => {
+  const t0 = Date.now()
+  const sonuc = await is()
+  return { ...sonuc, sure: Date.now() - t0 }
+}
+
+const raporla = ({ etiket, sorunlar, tiklanan, tiklanamayan, sure }) => {
+  const zaman = sure === undefined ? '' : ` (${sureYaz(sure)})`
   if (sorunlar.length === 0) {
     const ek = tiklanan === undefined ? '' : ` · ${tiklanan} bağlantı klavyeyle açıldı`
-    console.log(`✓ ${etiket.padEnd(14)} — sorun yok${ek}`)
+    console.log(`✓ ${etiket.padEnd(16)} — sorun yok${ek}${zaman}`)
   } else {
     hataliMi = true
-    console.error(`✗ ${etiket.padEnd(14)} — ${sorunlar.length} sorun:`)
+    console.error(`✗ ${etiket.padEnd(16)} — ${sorunlar.length} sorun${zaman}:`)
     for (const s of sorunlar) console.error(`    · ${s}`)
   }
   /**
@@ -850,18 +1364,18 @@ const raporla = ({ etiket, sorunlar, tiklanan, tiklanamayan }) => {
 
 try {
   if (genel.length > 0) {
-    raporla(await genelTur(wsAdresi, genel, { azHareket: false }))
-    raporla(await genelTur(wsAdresi, genel, { azHareket: true }))
+    raporla(await zamanla(() => genelTur(wsAdresi, genel, { azHareket: false })))
+    raporla(await zamanla(() => genelTur(wsAdresi, genel, { azHareket: true })))
   }
 
-  if (panel.length > 0) {
+  if (panel.length > 0 || davranis) {
     if (!EPOSTA || !SIFRE) {
       /**
        * ⚠️ ATLAMA SESSİZ OLAMAZ. Panel rotalarını oturumsuz açmak "200
        * döndü, geçti" derdi — 27 Ağustos arızası tam olarak buydu.
        */
       console.error(
-        `✗ panel          — ${panel.length} rota DENENMEDİ: --eposta ve --sifre verilmedi.\n` +
+        `✗ panel            — ${panel.length} rota ve panel davranışı DENENMEDİ: --eposta ve --sifre verilmedi.\n` +
           '    Oturumsuz panel rotaları 200 döner ama gövde boş gelir; "geçti" demek yanlış olurdu.',
       )
       hataliMi = true
@@ -873,7 +1387,8 @@ try {
        * var. Panel `(payload)` düzeninde ve o kodun hiçbirini yüklemiyor —
        * ikinci kip aynı yolu ikinci kez koşmak olurdu.
        */
-      raporla(await panelTuru(wsAdresi, panel, cerez))
+      if (panel.length > 0) raporla(await zamanla(() => panelTuru(wsAdresi, panel, cerez)))
+      if (davranis) raporla(await zamanla(() => davranisTuru(wsAdresi, cerez)))
     }
   }
 } finally {
@@ -881,6 +1396,7 @@ try {
 }
 
 if (hataliMi) {
+  console.error(`\nToplam süre: ${sureYaz(Date.now() - baslangic)}`)
   console.error(
     '\nGezinme kırık. Sunucu 200 dönüyor olabilir; "200" bir sayfanın açıldığını\n' +
       'kanıtlamıyor — bu betiğin başındaki iki arıza da 200 dönüyordu.',
@@ -893,4 +1409,5 @@ if (UCUNCU_TARAF.size > 0) {
   for (const m of UCUNCU_TARAF) console.log(`    · ${m.slice(0, 120)}`)
 }
 
+console.log(`\nToplam süre: ${sureYaz(Date.now() - baslangic)}`)
 console.log('\nGezinme sağlam.')

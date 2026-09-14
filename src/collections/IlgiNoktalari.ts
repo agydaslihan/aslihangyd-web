@@ -110,6 +110,7 @@ export const IlgiNoktalari: CollectionConfig = {
       label: 'Konum',
       required: true,
       admin: {
+        components: { Field: '@/components/panel/KonumAlani#default' },
         description: 'Haritadan seçin veya koordinat girin. Mesafe hesapları bu noktayı kullanır.',
       },
     },

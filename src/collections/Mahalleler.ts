@@ -387,7 +387,10 @@ export const Mahalleler: CollectionConfig = {
               name: 'merkez',
               type: 'point',
               label: 'Mahalle merkezi',
-              admin: { description: 'Haritanın odaklanacağı nokta.' },
+              admin: {
+                description: 'Haritanın odaklanacağı nokta.',
+                components: { Field: '@/components/panel/KonumAlani#default' },
+              },
             },
             {
               name: 'sinir',

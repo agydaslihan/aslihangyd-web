@@ -103,14 +103,27 @@ const parcaDizini = path.join(KOK, '.next', 'static', 'chunks')
  *
  * Adres kodda `` `/maplibre/${getVersion()}/…` `` biçiminde kuruluyor;
  * küçültücü sürümü bir değişkene alıyor ve çıktıda çözülmüş dizge
- * bulunmuyor:
+ * bulunmuyor. Çözülmüş adresi arayan bir denetim, ÇALIŞAN derlemede
+ * kırmızı verirdi — ve o yanlış alarm ilk hafta kapatılırdı.
+ *
+ * ⚠️ İKİ BİÇİM DE GEÇERLİ — 14 Eylül 2026'da CI çıktısından ölçüldü.
+ *
+ * Kurulum `Harita3B` içindeyken küçültücü MapLibre'nin tek satırlık
+ * `setWorkerUrl`ini çağrı yerine açıyordu:
  *
  *     t$.WORKER_URL = `/maplibre/${cR}/maplibre-gl-worker.mjs`
  *
- * Çözülmüş adresi arayan bir denetim, ÇALIŞAN derlemede kırmızı verirdi —
- * ve o yanlış alarm ilk hafta kapatılırdı.
+ * Kurulum `lib/harita/workerAdresi.ts`e taşınınca modül sınırı açmayı
+ * durdurdu; çıktı ÇAĞRI olarak kalıyor ve fonksiyonun gövdesi aynı parçada:
+ *
+ *     (0,i.setWorkerUrl)(`/maplibre/${(0,i.getVersion)()}/maplibre-gl-worker.mjs`)
+ *     "setWorkerUrl",0,function(t){tB.WORKER_URL=t}
+ *
+ * Yalnızca ilk biçimi arayan denetim, çalışan derlemede iki CI koşumunda
+ * kırmızı verdi (#114, #115). Aranan şey değişmedi: adres paketlemeden
+ * SAĞ ÇIKTI mı. Hiçbir biçim yoksa çağrı gerçekten düşmüştür.
  */
-const ATAMA_DESENI = /WORKER_URL\s*=\s*[`"']\/maplibre\//
+const ATAMA_DESENI = /(?:WORKER_URL\s*=\s*|setWorkerUrl\)?\(\s*)[`"']\/maplibre\//
 
 if (!existsSync(parcaDizini)) {
   kaldi('.next/static/chunks yok — önce `pnpm build` çalıştırın.')
@@ -119,8 +132,29 @@ if (!existsSync(parcaDizini)) {
   const bulunan = parcalar.some((ad) =>
     ATAMA_DESENI.test(readFileSync(path.join(parcaDizini, ad), 'utf8')),
   )
+  /**
+   * ⚠️ TEŞHİS — 14 Eylül 2026. Worker kurulumu `Harita3B`den ayrı bir
+   * modüle (`lib/harita/workerAdresi.ts`) taşındıktan sonra bu denetim CI'da
+   * iki kez kırıldı. İki ihtimal var ve yalnızca çıktıya bakarak ayrılıyor:
+   * çağrı paketlemede DÜŞTÜ (harita kırık) ya da küçültücü fonksiyonu artık
+   * satır içine açmıyor ve atama `setWorkerUrl(\`/maplibre/…\`)` çağrısı
+   * olarak duruyor (denetim yanlış). Adresin geçtiği her yer basılıyor.
+   */
+  const izler = []
+  for (const ad of parcalar) {
+    const metin = readFileSync(path.join(parcaDizini, ad), 'utf8')
+    for (const eslesme of metin.matchAll(/maplibre-gl-worker\.mjs/g)) {
+      const bas = Math.max(0, (eslesme.index ?? 0) - 160)
+      izler.push(`${ad}: …${metin.slice(bas, (eslesme.index ?? 0) + 30).replace(/\s+/g, ' ')}…`)
+    }
+  }
+  console.log(`  ℹ derleme çıktısında "maplibre-gl-worker.mjs" geçen yer: ${izler.length}`)
+  for (const iz of izler.slice(0, 4)) console.log(`    ${iz}`)
+
   if (bulunan) {
-    gecti('yerel derleme çıktısı worker adresini atıyor (WORKER_URL = /maplibre/…)')
+    gecti(
+      'yerel derleme çıktısı worker adresini kuruyor (WORKER_URL = /maplibre/… ya da setWorkerUrl(`/maplibre/…`))',
+    )
   } else {
     kaldi(
       'Yerel derleme çıktısının (.next) hiçbir yerinde WORKER_URL ataması yok. ' +

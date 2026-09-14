@@ -1,6 +1,6 @@
 'use client'
 
-import type { EidsDegerlendirmesi } from '@/lib/eids'
+import type { EidsDegerlendirmesi, EidsIlerlemesi } from '@/lib/eids'
 
 /**
  * EİDS hazırlık paneli — sihirbazın asıl kazancı.
@@ -23,13 +23,39 @@ import type { EidsDegerlendirmesi } from '@/lib/eids'
  * kalır.
  * ─────────────────────────────────────────────────────────────────────────
  */
-export function EidsHazirlikPaneli({ degerlendirme }: { degerlendirme: EidsDegerlendirmesi }) {
-  const { yayinlanabilir, engeller, uyarilar, kalanGun } = degerlendirme
+export function EidsHazirlikPaneli({
+  degerlendirme,
+  ilerleme,
+}: {
+  degerlendirme: EidsDegerlendirmesi
+  ilerleme: EidsIlerlemesi
+}) {
+  const { yayinlanabilir, uyarilar, kalanGun } = degerlendirme
 
   return (
     <div className={`sihirbaz-eids ${yayinlanabilir ? 'hazir' : 'eksik'}`}>
       <p className="sihirbaz-eids-durum">
         {yayinlanabilir ? 'EİDS koşulları sağlanıyor' : 'İlan henüz yayına alınamaz'}
+      </p>
+
+      {/*
+        ⚠️ SAYAÇ VE ÇUBUK — ne kadar yol alındığını GÖSTERİYOR.
+        Önceden liste hiç kısalmıyordu: altı engel tek seferde çıkıyor,
+        biri doldurulunca beşi kalıyordu ama kullanıcı ilerlediğini
+        göremiyordu. Sayı, aynı bilgiyi ilerleme olarak okutuyor.
+      */}
+      <p className="sihirbaz-eids-sayac">
+        <span>{ilerleme.ozet}</span>
+        <span
+          className="sihirbaz-eids-cubuk"
+          role="progressbar"
+          aria-valuenow={ilerleme.tamamlanan}
+          aria-valuemin={0}
+          aria-valuemax={ilerleme.toplam}
+          aria-label="EİDS koşulları"
+        >
+          <span style={{ width: `${(ilerleme.tamamlanan / ilerleme.toplam) * 100}%` }} />
+        </span>
       </p>
 
       <p className="sihirbaz-eids-aciklama">
@@ -45,10 +71,18 @@ export function EidsHazirlikPaneli({ degerlendirme }: { degerlendirme: EidsDeger
         )}
       </p>
 
-      {engeller.length > 0 ? (
+      {/*
+        ⚠️ HER EKSİĞİN YANINDA KAYNAĞI. "Taşınmaz numarası gerekli" demek,
+        onu nereden bulacağını bilmeyen birine hiçbir şey söylemiyor.
+        Kaynak metni `lib/eids/ilerleme.ts` içinde, kuralın yanında duruyor.
+      */}
+      {ilerleme.eksikler.length > 0 ? (
         <ul className="sihirbaz-eids-liste">
-          {engeller.map((engel) => (
-            <li key={engel.kod}>{engel.mesaj}</li>
+          {ilerleme.eksikler.map((eksik) => (
+            <li key={eksik.anahtar}>
+              <strong>{eksik.etiket}</strong> — {eksik.mesaj}
+              <span className="sihirbaz-eids-kaynak">{eksik.kaynak}</span>
+            </li>
           ))}
         </ul>
       ) : null}

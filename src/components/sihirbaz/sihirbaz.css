@@ -43,12 +43,18 @@
   border-radius: 4px;
 }
 
+/*
+  ⚠️ Bekleyen adım `elevation-600` — `500` DEĞİL. `500` iki temada da aynı
+  gri (rgb 128): açık temada beyaz üstünde 3,95:1, koyu temada panel
+  zemininde ~4,0:1 — AA'nın altı. `600` açıkta 5,9:1, koyuda 7,8:1.
+  Gerçek tarayıcıda `scripts/gezinme-dumani.mjs` ölçüyor.
+*/
 .sihirbaz-adimlar li {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8125rem;
-  color: var(--theme-elevation-500, #888);
+  color: var(--theme-elevation-600, #666);
 }
 
 .sihirbaz-adimlar li button.etkin {
@@ -209,7 +215,8 @@ textarea.sihirbaz-girdi {
 }
 
 .sihirbaz-ipucu {
-  color: var(--theme-elevation-500, #888);
+  /* ⚠️ Kaynak metinleri burada çiziliyor — `500` AA'nın altında (3,95:1). */
+  color: var(--theme-elevation-600, #666);
 }
 
 .sihirbaz-hata {
@@ -435,7 +442,8 @@ textarea.sihirbaz-girdi {
 
 .sihirbaz-adim-yuzde {
   font-size: 0.72rem;
-  color: var(--theme-elevation-500);
+  /* ⚠️ `500` AA'nın altında — bekleyen adımla aynı gerekçe. */
+  color: var(--theme-elevation-600);
   font-variant-numeric: tabular-nums;
 }
 
@@ -841,4 +849,88 @@ textarea.sihirbaz-girdi {
   font-size: 0.85rem;
   color: var(--theme-elevation-600);
   max-width: 46ch;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   Koordinat girişi
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/*
+  ⚠️ Sıra ENLEM ÖNCE — panelle aynı. İki ekranda iki farklı sıralama,
+  düzeltilmek istenen hatanın ta kendisini üretirdi.
+*/
+.sihirbaz-konum-kutular {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.75rem;
+}
+
+.sihirbaz-konum-uyari {
+  display: flex;
+  gap: 0.625rem;
+  align-items: flex-start;
+  margin: 0.5rem 0 0.75rem;
+  padding: 0.75rem 0.875rem;
+  border-radius: 6px;
+  border: 1px solid var(--theme-warning-250, var(--theme-elevation-150));
+  background: var(--theme-warning-50, var(--theme-elevation-50));
+  font-size: 0.875rem;
+  line-height: 1.5;
+}
+
+.sihirbaz-konum-uyari p {
+  margin: 0 0 0.5rem;
+}
+
+/* ── EİDS ilerleme sayacı ────────────────────────────────────────────── */
+
+.sihirbaz-eids-sayac {
+  display: flex;
+  flex-direction: column;
+  gap: 0.375rem;
+  margin: 0.5rem 0 0.75rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+}
+
+/*
+  ⚠️ Çubuk tek taşıyıcı DEĞİL (WCAG 1.4.1): yanındaki metin aynı bilgiyi
+  sayıyla veriyor ve `role="progressbar"` ekran okuyucuya anlatıyor.
+
+  ⚠️ İZ ZEMİN RENGİNDE + ÇERÇEVE (WCAG 1.4.11, 3:1). İlk hâlinde iz
+  `elevation-150` idi ve dolguyla farkı açık temada 2,97:1, koyuda
+  2,73:1 kalıyordu — dolgunun nerede bittiği okunmuyordu. Şimdi dolgu–iz
+  açıkta 4,0:1, koyuda 4,6:1; çerçeve–panel zemini iki temada da 5:1'in
+  üstünde, yani çubuğun toplam uzunluğu da görünüyor.
+*/
+.sihirbaz-eids-cubuk {
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--theme-elevation-600);
+  background: var(--theme-elevation-0);
+  overflow: hidden;
+}
+
+.sihirbaz-eids-cubuk > span {
+  display: block;
+  height: 100%;
+  background: var(--theme-success-500);
+  transition: width 180ms ease-out;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sihirbaz-eids-cubuk > span {
+    transition: none;
+  }
+}
+
+/* Eksiğin nereden bulunacağı — mesajın altında, sönük. */
+.sihirbaz-eids-kaynak {
+  display: block;
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  font-weight: 400;
+  color: var(--theme-elevation-600);
 }

@@ -71,14 +71,23 @@ describe('durum alanı istemciden gelmiyor', () => {
 
 describe('adımlar ve şartname karşılığı', () => {
   /**
-   * ⚠️ Şartname sekiz adım sayıyor. Bir adımın sessizce düşmesi, o adıma
-   * ait alanların panelde hiç doldurulamaması demek.
+   * ⚠️ Bir adımın sessizce düşmesi, o adıma ait alanların panelde hiç
+   * doldurulamaması demek. Liste tam olarak bu yüzden kilitli.
+   *
+   * ⚠️ SIRA 13 EYLÜL 2026'DA DEĞİŞTİ: `tapu` üçüncüden İKİNCİYE alındı.
+   * Önceden ilan baştan sona dolduruluyor, sonda altı EİDS eksiği birden
+   * görünüyordu. Yetki belgesi mülk sahibinden e-Devlet üzerinden geliyor
+   * ve dakikalar içinde halledilmiyor; engeli sonda görmek, yapılan işin
+   * boşa gitmesi demekti.
+   *
+   * ⚠️ Kategoriden SONRA kalmak zorunda: kategori sonraki adımların ne
+   * soracağını belirliyor, arsa ile daire aynı tapu alanlarını istemiyor.
    */
-  it('adım sırası şartnamedeki gibi — dokuz adım', () => {
+  it('adım sırası — EİDS ikinci, toplam on adım', () => {
     expect(ADIMLAR.map((a) => a.anahtar)).toEqual([
       'kategori',
-      'temel',
       'tapu',
+      'temel',
       'nitelikler',
       'fiyat',
       'gorseller',

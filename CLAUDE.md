@@ -254,7 +254,45 @@ Commit: Conventional Commits, açıklama Türkçe
 main'e doğrudan push YOK — PR üzerinden
 
 ## Her fazın sonunda
-pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
+pnpm typecheck && pnpm lint && pnpm test → hepsi temiz (sunucuda)
+pnpm build → CI'da, PR üzerinden (sunucuda DEĞİL — aşağıya bak)
+
+## ⚠️ Üretim sunucusunda derleme YAPILMAZ
+Geliştirme dizini (`/home/agydadmin/projects/aslihangyd-web`) ile canlı
+site AYNI makinede: 3,3 GB RAM, üretim kapları `/srv/aslihangyd/app`.
+14 Eylül 2026'da sunucuda ikinci `pnpm build` belleği tüketti ve işletim
+sistemi derlemeyi durdurdu; canlı site aynı belleği paylaşıyordu.
+
+- Üretim sunucusunda `pnpm build` çalıştırılmaz
+- Derleme CI'da yapılır, sunucu yalnızca hazır imajı çeker
+- typecheck, lint, test sunucuda koşabilir (hafif)
+- Tarayıcı doğrulaması gerekiyorsa geliştirme veritabanına karşı
+  `NODE_ENV=test` ile
+  ⚠️ `next start` HAZIR bir `.next` derlemesi ister ve o derleme sunucuda
+  üretilmiyor. KARAR (14 Eylül 2026): tarayıcı doğrulaması CI'da,
+  `scripts/gezinme-dumani.mjs` içinde. Hazır derlemeyi sunucuya indirmek
+  REDDEDİLDİ — canlı siteyle aynı makinede ikinci uygulama koşturmak,
+  kaçınılan riskin başka biçimi; CI doğrulaması ise her PR'da tekrarlanıyor
+  ve kayıt bırakıyor. Yeni bir panel davranışı doğrulanacaksa oraya tur
+  eklenir.
+
+⚠️ `.env.production` TUZAĞI: proje dizininde üretim ayarları duruyor ve
+`next start` (üretim kipi) onu `.env`'in ÜSTÜNE yükler — yerel sunucu
+üretim veritabanı adresiyle açılır. `NODE_ENV=test` iken `@next/env`
+`.env.production`'ı okumaz. Port 3000 üretim uygulamasınındır; yerel
+sunucu için başka port (örn. 3100).
+
+⚠️ Koruma kodda: `scripts/sunucu-korumasi.mjs`, `pnpm build` ve
+`pnpm start`ın İLK adımı. `/srv/aslihangyd` varsa derlemeyi,
+`.env.production` varken `NODE_ENV=test` verilmemişse başlatmayı reddeder.
+`src/lib/olcum/sunucuKorumasi.test.ts` ile denetleniyor. Docker imajı
+etkilenmez (`docker build` işaret dizinini görmez, kap `node server.js`
+ile başlar). `npx next build` doğrudan çağrılırsa koruma ATLANIR —
+çağırma. Muafiyet bayrağı ekleme.
+
+⚠️ Üretim veritabanına yazma bu oturumlardan yapılmaz: değişiklik koşullu,
+tek işlemlik SQL dosyası olarak hazırlanır, geliştirme veritabanında
+prova edilir ve Aslıhan sunucuda çalıştırır.
 
 ## Teknik borç (kapatılacak)
 - [x] ~~`vitest.config.ts` içindeki `passWithNoTests: true`~~ — Faz 1.4'te
@@ -272,9 +310,12 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
       atlanamadığını gösterir. `pnpm test` ikisini de çalıştırır ve
       `DATABASE_URI` ister.
 - `scripts/gezinme-dumani.mjs` — **gerçek tarayıcıda** gezinme dumanı.
-      CI'da her PR'da koşar ve ENGELLEYİCİDİR. Üç rotaya gerçek fare
+      CI'da her PR'da koşar ve ENGELLEYİCİDİR. Rotalara gerçek fare
       olaylarıyla tıklar; sayfa açıldı mı, başlık dolu mu, yakalanmamış
-      istisna var mı diye bakar.
+      istisna var mı diye bakar. Dördüncü tur **panel davranışı**: koordinat
+      alanına gerçek klavyeyle yazar, EİDS sayacını ve rozeti izler, çizilen
+      kontrastı iki temada ölçer. Tur süreleri CI özetine yazılır; toplam
+      15 dakikayı aşarsa uyarı düşer ve turlar paralelleştirilmelidir.
 
 ⚠️ Üçüncü katman 24 Ağustos 2026'da eklendi çünkü ilk ikisi bir
     KULLANILAMAZ SİTEYİ yeşil geçirdi: bütün rotalar 200, 101 test dosyası,

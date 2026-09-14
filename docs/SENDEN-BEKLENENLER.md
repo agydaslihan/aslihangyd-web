@@ -845,3 +845,26 @@ renkleri, yazı boyutlarını ve bileşenleri tek sayfada gösteriyor. Üretimde
 bu sayfa kapalı.
 
 **Logon hâlâ bekleniyor** — gelince yerleştiririm.
+
+### 9. TKGM Parsel Sorgu — "ticari amaçla kullanılması yasaktır" ⬅️ *avukata sor*
+
+**Bağlam (14 Eylül 2026):** Ada/parsel için TKGM'den otomatik öneri
+araştırıldı. Meşru bir API **yok**: Parsel Sorgu'nun kullanım koşulları
+(V-1.0) madde 3 servislere izinsiz erişimi yasaklıyor; MEGSİS servisleri
+yalnızca protokolle "kurum, kuruluş ve belediyeler"e açık. Otomatik öneri
+yazılmadı. Scraping de yapılmadı (kural 6).
+
+**Açık soru:** Aynı koşulların madde 4'ü: *"Sorgulama sonucu sunulan bilgi
+ve belgeler bilgilendirme amaçlıdır. Resmi işlemlerde kullanılamaz. Ayrıca
+ticari amaçla kullanılması yasaktır."* Bir emlak işletmesinin Parsel
+Sorgu'ya bakıp ilana ada/parsel yazması bu kapsama giriyor mu?
+
+**Şu anki davranış:** Sihirbazda ve panelde "TKGM'de sorgula" düğmesi
+**yok**. Ada/parsel için kaynak olarak yalnızca tapu belgesi gösteriliyor.
+Avukat "sorun yok" derse düğme eklenir (koordinatı taşıyan bağlantı
+biçimi TKGM tarafından belgelenmemiş; eklemeden önce tarayıcıda denenecek).
+
+**İkinci karar (senin):** TKGM'ye protokol için yazılı soru sorulsun mu?
+İstersen metnini hazırlarım.
+
+**Aciliyet:** Beklemeli değil — tapu belgesi yolu bugün çalışıyor.

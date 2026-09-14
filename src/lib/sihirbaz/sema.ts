@@ -314,19 +314,35 @@ export const ADIMLAR = [
     sema: kategoriSemasi,
     alanlar: ['tip', 'kategori'],
   },
-  {
-    anahtar: 'temel',
-    baslik: 'Temel',
-    aciklama: 'Mahalle ve başlık.',
-    sema: temelSemasi,
-    alanlar: ['mahalle', 'baslik'],
-  },
+  /**
+   * ⚠️ EİDS ADIMI İKİNCİ SIRADA — ve bu sıra bilinçli.
+   *
+   * Önceden üçüncüydü ve akış yorucuydu: ilan baştan sona dolduruluyor,
+   * sonda altı eksik birden görünüyordu. Yayın engelini en başta görmek,
+   * sonda duvara çarpmaktan iyidir — özellikle engel kaldırılamaz
+   * cinstense (yetki belgesi mülk sahibinden geliyor, dakikalar içinde
+   * halledilmiyor).
+   *
+   * ⚠️ Kategoriden SONRA, çünkü kategori sonraki adımların ne soracağını
+   * belirliyor; arsa ile daire aynı tapu alanlarını istemiyor.
+   *
+   * ⚠️ Bu bir GEVŞETME DEĞİL. Alanların hiçbiri hâlâ zorunlu değil ve
+   * taslak her an kaydedilebiliyor; değişen tek şey eksiğin NE ZAMAN
+   * görüldüğü.
+   */
   {
     anahtar: 'tapu',
     baslik: 'Tapu ve EİDS',
     aciklama: 'Ada, parsel, taşınmaz numarası ve yetki tarihleri.',
     sema: tapuSemasi,
     alanlar: ['ada', 'parsel', 'tasinmazNo', 'eidsDurum', 'eidsYetkiBaslangic', 'eidsYetkiBitis'],
+  },
+  {
+    anahtar: 'temel',
+    baslik: 'Temel',
+    aciklama: 'Mahalle ve başlık.',
+    sema: temelSemasi,
+    alanlar: ['mahalle', 'baslik'],
   },
   {
     anahtar: 'nitelikler',
