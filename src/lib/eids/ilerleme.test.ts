@@ -27,7 +27,7 @@ describe('EİDS ilerlemesi', () => {
     expect(ilerleme.toplam).toBe(6)
     expect(ilerleme.tamamlanan).toBe(0)
     expect(ilerleme.eksikler).toHaveLength(6)
-    expect(ilerleme.ozet).toBe('EİDS: 6 eksikten 0’si tamamlandı')
+    expect(ilerleme.ozet).toBe('EİDS: 6 eksikten 0’ı tamamlandı')
   })
 
   it('tam girdide hiç eksik yok', () => {
@@ -53,6 +53,9 @@ describe('EİDS ilerlemesi', () => {
     ]
 
     expect(sayilar).toEqual([0, 1, 2, 3])
+    expect(eidsIlerlemesi({ ada: '1847', parsel: '12', tasinmazNo: '123' }, BUGUN).ozet).toBe(
+      'EİDS: 6 eksikten 3’ü tamamlandı',
+    )
   })
 
   /**

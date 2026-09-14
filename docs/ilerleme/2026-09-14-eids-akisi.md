@@ -118,3 +118,77 @@ birebir korundu, SRID 4326.
 
 ⚠️ Üretim veritabanına bu oturumdan yazma izni yok; sorgu Aslıhan
 tarafından sunucuda çalıştırılıyor.
+
+## Gerçek tarayıcıda ölçüm — iki hata yakaladı
+
+Derlenmiş uygulama `127.0.0.1:3100`'de, geliştirme veritabanına karşı,
+CDP üzerinden gerçek fare/klavye olaylarıyla denendi.
+
+### 1. Panel koordinat alanı yazılanı SİLİYORDU (13 Eylül işi)
+
+Yeni ilanda enlem kutusuna yazıp boylama geçince **enlem boşalıyordu**.
+
+Sebep: `KonumAlaniIstemci` metni `value` değişince tazeliyordu. Enlem tek
+başına yazılınca boylam boş olduğu için forma `null` gidiyor, `value`
+`undefined → null` değişiyor ve bileşen bunu "dışarıdan gelen değişiklik"
+sanıp iki kutuyu da sıfırlıyordu. Kayıtlı bir ilanda "41." yazmak da aynı
+yoldan iki kutuyu birden siliyordu.
+
+⚠️ 13 Eylül ölçümü bunu göremedi: değerler tek seferde ve boylam önce
+dolacak sırayla yazılmıştı. Kullanıcının gerçek yazma sırası (önce enlem —
+düzeltmenin ta kendisi) hiç denenmemişti.
+
+Düzeltme `TurkceSayiAlani`'nın kalıbı (sözleşme testi `dogrula.test.ts` içinde): metin yalnızca `initialValue`
+değişince (yükleme, kayıt sonrası) tazeleniyor. Harita tıklaması ve takas
+metni zaten kendileri yazıyor.
+
+### 2. Sayaç "0’si" yazıyordu
+
+Ek sabit `’si` idi; yalnızca 2 ve 7'de doğru. `lib/metin/iyelik.ts`
+sayının okunuşunun son kelimesine göre ek seçiyor: 0’ı, 1’i, 3’ü, 6’sı,
+40’ı.
+
+### Ölçülenler
+
+| Denetim | Sonuç |
+| --- | --- |
+| Sihirbaz adım sırası | Kategori → **Tapu ve EİDS** → Temel → … ✓ |
+| Sayaç | "EİDS: 6 eksikten 0’si tamamlandı" (→ hata 2), `role="progressbar"`, `aria-valuemax=6` ✓ |
+| Alan yanı kaynak — sihirbaz | altı alanın altısı ✓ |
+| Alan yanı kaynak — panel formu | ada, parsel, taşınmaz no, iki tarih ✓ |
+| Taslak düğmesi EİDS eksikken | `sessiz` sınıfı yok ✓ |
+| `1, 1` | yer tutucu uyarısı, takas düğmesi yok ✓ |
+| Ters değer | "karıştırmış olabilirsiniz" + takas düğmesi ✓ |
+| Gerçek koordinat (#4) | uyarı yok ✓ |
+| Kontrast (AA) — iki tema | sayaç 12,08 / 16,55 · kaynak metni 5,26 / 8,07 · eksik etiketi 8 / 10,73 · başlık 12,08 / 16,55 ✓ |
+
+## ⚠️ Yerel `next start` üretim ayarlarını yüklüyor
+
+Proje dizininde `.env.production` var ve `next start` (üretim kipi) onu
+`.env`'in ÜSTÜNE yüklüyor. İlk denemede uygulama `postgres` sunucusuna
+— üretim compose ağının adına — bağlanmaya çalıştı; kabuktan
+çözülemediği için üretime ulaşmadı.
+
+Yerel doğrulama `NODE_ENV=test pnpm start` ile yapıldı: `@next/env` test
+kipinde `.env.production`'ı hiç okumuyor. Bu makine üretim sunucusu da
+olduğu için yerel sunucunun hangi veritabanına bağlandığı her seferinde
+doğrulanmalı (duman kullanıcısıyla giriş yalnızca geliştirme
+veritabanında çalışır).
+
+## ⚠️ Tarayıcıda YENİDEN ölçülemeyenler
+
+İki düzeltmeden sonra ikinci derleme **sistem belleği azaldığı için
+durduruldu**. Bu makine aynı zamanda üretim sunucusu (3,3 GB RAM); üretim
+uygulaması ayakta kaldı (`healthy`, anasayfa 200), ama derleme burada
+tekrar denenmedi — canlı siteyi riske atmaya değmez.
+
+Bu yüzden şunlar yerelde gerçek tarayıcıda ölçülmedi, **CI'a kaldı**:
+
+- Panel koordinat alanında düzeltmenin tarayıcıdaki davranışı (kök neden
+  ve sözleşme testi var; tarayıcı tekrarı yok)
+- Liste rozetinin görünümü ve kontrastı (geliştirme veritabanında taslak
+  ilan yoktu; geçici ilanla ölçüm betiğin sonraki adımı çöktüğü için
+  yazdırılamadı — geçici ilan silindi, doğrulandı)
+- İlerleme çubuğunun grafik kontrastı (WCAG 1.4.11) ve yer tutucu uyarı
+  kutularının kontrastı
+- Derleme, gezinme dumanı, Lighthouse — CI iş akışları her PR'da koşuyor

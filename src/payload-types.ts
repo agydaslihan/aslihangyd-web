@@ -378,11 +378,11 @@ export interface Ilanlar {
    */
   konum?: [number, number] | null;
   /**
-   * Tapu bilgisi. Yayın için zorunludur (EİDS).
+   * Tapu belgenizde “Ada” satırında yazar. Yayın için zorunludur (EİDS).
    */
   ada?: string | null;
   /**
-   * Tapu bilgisi. Yayın için zorunludur (EİDS).
+   * Tapu belgenizde “Parsel” satırında yazar. Yayın için zorunludur (EİDS).
    */
   parsel?: string | null;
   tapuDurumu?: ('kat_mulkiyeti' | 'kat_irtifaki' | 'arsa_tapulu' | 'hisseli' | 'mustakil') | null;
@@ -391,12 +391,15 @@ export interface Ilanlar {
    */
   eidsDurum?: ('yetkili' | 'suresi_doldu' | 'yetkisiz' | 'tapusuz' | 'yabanci_malik') | null;
   /**
-   * İlan sayfasında "Doğrulanmış İlan" rozetiyle birlikte ziyaretçiye gösterilir.
+   * e-Devlet → Tapu Bilgileri ekranında görünür; yetki verildikten sonra TTBS → EİDS İlan Yayınlama İzinlerim ekranında da listelenir. İlan sayfasında "Doğrulanmış İlan" rozetiyle birlikte ziyaretçiye gösterilir.
    */
   tasinmazNo?: string | null;
+  /**
+   * Mülk sahibi e-Devlet’ten verir; yetkilendirmenin başladığı gün.
+   */
   eidsYetkiBaslangic?: string | null;
   /**
-   * Yetki en az 3 ay verilir. Süre dolduğunda ilan otomatik olarak yayından kaldırılır.
+   * Mülk sahibi e-Devlet’ten verir; süre en az 3 ay olmalı. TTBS → EİDS İlan Yayınlama İzinlerim ekranında da görünür. Süre dolduğunda ilan otomatik olarak yayından kaldırılır.
    */
   eidsYetkiBitis?: string | null;
   /**

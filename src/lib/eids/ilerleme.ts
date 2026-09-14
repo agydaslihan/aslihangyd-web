@@ -1,3 +1,5 @@
+import { sayiIyelik } from '@/lib/metin/iyelik'
+
 import { eidsDegerlendir } from './kurallar'
 import { EIDS_ENGEL_KODLARI, type EidsEngelKodu, type EidsGirdisi } from './types'
 
@@ -150,7 +152,8 @@ export function eidsIlerlemesi(girdi: EidsGirdisi, simdi: Date = new Date()): Ei
     ozet:
       eksikler.length === 0
         ? `EİDS: ${toplam} koşulun hepsi tamamlandı`
-        : `EİDS: ${toplam} eksikten ${tamamlanan}’si tamamlandı`,
+        : // ⚠️ Ek sayıya göre değişiyor: 0’ı, 1’i, 2’si, 3’ü, 6’sı.
+          `EİDS: ${toplam} eksikten ${sayiIyelik(tamamlanan)} tamamlandı`,
   }
 }
 
