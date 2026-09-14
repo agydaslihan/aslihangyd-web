@@ -254,7 +254,42 @@ Commit: Conventional Commits, açıklama Türkçe
 main'e doğrudan push YOK — PR üzerinden
 
 ## Her fazın sonunda
-pnpm typecheck && pnpm lint && pnpm test && pnpm build → hepsi temiz
+pnpm typecheck && pnpm lint && pnpm test → hepsi temiz (sunucuda)
+pnpm build → CI'da, PR üzerinden (sunucuda DEĞİL — aşağıya bak)
+
+## ⚠️ Üretim sunucusunda derleme YAPILMAZ
+Geliştirme dizini (`/home/agydadmin/projects/aslihangyd-web`) ile canlı
+site AYNI makinede: 3,3 GB RAM, üretim kapları `/srv/aslihangyd/app`.
+14 Eylül 2026'da sunucuda ikinci `pnpm build` belleği tüketti ve işletim
+sistemi derlemeyi durdurdu; canlı site aynı belleği paylaşıyordu.
+
+- Üretim sunucusunda `pnpm build` çalıştırılmaz
+- Derleme CI'da yapılır, sunucu yalnızca hazır imajı çeker
+- typecheck, lint, test sunucuda koşabilir (hafif)
+- Tarayıcı doğrulaması gerekiyorsa geliştirme veritabanına karşı
+  `NODE_ENV=test` ile
+  ⚠️ `next start` HAZIR bir `.next` derlemesi ister ve o derleme artık
+  sunucuda üretilmiyor. Derlemenin sunucuya nasıl geleceği henüz
+  kararlaştırılmadı (açık soru, 14 Eylül 2026) — o zamana kadar tarayıcı
+  doğrulaması CI'daki gezinme dumanı ve Lighthouse iş akışlarına kalır.
+
+⚠️ `.env.production` TUZAĞI: proje dizininde üretim ayarları duruyor ve
+`next start` (üretim kipi) onu `.env`'in ÜSTÜNE yükler — yerel sunucu
+üretim veritabanı adresiyle açılır. `NODE_ENV=test` iken `@next/env`
+`.env.production`'ı okumaz. Port 3000 üretim uygulamasınındır; yerel
+sunucu için başka port (örn. 3100).
+
+⚠️ Koruma kodda: `scripts/sunucu-korumasi.mjs`, `pnpm build` ve
+`pnpm start`ın İLK adımı. `/srv/aslihangyd` varsa derlemeyi,
+`.env.production` varken `NODE_ENV=test` verilmemişse başlatmayı reddeder.
+`src/lib/olcum/sunucuKorumasi.test.ts` ile denetleniyor. Docker imajı
+etkilenmez (`docker build` işaret dizinini görmez, kap `node server.js`
+ile başlar). `npx next build` doğrudan çağrılırsa koruma ATLANIR —
+çağırma. Muafiyet bayrağı ekleme.
+
+⚠️ Üretim veritabanına yazma bu oturumlardan yapılmaz: değişiklik koşullu,
+tek işlemlik SQL dosyası olarak hazırlanır, geliştirme veritabanında
+prova edilir ve Aslıhan sunucuda çalıştırır.
 
 ## Teknik borç (kapatılacak)
 - [x] ~~`vitest.config.ts` içindeki `passWithNoTests: true`~~ — Faz 1.4'te

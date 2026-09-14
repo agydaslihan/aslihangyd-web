@@ -192,3 +192,25 @@ Bu yüzden şunlar yerelde gerçek tarayıcıda ölçülmedi, **CI'a kaldı**:
 - İlerleme çubuğunun grafik kontrastı (WCAG 1.4.11) ve yer tutucu uyarı
   kutularının kontrastı
 - Derleme, gezinme dumanı, Lighthouse — CI iş akışları her PR'da koşuyor
+
+## Kalıcı kural: üretim sunucusunda derleme yok
+
+Yukarıdaki bellek olayından sonra (Aslıhan'ın kararıyla) CLAUDE.md'ye
+yazıldı ve koda bağlandı: `scripts/sunucu-korumasi.mjs`, `pnpm build` ve
+`pnpm start`ın ilk adımı.
+
+| Durum | Karar |
+| --- | --- |
+| `pnpm build`, `/srv/aslihangyd` var | ✗ reddedilir — `NODE_ENV=test` de açmaz |
+| `pnpm build`, CI / `docker build` | ✓ işaret dizini yok |
+| `pnpm start`, `.env.production` var, `NODE_ENV≠test` | ✗ reddedilir |
+| `NODE_ENV=test pnpm start` | ✓ `.env.production` okunmaz |
+
+Sunucuda ölçüldü: `pnpm build` derlemeye hiç başlamadan çıkış 1 verdi
+(15 sn zaman sınırıyla, `next build` süreci oluşmadı); `pnpm start` çıkış
+1, `NODE_ENV=test` ile çıkış 0.
+
+⚠️ `npx next build` doğrudan çağrılırsa koruma atlanır. `next.config.ts`
+içine faz denetimi eklemek bunu da kapatırdı, ama config yükleme yolu
+ancak derlemeyle doğrulanabiliyor ve derleme artık sunucuda yapılmıyor —
+yazılmadı.
