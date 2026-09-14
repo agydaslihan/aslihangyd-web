@@ -123,10 +123,12 @@ describe('ilk ekran CLS turu', () => {
 
   /** Yavaşlatmasız mobilde aynı kayma hiç görünmüyor (ölçüldü). */
   it('mobil 4× CPU ve Lighthouse ekranı; mobilde pointer yaması yok', () => {
-    expect(betik).toMatch(
+    // ⚠️ Boşluk normalleştiriliyor: prettier nesneyi satırlara bölünce tek satırlık desen kırıldı.
+    const duz = betik.replace(/\s+/g, ' ')
+    expect(duz).toMatch(
       /genislik: 412, yukseklik: 823, olcek: 1\.75, mobil: true \}, cpu: 4, isaretciYamasi: false/,
     )
-    expect(betik).toMatch(
+    expect(duz).toMatch(
       /genislik: 1350, yukseklik: 940, olcek: 1, mobil: false \}, cpu: 1, isaretciYamasi: true/,
     )
     expect(betik).toContain('Emulation.setCPUThrottlingRate')
