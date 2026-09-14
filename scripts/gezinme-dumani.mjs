@@ -995,14 +995,19 @@ async function davranisTuru(wsAdresi, cerez) {
       ) {
         return void sorunlar.push('koordinat kutuları bulunamadı (Konum ve tapu sekmesi)')
       }
-      await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.1')
-      await uyu(300)
+      if (!(await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.1'))) {
+        return void sorunlar.push('koordinat (yeni ilan): enlem kutusuna odaklanılamadı')
+      }
       await tabBas(sekme)
       const odak = await sekme.deger(`document.activeElement?.id ?? ''`)
       if (!String(odak).endsWith('-boylam'))
         sorunlar.push(`koordinat: Tab boylama geçmedi (odak: "${odak}")`)
       await sekme.S('Input.insertText', { text: '27.8' })
-      await uyu(500)
+      // Koşul bekle — sabit süre değil; ulaşılmazsa son hâl raporlanıyor.
+      await sekme.kosulBekle(
+        `JSON.stringify([...document.querySelectorAll('.konum-kutu input')].map((i) => i.value)) === '["41.1","27.8"]'`,
+        3000,
+      )
       const kutular = await sekme.deger(
         `[...document.querySelectorAll('.konum-kutu input')].map((i) => i.value)`,
       )
@@ -1031,14 +1036,50 @@ async function davranisTuru(wsAdresi, cerez) {
       ) {
         return void sorunlar.push('kayıtlı ilanın enlemi kutuya gelmedi')
       }
-      await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.')
-      await uyu(500)
-      const kutular = await sekme.deger(
-        `[...document.querySelectorAll('.konum-kutu input')].map((i) => i.value)`,
-      )
-      if (kutular?.[0] !== '41.' || kutular?.[1] !== String(ALIPASA.boylam)) {
+      if (!(await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.'))) {
+        return void sorunlar.push('koordinat (kayıtlı ilan): enlem kutusuna odaklanılamadı')
+      }
+
+      /**
+       * ⚠️ SABİT BEKLEME YOK, ZAMAN ÇİZELGESİ VAR. İlk CI koşumunda (#114)
+       * bu iddia 500 ms sonra kutuları `[]` — sayfada HİÇ kutu yok — buldu;
+       * aynı kod #115'te geçti. Kutular ya kısa süre kaybolup aynı değerle
+       * dönüyor (alan yeniden çiziliyor: test zamanlaması) ya da dönünce
+       * yazılan değer gitmiş oluyor (kod hatası). 3 sn boyunca 50 ms'de bir
+       * örnek alınıyor, iddia SON duruma bakıyor ve çizelge her koşumda
+       * günlüğe yazılıyor.
+       */
+      const beklenen = JSON.stringify(['41.', String(ALIPASA.boylam)])
+      const cizelge = await sekme.deger(`new Promise((bitir) => {
+        const ornekler = []
+        const t0 = performance.now()
+        const al = () => {
+          const imza = JSON.stringify([...document.querySelectorAll('.konum-kutu input')].map((i) => i.value))
+          const son = ornekler[ornekler.length - 1]
+          if (!son || son.imza !== imza) ornekler.push({ ms: Math.round(performance.now() - t0), imza })
+          if (performance.now() - t0 < 3000) setTimeout(al, 50)
+          else bitir(ornekler)
+        }
+        al()
+      })`)
+      const ozet = (cizelge ?? []).map((o) => `${o.ms}ms ${o.imza}`).join(' → ')
+      const son = cizelge?.[cizelge.length - 1]?.imza ?? 'null'
+      bilgi.push(`koordinat (kayıtlı ilan) "41." sonrası kutular: ${ozet}`)
+      // Kutular bir çökmeyle kayboluyorsa istisna burada görünür.
+      const istisnalar = sekme
+        .olaylariBosalt()
+        .filter((e) => e.method === 'Runtime.exceptionThrown')
+        .map(
+          (e) =>
+            (
+              e.params.exceptionDetails.exception?.description ?? e.params.exceptionDetails.text
+            ).split('\n')[0],
+        )
+      if (istisnalar.length > 0)
+        bilgi.push(`koordinat (kayıtlı ilan) istisnalar: ${istisnalar.join(' | ')}`)
+      if (son !== beklenen) {
         sorunlar.push(
-          `koordinat (kayıtlı ilan): "41." yazılınca kutular ${JSON.stringify(kutular)} — beklenen ["41.","${ALIPASA.boylam}"]`,
+          `koordinat (kayıtlı ilan): "41." yazıldıktan 3 sn sonra kutular ${son} — beklenen ${beklenen} · çizelge: ${ozet}`,
         )
       }
     })
