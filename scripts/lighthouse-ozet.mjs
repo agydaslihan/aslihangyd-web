@@ -45,7 +45,7 @@ import { join } from 'node:path'
  * ⚠️ Eşikler BU DOSYADA DEĞİL: `CLAUDE.md` ile ikizi tutulan tek kaynakta.
  * Buraya kopyalanmış bir sayı, şartname değiştiğinde sessizce eskir.
  */
-import { cihazEsikleri } from './lighthouse-esikleri.mjs'
+import { cihazEsikleri, ENGELLEYICI_KATEGORILER, kapiBulgulari } from './lighthouse-esikleri.mjs'
 
 /** Cihaz anahtarından başlık. Bilinmeyen anahtar olduğu gibi yazılır. */
 const CIHAZ_ADI = { masaustu: 'Masaüstü', mobil: 'Mobil' }
@@ -140,6 +140,9 @@ if (enAz === enCok) {
   )
 }
 
+/** Engelleyici kapı bulguları — özetin sonunda basılıyor, varsa çıkış 1. */
+const kapiSorunlari = []
+
 for (const cihaz of cihazlar) {
   const grup = [...gruplar.values()].filter((g) => g.cihaz === cihaz)
   if (cihaz) console.log(`### ${CIHAZ_ADI[cihaz] ?? cihaz}\n`)
@@ -149,6 +152,7 @@ for (const cihaz of cihazlar) {
 
   for (const { sayfa, raporlar } of grup.sort((a, b) => a.sayfa.localeCompare(b.sayfa))) {
     const cihazHedefi = cihazEsikleri(cihaz)
+    const kategoriMedyanlari = {}
     const hucreler = Object.keys(cihazHedefi).map((anahtar) => {
       const puanlar = raporlar
         .map((r) => r.categories?.[anahtar]?.score)
@@ -157,7 +161,14 @@ for (const cihaz of cihazlar) {
       if (puanlar.length === 0) return '—'
 
       const orta = Math.round(medyan(puanlar))
-      const isaret = orta >= cihazHedefi[anahtar] ? '✅' : '⚠️'
+      kategoriMedyanlari[anahtar] = orta
+      // ⚠️ Engelleyici kategoride eşik altı ❌ (koşu düşer); performansta ⚠️ (raporlayıcı).
+      const isaret =
+        orta >= cihazHedefi[anahtar]
+          ? '✅'
+          : ENGELLEYICI_KATEGORILER.includes(anahtar)
+            ? '❌'
+            : '⚠️'
       const dusuk = Math.min(...puanlar)
       const yuksek = Math.max(...puanlar)
       // Yayılım yalnızca gerçekten oynadıysa yazılıyor; her hücreye
@@ -166,12 +177,24 @@ for (const cihaz of cihazlar) {
       return `${isaret} ${orta}${yayilim}`
     })
     console.log(`| \`${sayfa}\` | ${hucreler.join(' | ')} |`)
+
+    const clsDegerleri = raporlar
+      .map((r) => r.audits?.['cumulative-layout-shift']?.numericValue)
+      .filter((d) => typeof d === 'number')
+    kapiSorunlari.push(
+      ...kapiBulgulari({
+        cihaz,
+        sayfa,
+        kategoriler: kategoriMedyanlari,
+        cls: clsDegerleri.length > 0 ? medyan(clsDegerleri) : undefined,
+      }),
+    )
   }
   console.log('')
 }
 
 console.log('### Core Web Vitals\n')
-console.log('| Cihaz | Sayfa | LCP (hedef < 2,5 sn) | CLS (hedef < 0,1) | TBT |')
+console.log('| Cihaz | Sayfa | LCP (hedef < 2,5 sn · raporlayıcı) | CLS (kapı: 0) | TBT |')
 console.log('| --- | --- | --- | --- | --- |')
 
 for (const cihaz of cihazlar) {
@@ -191,7 +214,7 @@ for (const cihaz of cihazlar) {
     console.log(
       `| ${CIHAZ_ADI[cihaz] ?? (cihaz || '—')} | \`${sayfa}\` | ` +
         `${olc('largest-contentful-paint', sn)} | ` +
-        `${olc('cumulative-layout-shift', ondalik)} | ` +
+        `${olc('cumulative-layout-shift', (v) => `${v > 0 ? '❌' : '✅'} ${ondalik(v)}`)} | ` +
         `${olc('total-blocking-time', ms)} |`,
     )
   }
@@ -342,3 +365,21 @@ console.log(
     '(hero ~72 kB, kart ~28 kB); metinler yer tutucu. Gerçek içerik ve ' +
     'fotoğraflar girdiğinde sayılar değişecektir.',
 )
+
+/**
+ * ⚠️ KAPI — BU BETİK ARTIK YALNIZCA RAPORLAMIYOR.
+ *
+ * Özet ÖNCE tamamen basılıyor (iş özetinde görünsün), sonra engelleyici
+ * bulgu varsa çıkış 1. Hangi ölçütün engelleyici olduğu ve neden:
+ * `scripts/lighthouse-esikleri.mjs` → ENGELLEYICI_KATEGORILER, CLS_ESIGI.
+ */
+console.log('\n### Engelleyici kapılar\n')
+if (kapiSorunlari.length === 0) {
+  console.log('✅ Erişilebilirlik, en iyi uygulamalar, SEO ve CLS (0) — hepsi geçti.')
+} else {
+  console.log(`❌ **${kapiSorunlari.length} kapı kırıldı:**\n`)
+  for (const sorun of kapiSorunlari) console.log(`- ${sorun}`)
+  // İş özetine gidiyor (stdout); günlükte de görünsün.
+  for (const sorun of kapiSorunlari) console.error(`::error title=Lighthouse kapısı::${sorun}`)
+  process.exit(1)
+}

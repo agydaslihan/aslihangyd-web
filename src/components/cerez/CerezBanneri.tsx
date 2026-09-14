@@ -52,9 +52,11 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
    * vitrini bant kadar kısaltmak — ortalanan içerik yukarı kayıyor ve
    * bandın üstünde kalıyor.
    *
-   * ⚠️ Yükseklik SABİT YAZILAMAZ: bant, "ayrıntılı" görünümde kategori
-   * satırlarıyla birlikte iki katına çıkıyor ve dar ekranda butonlar alt
-   * alta diziliyor. Ölçülen değer yayınlanıyor, tahmin edilen değil.
+   * ⚠️ KOMPAKT bandın yüksekliği `globals.css` içinde, genişliğe göre
+   * ÖLÇÜLMÜŞ sabitlerle geliyor — tarayıcıda sonradan ölçmek vitrini
+   * çizildikten sonra kısaltıyor ve CLS üretiyordu (14 Eylül 2026).
+   * "Ayrıntılı" görünüm kategori satırlarıyla iki katına çıkıyor; onu
+   * burada ölçüp yazıyoruz — oraya yalnızca tıklayarak geliniyor.
    * ───────────────────────────────────────────────────────────────────────
    */
   useEffect(() => {
@@ -66,33 +68,49 @@ export function CerezBanneri({ onayVar }: { onayVar: boolean }) {
       return
     }
 
+    /**
+     * ⚠️ AYRICA BİR DURUM BAYRAĞI — YALNIZCA YÜKSEKLİK YETMİYOR.
+     *
+     * Vitrini bant kadar kısaltmak, içeriği o boya sığdığı sürece çalışıyor.
+     * 1280×720'de sığmıyor: vitrinin kendi dikey boşluğu (py-24 = 192 px) ve
+     * kaydırma göstergesi, kalan 484 px'i tek başına aşıyor. Bayrak açıkken
+     * vitrin kendi boşluğunu da daraltıyor.
+     *
+     * ⚠️ Sayfa yüklenirken bayrak ZATEN VAR — sunucu `<html>`e koyuyor
+     * (`app/(site)/layout.tsx`). Buradaki atama yalnızca bant sonradan
+     * açıldığında (altbilgideki "Çerez tercihleri") iş görüyor; o da bir
+     * tıklamanın sonucu.
+     */
+    kok.dataset.cerezBandi = 'acik'
+
+    /**
+     * ⚠️ KOMPAKT HÂLDE ÖLÇÜLMÜYOR — YÜKSEKLİK CSS'TEN GELİYOR.
+     *
+     * Ölçüp yazmak hidrasyondan SONRA oluyordu ve vitrini çizildikten sonra
+     * kısaltıyordu: ana sayfa CLS 0,0876 (14 Eylül 2026). Kompakt bandın
+     * yüksekliği `globals.css` içinde genişliğe göre ölçülmüş sabitler.
+     *
+     * Ölçüm yalnızca "ayrıntılı" görünümde: oraya kullanıcı tıklayarak
+     * geliyor ve etkileşimden hemen sonraki kayma CLS'e sayılmıyor. Kategori
+     * satırları bandı iki katına çıkarıyor; sabit bir sayı yazılamaz.
+     */
+    if (!ayrintili) {
+      kok.style.removeProperty('--cerez-bandi-yuksekligi')
+      return
+    }
+
     const yaz = () => {
       // Kartın kendi yüksekliği + sarmalayıcının alt boşluğu.
       const yukseklik = Math.ceil(bant.getBoundingClientRect().height) + 32
       kok.style.setProperty('--cerez-bandi-yuksekligi', `${yukseklik}px`)
     }
     yaz()
-    /**
-     * ⚠️ AYRICA BİR DURUM BAYRAĞI — YALNIZCA YÜKSEKLİK YETMİYOR.
-     *
-     * Vitrini bant kadar kısaltmak, içeriği o boya sığdığı sürece çalışıyor.
-     * 1280×720'de sığmıyor: vitrinin kendi dikey boşluğu (py-24 = 192 px) ve
-     * kaydırma göstergesi, kalan 484 px'i tek başına aşıyor. Ölçüm bunu
-     * gösterdi — kısaltma sonrası 1440×900 düzeldi ama 1280×720 ve mobil
-     * hâlâ örtülüydü.
-     *
-     * Bayrak açıkken vitrin kendi boşluğunu da daraltıyor. Bant kapanınca
-     * her şey aynen geri geliyor; yani bu bir kalıcı tasarım değişikliği
-     * değil, bandın açık olduğu birkaç saniyeye ait bir uyarlama.
-     */
-    kok.dataset.cerezBandi = 'acik'
 
     const gozcu = new ResizeObserver(yaz)
     gozcu.observe(bant)
     return () => {
       gozcu.disconnect()
       kok.style.removeProperty('--cerez-bandi-yuksekligi')
-      delete kok.dataset.cerezBandi
     }
   }, [acik, ayrintili])
 

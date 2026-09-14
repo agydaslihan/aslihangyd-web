@@ -186,10 +186,10 @@ jobs:
 
       # İstemciye inen JavaScript ölçülüp iş özetine yazılıyor.
       #
-      # ⚠️ Eşik aşıldığında koşu BAŞARISIZ OLMAZ, uyarı düşer. Paket boyutu
-      # bir kalite kapısı değil, bir trend göstergesi; testleri geçen bir
-      # PR'ı birkaç kilobayt yüzünden bloklamak, eşiği yükseltme
-      # alışkanlığı doğurur. Amaç sessizce iki katına çıkmasını engellemek.
+      # ⚠️ İKİ SINIR: 220 kB trend eşiği aşılınca uyarı düşer (koşu sürer);
+      # CLAUDE.md bütçesi 320 kB aşılınca koşu DÜŞER. Bütçe 14 Eylül 2026'ya
+      # kadar hiçbir yerde denetlenmiyordu. Worker duman testi bütçe
+      # aşılsa da koşuyor; iki sonuç da görünsün diye çıkış sonda veriliyor.
       #
       # Ölçüm sunucuyu ayağa kaldırıp gerçekten yüklenen sayfayı okuyor;
       # `.next` manifest'lerine bakmıyor. Gerekçe betiğin başında.
@@ -201,7 +201,8 @@ jobs:
             if curl -sf -o /dev/null --max-time 3 http://127.0.0.1:3000/; then break; fi
             sleep 1
           done
-          node scripts/paket-olcumu.mjs http://127.0.0.1:3000 / /portfoy /harita
+          paket_cikis=0
+          node scripts/paket-olcumu.mjs http://127.0.0.1:3000 / /portfoy /harita || paket_cikis=$?
 
           # ⚠️ HARİTA WORKER DUMAN TESTİ — bu kapı olmadan harita üretimde
           # tamamen kırıktı ve CI yeşildi.
@@ -216,5 +217,6 @@ jobs:
           node scripts/harita-worker-duman.mjs http://127.0.0.1:3000
 
           kill "$sunucu"
+          exit "$paket_cikis"
         env:
           NEXT_TELEMETRY_DISABLED: '1'

@@ -45,14 +45,68 @@ describe('çerez bandı ilk ekranı kilitlemiyor', () => {
     expect(banner).toMatch(/pointer-events-auto/)
   })
 
-  it('bandın yüksekliği ÖLÇÜLEREK yayınlanıyor, tahmin edilmiyor', () => {
-    /**
-     * ⚠️ Sabit bir sayı yazılamaz: bant "ayrıntılı" görünümde kategori
-     * satırlarıyla iki katına çıkıyor ve dar ekranda düğmeler sarıyor.
-     */
-    expect(banner).toContain('--cerez-bandi-yuksekligi')
-    expect(banner).toContain('ResizeObserver')
+  /**
+   * ⚠️ 14 EYLÜL 2026: ANA SAYFA CLS 0,0876 — İKİ HAFTA FARK EDİLMEDİ.
+   *
+   * Bayrak ve yükseklik hidrasyondan SONRA yazılıyordu; vitrin çizildikten
+   * sonra kısalıyor ve bütün ilk ekran 57 px kayıyordu. Artık bayrak
+   * sunucuda, kompakt yükseklik CSS'te; tarayıcıda ölçüm yalnızca
+   * kullanıcının açtığı "ayrıntılı" görünümde.
+   */
+  it('bayrak sunucuda, ilk boyamadan önce konuyor', () => {
+    const duzen = oku('app/(site)/layout.tsx')
+    expect(duzen).toContain("data-cerez-bandi={onay === null ? 'acik' : undefined}")
+    // Bant da aynı sunucu okumasıyla çiziliyor — ikisi ayrışamaz.
+    expect(duzen).toContain('<CerezBanneri onayVar={onay !== null} />')
+  })
+
+  it("kompakt yükseklik CSS'te, tarayıcı yalnızca ayrıntılı görünümü ölçüyor", () => {
+    const css = oku('app/(site)/globals.css')
+    expect(css).toMatch(/\[data-cerez-bandi='acik'\] \{\s*--cerez-bandi-yuksekligi: \d+px;/)
+    // Ölçüm dalı "ayrıntılı" koşulunun ARKASINDA olmalı.
+    const olcumOncesi = banner.slice(0, banner.indexOf('new ResizeObserver'))
+    expect(olcumOncesi).toContain('if (!ayrintili) {')
     expect(banner).toContain('getBoundingClientRect')
+  })
+
+  it('CSS tahmini hiçbir genişlikte ölçülen yüksekliğin ALTINDA değil', () => {
+    /**
+     * ⚠️ Altında kalırsa bant vitrinin çağrı butonlarını örter — 31 Ağustos
+     * arızasının aynısı. Ölçüm (14 Eylül, yayındaki sürüm, 1 px adım):
+     * genişlik aralığı → kompakt bant + 32 px.
+     */
+    const olculen: [number, number, number][] = [
+      [320, 336, 418],
+      [337, 398, 393],
+      [399, 439, 369],
+      [440, 522, 317],
+      [523, 625, 293],
+      [626, 639, 241],
+      [640, 649, 313],
+      [650, 752, 261],
+      [753, 1920, 236],
+    ]
+    const css = oku('app/(site)/globals.css')
+    const kurallar = [
+      ...css.matchAll(
+        /@media \(min-width: (\d+)px\) \{\s*\[data-cerez-bandi='acik'\] \{\s*--cerez-bandi-yuksekligi: (\d+)px;/g,
+      ),
+    ].map((e) => [Number(e[1]), Number(e[2])] as [number, number])
+    const taban = Number(
+      /\[data-cerez-bandi='acik'\] \{\s*--cerez-bandi-yuksekligi: (\d+)px;/.exec(css)?.[1],
+    )
+    const cssDegeri = (g: number) =>
+      kurallar.filter(([asgari]) => g >= asgari).reduce((_, [, d]) => d, taban)
+
+    expect(kurallar.length).toBeGreaterThan(5)
+    const altinda: string[] = []
+    for (const [bas, son, yukseklik] of olculen) {
+      for (let g = bas; g <= son; g++) {
+        if (cssDegeri(g) < yukseklik)
+          altinda.push(`${g}px: CSS ${cssDegeri(g)} < ölçülen ${yukseklik}`)
+      }
+    }
+    expect(altinda).toEqual([])
   })
 
   it('bant kapanınca bıraktığı izi TEMİZLİYOR', () => {

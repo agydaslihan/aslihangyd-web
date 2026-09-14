@@ -96,6 +96,49 @@ describe('panel davranışı turu', () => {
   })
 })
 
+/**
+ * ⚠️ İLK EKRAN CLS — ENGELLEYİCİ, EŞİK SIFIR (14 Eylül 2026).
+ *
+ * Ana sayfa CLS'i iki hafta 0,088'de kaldı; çerez bandı vitrini hidrasyondan
+ * sonra kısaltıyordu. Tur yayındaki (düzeltilmemiş) sürüme karşı koşuldu ve
+ * Lighthouse'la birebir aynı değerlerle kırıldı: masaüstü 0,0876, mobil
+ * 0,0517. Koşullardan biri düşerse kayma yeniden görünmez olur.
+ */
+describe('ilk ekran CLS turu', () => {
+  it('varsayılan koşumda ve genel kapsamda koşuyor', () => {
+    expect(betik).toContain(
+      "const clsKos = SADECE === null || SADECE === 'genel' || SADECE === 'cls'",
+    )
+    expect(betik).toContain('if (clsKos) raporla(await zamanla(() => ilkEkranClsTuru(wsAdresi)))')
+  })
+
+  it('eşik sıfır', () => {
+    expect(betik).toContain('if (cls > 0) {')
+  })
+
+  it('onay çerezi yok — yalıtılmış bağlam, bant açık olmalı', () => {
+    expect(betik).toContain('yalitilmis: true')
+    expect(betik).toContain("olcum.bayrak !== 'acik'")
+  })
+
+  /** Yavaşlatmasız mobilde aynı kayma hiç görünmüyor (ölçüldü). */
+  it('mobil 4× CPU ve Lighthouse ekranı; mobilde pointer yaması yok', () => {
+    // ⚠️ Boşluk normalleştiriliyor: prettier nesneyi satırlara bölünce tek satırlık desen kırıldı.
+    const duz = betik.replace(/\s+/g, ' ')
+    expect(duz).toMatch(
+      /genislik: 412, yukseklik: 823, olcek: 1\.75, mobil: true \}, cpu: 4, isaretciYamasi: false/,
+    )
+    expect(duz).toMatch(
+      /genislik: 1350, yukseklik: 940, olcek: 1, mobil: false \}, cpu: 1, isaretciYamasi: true/,
+    )
+    expect(betik).toContain('Emulation.setCPUThrottlingRate')
+  })
+
+  it('bandın CSS tahmini ölçülenin altındaysa kırılıyor', () => {
+    expect(betik).toContain('olcum.cssYukseklik < olcum.olculenYukseklik')
+  })
+})
+
 describe('CI süresi ölçülüyor', () => {
   it('toplam süre özete yazılıyor ve 15 dakika eşiği uyarıyor', () => {
     expect(isAkisi).toContain('Gezinme dumanı: $(( sure / 60 )) dk')

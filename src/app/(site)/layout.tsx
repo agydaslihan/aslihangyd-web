@@ -258,7 +258,24 @@ export default async function SiteLayout({ children }: { children: React.ReactNo
   const menu = menuyuSirala(menuyuSuz(UST_MENU_YAPISI, acikAnahtarlar), await menuSirasiniGetir())
 
   return (
-    <html lang="tr" className={`${yaziGovde.variable} ${yaziBaslik.variable}`}>
+    <html
+      lang="tr"
+      className={`${yaziGovde.variable} ${yaziBaslik.variable}`}
+      /**
+       * ⚠️ ÇEREZ BANDI BAYRAĞI SUNUCUDA — İLK BOYAMADAN ÖNCE.
+       *
+       * 14 Eylül 2026: ana sayfa CLS'i masaüstünde 0,0876, mobilde 0,0517
+       * idi ve iki hafta fark edilmedi. Bayrak hidrasyondan SONRA
+       * `CerezBanneri` tarafından konuyordu; vitrin çizildikten sonra
+       * kısalıyor ve bütün ilk ekran 57 px yukarı kayıyordu — onay vermemiş
+       * her ziyaretçide, yani her yeni ziyaretçide.
+       *
+       * Onay bilgisi zaten burada okunuyor (`cerezOnayiniOku`) ve bandın
+       * kendisi de aynı bilgiyle sunucuda çiziliyor; bayrak ile bant
+       * ayrışamaz. Satır içi betik gerekmiyor, JavaScript inmese de doğru.
+       */
+      data-cerez-bandi={onay === null ? 'acik' : undefined}
+    >
       <head>
         {/*
           ⚠️ GÖVDE FONTU ÖN YÜKLEMESİ — NEXT'İN BASMADIĞI `<link>`.

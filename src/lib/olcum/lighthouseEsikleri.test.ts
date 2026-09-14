@@ -3,7 +3,13 @@ import path from 'node:path'
 
 import { describe, expect, it } from 'vitest'
 
-import { LIGHTHOUSE_ESIKLERI, cihazEsikleri } from '../../../scripts/lighthouse-esikleri.mjs'
+import {
+  CLS_ESIGI,
+  ENGELLEYICI_KATEGORILER,
+  LIGHTHOUSE_ESIKLERI,
+  cihazEsikleri,
+  kapiBulgulari,
+} from '../../../scripts/lighthouse-esikleri.mjs'
 
 /**
  * ─────────────────────────────────────────────────────────────────────────
@@ -99,5 +105,65 @@ describe('Lighthouse eşikleri tek kaynakta', () => {
    */
   it('bilinmeyen cihaz masaüstü eşiğine düşüyor', () => {
     expect(cihazEsikleri('tablet')).toEqual(LIGHTHOUSE_ESIKLERI.masaustu)
+  })
+})
+
+/**
+ * ⚠️ ENGELLEYİCİ KAPILAR — 14 Eylül 2026.
+ *
+ * Ana sayfa CLS'i iki hafta 0,088'de kaldı: Lighthouse adımı raporlayıcıydı
+ * ve özet "hedef < 0,1" diyordu. Bu testler kapının sıfıra baktığını,
+ * deterministik kategorilerde koşuyu düşürdüğünü ve ölçülemeyen değeri
+ * GEÇTİ saymadığını kilitliyor.
+ */
+describe('Lighthouse engelleyici kapıları', () => {
+  const tam = { accessibility: 100, 'best-practices': 100, seo: 100, performance: 60 }
+
+  it('CLS eşiği SIFIR — 0,1 değil', () => {
+    expect(CLS_ESIGI).toBe(0)
+    expect(
+      kapiBulgulari({ cihaz: 'masaustu', sayfa: 'anasayfa', kategoriler: tam, cls: 0.0876 }),
+    ).toEqual(['masaustu/anasayfa: CLS 0.0876 > 0'])
+    expect(
+      kapiBulgulari({ cihaz: 'masaustu', sayfa: 'anasayfa', kategoriler: tam, cls: 0 }),
+    ).toEqual([])
+  })
+
+  it('deterministik kategoriler engelleyici, performans DEĞİL', () => {
+    expect([...ENGELLEYICI_KATEGORILER].sort()).toEqual(['accessibility', 'best-practices', 'seo'])
+    // Performans 60 — raporlayıcı, koşuyu düşürmüyor.
+    expect(kapiBulgulari({ cihaz: 'mobil', sayfa: 'portfoy', kategoriler: tam, cls: 0 })).toEqual(
+      [],
+    )
+  })
+
+  it('erişilebilirlik eşik altı kapıyı kırıyor', () => {
+    const bulgular = kapiBulgulari({
+      cihaz: 'mobil',
+      sayfa: 'portfoy',
+      kategoriler: { ...tam, accessibility: 94 },
+      cls: 0,
+    })
+    expect(bulgular).toEqual(['mobil/portfoy: erişilebilirlik 94 < 95'])
+  })
+
+  it('ölçülemeyen kategori ya da CLS GEÇTİ sayılmıyor', () => {
+    const bulgular = kapiBulgulari({
+      cihaz: 'masaustu',
+      sayfa: 'mahalleler',
+      kategoriler: { accessibility: 100, 'best-practices': 100 },
+      cls: undefined,
+    })
+    expect(bulgular).toEqual([
+      'masaustu/mahalleler: SEO ölçülemedi',
+      'masaustu/mahalleler: CLS ölçülemedi',
+    ])
+  })
+
+  it('özet betiği kapıyı uyguluyor ve kırılınca çıkış 1 veriyor', () => {
+    const ozet = readFileSync(path.join(KOK, 'scripts/lighthouse-ozet.mjs'), 'utf8')
+    expect(ozet).toContain('kapiBulgulari({')
+    expect(ozet).toMatch(/kapiSorunlari\.length === 0[\s\S]*process\.exit\(1\)/)
+    expect(ozet).not.toContain('CLS (hedef < 0,1)')
   })
 })

@@ -217,7 +217,30 @@ yoksa yetkisi dolan ilanı yayından kaldıran görev çalışamaz.
 - Video: ASLA self-host etme, CDN (Bunny Stream) üzerinden HLS
 
 ## Performans hedefleri
-LCP < 2.5s · CLS < 0.1 · INP < 200ms
+LCP < 2.5s · CLS 0,000 · INP < 200ms
+
+⚠️ CLS HEDEFİ 0,000 VE KAPI DA 0,000 — 0,1 DEĞİL. 31 Ağustos'ta çerez
+bandı ana sayfa CLS'ini 0,088'e çıkardı ve iki hafta kimse görmedi: kapı
+raporlayıcıydı ve 0,1'e bakıyordu. Hedefle kapı ayrışınca kapı hedefi
+korumaz. Mobil LCP bilinçli olarak raporlayıcı — gerekçe ve yeniden bakma
+koşulu: docs/ilerleme/2026-09-14-mobil-lcp-karari.md
+
+### Hangi kapı koşuyu DÜŞÜRÜR
+Ayrım runner hızına duyarlılık: belirlenimci ölçüt engelleyici, makineye
+göre oynayan ölçüt raporlayıcı.
+
+| Ölçüt | Kapı | Nerede |
+| --- | --- | --- |
+| İlk ekran CLS (onaysız, masaüstü + 4× mobil) | ENGELLEYİCİ, 0 | `scripts/gezinme-dumani.mjs` |
+| CLS (3 sayfa × 2 cihaz, medyan) | ENGELLEYİCİ, 0 | `scripts/lighthouse-ozet.mjs` |
+| Erişilebilirlik / En iyi uygulamalar / SEO | ENGELLEYİCİ, tablodaki eşik | `scripts/lighthouse-ozet.mjs` |
+| İstemci JS, ana sayfa | ENGELLEYİCİ, 320 kB · 220 kB'ta uyarı | `scripts/paket-olcumu.mjs` |
+| Performans skoru, LCP, TBT | raporlayıcı | runner'a duyarlı (77–100 ölçüldü) |
+| Derleme süresi | raporlayıcı | runner'a duyarlı |
+
+⚠️ Raporlayıcı bir ölçütü engelleyiciye çevirmek ya da eşik gevşetmek bir
+karardır; önce sor. Yeni bir hedef yazılıyorsa onu denetleyen kapı da
+yazılır — kapısı olmayan hedef, yazılmamış hedeftir.
 
 ⚠️ Lighthouse eşikleri CİHAZA GÖRE FARKLI (Aurora Luxury §4). Mobil
 performans skoru simüle edilmiş 4G + 4× CPU yavaşlatmayla hesaplanıyor;
@@ -237,6 +260,10 @@ değiştirmek zorunda — yoksa test kırılır.
 kaç kB. Bir animasyon hedefi bozuyorsa animasyon değişir, hedef değil.
 
 Bundle: ana sayfa ≤320 kB gzip · hareket kodu ≤120 kB gzip
+
+⚠️ Hareket kodu bütçesi (≤120 kB) HİÇBİR YERDE ÖLÇÜLMÜYOR (14 Eylül 2026).
+Paket ölçümü rota başına toplam JS'i sayıyor; hareket kodunu ayrı sayan
+bir yöntem yok. Açık madde — kapısı yazılana kadar bu sayı denetlenmiyor.
 
 ## Klasör yapısı
 src/app/(site)       genel site
