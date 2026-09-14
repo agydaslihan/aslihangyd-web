@@ -68,6 +68,17 @@ describe('panel davranışı turu', () => {
     expect(betik).toContain(tam.ozet)
   })
 
+  /**
+   * ⚠️ PAYLOAD SEKME YARIŞI. Tercih isteği dönmeden tıklanan sekme geri
+   * dönüyor; ilk CI koşumları üç farklı sonuç verdi. Bekleme kaldırılırsa
+   * test yeniden kararsızlaşır.
+   */
+  it('sekmeye tıklamadan önce Payload tercih isteğini bekliyor', () => {
+    expect(betik).toContain("e.name.includes('/payload-preferences/')")
+    expect(betik).toContain('const sekmeyeGec = async')
+    expect(betik).not.toMatch(/'Konum ve tapu'\)\?\.click\(\)/)
+  })
+
   it('rozet eksik sayısını ve alan dolunca düşüşünü denetliyor', () => {
     expect(betik).toContain("'EİDS eksik (6)'")
     expect(betik).toContain("'EİDS eksik (5)'")

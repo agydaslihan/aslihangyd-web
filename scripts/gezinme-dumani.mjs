@@ -928,6 +928,48 @@ async function davranisTuru(wsAdresi, cerez) {
   const etiketliGirdi = (etiket) =>
     `(() => { const l = [...document.querySelectorAll('label')].find((x) => x.textContent.trim().startsWith(${JSON.stringify(etiket)})); const i = (l?.closest('.sihirbaz-alan') ?? l?.parentElement)?.querySelector('input'); if (i && !i.id) i.id = 'duman-' + Math.random().toString(36).slice(2); return i ? '#' + CSS.escape(i.id) : null })()`
 
+  /**
+   * Payload sekmesine KALICI geçiş.
+   *
+   * ⚠️ PAYLOAD YARIŞI — 14 Eylül 2026'da CI'da ölçüldü, kaynağında
+   * doğrulandı (`@payloadcms/ui` Tabs alanı + Preferences sağlayıcısı).
+   * Sayfa açılınca Tabs alanı kayıtlı sekmeyi `/api/payload-preferences/…`
+   * isteğiyle soruyor. İstek dönmeden sekmeye tıklanırsa tıklama sekmeyi
+   * değiştiriyor, sonra AYNI isteği bekliyor; istek dönünce önce açılış
+   * etkisi ESKİ sekmeyi geri yüklüyor. Sonuç: kutular bir an görünüp
+   * kayboluyor ya da hiç görünmüyor — istisna yok.
+   *
+   * İlk koşumlarda tıklama sayfa açılır açılmaz yapılıyordu ve iddia üç
+   * koşumda üç farklı sonuç verdi (geçti / "41." sonrası [] / kutular hiç
+   * yok). Kodumuzun hatası değildi; testin zamanlamasıydı.
+   *
+   * Şimdi: tercih isteğinin bitmesi bekleniyor, tıklanıyor, sekme 1 sn
+   * GÖZLEM penceresi boyunca etkin kalmalı (bu hazır olmayı değil geri
+   * dönüşü bekliyor); dönerse yeniden deneniyor. Deneme sayısı günlüğe.
+   */
+  const sekmeyeGec = async (sekme, ad, hazirKosulu) => {
+    await sekme.kosulBekle(
+      `performance.getEntriesByType('resource').some((e) => e.name.includes('/payload-preferences/'))`,
+      5000,
+    )
+    for (let deneme = 1; deneme <= 3; deneme++) {
+      await sekme.deger(
+        `[...document.querySelectorAll('[class*="tabs-field__tab-button"]')].find((b) => b.textContent.trim() === ${JSON.stringify(ad)})?.click()`,
+      )
+      if (!(await sekme.kosulBekle(hazirKosulu, 5000))) continue
+      await uyu(1000)
+      const etkin = await sekme.deger(
+        `document.querySelector('[class*="tabs-field__tab-button--active"]')?.textContent.trim() ?? ''`,
+      )
+      if (etkin === ad && (await sekme.deger(hazirKosulu))) {
+        if (deneme > 1)
+          bilgi.push(`"${ad}" sekmesi ${deneme}. denemede kalıcı oldu (Payload tercih yarışı)`)
+        return true
+      }
+    }
+    return false
+  }
+
   const temadaOlc = async (sekme, olcumler) => {
     const sonuc = {}
     for (const tema of ['light', 'dark']) {
@@ -987,13 +1029,14 @@ async function davranisTuru(wsAdresi, cerez) {
         `document.querySelector('[class*="tabs-field__tab-button"]') !== null`,
       )
       if (!hazir) return void sorunlar.push('yeni ilan formu açılmadı')
-      await sekme.deger(
-        `[...document.querySelectorAll('[class*="tabs-field__tab-button"]')].find((b) => b.textContent.trim() === 'Konum ve tapu')?.click()`,
-      )
       if (
-        !(await sekme.kosulBekle(`document.querySelectorAll('.konum-kutu input').length === 2`))
+        !(await sekmeyeGec(
+          sekme,
+          'Konum ve tapu',
+          `document.querySelectorAll('.konum-kutu input').length === 2`,
+        ))
       ) {
-        return void sorunlar.push('koordinat kutuları bulunamadı (Konum ve tapu sekmesi)')
+        return void sorunlar.push('koordinat kutuları bulunamadı (Konum ve tapu sekmesi, 3 deneme)')
       }
       if (!(await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.1'))) {
         return void sorunlar.push('koordinat (yeni ilan): enlem kutusuna odaklanılamadı')
@@ -1026,15 +1069,16 @@ async function davranisTuru(wsAdresi, cerez) {
         `document.querySelector('[class*="tabs-field__tab-button"]') !== null`,
       )
       if (!hazir) return void sorunlar.push('kayıtlı ilan formu açılmadı')
-      await sekme.deger(
-        `[...document.querySelectorAll('[class*="tabs-field__tab-button"]')].find((b) => b.textContent.trim() === 'Konum ve tapu')?.click()`,
-      )
       if (
-        !(await sekme.kosulBekle(
+        !(await sekmeyeGec(
+          sekme,
+          'Konum ve tapu',
           `document.querySelector('.konum-kutu input')?.value === '${ALIPASA.enlem}'`,
         ))
       ) {
-        return void sorunlar.push('kayıtlı ilanın enlemi kutuya gelmedi')
+        return void sorunlar.push(
+          'kayıtlı ilanın enlemi kutuya gelmedi (Konum ve tapu sekmesi, 3 deneme)',
+        )
       }
       if (!(await klavyeyleYaz(sekme, '.konum-kutu:nth-child(1) input', '41.'))) {
         return void sorunlar.push('koordinat (kayıtlı ilan): enlem kutusuna odaklanılamadı')
@@ -1054,16 +1098,18 @@ async function davranisTuru(wsAdresi, cerez) {
         const ornekler = []
         const t0 = performance.now()
         const al = () => {
-          const imza = JSON.stringify([...document.querySelectorAll('.konum-kutu input')].map((i) => i.value))
+          const kutular = JSON.stringify([...document.querySelectorAll('.konum-kutu input')].map((i) => i.value))
+          const etkin = document.querySelector('[class*="tabs-field__tab-button--active"]')?.textContent.trim() ?? '?'
+          const imza = kutular + ' @' + etkin
           const son = ornekler[ornekler.length - 1]
-          if (!son || son.imza !== imza) ornekler.push({ ms: Math.round(performance.now() - t0), imza })
+          if (!son || son.imza !== imza) ornekler.push({ ms: Math.round(performance.now() - t0), imza, kutular })
           if (performance.now() - t0 < 3000) setTimeout(al, 50)
           else bitir(ornekler)
         }
         al()
       })`)
       const ozet = (cizelge ?? []).map((o) => `${o.ms}ms ${o.imza}`).join(' → ')
-      const son = cizelge?.[cizelge.length - 1]?.imza ?? 'null'
+      const son = cizelge?.[cizelge.length - 1]?.kutular ?? 'null'
       bilgi.push(`koordinat (kayıtlı ilan) "41." sonrası kutular: ${ozet}`)
       // Kutular bir çökmeyle kayboluyorsa istisna burada görünür.
       const istisnalar = sekme

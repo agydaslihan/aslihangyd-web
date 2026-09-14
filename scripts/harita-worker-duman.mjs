@@ -103,14 +103,27 @@ const parcaDizini = path.join(KOK, '.next', 'static', 'chunks')
  *
  * Adres kodda `` `/maplibre/${getVersion()}/…` `` biçiminde kuruluyor;
  * küçültücü sürümü bir değişkene alıyor ve çıktıda çözülmüş dizge
- * bulunmuyor:
+ * bulunmuyor. Çözülmüş adresi arayan bir denetim, ÇALIŞAN derlemede
+ * kırmızı verirdi — ve o yanlış alarm ilk hafta kapatılırdı.
+ *
+ * ⚠️ İKİ BİÇİM DE GEÇERLİ — 14 Eylül 2026'da CI çıktısından ölçüldü.
+ *
+ * Kurulum `Harita3B` içindeyken küçültücü MapLibre'nin tek satırlık
+ * `setWorkerUrl`ini çağrı yerine açıyordu:
  *
  *     t$.WORKER_URL = `/maplibre/${cR}/maplibre-gl-worker.mjs`
  *
- * Çözülmüş adresi arayan bir denetim, ÇALIŞAN derlemede kırmızı verirdi —
- * ve o yanlış alarm ilk hafta kapatılırdı.
+ * Kurulum `lib/harita/workerAdresi.ts`e taşınınca modül sınırı açmayı
+ * durdurdu; çıktı ÇAĞRI olarak kalıyor ve fonksiyonun gövdesi aynı parçada:
+ *
+ *     (0,i.setWorkerUrl)(`/maplibre/${(0,i.getVersion)()}/maplibre-gl-worker.mjs`)
+ *     "setWorkerUrl",0,function(t){tB.WORKER_URL=t}
+ *
+ * Yalnızca ilk biçimi arayan denetim, çalışan derlemede iki CI koşumunda
+ * kırmızı verdi (#114, #115). Aranan şey değişmedi: adres paketlemeden
+ * SAĞ ÇIKTI mı. Hiçbir biçim yoksa çağrı gerçekten düşmüştür.
  */
-const ATAMA_DESENI = /WORKER_URL\s*=\s*[`"']\/maplibre\//
+const ATAMA_DESENI = /(?:WORKER_URL\s*=\s*|setWorkerUrl\)?\(\s*)[`"']\/maplibre\//
 
 if (!existsSync(parcaDizini)) {
   kaldi('.next/static/chunks yok — önce `pnpm build` çalıştırın.')
@@ -139,7 +152,9 @@ if (!existsSync(parcaDizini)) {
   for (const iz of izler.slice(0, 4)) console.log(`    ${iz}`)
 
   if (bulunan) {
-    gecti('yerel derleme çıktısı worker adresini atıyor (WORKER_URL = /maplibre/…)')
+    gecti(
+      'yerel derleme çıktısı worker adresini kuruyor (WORKER_URL = /maplibre/… ya da setWorkerUrl(`/maplibre/…`))',
+    )
   } else {
     kaldi(
       'Yerel derleme çıktısının (.next) hiçbir yerinde WORKER_URL ataması yok. ' +
