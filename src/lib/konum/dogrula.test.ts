@@ -47,13 +47,41 @@ describe('konum denetimi', () => {
     expect(konumuDenetle(takas?.enlem, takas?.boylam).durum).toBe('tamam')
   })
 
-  /** ⚠️ İlan #2'nin kaydı: POINT(1 1) — Gine Körfezi. */
-  it('Çorlu dışındaki geçerli koordinatı ayırt ediyor (ilan #2)', () => {
+  /**
+   * ⚠️ ÜRETİMDEN ALINAN İKİNCİ GERÇEK HATA. İlan #2'nin kaydı POINT(1 1)
+   * idi — Gine Körfezi.
+   *
+   * Önceki hâli bunu "Çorlu dışında" sayıyor ve kullanıcıya "enlem ve
+   * boylamı karıştırmış olabilirsiniz" diyordu. Yanlış tavsiye: ortada
+   * karıştırılacak bir konum yok. Doğrusu alanı boş bırakmak.
+   */
+  it('yer tutucu değeri yakalıyor (ilan #2)', () => {
     const sonuc = konumuDenetle(1, 1)
 
-    expect(sonuc.durum).toBe('disarida')
+    expect(sonuc.durum).toBe('yer_tutucu')
     expect(sonuc.takas).toBeNull()
-    expect(sonuc.mesaj).toContain('Çorlu dışında')
+    expect(sonuc.mesaj).toContain('boş bırakın')
+    expect(sonuc.mesaj).not.toContain('karıştırmış')
+  })
+
+  it('sıfır noktası da yer tutucu', () => {
+    expect(konumuDenetle(0, 0).durum).toBe('yer_tutucu')
+  })
+
+  /** ⚠️ Kutu denetiminden ÖNCE: tam sayı derece Çorlu kutusuna düşse de bina değil. */
+  it('Çorlu kutusuna düşen tam sayı derece de yer tutucu', () => {
+    expect(konumuDenetle(41, 28).durum).toBe('yer_tutucu')
+  })
+
+  /** Ters yer tutucu takas önermiyor — takası da anlamsız. */
+  it('yer tutucu takas edilebilir görünse bile takas önerilmiyor', () => {
+    expect(konumuDenetle(28, 41).takas).toBeNull()
+  })
+
+  /** Ölçüt dar: tek bir ondalık yeter, gerçek ama uzak koordinat "dışarıda" kalıyor. */
+  it('ondalıklı uzak koordinat yer tutucu sayılmıyor', () => {
+    expect(konumuDenetle(1.5, 1.5).durum).toBe('disarida')
+    expect(konumuDenetle(41.15, 28).durum).toBe('tamam')
   })
 
   it('dünya dışı değeri geçersiz sayıyor', () => {

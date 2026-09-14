@@ -92,6 +92,12 @@ export default function KonumAlaniIstemci(props: KonumAlaniIstemciOzellikleri) {
   const enlem = koordinatCoz(metin.enlem)
   const boylam = koordinatCoz(metin.boylam)
   const denetim = konumuDenetle(enlem, boylam)
+  /**
+   * ⚠️ Yer tutucu değerin işaretçisi ÇİZİLMİYOR. `1, 1` Gine Körfezi'ne
+   * düşer; haritayı oraya uçurmak, uyarının "bu bir konum değil" dediği
+   * şeyi konummuş gibi göstermek olurdu.
+   */
+  const noktaGosterilmez = denetim.durum === 'gecersiz' || denetim.durum === 'yer_tutucu'
 
   const yaz = (yeniEnlem: number | null, yeniBoylam: number | null) => {
     setValue(noktayaCevir(yeniEnlem, yeniBoylam))
@@ -185,8 +191,8 @@ export default function KonumAlaniIstemci(props: KonumAlaniIstemciOzellikleri) {
       </p>
 
       <KonumSecici
-        enlem={denetim.durum === 'gecersiz' ? null : enlem}
-        boylam={denetim.durum === 'gecersiz' ? null : boylam}
+        enlem={noktaGosterilmez ? null : enlem}
+        boylam={noktaGosterilmez ? null : boylam}
         onSecim={haritadanSecildi}
         stilAdresi={stilAdresi}
         kilitli={kilitli}

@@ -117,3 +117,6 @@ tarih pencereden çıktı. Tarih artık pencerenin ortasından hesaplanıyor.
 Veri değişikliği onay bekliyor — özellikle #2'nin gerçek konumu bilinmiyor
 ve uydurma koordinat yazmak CLAUDE.md kural 2'ye aykırı. Araç hazır:
 Aslıhan panelden haritaya tıklayarak ikisini de düzeltebilir.
+
+→ **14 Eylül:** Aslıhan iki ilanın gerçek koordinatını verdi; takas ve
+NULL kararları iptal edildi. Ayrıntı: `2026-09-14-eids-akisi.md`.

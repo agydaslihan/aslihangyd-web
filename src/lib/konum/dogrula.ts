@@ -48,6 +48,8 @@ export type KonumDurumu =
   | 'disarida'
   /** Dünya üzerinde bile geçerli değil. */
   | 'gecersiz'
+  /** Tam sayı derece (`1, 1` gibi) — bir taşınmazın konumu değil, yer tutucu. */
+  | 'yer_tutucu'
   /** Biri ya da ikisi girilmemiş. */
   | 'eksik'
 
@@ -90,6 +92,32 @@ export function konumuDenetle(
     return {
       durum: 'gecersiz',
       mesaj: `Geçerli bir koordinat değil. Enlem −90 ile 90, boylam −180 ile 180 arasında olur.`,
+      takas: null,
+    }
+  }
+
+  /**
+   * ⚠️ YER TUTUCU — İLAN #2'NİN `POINT(1 1)`İ.
+   *
+   * Önceden bu değer yalnızca "Çorlu dışında" sayılıyor ve kullanıcıya
+   * "enlem ve boylamı karıştırmış olabilirsiniz" deniyordu. Oysa sorun
+   * karışıklık değil: ortada bir konum YOK. Doğru tavsiye takas değil,
+   * alanı boş bırakmak — yanlış konum haritada yanlış yere pin koyar,
+   * konum olmaması ise mahalle merkezine düşer.
+   *
+   * ⚠️ Ölçüt: iki değer de TAM SAYI. Bir derece ≈ 111 km; tam sayı
+   * dereceyle yazılmış bir koordinat hiçbir binayı göstermez. GPS, harita
+   * tıklaması ve kopyalanan her gerçek koordinat ondalık taşıyor.
+   *
+   * ⚠️ Kutu denetiminden ÖNCE: `41, 28` Çorlu kutusuna düşüyor ama o da
+   * bir bina değil.
+   */
+  if (Number.isInteger(enlem) && Number.isInteger(boylam)) {
+    return {
+      durum: 'yer_tutucu',
+      mesaj:
+        'Bu bir taşınmaz konumu değil, yer tutucu bir değer gibi görünüyor. Gerçek konumu ' +
+        'bilmiyorsanız alanı boş bırakın — yanlış konum, konum olmamasından kötüdür.',
       takas: null,
     }
   }

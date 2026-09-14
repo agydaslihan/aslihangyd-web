@@ -50,9 +50,10 @@
   margin: 0;
 }
 
-/* Ters koordinat kesin bir hata; Çorlu dışı yalnızca dikkat çağrısı. */
+/* Ters, geçersiz ve yer tutucu kesin hata; Çorlu dışı yalnızca dikkat çağrısı. */
 .konum-uyari-ters,
-.konum-uyari-gecersiz {
+.konum-uyari-gecersiz,
+.konum-uyari-yer_tutucu {
   border-color: var(--theme-error-250, var(--theme-elevation-200));
   background: var(--theme-error-50, var(--theme-elevation-50));
 }
