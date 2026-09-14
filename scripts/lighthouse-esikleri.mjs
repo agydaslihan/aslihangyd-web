@@ -48,3 +48,62 @@ export const LIGHTHOUSE_ESIKLERI = {
 export function cihazEsikleri(cihaz) {
   return LIGHTHOUSE_ESIKLERI[cihaz] ?? LIGHTHOUSE_ESIKLERI.masaustu
 }
+
+/**
+ * ═══════════════════════════════════════════════════════════════════════
+ * ENGELLEYİCİ KAPILAR — hangi ölçüt koşuyu DÜŞÜRÜR.
+ *
+ * ⚠️ NEDEN VAR: ANA SAYFA CLS'İ İKİ HAFTA 0,088'DE KALDI (14 Eylül 2026).
+ *
+ * Hedef 0,000'dı; özet "hedef < 0,1" yazıyor ve her durumda çıkış 0
+ * veriyordu. Bütün Lighthouse adımı raporlayıcıydı — bu yüzden bozulma
+ * hiçbir yerde kırmızı yakmadı.
+ *
+ * Ayrım RUNNER'A DUYARLILIK:
+ *   · Engelleyici: erişilebilirlik, en iyi uygulamalar, SEO ve CLS.
+ *     Denetimleri deterministik; üç koşumda aynı çıkıyor ve medyanları
+ *     makinenin hızına bağlı değil. Eşiğin altı bir gerilemedir.
+ *   · Raporlayıcı: performans skoru, LCP, TBT. Aynı kod benchmarkIndex
+ *     oynayınca 77–100 arası skor üretti; bunları kapı yapmak her koşumda
+ *     makineyi tartışmak olurdu. Mobil LCP ayrıca bir karar bekliyor
+ *     (docs/ilerleme/2026-09-14-mobil-lcp-karari.md).
+ *
+ * ⚠️ CLS eşiği SIFIR, "0,1" değil. Google'ın "iyi" sınırı 0,1 ama bu
+ * projenin şartnamesi 0,000 istiyor ve haftalarca tuttu; 0,1'e bakan kapı
+ * 0,088'i geçirdi.
+ * ═══════════════════════════════════════════════════════════════════════
+ */
+export const ENGELLEYICI_KATEGORILER = ['accessibility', 'best-practices', 'seo']
+
+/** CLS kapısı — medyan bu değeri AŞARSA koşu düşer. */
+export const CLS_ESIGI = 0
+
+const KATEGORI_ADI = {
+  performance: 'performans',
+  accessibility: 'erişilebilirlik',
+  'best-practices': 'en iyi uygulamalar',
+  seo: 'SEO',
+}
+
+/**
+ * Bir (cihaz, sayfa) ölçümünün engelleyici kapı bulguları.
+ *
+ * @param {{ cihaz: string, sayfa: string, kategoriler: Record<string, number | undefined>, cls: number | undefined }} olcum
+ *   kategoriler: 0–100 arası medyan puanlar · cls: medyan CLS
+ * @returns {string[]} boşsa kapıdan geçti
+ */
+export function kapiBulgulari({ cihaz, sayfa, kategoriler, cls }) {
+  const hedef = cihazEsikleri(cihaz)
+  const bulgular = []
+  for (const anahtar of ENGELLEYICI_KATEGORILER) {
+    const puan = kategoriler[anahtar]
+    // ⚠️ Ölçülemeyen kategori GEÇTİ sayılmaz — sessiz boşluk, kapının kendisini açar.
+    if (typeof puan !== 'number')
+      bulgular.push(`${cihaz}/${sayfa}: ${KATEGORI_ADI[anahtar]} ölçülemedi`)
+    else if (puan < hedef[anahtar])
+      bulgular.push(`${cihaz}/${sayfa}: ${KATEGORI_ADI[anahtar]} ${puan} < ${hedef[anahtar]}`)
+  }
+  if (typeof cls !== 'number') bulgular.push(`${cihaz}/${sayfa}: CLS ölçülemedi`)
+  else if (cls > CLS_ESIGI) bulgular.push(`${cihaz}/${sayfa}: CLS ${cls.toFixed(4)} > ${CLS_ESIGI}`)
+  return bulgular
+}

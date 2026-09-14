@@ -15,7 +15,15 @@
  * indireceği dosyaların aynısını sayıyor. Next'in iç yapısına değil,
  * HTML'in kendisine bağlı.
  *
- * ⚠️ EŞİK AŞILDIĞINDA KOŞU BAŞARISIZ OLMAZ, uyarı düşer.
+ * ⚠️ İKİ SINIR VAR (14 Eylül 2026'dan beri):
+ *   · TREND EŞİĞİ (220 kB) — aşılınca uyarı düşer, koşu sürer.
+ *   · BÜTÇE (320 kB, CLAUDE.md) — aşılınca koşu DÜŞER.
+ * Bütçe daha önce hiçbir yerde denetlenmiyordu: CLAUDE.md "≤320 kB"
+ * diyordu, betik 220'de yalnızca uyarıyordu. Aynı gün ana sayfa CLS'inin
+ * iki hafta raporlayıcı bir kapıda sessizce 0,088'de kaldığı bulundu.
+ * Bayt belirlenimci — runner hızına bağlı değil — o yüzden bütçe kapı.
+ *
+ * ⚠️ TREND EŞİĞİ AŞILDIĞINDA KOŞU BAŞARISIZ OLMAZ, uyarı düşer.
  *
  * Paket boyutu bir kalite kapısı değil, bir trend göstergesi. Testleri
  * geçen bir PR'ı birkaç kilobayt yüzünden bloklamak, kapının kendisini
@@ -40,6 +48,15 @@ import { gzipSync } from 'node:zlib'
  * önce neyin büyüdüğüne bakın — genellikle cevap "kaldırılabilir".
  */
 const ESIK_BAYT = 220 * 1024
+
+/**
+ * Bütçe: CLAUDE.md → "Bundle: ana sayfa ≤320 kB gzip". AŞILIRSA KOŞU DÜŞER.
+ *
+ * ⚠️ İkiz sayı: `src/lib/olcum/paketButcesi.test.ts` CLAUDE.md ile bu
+ * satırın aynı kaldığını denetliyor. Bütçeyi değiştiren ikisini birden
+ * değiştirir.
+ */
+const BUTCE_BAYT = 320 * 1024
 
 const temelAdres = (process.argv[2] ?? 'http://127.0.0.1:3000').replace(/\/$/, '')
 const rotalar = process.argv.length > 3 ? process.argv.slice(3) : ['/']
@@ -128,7 +145,7 @@ const satirlar = [
     (s) => `| \`${s.rota}\` | ${s.dosyaSayisi} | ${kb(s.hamToplam)} | **${kb(s.gzipToplam)}** |`,
   ),
   '',
-  `Eşik (ana sayfa): ${kb(ESIK_BAYT)} gzip`,
+  `Trend eşiği (ana sayfa): ${kb(ESIK_BAYT)} gzip · Bütçe (engelleyici): ${kb(BUTCE_BAYT)} gzip`,
 ]
 
 const anaSayfa = sonuclar.find((s) => s.rota === '/')
@@ -147,6 +164,14 @@ if (anaSayfa !== undefined && anaSayfa.gzipToplam > ESIK_BAYT) {
   )
 }
 
+const butceAsildi = anaSayfa !== undefined && anaSayfa.gzipToplam > BUTCE_BAYT
+if (butceAsildi) {
+  satirlar.push(
+    '',
+    `❌ **BÜTÇE AŞILDI: ${kb(anaSayfa.gzipToplam)} > ${kb(BUTCE_BAYT)}** — koşu düştü (CLAUDE.md).`,
+  )
+}
+
 console.log(satirlar.join('\n'))
 
 if (process.env.GITHUB_STEP_SUMMARY !== undefined) {
@@ -161,5 +186,12 @@ if (asildi && process.env.GITHUB_ACTIONS !== undefined && anaSayfa !== undefined
   )
 }
 
-// ⚠️ Eşik aşılsa bile 0 dönülür. Bloklamak bilinçli olarak yapılmıyor.
+if (butceAsildi) {
+  console.error(
+    `::error title=İstemci JS bütçesi aşıldı::${kb(anaSayfa.gzipToplam)} > ${kb(BUTCE_BAYT)} gzip (CLAUDE.md bütçesi).`,
+  )
+  process.exit(1)
+}
+
+// ⚠️ Trend eşiği aşılsa bile 0 dönülür — o bir uyarı; bütçe yukarıda.
 process.exit(0)

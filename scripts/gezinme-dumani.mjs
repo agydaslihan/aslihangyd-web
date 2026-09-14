@@ -46,6 +46,7 @@
  *   --sifre=…       ATLANIR ve bu açıkça bildirilir (sessizce atlanmaz).
  *   --sadece=genel  yalnızca genel rotalar | --sadece=panel yalnızca panel
  *   --sadece=davranis  yalnızca panel davranışı (form, sayaç, rozet, kontrast)
+ *   --sadece=cls       yalnızca ilk ekran CLS (onaysız, masaüstü + 4× mobil)
  *
  * ⚠️ Ayarlar ORTAM DEĞİŞKENİ DEĞİL, BAYRAK. `src/lib/ortam.test.ts` kodun
  * okuduğu her ortam değişkeninin `.env.example` ve `compose.prod.yml` ile
@@ -203,7 +204,19 @@ async function tarayiciyaBaglan() {
 }
 
 /** Minimal CDP oturumu — tek sekme, olay tamponu. */
-async function sekmeAc(wsAdresi, { azHareket, cerez }) {
+/**
+ * @param {object} secenekler
+ * @param {boolean} secenekler.azHareket
+ * @param {string} [secenekler.cerez]
+ * @param {boolean} [secenekler.yalitilmis] ayrı tarayıcı bağlamı — çerez ve depolama paylaşılmıyor
+ * @param {{ genislik: number, yukseklik: number, olcek: number, mobil: boolean }} [secenekler.cihaz]
+ * @param {number} [secenekler.cpu] CPU yavaşlatma katsayısı (Lighthouse mobil: 4)
+ * @param {boolean} [secenekler.isaretciYamasi] `(pointer: fine)` yaması — varsayılan `!azHareket`
+ */
+async function sekmeAc(
+  wsAdresi,
+  { azHareket, cerez, yalitilmis = false, cihaz = null, cpu = 1, isaretciYamasi = !azHareket },
+) {
   const ws = new WebSocket(wsAdresi)
   await new Promise((c, r) => {
     ws.onopen = c
@@ -231,7 +244,13 @@ async function sekmeAc(wsAdresi, { azHareket, cerez }) {
       ws.send(JSON.stringify({ id, method, params, ...(sessionId ? { sessionId } : {}) }))
     })
 
-  const { targetId } = await cagir('Target.createTarget', { url: 'about:blank' })
+  const baglam = yalitilmis
+    ? (await cagir('Target.createBrowserContext', { disposeOnDetach: true })).browserContextId
+    : undefined
+  const { targetId } = await cagir('Target.createTarget', {
+    url: 'about:blank',
+    ...(baglam ? { browserContextId: baglam } : {}),
+  })
   const { sessionId } = await cagir('Target.attachToTarget', { targetId, flatten: true })
   const S = (m, p) => cagir(m, p, sessionId)
 
@@ -243,13 +262,14 @@ async function sekmeAc(wsAdresi, { azHareket, cerez }) {
     features: [{ name: 'prefers-reduced-motion', value: azHareket ? 'reduce' : 'no-preference' }],
   })
   await S('Emulation.setDeviceMetricsOverride', {
-    width: 1440,
-    height: 900,
-    deviceScaleFactor: 1,
-    mobile: false,
+    width: cihaz?.genislik ?? 1440,
+    height: cihaz?.yukseklik ?? 900,
+    deviceScaleFactor: cihaz?.olcek ?? 1,
+    mobile: cihaz?.mobil ?? false,
   })
+  if (cpu > 1) await S('Emulation.setCPUThrottlingRate', { rate: cpu })
 
-  if (!azHareket) {
+  if (isaretciYamasi) {
     /**
      * ⚠️ BETİĞİN EN KRİTİK SATIRI — başlıktaki gerekçeyi okumadan silmeyin.
      * Headless Chrome `(pointer: fine)` için false diyor; `masaustuMu()`
@@ -315,6 +335,8 @@ async function sekmeAc(wsAdresi, { azHareket, cerez }) {
     olaylariBosalt: () => olaylar.splice(0, olaylar.length),
     kapat: async () => {
       await cagir('Target.closeTarget', { targetId })
+      if (baglam)
+        await cagir('Target.disposeBrowserContext', { browserContextId: baglam }).catch(() => {})
       ws.close()
     },
   }
@@ -798,6 +820,153 @@ async function panelTuru(wsAdresi, rotalar, cerez) {
 
   await sekme.kapat()
   return { etiket: 'panel (oturumlu)', sorunlar }
+}
+
+/* ══════════════════════════════════════════════════════════════════════
+   İLK EKRAN CLS — onay çerezi olmadan, masaüstü ve 4× yavaş mobil
+   ══════════════════════════════════════════════════════════════════════ */
+
+/**
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ NEDEN VAR: ANA SAYFA CLS'İ İKİ HAFTA 0,088'DE KALDI VE KİMSE GÖRMEDİ.
+ *
+ * Hedef 0,000 idi. Lighthouse adımı raporlayıcıydı ve özeti "hedef < 0,1"
+ * diyordu; 0,088 hiçbir yerde kırmızı yakmadı. Sebep çerez bandıydı: vitrin
+ * hidrasyondan sonra bant kadar kısalıyor, ilk ekran 57 px kayıyordu —
+ * onay vermemiş, yani ilk kez gelen HER ziyaretçide (31 Ağustos'ta girdi,
+ * 14 Eylül'de ölçülerek bulundu).
+ *
+ * Bu tur ENGELLEYİCİ ve eşik SIFIR. Koşullar Lighthouse'unkiyle aynı:
+ *   · yalıtılmış bağlam → onay çerezi yok, bant açık
+ *   · masaüstü 1350×940 · mobil 412×823 @1,75 + 4× CPU
+ * Mobilde yavaşlatma ŞART: hızlı makinede hidrasyon ilk boyamadan önce
+ * bitiyor ve aynı kayma hiç görünmüyor (ölçüldü: yavaşlatmasız 0, 4× ile
+ * 0,0517 — Lighthouse'la birebir).
+ *
+ * ⚠️ Mobilde `(pointer: fine)` yaması YOK: gerçek telefon bu sorguya
+ * `false` der; yamayla ölçmek masaüstü hareket kodunu telefona yüklerdi.
+ *
+ * Ayrıca bandın CSS'teki tahmini yüksekliği ölçülen yükseklikle
+ * karşılaştırılıyor: tahmin gerçeğin ALTINDAysa bant vitrinin butonlarını
+ * örter (31 Ağustos arızası).
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+const CLS_CIHAZLARI = [
+  {
+    ad: 'masaüstü',
+    cihaz: { genislik: 1350, yukseklik: 940, olcek: 1, mobil: false },
+    cpu: 1,
+    isaretciYamasi: true,
+  },
+  {
+    ad: 'mobil 4× CPU',
+    cihaz: { genislik: 412, yukseklik: 823, olcek: 1.75, mobil: true },
+    cpu: 4,
+    isaretciYamasi: false,
+  },
+]
+
+const KAYMA_IZLEYICI = `(() => {
+  window.__kaymalar = []
+  new PerformanceObserver((liste) => {
+    for (const e of liste.getEntries()) {
+      if (e.hadRecentInput) continue
+      window.__kaymalar.push({
+        ms: Math.round(e.startTime),
+        deger: e.value,
+        kaynaklar: (e.sources || []).slice(0, 3).map((k) => {
+          const d = k.node
+          const ad = d && d.nodeType === 1 ? d.tagName.toLowerCase() : '#metin'
+          return ad + ' «' + ((d && d.textContent) || '').trim().slice(0, 28) + '» y ' +
+            Math.round(k.previousRect.y) + '→' + Math.round(k.currentRect.y)
+        }),
+      })
+    }
+  }).observe({ type: 'layout-shift', buffered: true })
+})()`
+
+async function ilkEkranClsTuru(wsAdresi) {
+  const sorunlar = []
+  const bilgi = []
+
+  for (const { ad, cihaz, cpu, isaretciYamasi } of CLS_CIHAZLARI) {
+    const sekme = await sekmeAc(wsAdresi, {
+      azHareket: false,
+      yalitilmis: true,
+      cihaz,
+      cpu,
+      isaretciYamasi,
+    })
+    try {
+      await sekme.S('Page.addScriptToEvaluateOnNewDocument', { source: KAYMA_IZLEYICI })
+      await sekme.S('Page.navigate', { url: `${TABAN}/` })
+      await sekme.kosulBekle(`document.readyState === 'complete'`, 30000)
+
+      /**
+       * ⚠️ SESSİZLİK PENCERESİ, SABİT BEKLEME DEĞİL. Yavaş mobilde hidrasyon
+       * saniyeler sürüyor; kayma ancak ondan sonra geliyor. Son kaymadan ya
+       * da yüklemeden bu yana 4 sn hiçbir şey olmayınca ölçüm bitiyor
+       * (en çok 25 sn).
+       */
+      const bitis = Date.now() + 25000
+      let sonDegisim = Date.now()
+      let oncekiSayi = -1
+      while (Date.now() < bitis) {
+        const sayi = await sekme.deger('window.__kaymalar.length')
+        if (sayi !== oncekiSayi) {
+          oncekiSayi = sayi
+          sonDegisim = Date.now()
+        }
+        if (Date.now() - sonDegisim >= 4000) break
+        await uyu(250)
+      }
+
+      const olcum = await sekme.deger(`(() => {
+        const kok = document.documentElement
+        const kart = document.querySelector('[role=dialog] > div')
+        return {
+          bayrak: kok.dataset.cerezBandi ?? null,
+          kaymalar: window.__kaymalar,
+          cssYukseklik: parseFloat(getComputedStyle(kok).getPropertyValue('--cerez-bandi-yuksekligi')) || null,
+          olculenYukseklik: kart ? Math.ceil(kart.getBoundingClientRect().height) + 32 : null,
+        }
+      })()`)
+
+      if (olcum === null) {
+        sorunlar.push(`${ad}: ölçüm okunamadı`)
+        continue
+      }
+      // ⚠️ Bant açık değilse bu ölçüm ilk ziyaretin ölçümü DEĞİL — geçti saymak yanlış olurdu.
+      if (olcum.bayrak !== 'acik' || olcum.olculenYukseklik === null) {
+        sorunlar.push(
+          `${ad}: çerez bandı açık değil (bayrak ${olcum.bayrak}) — ilk ziyaret koşulu kurulamadı`,
+        )
+        continue
+      }
+
+      const cls = olcum.kaymalar.reduce((t, k) => t + k.deger, 0)
+      bilgi.push(
+        `${ad}: CLS ${cls.toFixed(4)} · bant CSS ${olcum.cssYukseklik} px / ölçülen ${olcum.olculenYukseklik} px`,
+      )
+      if (cls > 0) {
+        const ayrinti = olcum.kaymalar
+          .map((k) => `${k.ms} ms ${k.deger.toFixed(4)} [${k.kaynaklar.join(' | ')}]`)
+          .join(' ; ')
+        sorunlar.push(`${ad}: ilk ekran CLS ${cls.toFixed(4)} — hedef 0 · ${ayrinti}`)
+      }
+      if (olcum.cssYukseklik === null || olcum.cssYukseklik < olcum.olculenYukseklik) {
+        sorunlar.push(
+          `${ad}: bandın CSS yüksekliği (${olcum.cssYukseklik} px) ölçülenin (${olcum.olculenYukseklik} px) ALTINDA — ` +
+            'bant vitrinin butonlarını örter. globals.css içindeki tabloyu yeniden ölçün.',
+        )
+      }
+    } finally {
+      await sekme.kapat()
+    }
+  }
+
+  for (const b of bilgi) console.log(`  ℹ ${b}`)
+  return { etiket: 'ilk ekran CLS', sorunlar }
 }
 
 /* ══════════════════════════════════════════════════════════════════════
@@ -1313,13 +1482,15 @@ async function panelCerezi() {
    ÇALIŞTIR
    ══════════════════════════════════════════════════════════════════════ */
 
-const genel = SADECE === 'panel' || SADECE === 'davranis' ? [] : await genelRotalar()
-const panel = SADECE === 'genel' || SADECE === 'davranis' ? [] : panelRotalari()
-const davranis = SADECE !== 'genel'
+const clsKos = SADECE === null || SADECE === 'genel' || SADECE === 'cls'
+const genel =
+  SADECE === 'panel' || SADECE === 'davranis' || SADECE === 'cls' ? [] : await genelRotalar()
+const panel = SADECE === 'genel' || SADECE === 'davranis' || SADECE === 'cls' ? [] : panelRotalari()
+const davranis = SADECE !== 'genel' && SADECE !== 'cls'
 
 console.log(`Taban: ${TABAN}`)
 console.log(
-  `Genel rota: ${genel.length} · Panel rotası: ${panel.length} · Panel davranışı: ${davranis ? 'evet' : 'hayır'}\n`,
+  `Genel rota: ${genel.length} · Panel rotası: ${panel.length} · Panel davranışı: ${davranis ? 'evet' : 'hayır'} · İlk ekran CLS: ${clsKos ? 'evet' : 'hayır'}\n`,
 )
 
 const { wsAdresi, kapat } = await tarayiciyaBaglan()
@@ -1363,6 +1534,8 @@ const raporla = ({ etiket, sorunlar, tiklanan, tiklanamayan, sure }) => {
 }
 
 try {
+  if (clsKos) raporla(await zamanla(() => ilkEkranClsTuru(wsAdresi)))
+
   if (genel.length > 0) {
     raporla(await zamanla(() => genelTur(wsAdresi, genel, { azHareket: false })))
     raporla(await zamanla(() => genelTur(wsAdresi, genel, { azHareket: true })))
