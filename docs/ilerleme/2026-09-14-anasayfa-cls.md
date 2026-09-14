@@ -97,10 +97,24 @@ bırakıyor; kayma üretmiyor.
 Oraya kullanıcı tıklayarak geliyor; etkileşimden hemen sonraki kayma CLS'e
 sayılmıyor (`hadRecentInput`).
 
-### Kalan kayma
+### Kalan kayma — ölçüldü: 0
 
-Beklenen **0**. Ölçülmesi CI'da (sunucuda derleme yok) — sonuç bu kayda
-eklenecek.
+PR #116 CI'ı, düzeltilmiş derlemede:
+
+| Ölçüm | Sonuç |
+| --- | --- |
+| Duman — ilk ekran, onaysız, masaüstü 1350×940 | **CLS 0,0000** · bant CSS 236 px = ölçülen 236 px |
+| Duman — ilk ekran, onaysız, mobil 412×823 4× CPU | **CLS 0,0000** · bant CSS 369 px = ölçülen 369 px |
+| Lighthouse — 3 sayfa × 2 cihaz × 3 koşum | **18 koşumun her biri 0** (yalnızca medyan değil) |
+
+Masaüstü anasayfa performans skoru 98 → 100 (LCP ve baytlar aynı; kayma
+kalktı). Mobil LCP değişmedi (3,3–3,7 sn) — beklenen, karar kaydı ayrı.
+
+Kalan küçük kayma yok. Tahmin–ölçüm farkı yalnızca 16 sınır genişliğinde
+ve yalnızca vitrin boyunda (+24–72 px), kayma olarak değil.
+
+Engelleyici kapılar ilk koşumda: ilk ekran CLS ✓ (11 sn), Lighthouse
+kapıları ✓, istemci JS 214,8 kB (bütçe 320) ✓.
 
 ## Kapılar — hedefe bakıyor
 
