@@ -214,3 +214,57 @@ Sunucuda ölçüldü: `pnpm build` derlemeye hiç başlamadan çıkış 1 verdi
 içine faz denetimi eklemek bunu da kapatırdı, ama config yükleme yolu
 ancak derlemeyle doğrulanabiliyor ve derleme artık sunucuda yapılmıyor —
 yazılmadı.
+
+## Tarayıcı doğrulaması CI'a taşındı — panel davranışı turu
+
+**Karar (Aslıhan):** tarayıcı doğrulaması CI'da. Hazır derlemeyi sunucuya
+indirmek reddedildi: canlı siteyle aynı makinede ikinci uygulama
+koşturmak, az önce kaçınılan riskin başka biçimi. CI doğrulaması her PR'da
+tekrarlanıyor ve kayıt bırakıyor.
+
+`scripts/gezinme-dumani.mjs` dördüncü tur: **panel davranışı**.
+
+| Denetim | Nasıl |
+| --- | --- |
+| Yeni ilanda enlem yaz → Tab → boylam yaz | `Input.insertText` + gerçek `Tab`; iki kutu da duruyor mu |
+| Kayıtlı ilanda "41." | seç + yaz; iki kutu da korunuyor mu |
+| Sayaç ve iyelik eki | ada → parsel → taşınmaz no → yetkili → başlangıç → bitiş: `0’ı 1’i 2’si 3’ü 4’ü 5’i` → "hepsi tamamlandı"; `aria-valuenow` ve eksik listesi her adımda |
+| Liste rozeti | REST'ten açılan taslak: "EİDS eksik (6)", ada girilince "(5)"; yayındaki ilanda rozet yok |
+| Çizilen kontrast, iki tema | rozet, adım göstergesi (etkin/bekleyen/numara/ilerleme metni), sayaç, kaynak metni, ipucu; çubuk dolgu–iz ve çerçeve–zemin ≥ 3:1 |
+
+⚠️ `6’sı` tarayıcıda görünmüyor: altı koşul tamamlanınca özet "6 koşulun
+hepsi tamamlandı" diyor. Ek birim testinde (`lib/metin/iyelik.test.ts`).
+
+⚠️ Beklenen metinler betikte elle yazılı; `src/lib/olcum/gezinmeDumani.test.ts`
+onları `sayiIyelik()` ve `eidsIlerlemesi()` çıktısıyla karşılaştırıyor —
+motor değişip betik eskide kalırsa önce birim testi kırılıyor. Aynı dosya
+`(pointer: fine)` yamasının yerinde durduğunu da denetliyor.
+
+⚠️ Deneme kaydı `DUMAN-DAVRANIS` önekiyle REST'ten açılıyor ve `finally`
+içinde siliniyor.
+
+⚠️ **Tur yerelde koşulmadı.** Sunucuda derleme yok; 3000 portundaki
+üretim uygulamasına karşı koşmak üretim veritabanına deneme ilanı yazmak
+olurdu. İlk gerçek koşumu CI'da.
+
+### Süre
+
+Her turun süresi günlüğe, toplamı CI iş özetine yazılıyor; 900 sn'yi
+aşarsa `::warning::`. Ölçüm ilk CI koşumunda — sonuç bu kayda eklenecek.
+
+### Hesaplayarak düzeltilen kontrastlar
+
+Tur yazılırken Payload tema değişkenleri (`@payloadcms/next` stilleri)
+okunarak hesaplandı; ölçülse kırılacaklardı:
+
+| Öğe | Önce | Sonra |
+| --- | --- | --- |
+| İlerleme çubuğu dolgu–iz | açık 2,97 · koyu 2,73 | iz zemin rengi + çerçeve: açık 4,0 · koyu 4,6 |
+| Bekleyen adım metni (`elevation-500`) | açık 3,95 (beyaz zemin) | `elevation-600`: açık 5,9 · koyu 7,8 |
+| Adım yüzdesi | aynı token | `elevation-600` |
+| `.sihirbaz-ipucu` (kaynak metinleri burada) | açık 3,95 | `elevation-600` |
+
+⚠️ `elevation-500` iki temada da aynı gri (rgb 128) — koyu tema onu
+EZMİYOR. Aynı token üç yerde daha duruyor ve **bu PR'da değiştirilmedi**
+(kapsam dışı, ölçülmüyor): `.sihirbaz-birim`, `.sihirbaz-gostergeler dt`,
+`.sihirbaz-gostergeler-not`.

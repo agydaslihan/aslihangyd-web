@@ -268,10 +268,13 @@ sistemi derlemeyi durdurdu; canlı site aynı belleği paylaşıyordu.
 - typecheck, lint, test sunucuda koşabilir (hafif)
 - Tarayıcı doğrulaması gerekiyorsa geliştirme veritabanına karşı
   `NODE_ENV=test` ile
-  ⚠️ `next start` HAZIR bir `.next` derlemesi ister ve o derleme artık
-  sunucuda üretilmiyor. Derlemenin sunucuya nasıl geleceği henüz
-  kararlaştırılmadı (açık soru, 14 Eylül 2026) — o zamana kadar tarayıcı
-  doğrulaması CI'daki gezinme dumanı ve Lighthouse iş akışlarına kalır.
+  ⚠️ `next start` HAZIR bir `.next` derlemesi ister ve o derleme sunucuda
+  üretilmiyor. KARAR (14 Eylül 2026): tarayıcı doğrulaması CI'da,
+  `scripts/gezinme-dumani.mjs` içinde. Hazır derlemeyi sunucuya indirmek
+  REDDEDİLDİ — canlı siteyle aynı makinede ikinci uygulama koşturmak,
+  kaçınılan riskin başka biçimi; CI doğrulaması ise her PR'da tekrarlanıyor
+  ve kayıt bırakıyor. Yeni bir panel davranışı doğrulanacaksa oraya tur
+  eklenir.
 
 ⚠️ `.env.production` TUZAĞI: proje dizininde üretim ayarları duruyor ve
 `next start` (üretim kipi) onu `.env`'in ÜSTÜNE yükler — yerel sunucu
@@ -307,9 +310,12 @@ prova edilir ve Aslıhan sunucuda çalıştırır.
       atlanamadığını gösterir. `pnpm test` ikisini de çalıştırır ve
       `DATABASE_URI` ister.
 - `scripts/gezinme-dumani.mjs` — **gerçek tarayıcıda** gezinme dumanı.
-      CI'da her PR'da koşar ve ENGELLEYİCİDİR. Üç rotaya gerçek fare
+      CI'da her PR'da koşar ve ENGELLEYİCİDİR. Rotalara gerçek fare
       olaylarıyla tıklar; sayfa açıldı mı, başlık dolu mu, yakalanmamış
-      istisna var mı diye bakar.
+      istisna var mı diye bakar. Dördüncü tur **panel davranışı**: koordinat
+      alanına gerçek klavyeyle yazar, EİDS sayacını ve rozeti izler, çizilen
+      kontrastı iki temada ölçer. Tur süreleri CI özetine yazılır; toplam
+      15 dakikayı aşarsa uyarı düşer ve turlar paralelleştirilmelidir.
 
 ⚠️ Üçüncü katman 24 Ağustos 2026'da eklendi çünkü ilk ikisi bir
     KULLANILAMAZ SİTEYİ yeşil geçirdi: bütün rotalar 200, 101 test dosyası,

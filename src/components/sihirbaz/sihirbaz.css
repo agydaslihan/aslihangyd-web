@@ -43,12 +43,18 @@
   border-radius: 4px;
 }
 
+/*
+  ⚠️ Bekleyen adım `elevation-600` — `500` DEĞİL. `500` iki temada da aynı
+  gri (rgb 128): açık temada beyaz üstünde 3,95:1, koyu temada panel
+  zemininde ~4,0:1 — AA'nın altı. `600` açıkta 5,9:1, koyuda 7,8:1.
+  Gerçek tarayıcıda `scripts/gezinme-dumani.mjs` ölçüyor.
+*/
 .sihirbaz-adimlar li {
   display: flex;
   align-items: center;
   gap: 0.5rem;
   font-size: 0.8125rem;
-  color: var(--theme-elevation-500, #888);
+  color: var(--theme-elevation-600, #666);
 }
 
 .sihirbaz-adimlar li button.etkin {
@@ -209,7 +215,8 @@ textarea.sihirbaz-girdi {
 }
 
 .sihirbaz-ipucu {
-  color: var(--theme-elevation-500, #888);
+  /* ⚠️ Kaynak metinleri burada çiziliyor — `500` AA'nın altında (3,95:1). */
+  color: var(--theme-elevation-600, #666);
 }
 
 .sihirbaz-hata {
@@ -435,7 +442,8 @@ textarea.sihirbaz-girdi {
 
 .sihirbaz-adim-yuzde {
   font-size: 0.72rem;
-  color: var(--theme-elevation-500);
+  /* ⚠️ `500` AA'nın altında — bekleyen adımla aynı gerekçe. */
+  color: var(--theme-elevation-600);
   font-variant-numeric: tabular-nums;
 }
 
@@ -889,12 +897,19 @@ textarea.sihirbaz-girdi {
 /*
   ⚠️ Çubuk tek taşıyıcı DEĞİL (WCAG 1.4.1): yanındaki metin aynı bilgiyi
   sayıyla veriyor ve `role="progressbar"` ekran okuyucuya anlatıyor.
+
+  ⚠️ İZ ZEMİN RENGİNDE + ÇERÇEVE (WCAG 1.4.11, 3:1). İlk hâlinde iz
+  `elevation-150` idi ve dolguyla farkı açık temada 2,97:1, koyuda
+  2,73:1 kalıyordu — dolgunun nerede bittiği okunmuyordu. Şimdi dolgu–iz
+  açıkta 4,0:1, koyuda 4,6:1; çerçeve–panel zemini iki temada da 5:1'in
+  üstünde, yani çubuğun toplam uzunluğu da görünüyor.
 */
 .sihirbaz-eids-cubuk {
   display: block;
-  height: 6px;
-  border-radius: 3px;
-  background: var(--theme-elevation-150);
+  height: 8px;
+  border-radius: 4px;
+  border: 1px solid var(--theme-elevation-600);
+  background: var(--theme-elevation-0);
   overflow: hidden;
 }
 
