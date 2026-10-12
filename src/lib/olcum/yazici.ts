@@ -5,6 +5,7 @@ import { getPayload } from 'payload'
 
 import type { GozlemGunluk as GozlemGunlukKaydi } from '@/payload-types'
 
+import { botAnahtariniCoz } from './bot'
 import {
   bosalt,
   olayAnahtariniCoz,
@@ -87,11 +88,27 @@ function kovaDizisi(
  * boşaltma günün önceki sayaçlarını siler ve panel yalnızca son beş dakikayı
  * gösterirdi — hem de hatasız görünerek.
  */
+/**
+ * Sayı alanlarının birleştirme kipi.
+ *
+ * ⚠️ `enBuyuk` ve `enKucuk` TOPLANMAZ. `enYavasMs` toplanırsa "en yavaş
+ * istek" diye bir şey kalmaz; `ilkMs` toplanırsa ilk tarama zamanı 1970'in
+ * katlarına çıkar. Kip bu yüzden alan adıyla değil AÇIKÇA geçiriliyor:
+ * hangi alanın nasıl birleştiğini, birleştirmeyi çağıran kod söylüyor.
+ *
+ * ⚠️ Eskiden kural tek bir satırdı: `ad === 'enYavasMs' ? max : topla`.
+ * Bot sayfalarının ilk/son tarama zamanı eklenince o satır üç kipi birden
+ * taşımak zorunda kalacaktı; alan adına gömülü bir kural, dördüncü alanda
+ * sessizce yanlış toplar.
+ */
+type BirlesimKipi = 'topla' | 'enBuyuk' | 'enKucuk'
+
 function birlestir(
   mevcut: unknown,
   yeni: Record<string, unknown>[],
   anahtarlar: readonly string[],
   sayilar: readonly string[],
+  kipler: Readonly<Record<string, BirlesimKipi>> = { enYavasMs: 'enBuyuk' },
 ): Record<string, unknown>[] {
   const harita = new Map<string, Record<string, unknown>>()
 
@@ -115,8 +132,21 @@ function birlestir(
     for (const ad of sayilar) {
       const a = typeof once[ad] === 'number' ? (once[ad] as number) : 0
       const b = typeof satir[ad] === 'number' ? (satir[ad] as number) : 0
-      // `enYavasMs` toplanmaz, en büyüğü alınır.
-      once[ad] = ad === 'enYavasMs' ? Math.max(a, b) : a + b
+      const kip = kipler[ad] ?? 'topla'
+      if (kip === 'enBuyuk') {
+        once[ad] = Math.max(a, b)
+      } else if (kip === 'enKucuk') {
+        /**
+         * ⚠️ SIFIR "YOK" DEMEK, "EN KÜÇÜK" DEMEK DEĞİL. Alan eksikse `a`
+         * sıfır oluyor ve düz bir `Math.min` ilk tarama zamanını 0 yapardı
+         * — panelde 1 Ocak 1970 yazardı. Sıfır olmayanlar arasından
+         * seçiliyor.
+         */
+        const adaylar = [a, b].filter((deger) => deger > 0)
+        once[ad] = adaylar.length === 0 ? 0 : Math.min(...adaylar)
+      } else {
+        once[ad] = a + b
+      }
     }
   }
 
@@ -214,6 +244,40 @@ export async function tamponuYaz(): Promise<boolean> {
        * toplanmalı.
        */
       vitaller: birlestir(eski?.vitaller, vitalDizisi(icerik), ['ad', 'cihaz', 'kova'], ['adet']),
+
+      /* ── Bot trafiği — AYNI SATIR, AYRI SÜTUNLAR ────────────────────────
+       *
+       * ⚠️ İnsan sayaçlarıyla aynı gün satırına yazılıyor ve aynı
+       * boşaltmada gidiyor: bot istekleri için AYRI BİR DB YAZMASI YOK.
+       * Eklenen şey yeni bir yol değil, yeni bir boyut.
+       * ──────────────────────────────────────────────────────────────── */
+      botToplamIstek: Number(eski?.botToplamIstek ?? 0) + icerik.botToplam,
+      botIstekleri: birlestir(eski?.botIstekleri, botDizisi(icerik), ['tur', 'ad'], ['adet']),
+      botSayfalari: birlestir(
+        eski?.botSayfalari,
+        botSayfaDizisi(icerik),
+        ['rota'],
+        ['adet', 'ilkMs', 'sonMs'],
+        // ⚠️ İlk tarama en KÜÇÜK, son tarama en BÜYÜK zaman; ikisi de toplanmaz.
+        { ilkMs: 'enKucuk', sonMs: 'enBuyuk' },
+      ),
+      botDurumlari: birlestir(
+        eski?.botDurumlari,
+        [...icerik.botDurum.entries()].map(([kod, adet]) => ({ kod, adet })),
+        ['kod'],
+        ['adet'],
+      ),
+      /**
+       * ⚠️ BU BAYRAK BİR DÜRÜSTLÜK ŞARTI, BİR ÖZELLİK DEĞİL.
+       *
+       * 11 Ekim 2026'dan ÖNCE yazılan gün satırlarında insan sayaçları bot
+       * trafiğini de içeriyordu ve `User-Agent` hiçbir yere kaydedilmediği
+       * için geriye dönük ayrıştırmak İMKÂNSIZ. Bayrağı taşımayan satırlar
+       * panelde "bu günlerin insan sayıları bot trafiğini içeriyor" uyarısı
+       * olarak görünüyor. Uyarıyı kaldırmak, karşılaştırmayı sessizce
+       * yanlış yapmak olurdu.
+       */
+      botAyrimi: true,
     }
 
     if (eski === null) {
@@ -255,6 +319,28 @@ function vitalDizisi(icerik: TamponIcerigi): Record<string, unknown>[] {
     // histogramı okunamaz hâle getirirdi.
     return cozulmus === null ? [] : [{ ...cozulmus, adet }]
   })
+}
+
+/**
+ * Bot sayaçlarını satıra çevirir.
+ *
+ * ⚠️ Anahtarı kuran ve bölen kod `bot.ts` içinde; burada yalnızca çözülmüş
+ * hâli satıra yazılıyor — `olayDizisi` ile aynı disiplin.
+ */
+function botDizisi(icerik: TamponIcerigi): Record<string, unknown>[] {
+  return [...icerik.botIstek.entries()].map(([anahtar, adet]) => {
+    const { sinif, ad } = botAnahtariniCoz(anahtar)
+    return { tur: sinif, ad, adet }
+  })
+}
+
+function botSayfaDizisi(icerik: TamponIcerigi): Record<string, unknown>[] {
+  return [...icerik.botSayfa.entries()].map(([rota, ozet]) => ({
+    rota,
+    adet: ozet.adet,
+    ilkMs: ozet.ilkMs,
+    sonMs: ozet.sonMs,
+  }))
 }
 
 /**

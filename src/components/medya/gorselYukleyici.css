@@ -1,0 +1,213 @@
+/*
+ * Toplu fotoğraf yükleyicinin stili.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ KURALLAR `sihirbaz.css`TEN TAŞINDI, KOPYALANMADI. Yükleyici artık iki
+ * ekranda birden çalışıyor (sihirbaz + ilan düzenleme); stilin sihirbazın
+ * dosyasında kalması, sihirbaz dışında kullanıldığında sessizce stilsiz
+ * kalma riski demekti.
+ *
+ * ⚠️ HAM HEX YOK. Renkler Payload'ın kendi değişkenlerinden; yedek değer
+ * de yazılmıyor (`tasarim/disiplin.test.ts`). Bileşen yalnızca Payload
+ * admin'i içinde render ediliyor ve o değişkenler orada daima tanımlı.
+ *
+ * ⚠️ Metin renkleri `--panel-metin-*` ve rampanın UÇLARINDAN; rampanın
+ * ortası (elevation-500, error-500) iki temada da AA altında kalıyor
+ * (`lib/tasarim/panelKontrast.test.ts`).
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+
+.gorsel-yukleyici {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+/*
+ * ⚠️ Sürükle-bırak alanı, dosya seçicinin YERİNE değil YANINDA duruyor:
+ * sürükleme dokunmatikte ve klavyeyle yok.
+ */
+.gorsel-birakma {
+  border: 2px dashed var(--theme-elevation-200);
+  border-radius: 8px;
+  padding: 1.25rem;
+  text-align: center;
+  transition:
+    border-color 120ms ease-out,
+    background 120ms ease-out;
+}
+
+.gorsel-birakma.uzerinde {
+  border-color: var(--theme-success-500);
+  background: var(--theme-elevation-50);
+}
+
+.gorsel-birakma p {
+  margin: 0;
+}
+
+.gorsel-secici {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.gorsel-secici-etiket {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--theme-text);
+}
+
+.gorsel-girdi {
+  font: inherit;
+  font-size: 0.9rem;
+  padding: 0.5rem 0.65rem;
+  color: var(--theme-text);
+  background: var(--theme-input-bg);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  min-width: 0;
+}
+
+.gorsel-ipucu {
+  margin: 0;
+  font-size: 0.78rem;
+  line-height: 1.5;
+  color: var(--panel-metin-soluk);
+}
+
+.gorsel-hata {
+  margin: 0;
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  color: var(--panel-metin-hata);
+  background: var(--theme-error-50);
+  border: 1px solid var(--theme-error-100);
+  border-radius: 4px;
+}
+
+.gorsel-dugme {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  /* Dokunma hedefi en az 44px — sahada telefonla kullanılıyor. */
+  min-height: 2.75rem;
+  padding-inline: 1rem;
+  font: inherit;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: var(--theme-text);
+  background: transparent;
+  border: 1px solid var(--theme-elevation-200);
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.gorsel-dugme:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.gorsel-ilerleme {
+  margin: 0;
+}
+
+.gorsel-ilerleme-cubuk {
+  height: 6px;
+  border-radius: 999px;
+  background: var(--theme-elevation-100);
+  overflow: hidden;
+}
+
+.gorsel-ilerleme-cubuk span {
+  display: block;
+  height: 100%;
+  background: var(--theme-success-500);
+  transition: width 200ms ease-out;
+}
+
+.gorsel-ilerleme-metin {
+  margin: 0.4rem 0 0;
+  font-size: 0.8rem;
+  color: var(--theme-elevation-600);
+}
+
+.gorsel-arac {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.gorsel-liste {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.gorsel-liste li {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 6px;
+  background: var(--theme-elevation-50);
+}
+
+/* ⚠️ Kapak, sıranın başı olduğu için ayrıca işaretleniyor: "ilk fotoğraf
+   kapaktır" kuralı ekranda görünmüyorsa kural yoktur. */
+.gorsel-liste li.kapak {
+  border-color: var(--theme-success-500);
+}
+
+.gorsel-liste img {
+  width: 96px;
+  height: 72px;
+  object-fit: cover;
+  border-radius: 4px;
+  flex: 0 0 auto;
+}
+
+.gorsel-govde {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.gorsel-ad {
+  font-size: 0.8rem;
+  color: var(--theme-elevation-600);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.gorsel-dugmeler {
+  display: flex;
+  gap: 0.25rem;
+  flex: 0 0 auto;
+}
+
+.gorsel-dugmeler button {
+  /* ⚠️ 44 px dokunma hedefi — sahada telefonla kullanılıyor. */
+  min-width: 44px;
+  min-height: 44px;
+  color: var(--theme-text);
+  border: 1px solid var(--theme-elevation-150);
+  border-radius: 4px;
+  background: var(--theme-elevation-0);
+  cursor: pointer;
+}
+
+.gorsel-dugmeler button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}

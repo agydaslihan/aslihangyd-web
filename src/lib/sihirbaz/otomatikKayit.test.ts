@@ -130,6 +130,16 @@ describe('sahada kullanım', () => {
     expect(bilesen).toContain('navigator.geolocation')
   })
 
+  /**
+   * ⚠️ İKİ İDDİA ARTIK PAYLAŞILAN YÜKLEYİCİYE BAKIYOR.
+   *
+   * Görsel adımı 11 Ekim 2026'da sihirbazdan çıkarılıp
+   * `components/medya/GorselYukleyici.tsx` dosyasına taşındı: aynı bileşen
+   * ilan düzenleme ekranında da çalışıyor. İddiaları sihirbaz dosyasında
+   * bırakmak, kuralı ARTIK ORADA OLMAYAN bir yerde aramak olurdu.
+   */
+  const yukleyici = oku('components/medya/GorselYukleyici.tsx')
+
   it('fotoğraf girişi kamerayı kapatmıyor', () => {
     /**
      * ⚠️ `capture` yazmak galeriyi kapatıp yalnızca kamerayı açar. Sahada
@@ -139,15 +149,14 @@ describe('sahada kullanım', () => {
      * `/*`, yorum soyucusunu yanıltıp dosyanın yarısını yutuyordu. Ölçüm
      * aracının kendi tuzağı, ölçülen şeyin arızası gibi görünüyordu.
      */
-    const ham = oku('components/sihirbaz/PortfoySihirbazi.tsx')
-    expect(ham).toContain('accept="image/')
-    expect(ham).not.toContain('capture=')
+    expect(yukleyici).toContain('accept="image/')
+    expect(yukleyici).not.toContain('capture=')
   })
 
   it('görsel sıralaması klavyeyle de yapılabiliyor', () => {
     // Sürükle-bırak klavyeyle kullanılamıyor; yukarı/aşağı düğmeleri şart.
-    expect(bilesen).toContain('fotoğrafı yukarı taşı')
-    expect(bilesen).toContain('fotoğrafı aşağı taşı')
+    expect(yukleyici).toContain('fotoğrafı yukarı taşı')
+    expect(yukleyici).toContain('fotoğrafı aşağı taşı')
   })
 
   it('adımlar arası gezinme serbest', () => {

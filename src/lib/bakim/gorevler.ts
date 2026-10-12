@@ -192,7 +192,38 @@ export async function saklamaSuresiDolanlariSil(payload: Payload): Promise<Gorev
 export const OLCUM_AYRINTI_GUN = 90
 
 /**
- * Ölçüm kayıtlarının ayrıntı katmanını 90 gün sonra temizler.
+ * Bot verisinin saklama süresi.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ 90 DEĞİL 180 — VE AYRIM KASITLI, GEVŞETME DEĞİL.
+ *
+ * 90 gün kuralı bir KVKK taahhüdü: aydınlatma metninde yazıyor ve ziyaretçi
+ * verisinin en ayrıntılı katmanını (olay kırılımı, şehir) kapsıyor.
+ *
+ * Bot verisi kişisel veri DEĞİL — botlar kişi değil; çerez yazılmıyor, IP
+ * okunmuyor, `User-Agent` hiçbir yere kaydedilmiyor (`lib/olcum/bot.ts`
+ * ham dizeyi bir kovaya çevirip atıyor). Dolayısıyla 90 gün taahhüdü bu
+ * sütunları kapsamıyor ve onlara uygulanması gerekmiyor.
+ *
+ * ⚠️ O HÂLDE NEDEN BİR SINIR VAR: DİSK. Tarama verisi rota başına satır
+ * üretiyor ve ilan/mahalle sayfaları arttıkça gün satırı büyüyor. Sınırsız
+ * bırakmak, hiç kimsenin bakmadığı bir tabloyu yıllarca büyütmek olurdu.
+ *
+ * ⚠️ NEDEN TAM OLARAK 180: "hiç taranmamış sayfa" sorusunun cevap
+ * penceresi. Bu ölçekte bir siteyi arama motoru her sayfa için haftada bir
+ * gezmiyor; altı ay, "bu sayfa gerçekten hiç taranmadı" diyebilmek için
+ * gereken en kısa süre. Daha kısası yanlış alarm üretir, daha uzunu disk
+ * için gerekmeyen bir maliyet.
+ *
+ * ⚠️ Satır SİLİNMİYOR, ayrıntı boşaltılıyor: `botToplamIstek` kalıyor, tür
+ * ve sayfa kırılımı gidiyor. Böylece "geçen yıl bu ay ne kadar tarandık"
+ * sorusu cevaplanabilir kalıyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export const BOT_SAKLAMA_GUN = 180
+
+/**
+ * Ölçüm kayıtlarının ayrıntı katmanlarını temizler — iki ayrı eşikle.
  *
  * ─────────────────────────────────────────────────────────────────────────
  * ⚠️ SATIR SİLİNMİYOR, YALNIZCA AYRINTI DİZİSİ BOŞALTILIYOR.
@@ -211,7 +242,7 @@ export const OLCUM_AYRINTI_GUN = 90
 export async function olcumAyrintilariniTemizle(payload: Payload): Promise<GorevRaporu> {
   const rapor: GorevRaporu = {
     anahtar: 'olcum-ayrinti-sil',
-    ad: 'Ölçüm — 90 günden eski olay ayrıntılarını temizle',
+    ad: gorevKunyesi('olcum-ayrinti-sil').ad,
     islenen: 0,
     detay: [],
   }
@@ -258,6 +289,61 @@ export async function olcumAyrintilariniTemizle(payload: Payload): Promise<Gorev
       rapor.detay.push(
         `${rapor.islenen} gün kaydının olay ayrıntısı ve şehir kırılımı temizlendi ` +
           `(${OLCUM_AYRINTI_GUN} günden eski). Toplulaştırılmış sayaçlar korundu.`,
+      )
+    }
+
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ BOT AYRINTISI AYRI EŞİKLE, AYNI GÖREVDE.
+     *
+     * Ayrı bir bakım görevi açmak ayrı bir cron satırı, ayrı bir künye ve
+     * ayrı bir "çalışmadı" arıza yüzeyi demekti. İki eşiğin aynı görevde
+     * durması, ikisinin birlikte görünmesini de sağlıyor: panelde tek
+     * satır, iki sayı.
+     *
+     * ⚠️ İKİ EŞİK AYNI SAYIYA ÇEKİLMEMELİ. 90 gün bir KVKK taahhüdü, 180
+     * gün bir disk kararı; birleştirmek, taahhüdü gevşetmek ya da diski
+     * gereksiz yere daraltmak olurdu. Gerekçeler `BOT_SAKLAMA_GUN`
+     * üzerinde yazılı.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    const botSiniri = new Date()
+    botSiniri.setUTCDate(botSiniri.getUTCDate() - BOT_SAKLAMA_GUN)
+    const botSinirGunu = botSiniri.toISOString().slice(0, 10)
+
+    const botEskileri = await payload.find({
+      collection: 'gozlem-gunluk',
+      where: {
+        and: [{ gun: { less_than: botSinirGunu } }, { botTemizlendi: { not_equals: true } }],
+      },
+      limit: 500,
+      depth: 0,
+      overrideAccess: true,
+    })
+
+    let botIslenen = 0
+    for (const kayit of botEskileri.docs) {
+      await payload.update({
+        collection: 'gozlem-gunluk',
+        id: (kayit as { id: string | number }).id,
+        /**
+         * ⚠️ `botToplamIstek` SİLİNMİYOR. "Geçen yıl bu ay ne kadar
+         * tarandık" sorusu bir SEO sorusudur ve tek bir sayıyla
+         * cevaplanıyor; onu da silmek, saklama sınırının amacını
+         * (disk) aşıp bilgiyi yok etmek olurdu.
+         */
+        data: { botIstekleri: [], botSayfalari: [], botDurumlari: [], botTemizlendi: true },
+        overrideAccess: true,
+      })
+      botIslenen += 1
+    }
+
+    rapor.islenen += botIslenen
+    if (botIslenen > 0) {
+      rapor.detay.push(
+        `${botIslenen} gün kaydının bot tür ve sayfa kırılımı temizlendi ` +
+          `(${BOT_SAKLAMA_GUN} günden eski). Bot verisi kişisel veri değil; sınır disk ` +
+          `için. Toplam tarama sayısı korundu.`,
       )
     }
   } catch (hata) {

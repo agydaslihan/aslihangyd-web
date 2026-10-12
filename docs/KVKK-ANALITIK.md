@@ -199,6 +199,8 @@ sapmayı gizlemek ölçümün kendisinden zararlı olurdu.
 | **Şehir kırılımı** | **90 gün** | Ülkeden farklı olarak tek kişiyi işaret edebilir; raporun k-anonimlik eşiği gösterimi kısıtlıyor, saklamayı değil |
 | Toplulaştırılmış günlük sayaçlar (sayfa, kaynak, cihaz, ülke, giriş sayfası, saat, tarayıcı) | Süresiz | Kişisel veri değil; yıllar arası karşılaştırma için gerekli |
 | Core Web Vitals kova sayaçları | Süresiz | Kişisel veri değil; ham değer hiç oluşmuyor, yalnızca histogram |
+| **Bot tür ve sayfa kırılımı** | **180 gün** | ⚠️ Bu süre bir KVKK taahhüdü DEĞİL, **disk** kararı — bot kişi değil. Gerekçe aşağıda (§4b) |
+| Bot toplam istek sayısı | Süresiz | Kişisel veri değil; "geçen yıl bu ay ne kadar tarandık" sorusu tek sayıyla cevaplanıyor |
 
 Silme işi otomatik: `olcum-ayrinti-sil` bakım görevi her gece çalışıyor.
 
@@ -207,6 +209,59 @@ Silme işi otomatik: `olcum-ayrinti-sil` bakım görevi her gece çalışıyor.
 > toplanmış sayaçlar. 90 gün, aydınlatma metninde taahhüt edildiği için
 > uygulanıyor. Metinde farklı bir süre yazılacaksa koddaki değer de
 > güncellenmeli (`OLCUM_AYRINTI_GUN`).
+
+---
+
+## 4b. Bot ve arama motoru ölçümü (11 Ekim 2026'da eklendi)
+
+**Bot trafiği kişisel veri işleme DEĞİL — çünkü bot kişi değil.** Bu bölüm
+avukata bir soru getirmiyor; bilgi olarak duruyor ki panelde görülen bot
+sayıları için "bunun aydınlatma metninde karşılığı var mı?" sorusu
+sorulmasın.
+
+### Ne ölçülüyor
+
+| Alan | Örnek | Not |
+|---|---|---|
+| Bot sınıfı | `googlebot`, `gptbot`, `diger` | `User-Agent`'tan türetilmiş bir **kova** |
+| Tanınmayan botun adı | `applebot` | Harf/rakam/tire ile sınırlı, 32 karaktere kırpılı |
+| Taranan rota | `/mahalleler/muhittin` | Sorgu dizesi atılıyor, insan tarafıyla aynı kural |
+| İlk ve son tarama anı | epoch ms | Rota başına, bota göre değil |
+| Yanıt kodu | `404`, `5xx` | 200 türetiliyor; vekil katmanı yanıtı görmüyor |
+
+### Ne YAPILMIYOR
+
+- **Ham `User-Agent` hiçbir yere kaydedilmiyor** — ne veritabanına ne
+  günlüğe. `src/lib/olcum/bot.ts` ham dizeyi bir kovaya çevirip **atıyor**;
+  insan tarafındaki `tarayiciAilesi()` ile aynı disiplin.
+- **IP okunmuyor, çerez yazılmıyor, kimlik üretilmiyor.**
+- **Ayrı bir veritabanı yazması yok**: bot sayaçları insan sayaçlarıyla
+  aynı gün satırına, aynı boşaltmada yazılıyor. Eklenen şey yeni bir yol
+  değil, yeni bir **boyut**.
+
+### Neden 180 gün, neden KVKK'dan ayrı
+
+90 gün kuralı bir **taahhüt**: aydınlatma metninde yazıyor ve ziyaretçi
+verisinin en ayrıntılı katmanını kapsıyor. Bot verisi o kapsamın dışında —
+ama sınırsız da bırakılmadı, çünkü tarama verisi rota başına satır
+üretiyor ve ilan/mahalle sayfaları arttıkça gün satırı büyüyor. **Sınırın
+sebebi disk, gizlilik değil** ve bu ayrımın yazılı olması şart: iki sayı
+aynı yere çekilirse ya taahhüt gevşer ya disk gereksiz yere daralır.
+
+180 sayısı "hiç taranmamış sayfa" sorusunun cevap penceresinden geliyor:
+bu ölçekte arama motoru her sayfayı haftada bir gezmiyor; altı ay, "bu
+sayfa gerçekten hiç taranmadı" diyebilmek için gereken en kısa süre.
+
+### ⚠️ 11 Ekim 2026'dan ÖNCEKİ günler
+
+O tarihe kadar `proxy.ts` her isteği insan sayacına yazıyordu ve bot
+süzgeci yoktu: **Googlebot'un `User-Agent` dizesi "Chrome" ve "Mobile"
+taşıdığı için tarama istekleri tarayıcı dağılımında chrome, cihaz
+dağılımında mobil görünüyordu.** Ham `User-Agent` hiçbir yere
+kaydedilmediği için geriye dönük ayrıştırmak **imkânsız**; o günlerin
+ziyaretçi sayıları bot trafiğini içermeye devam ediyor. Panel bu günleri
+sayıp uyarı olarak gösteriyor (`botAyrimi` bayrağı) — gizlemek,
+karşılaştırmayı sessizce yanlış yapmak olurdu.
 
 ---
 
@@ -345,8 +400,10 @@ Avukatın değerlendirmesine sunulan taslak başlıklar:
 | Katman B onay kapısı | `src/components/olcum/KatmanB.tsx` |
 | Olay ucu (sunucu tarafı onay denetimi) | `src/app/api/olcum/olay/route.ts` |
 | Veri şeması (kişisel alan içermiyor) | `src/collections/GozlemGunluk.ts` |
-| 90 gün temizliği | `src/lib/bakim/gorevler.ts` |
-| Kararların testi | `src/lib/olcum/olcum.test.ts` |
+| 90 gün temizliği (ve bot için 180 gün) | `src/lib/bakim/gorevler.ts` |
+| Bot sınıflandırması (ham UA kaydedilmiyor) | `src/lib/olcum/bot.ts` |
+| Bot raporu — insan raporundan AYRI nesne | `src/lib/olcum/botToplama.ts`, `src/lib/olcum/botRaporu.ts` |
+| Kararların testi | `src/lib/olcum/olcum.test.ts`, `src/lib/olcum/bot.test.ts` |
 
 ⚠️ Bu kararların çoğu **testle** korunuyor: biri IP eklemeye kalkarsa,
 oturum kimliği üretmeye kalkarsa ya da onay kapısını kaldırırsa test

@@ -235,6 +235,115 @@ export const GozlemGunluk: CollectionConfig = {
         { name: 'adet', type: 'number', defaultValue: 0 },
       ],
     },
+
+    /* ── Bot ve arama motoru trafiği ─────────────────────────────────────
+     *
+     * ⚠️ İNSAN SAYAÇLARINDAN AYRI SÜTUNLAR, AYNI SATIR. Ayrı bir koleksiyon
+     * açmak gün başına ikinci bir yazma demekti ve şartnamenin sert kuralı
+     * ("sayfa görüntüleme başına INSERT yok") iki kat zorlanırdı. Eklenen
+     * şey yeni bir yazma yolu değil, yeni bir BOYUT.
+     *
+     * ⚠️ BU SÜTUNLAR KİŞİSEL VERİ DEĞİL — botlar kişi değil. Çerez
+     * yazılmıyor, IP okunmuyor, `User-Agent` kaydedilmiyor: ham dize bir
+     * kovaya çevrilip atılıyor (`lib/olcum/bot.ts`). Dolayısıyla KVKK'nın
+     * 90 gün taahhüdü buraya uygulanmıyor; saklama sınırı DİSK için var ve
+     * 180 gün (`BOT_SAKLAMA_GUN`).
+     * ─────────────────────────────────────────────────────────────────── */
+
+    {
+      name: 'botToplamIstek',
+      type: 'number',
+      label: 'Bot isteği (Katman A)',
+      defaultValue: 0,
+      admin: {
+        readOnly: true,
+        description:
+          '⚠️ `toplamIstek` İÇİNDE DEĞİL, ONUN YANINDA. İkisini toplamak ' +
+          '"ziyaretçi" sayısını bot taramalarıyla şişirmek olurdu.',
+      },
+    },
+    {
+      name: 'botIstekleri',
+      type: 'array',
+      label: 'Bot türüne göre istek',
+      admin: {
+        readOnly: true,
+        description:
+          'Tür, `User-Agent` dizesinden türetilmiş bir KOVA; ham dize hiçbir yere ' +
+          'kaydedilmiyor. `diger` türündeki satırlar botun adıyla duruyor — adsız ' +
+          'bir "diğer" toplamı, yeni bir botun trafiğini fark etmemizi engellerdi.',
+      },
+      fields: [
+        { name: 'tur', type: 'text', required: true, label: 'Tür' },
+        { name: 'ad', type: 'text', label: 'Ad' },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+      ],
+    },
+    {
+      name: 'botSayfalari',
+      type: 'array',
+      label: 'Taranan sayfalar',
+      admin: {
+        readOnly: true,
+        description:
+          '⚠️ `ilkMs` / `sonMs` EPOCH MİLİSANİYE. Gün satırları beş dakikada bir ' +
+          'birleştiriliyor ve birleştirme ilk tarama için en KÜÇÜK, son tarama için ' +
+          'en BÜYÜK değeri alıyor; dizge karşılaştırmasıyla bu, biçim değiştiği gün ' +
+          'sessizce yanlış sonuç verirdi.',
+      },
+      fields: [
+        { name: 'rota', type: 'text', required: true },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+        { name: 'ilkMs', type: 'number', defaultValue: 0, label: 'İlk tarama (epoch ms)' },
+        { name: 'sonMs', type: 'number', defaultValue: 0, label: 'Son tarama (epoch ms)' },
+      ],
+    },
+    {
+      name: 'botDurumlari',
+      type: 'array',
+      label: 'Bot isteklerinin yanıt kodu',
+      admin: {
+        readOnly: true,
+        description:
+          '⚠️ YALNIZCA `404` ve `5xx` GÖZLENEBİLİYOR. Vekil katmanı yanıtı görmüyor; ' +
+          '200 sayısı türetiliyor (toplam − 404 − 5xx) ve ara durumlar (301, 304) o ' +
+          'tarafta kalıyor. Yaklaşıklık panelde yazılı.',
+      },
+      fields: [
+        { name: 'kod', type: 'text', required: true },
+        { name: 'adet', type: 'number', defaultValue: 0 },
+      ],
+    },
+    {
+      /**
+       * ⚠️ BU BAYRAK BİR DÜRÜSTLÜK ŞARTI.
+       *
+       * 11 Ekim 2026'dan önce yazılan satırlarda insan sayaçları bot
+       * trafiğini DE içeriyordu: `proxy.ts` her isteği sayıyordu ve bot
+       * süzgeci yoktu. `User-Agent` hiçbir yere kaydedilmediği için geriye
+       * dönük ayrıştırmak imkânsız. Bayrak taşımayan günler panelde uyarı
+       * olarak görünüyor; kaldırmak, karşılaştırmayı sessizce yanlış
+       * yapmak olurdu.
+       */
+      name: 'botAyrimi',
+      type: 'checkbox',
+      label: 'İnsan ve bot sayaçları ayrıştırıldı',
+      defaultValue: false,
+      admin: { readOnly: true },
+    },
+    {
+      name: 'botTemizlendi',
+      type: 'checkbox',
+      label: '180 gün doldu, bot ayrıntısı temizlendi',
+      defaultValue: false,
+      admin: {
+        readOnly: true,
+        description:
+          'Bot verisi kişisel veri değil; sınır KVKK değil DİSK için. Sayfa ve tür ' +
+          'kırılımı temizlenir, toplam istek sayısı kalır.',
+      },
+    },
+
     {
       name: 'ayrintiTemizlendi',
       type: 'checkbox',

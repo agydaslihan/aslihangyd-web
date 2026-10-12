@@ -97,8 +97,22 @@ describe('borç görünür kalıyor', () => {
   })
 })
 
-describe('sihirbazda toplu yükleme', () => {
-  const bilesen = oku('components/sihirbaz/PortfoySihirbazi.tsx')
+describe('toplu yükleme — İKİ EKRANDA AYNI BİLEŞEN', () => {
+  /**
+   * ─────────────────────────────────────────────────────────────────────
+   * ⚠️ İDDİALAR 11 EKİM 2026'DA SİHİRBAZDAN YÜKLEYİCİYE TAŞINDI.
+   *
+   * Toplu yükleme PR #108'de sihirbazın içine yazılmıştı. Sonucu şuydu:
+   * YENİ ilana yirmi fotoğraf sürüklenebiliyordu, MEVCUT ilana tek yol
+   * Payload'ın dizi alanıydı — her fotoğraf için satır ekle, çekmeceyi aç,
+   * dosya seç, kapat. Yirmi fotoğraf, yirmi tur.
+   *
+   * Bileşen çıkarıldı; iddialar da onunla taşındı. Sihirbaz dosyasında
+   * bırakılsalardı, kuralı artık orada olmayan bir yerde ararlardı ve
+   * yükleyici bozulduğunda yeşil kalırlardı.
+   * ─────────────────────────────────────────────────────────────────────
+   */
+  const bilesen = oku('components/medya/GorselYukleyici.tsx')
 
   it('sürükle-bırak alanı VAR ama dosya seçici de duruyor', () => {
     /**
@@ -135,8 +149,8 @@ describe('sihirbazda toplu yükleme', () => {
 
   it('alt metin BOŞ gönderiliyor — türetme tek yerde', () => {
     /**
-     * ⚠️ Sihirbaz kendi metnini üretseydi, panelden yüklenen görsellerle
-     * sihirbazdan yüklenenler farklı kurallara tabi olurdu. Türetme
+     * ⚠️ Yükleyici kendi metnini üretseydi, panelden yüklenen görsellerle
+     * buradan yüklenenler farklı kurallara tabi olurdu. Türetme
      * koleksiyonun kancasında: tek yer, tek kural.
      */
     expect(bilesen).toContain("form.set('alt', '')")
@@ -145,5 +159,59 @@ describe('sihirbazda toplu yükleme', () => {
 
   it('kapak hâlâ sıranın başı', () => {
     expect(bilesen).toContain('ilk sıradaki kapak')
+  })
+
+  it('yazılan alt metin GERÇEKTEN kaydediliyor', () => {
+    /**
+     * ⚠️ BU BİR HATA DÜZELTMESİNİN TESTİ.
+     *
+     * Sihirbazın görsel adımında her satırda alt metin kutusu vardı ve
+     * yazılan metin hiçbir yere gitmiyordu: kaydetme yolu yalnızca görsel
+     * kimliklerini gönderiyor (`veriyeCevir.ts` → `gorseller: ids`), metin
+     * bileşenin yerel durumunda kalıp kayboluyordu. Kullanıcı
+     * erişilebilirlik borcunu kapattığını sanıyor, borç duruyordu.
+     */
+    expect(bilesen).toContain('gorselAltMetniniKaydet')
+    expect(bilesen).toContain('onBlur=')
+  })
+
+  it('sihirbaz artık kendi kopyasını taşımıyor', () => {
+    /**
+     * ⚠️ İkinci bir yükleme yolu, iki ayrı tür süzgeci ve iki ayrı bütçe
+     * uyarısı demek — ve ikisi er geç ayrışır.
+     */
+    const sihirbaz = oku('components/sihirbaz/PortfoySihirbazi.tsx')
+    expect(sihirbaz).toContain('<GorselYukleyici')
+    expect(sihirbaz).not.toContain('function GorselAdimi')
+    expect(sihirbaz).not.toContain("form.set('dosya'")
+  })
+
+  it('ilan düzenleme ekranı AYNI bileşeni çiziyor', () => {
+    /**
+     * ⚠️ Koleksiyon alanının arayüzü değişti, ŞEKLİ değişmedi: satırlar
+     * hâlâ `{ gorsel: medya }` taşıyor, göç gerekmedi, site tarafı aynen
+     * okuyor.
+     */
+    const koleksiyon = oku('collections/Ilanlar.ts')
+    expect(koleksiyon).toContain("Field: '@/components/medya/GorselAlani#default'")
+    expect(koleksiyon).toMatch(/name: 'gorseller'[\s\S]{0,200}?type: 'array'/)
+
+    const kopru = oku('components/medya/GorselAlaniIstemci.tsx')
+    expect(kopru).toContain('<GorselYukleyici')
+    // Form durumuna dokunma yolu Payload'ın kendi arayüzü.
+    expect(kopru).toContain('addFieldRow')
+    expect(kopru).toContain('moveFieldRow')
+    expect(kopru).toContain('removeFieldRow')
+  })
+
+  it('Google Drive yolu YOK — gerekçesi yazılı', () => {
+    /**
+     * ⚠️ 11 Ekim 2026 kararı: Drive'ın bant genişliği kotası var ve trafik
+     * artınca görseller düşer; `next/image` dış bağlantıyı boyutlandıramaz,
+     * WebP/AVIF üretemez; görsel bütçesi sistemi devre dışı kalır.
+     */
+    const eylemler = oku('lib/medya/eylemler.ts')
+    expect(eylemler).toContain('GOOGLE DRIVE')
+    expect(eylemler).not.toMatch(/drive\.google\.com|googleusercontent/)
   })
 })

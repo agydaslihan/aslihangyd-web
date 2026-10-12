@@ -101,7 +101,12 @@ export const GOREV_KUNYELERI: readonly GorevKunyesi[] = [
   },
   {
     anahtar: 'olcum-ayrinti-sil',
-    ad: 'Ölçüm — 90 günden eski olay ayrıntılarını temizle',
+    /**
+     * ⚠️ AD İKİ EŞİĞİ BİRDEN SÖYLÜYOR. Tek sayı yazmak, görevin yaptığı
+     * işin yarısını gizlemek olurdu: olay ayrıntısı 90 günde (KVKK
+     * taahhüdü), bot kırılımı 180 günde (disk kararı) temizleniyor.
+     */
+    ad: 'Ölçüm — süresi dolan ayrıntıları temizle (olay 90, bot 180 gün)',
     siklik: 'Her gün 04:10 (Europe/Istanbul)',
     calismazsaSonuc:
       'Gözlem kayıtlarının en ayrıntılı katmanı (hangi filtre, hangi alan, hangi ' +
@@ -109,7 +114,10 @@ export const GOREV_KUNYELERI: readonly GorevKunyesi[] = [
       'gün bazında toplulaştırılmış sayaçlar ve tek bir ziyaretçiyi işaret edemezler; ' +
       'dolayısıyla aksaması KVKK ihlali doğurmaz. Yine de aydınlatma metninde 90 gün ' +
       'taahhüt edildiği için verilen sözün tutulmaması demek. Toplulaştırılmış ' +
-      'sayaçlar (sayfa, kaynak, cihaz) kalıcıdır ve bu görev onlara dokunmaz.',
+      'sayaçlar (sayfa, kaynak, cihaz) kalıcıdır ve bu görev onlara dokunmaz. ' +
+      '⚠️ Aynı görev bot tür ve sayfa kırılımını 180 günde temizliyor; o sınır bir ' +
+      'KVKK taahhüdü değil DİSK kararı (bot kişi değil). Aksarsa gün satırları ' +
+      'rota başına satırla büyümeye devam eder.',
     yasal: false,
   },
 ]

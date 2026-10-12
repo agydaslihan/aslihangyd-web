@@ -412,32 +412,14 @@ textarea.sihirbaz-girdi {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   İlerleme, görseller, öneriler ve kontrol listesi
+   Adım yüzdesi, öneriler ve kontrol listesi
+
+   ⚠️ GÖRSEL YÜKLEME KURALLARI BURADA DEĞİL — 11 Ekim 2026'da
+   `components/medya/gorselYukleyici.css` dosyasına taşındı. Yükleyici
+   artık sihirbazın yanı sıra ilan düzenleme ekranında da çalışıyor;
+   stilinin sihirbaz dosyasında kalması, bileşen sihirbaz dışında
+   kullanıldığında sessizce stilsiz kalması demekti.
    ═══════════════════════════════════════════════════════════════════════ */
-
-.sihirbaz-ilerleme {
-  margin-bottom: 1rem;
-}
-
-.sihirbaz-ilerleme-cubuk {
-  height: 6px;
-  border-radius: 999px;
-  background: var(--theme-elevation-100);
-  overflow: hidden;
-}
-
-.sihirbaz-ilerleme-cubuk span {
-  display: block;
-  height: 100%;
-  background: var(--theme-success-500);
-  transition: width 200ms ease-out;
-}
-
-.sihirbaz-ilerleme-metin {
-  margin: 0.4rem 0 0;
-  font-size: 0.8rem;
-  color: var(--theme-elevation-600);
-}
 
 .sihirbaz-adim-yuzde {
   font-size: 0.72rem;
@@ -470,76 +452,6 @@ textarea.sihirbaz-girdi {
   border: 0;
   padding: 0;
   margin: 0;
-}
-
-.sihirbaz-gorseller {
-  list-style: none;
-  margin: 0.75rem 0 0;
-  padding: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.5rem;
-}
-
-.sihirbaz-gorseller li {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.5rem;
-  border: 1px solid var(--theme-elevation-150);
-  border-radius: 6px;
-  background: var(--theme-elevation-50);
-}
-
-/* ⚠️ Kapak, sıranın başı olduğu için ayrıca işaretleniyor: "ilk fotoğraf
-   kapaktır" kuralı ekranda görünmüyorsa kural yoktur. */
-.sihirbaz-gorseller li.kapak {
-  border-color: var(--theme-success-500);
-}
-
-.sihirbaz-gorseller img {
-  width: 96px;
-  height: 72px;
-  object-fit: cover;
-  border-radius: 4px;
-  flex: 0 0 auto;
-}
-
-.sihirbaz-gorsel-govde {
-  display: flex;
-  flex-direction: column;
-  gap: 0.35rem;
-  min-width: 0;
-  flex: 1 1 auto;
-}
-
-.sihirbaz-gorsel-ad {
-  font-size: 0.8rem;
-  color: var(--theme-elevation-600);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.sihirbaz-gorsel-dugmeler {
-  display: flex;
-  gap: 0.25rem;
-  flex: 0 0 auto;
-}
-
-.sihirbaz-gorsel-dugmeler button {
-  /* ⚠️ 44 px dokunma hedefi — sahada telefonla kullanılıyor. */
-  min-width: 44px;
-  min-height: 44px;
-  border: 1px solid var(--theme-elevation-150);
-  border-radius: 4px;
-  background: var(--theme-elevation-0);
-  cursor: pointer;
-}
-
-.sihirbaz-gorsel-dugmeler button:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 
 .sihirbaz-oneri {
@@ -592,43 +504,6 @@ textarea.sihirbaz-girdi {
 
 .sihirbaz-gosterge p {
   margin: 0;
-}
-
-/* ═══════════════════════════════════════════════════════════════════════
-   Toplu fotoğraf yükleme
-   ═══════════════════════════════════════════════════════════════════════ */
-
-/*
- * ⚠️ Sürükle-bırak alanı, dosya seçicinin YERİNE değil YANINDA duruyor:
- * sürükleme dokunmatikte ve klavyeyle yok.
- */
-.sihirbaz-birakma {
-  border: 2px dashed var(--theme-elevation-200);
-  border-radius: 8px;
-  padding: 1.25rem;
-  text-align: center;
-  margin-bottom: 0.75rem;
-  transition:
-    border-color 120ms ease-out,
-    background 120ms ease-out;
-}
-
-.sihirbaz-birakma.uzerinde {
-  border-color: var(--theme-success-500);
-  background: var(--theme-elevation-50);
-}
-
-.sihirbaz-birakma p {
-  margin: 0;
-}
-
-.sihirbaz-gorsel-arac {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
-  margin-top: 0.75rem;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════

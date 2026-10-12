@@ -74,10 +74,30 @@ const MUAF: Record<string, string> = {
  * ilk günden kalıcı olarak kırmızı olması demekti.
  */
 function yorumsuz(kaynak: string): string {
-  return kaynak
-    .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
-    .replace(/\/\*[\s\S]*?\*\//g, '')
-    .replace(/^\s*\/\/.*$/gm, '')
+  return (
+    kaynak
+      .replace(/\{\/\*[\s\S]*?\*\/\}/g, '')
+      /**
+       * ⚠️ YORUM AÇILIŞI ÖNÜNDEKİ KARAKTERLE SINANIYOR — VE BU BİR KÖRLÜK
+       * DÜZELTMESİ.
+       *
+       * Desen eskiden düpedüz `/\*[\s\S]*?\*\//` idi ve `accept="image/*"`
+       * dizesindeki `/*` ONUN İÇİN BİR YORUM AÇILIŞIYDI. O dizeden sonraki
+       * ilk `*\/` neredeyse her zaman uzakta bir JSDoc bloğunun sonunda
+       * oluyor; arada kalan onlarca satır sessizce TARAMA DIŞI kalıyordu.
+       *
+       * Ölçüldü: `PortfoySihirbazi.tsx` içinde bir `✕` (U+2715) vardı, font
+       * alt kümesinde yoktu ve bu test aylarca yeşil kaldı. Yani denetimin
+       * kendi ölçüm aracı, denetlediği şeyi gizliyordu — `otomatikKayit.test.ts`
+       * aynı tuzağa düşmüş ve orada ham kaynağa dönülerek çözülmüştü.
+       *
+       * Gerçek bir yorum daima satır başı, boşluk ya da bir açılış
+       * karakterinden sonra gelir; `image/*` içindeki `/` bir harften sonra
+       * geliyor. Önceki karakter geri yazılıyor ki sonraki eşleşmeler kaymasın.
+       */
+      .replace(/(^|[\s({[])\/\*[\s\S]*?\*\//g, '$1')
+      .replace(/^\s*\/\/.*$/gm, '')
+  )
 }
 
 function kaynakDosyalari(dizin: string, biriktir: string[] = []): string[] {

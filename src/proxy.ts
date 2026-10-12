@@ -1,6 +1,7 @@
 import { NextResponse, type NextRequest } from 'next/server'
 
 import { CEREZ_ONAY_ADI, izinVarMi, onayCoz } from '@/lib/kvkk/onay'
+import { BOT_EK_YOLLARI, botKimligi } from '@/lib/olcum/bot'
 import {
   girisMi,
   rotaAnahtari,
@@ -12,7 +13,7 @@ import {
   utmOku,
   yonlendirenAlanAdi,
 } from '@/lib/olcum/kimliksizlestirme'
-import { onayliIstekSay, sayfaSay } from '@/lib/olcum/tampon'
+import { botSay, onayliIstekSay, sayfaSay } from '@/lib/olcum/tampon'
 import { cihazSinifi } from '@/lib/olcum/tipler'
 
 /**
@@ -49,9 +50,43 @@ export async function proxy(istek: NextRequest): Promise<NextResponse> {
 
   try {
     const yol = istek.nextUrl.pathname
+    const basliklar = istek.headers
+
+    /**
+     * ─────────────────────────────────────────────────────────────────────
+     * ⚠️ BOT İSTEĞİ İNSAN SAYAÇLARINA HİÇ GİRMİYOR — ERKEN DÖNÜŞLE.
+     *
+     * 11 Ekim 2026'ya kadar böyle değildi ve sonucu ölçüldü: Googlebot'un
+     * `User-Agent` dizesi "Chrome" ve "Mobile" kelimelerini taşıyor, yani
+     * `tarayiciAilesi()` onu CHROME, `cihazSinifi()` onu MOBİL sayıyordu.
+     * "Trafiğin %75'i mobil" varsayımını doğrulamak için bakılan grafik,
+     * Googlebot'un mobil tarayıcısını ziyaretçi sanıyordu; dönüşüm oranının
+     * paydası da şişiyordu (talep sabit, görüntüleme fazla → oran
+     * olduğundan küçük).
+     *
+     * ⚠️ İKİSİ BİRDEN SAYILMIYOR. `return` şart: aşağıdaki `sayfaSay()`
+     * çağrısına düşen bir bot isteği, düzeltilen hatanın ta kendisidir.
+     *
+     * ⚠️ Bot ölçümü Katman A ve onay gerektirmiyor; bot kişi değil. Çerez
+     * yazılmıyor, IP okunmuyor, ham `User-Agent` kaydedilmiyor.
+     * ─────────────────────────────────────────────────────────────────────
+     */
+    const bot = botKimligi(basliklar.get('user-agent'))
+    if (bot !== null) {
+      /**
+       * ⚠️ BOT SÜZGECİ İNSANINKİNDEN GENİŞ: `robots.txt` ve `sitemap.xml`
+       * insan için ziyaret değil, bot için en doğrudan SEO sinyali —
+       * "Googlebot site haritasını en son ne zaman çekti" sorusunun
+       * cevabı yalnızca o iki istekte var.
+       */
+      if (sayilirMi(yol) || BOT_EK_YOLLARI.includes(rotaAnahtari(yol))) {
+        botSay({ rota: rotaAnahtari(yol), kimlik: bot })
+      }
+      return yanit
+    }
+
     if (!sayilirMi(yol)) return yanit
 
-    const basliklar = istek.headers
     const utm = utmOku(istek.nextUrl.searchParams)
 
     /**
@@ -127,6 +162,11 @@ export async function proxy(istek: NextRequest): Promise<NextResponse> {
  * `sayilirMi()` zaten süzüyor ama eşleşmeyi burada da daraltmak, o yollarda
  * proxy'nin hiç çalışmaması demek: Payload admin'inin her isteği için
  * gereksiz bir katman koşmuyor.
+ *
+ * ⚠️ `robots.txt` ve `sitemap.xml` BİLİNÇLİ OLARAK EŞLEŞMENİN İÇİNDE.
+ * `sayilirMi()` onları insan sayacından düşürüyor; bot sayacı ise tam o
+ * iki isteği arıyor (`BOT_EK_YOLLARI`). Desene eklenen bir dışlama,
+ * "Googlebot site haritasını çekiyor mu" sorusunu cevapsız bırakırdı.
  */
 export const config = {
   matcher: ['/((?!api|admin|_next/static|_next/image|favicon.ico).*)'],
