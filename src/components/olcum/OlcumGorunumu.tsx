@@ -13,6 +13,7 @@ import {
 import { KATMAN_ETIKETI, type Katman } from '@/lib/olcum/tipler'
 import { yoneticiMi } from '@/lib/erisim'
 import { aramaKelimeleriniGetir, type AramaKonsoluRaporu } from '@/lib/olcum/aramaKonsolu'
+import { botRaporuGetir, type BotRaporu } from '@/lib/olcum/botRaporu'
 
 /**
  * Gözlemlenebilirlik ekranı.
@@ -54,7 +55,19 @@ export default async function GozlemGorunumu({ initPageResult }: AdminViewServer
     )
   }
 
-  const [rapor, arama] = await Promise.all([raporuGetir(7), aramaKelimeleriniGetir(28)])
+  /**
+   * ⚠️ BOT RAPORU AYRI BİR ÇAĞRI VE AYRI BİR PENCERE (180 gün).
+   *
+   * İnsan raporu haftalık karşılaştırma için 7 gün okuyor; "hiç taranmamış
+   * sayfa" sorusu ise altı ay istiyor — bu ölçekte arama motoru her sayfayı
+   * haftada bir gezmiyor ve yedi günlük bir pencerede sağlıklı sayfaların
+   * yarısı "taranmamış" görünürdü.
+   */
+  const [rapor, arama, bot] = await Promise.all([
+    raporuGetir(7),
+    aramaKelimeleriniGetir(28),
+    botRaporuGetir(),
+  ])
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem', maxWidth: '68rem' }}>
@@ -398,6 +411,9 @@ export default async function GozlemGorunumu({ initPageResult }: AdminViewServer
         </div>
       </Kutu>
 
+      {/* ── Bot ve arama motoru trafiği ─────────────────────────────── */}
+      <BotBolumu bot={bot} />
+
       <Kutu>
         <h2 style={baslik}>Arama kelimeleri (Google Search Console)</h2>
         <p style={kucuk}>
@@ -426,6 +442,11 @@ export default async function GozlemGorunumu({ initPageResult }: AdminViewServer
           </li>
           <li>
             <strong>Üçüncü taraf analitik yok.</strong> Veri yurt dışına gitmiyor.
+          </li>
+          <li>
+            <strong>Bot trafiği bu sayıların içinde DEĞİL.</strong> Arama motoru ve tarayıcı
+            istekleri ayrı bir bölümde sayılıyor; aynı kovada durdukları sürece hem ziyaretçi hem
+            dönüşüm sayısı yanlış oluyordu.
           </li>
           <li>
             <strong>Hız ölçümünde ham değer saklanmıyor.</strong> &quot;LCP = 2.431 ms&quot; tek bir
@@ -847,6 +868,285 @@ function SaatSeridi({ saatler }: { saatler: { saat: number; adet: number }[] }) 
         <span style={kucuk}>23:00</span>
       </div>
     </div>
+  )
+}
+
+/**
+ * Bot ve arama motoru bölümü.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ AYRI BİR KUTU, AYRI BİR PAYDA — VE BU AYRIM BİR HATA DÜZELTMESİ.
+ *
+ * 11 Ekim 2026'ya kadar bot istekleri insan sayaçlarına giriyordu:
+ * Googlebot'un `User-Agent` dizesi "Chrome" ve "Mobile" taşıdığı için
+ * tarayıcı dağılımında **chrome**, cihaz dağılımında **mobil** olarak
+ * görünüyordu. "Trafiğin %75'i mobil" varsayımını doğrulamak için bakılan
+ * grafik, arama motorunun mobil tarayıcısını ziyaretçi sanıyordu.
+ *
+ * ⚠️ BU BÖLÜMÜN SAYILARI YUKARIDAKİLERE EKLENMEZ. Bot bir ziyaretçi değil;
+ * toplanırsa "ziyaretçi" sayısı da dönüşüm oranı da bozulur.
+ *
+ * ⚠️ ONAY GEREKTİRMİYOR ve bu teknik bir yorum değil, tanımın kendisi:
+ * botlar kişi değil. Çerez yazılmıyor, IP okunmuyor, `User-Agent` hiçbir
+ * yere kaydedilmiyor.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+function BotBolumu({ bot }: { bot: BotRaporu }) {
+  return (
+    <>
+      <Kutu>
+        <h2 style={baslik}>Arama motorları ve botlar siteyi nasıl geziyor?</h2>
+        <p style={metin}>
+          {bot.ilkGun} – {bot.sonGun} ({bot.gunSayisi} gün).{' '}
+          <strong>Bu sayılar yukarıdaki ziyaretçi sayılarının İÇİNDE DEĞİL.</strong> Bot bir
+          ziyaretçi değil; aynı kovada durdukları sürece hem ziyaretçi hem dönüşüm sayısı yanlış
+          oluyordu.
+        </p>
+        <p style={kucuk}>
+          ⚠️ Pencere <strong>180 gün</strong>, yukarıdaki bölümler gibi 7 gün değil: &ldquo;hiç
+          taranmamış sayfa&rdquo; sorusu altı ay istiyor. Bu ölçekte arama motoru her sayfayı
+          haftada bir gezmiyor; yedi günlük bir pencerede sağlıklı sayfaların yarısı
+          &ldquo;taranmamış&rdquo; görünürdü.
+        </p>
+        <p style={kucuk}>
+          ⚠️ Onay gerekmiyor ve <strong>çerez yazılmıyor, IP okunmuyor</strong>. Tür,{' '}
+          <code>User-Agent</code> dizesinden türetilmiş bir kova; ham dize hiçbir yere
+          kaydedilmiyor.
+        </p>
+
+        {bot.ayrimsizGun > 0 ? (
+          <p style={{ ...metin, fontWeight: 600 }}>
+            ⚠️ Bu pencerenin <strong>{bot.ayrimsizGun} gününde</strong> insan ve bot sayaçları
+            ayrıştırılmamıştı (11 Ekim 2026&apos;dan önce yazılan günler). O günlerin ziyaretçi
+            sayıları bot trafiğini DE içeriyor. <code>User-Agent</code> hiçbir yere kaydedilmediği
+            için geriye dönük ayrıştırmak imkânsız; haftalık karşılaştırma o sınırı geçerken
+            kayıyor.
+          </p>
+        ) : null}
+
+        {bot.bos ? (
+          <p style={metin}>
+            Bu pencerede hiç bot isteği sayılmadı. Yeni bir site için normal; birkaç haftadır
+            yayındaysa <strong>robots.txt</strong> durumuna bakın (aşağıda).
+          </p>
+        ) : (
+          <>
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', margin: '1rem 0' }}>
+              <div>
+                <p style={kucuk}>
+                  Toplam bot isteği
+                  <KatmanEtiketi katman="A" />
+                </p>
+                <p style={buyukSayi}>{bot.toplamIstek}</p>
+              </div>
+              <div>
+                <p style={kucuk}>Taranan sayfa</p>
+                <p style={buyukSayi}>{bot.sayfalar.length}</p>
+              </div>
+              <div>
+                <p style={kucuk}>Harita kapsamı</p>
+                <p style={buyukSayi}>{bot.kapsamYuzde === null ? '—' : `%${bot.kapsamYuzde}`}</p>
+                <p style={kucuk}>Site haritasındaki sayfaların kaçı tarandı.</p>
+              </div>
+            </div>
+
+            <h3 style={{ ...baslik, fontSize: '.95rem', marginTop: '1rem' }}>Bot türüne göre</h3>
+            <Tablo
+              basliklar={['Bot', 'İstek', 'Ne işe yarıyor']}
+              satirlar={bot.turler.map((satir) => [
+                satir.etiket,
+                String(satir.adet),
+                satir.aciklama,
+              ])}
+            />
+            {bot.turler.find((satir) => satir.tur === 'diger')?.adlar.length ? (
+              <div style={{ marginTop: '.75rem' }}>
+                <Liste
+                  baslik="“Diğer” kırılımı — tanınmayan tarayıcılar"
+                  katman="A"
+                  satirlar={bot.turler.find((satir) => satir.tur === 'diger')?.adlar ?? []}
+                />
+                <p style={kucuk}>
+                  ⚠️ Adsız bir &ldquo;diğer&rdquo; toplamı, yeni bir botun trafiğini fark etmemizi
+                  engellerdi. Sık görünen biri koda tanımlı sınıf olarak eklenmelidir.
+                </p>
+              </div>
+            ) : null}
+
+            <h3 style={{ ...baslik, fontSize: '.95rem', marginTop: '1.25rem' }}>
+              Yanıt kodu dağılımı
+            </h3>
+            <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap' }}>
+              <div>
+                <p style={kucuk}>200 (türetilen)</p>
+                <p style={buyukSayi}>{bot.turetilen200}</p>
+              </div>
+              <div>
+                <p style={kucuk}>404</p>
+                <p style={buyukSayi}>{bot.dort04}</p>
+              </div>
+              <div>
+                <p style={kucuk}>5xx</p>
+                <p style={buyukSayi}>{bot.besxx}</p>
+              </div>
+            </div>
+            <p style={kucuk}>
+              ⚠️ <strong>200 bir sayaç değil, bir türetme</strong> (toplam − 404 − 5xx). Vekil
+              katmanı yanıtı görmüyor: isteği aşağıya geçiriyor ve durum kodu orada üretiliyor.
+              Yönlendirmeler (301) ve değişmemiş yanıtlar (304) bu türetmede 200 tarafında kalıyor.
+              404 sayısı 404 sayfasının kendisinde, 5xx ise hata kancasında sayılıyor.
+            </p>
+            {bot.dort04 > 0 ? (
+              <p style={kucuk}>
+                ⚠️ Arama motorunun 404 aldığı her adres ya bir yere koyduğumuz kırık bağlantı ya da
+                haritada duran ölü bir giriş. Tarama bütçesi oraya harcanıyor ve Search
+                Console&apos;da kalıcı hata olarak birikiyor. Aşağıdaki &ldquo;haritada
+                olmayan&rdquo; listesi adayları gösteriyor.
+              </p>
+            ) : null}
+
+            <h3 style={{ ...baslik, fontSize: '.95rem', marginTop: '1.25rem' }}>
+              Hangi sayfalar taranıyor
+            </h3>
+            <Tablo
+              basliklar={['Sayfa', 'Tarama', 'İlk', 'Son']}
+              satirlar={bot.sayfalar
+                .slice(0, 25)
+                .map((satir) => [
+                  satir.rota,
+                  String(satir.adet),
+                  satir.ilk === null ? '—' : zamanYaz(satir.ilk),
+                  satir.son === null ? '—' : zamanYaz(satir.son),
+                ])}
+            />
+            {bot.sayfalar.length > 25 ? (
+              <p style={kucuk}>
+                En çok taranan 25 sayfa gösteriliyor ({bot.sayfalar.length} rota).
+              </p>
+            ) : null}
+          </>
+        )}
+      </Kutu>
+
+      {/* ── ⭐ SEO boşluğu ──────────────────────────────────────────── */}
+      <Kutu>
+        <h2 style={baslik}>Hiç taranmamış sayfalar — SEO boşluğu</h2>
+        <p style={metin}>
+          Site haritasında duran ama bu pencerede <strong>hiç taranmamış</strong> sayfalar.
+          Taranmayan sayfa arama sonucunda <strong>yoktur</strong>.
+        </p>
+        <p style={kucuk}>
+          ⚠️ Sebep genellikle içerik değil <strong>bağlantı</strong>: hiçbir sayfadan ona
+          gidilmiyorsa arama motoru da gitmiyor. Mahalle sayfaları bu sitenin SEO motorunun kalbi;
+          biri bu listede duruyorsa iç bağlantıya bakılmalı.
+        </p>
+        <p style={kucuk}>
+          ⚠️ robots.txt&apos;te taramaya kapatılan yollar bu listeye GİRMİYOR — kendi kararımızı
+          arıza olarak göstermek olurdu.
+        </p>
+
+        {bot.seo.hata !== null ? (
+          <p style={metin}>
+            <strong>Site haritası üretilemedi.</strong> {bot.seo.hata} — bu bir &ldquo;boşluk
+            yok&rdquo; değil, &ldquo;bakamadık&rdquo; durumudur.
+          </p>
+        ) : bot.taranmamisSayfalar.length === 0 ? (
+          <p style={metin}>
+            {bot.bos
+              ? 'Henüz hiç tarama sayılmadı; bu liste ancak tarama verisi geldikçe anlam taşır.'
+              : 'Haritadaki her sayfa en az bir kez tarandı.'}
+          </p>
+        ) : (
+          <ul style={{ ...metin, paddingLeft: '1.25rem' }}>
+            {bot.taranmamisSayfalar.slice(0, 40).map((rota) => (
+              <li key={rota}>
+                <code>{rota}</code>
+              </li>
+            ))}
+          </ul>
+        )}
+
+        {bot.haritadaOlmayanlar.length > 0 ? (
+          <>
+            <h3 style={{ ...baslik, fontSize: '.95rem', marginTop: '1.25rem' }}>
+              Taranan ama haritada olmayan adresler
+            </h3>
+            <p style={kucuk}>
+              Ters yön: bot gidiyor ama site haritası bu adresi bildirmiyor. Ya eski bir adres
+              (yönlendirme gerekir) ya da bir yere koyduğumuz kırık bağlantı.
+            </p>
+            <ul style={{ ...metin, paddingLeft: '1.25rem' }}>
+              {bot.haritadaOlmayanlar.slice(0, 25).map((rota) => (
+                <li key={rota}>
+                  <code>{rota}</code>
+                </li>
+              ))}
+            </ul>
+          </>
+        ) : null}
+      </Kutu>
+
+      {/* ── robots.txt ve site haritası ─────────────────────────────── */}
+      <Kutu>
+        <h2 style={baslik}>robots.txt ve site haritası</h2>
+        <p style={kucuk}>
+          Bu iki dosya arama motoruna ne söylediğimizi belirliyor; ikisi de çalışma zamanında
+          üretiliyor (<code>app/robots.ts</code>, <code>app/sitemap.ts</code>). Buradaki sayılar o
+          üreticilerin <strong>şu anki çıktısından</strong> okunuyor — ikinci bir liste tutulmuyor.
+        </p>
+
+        {bot.seo.herSeyKapali ? (
+          <p style={{ ...metin, fontWeight: 600 }}>
+            ⚠️ <strong>robots.txt tüm siteyi taramaya KAPATIYOR</strong> (<code>Disallow: /</code>).
+            Bu, üretim dışı bir ortamın beklenen davranışı: hazırlık kopyasının indekslenmesi asıl
+            siteyle içerik tekrarı yaratır. Üretimde görüyorsanız <code>SITE_ADRESI</code>{' '}
+            yapılandırmasına bakın — &ldquo;neden kimse bizi taramıyor&rdquo; sorusunun cevabı
+            burada.
+          </p>
+        ) : null}
+
+        <div style={{ display: 'flex', gap: '2rem', flexWrap: 'wrap', margin: '.75rem 0' }}>
+          <div>
+            <p style={kucuk}>Haritadaki sayfa sayısı</p>
+            <p style={buyukSayi}>{bot.seo.sayfaSayisi}</p>
+          </div>
+          <div>
+            <p style={kucuk}>Haritadaki en yeni değişiklik</p>
+            <p style={buyukSayi}>
+              {bot.seo.sonGuncelleme === null ? '—' : zamanYaz(bot.seo.sonGuncelleme)}
+            </p>
+            <p style={kucuk}>
+              ⚠️ Dosyanın yazılma anı DEĞİL: harita her istekte yeniden üretiliyor, &ldquo;son
+              yazılma&rdquo; diye bir an yok. Gösterilen, girdilerin en yeni{' '}
+              <code>lastModified</code> değeri — yani içeriğin en son ne zaman değiştiği.
+            </p>
+          </div>
+        </div>
+
+        <div style={{ marginTop: '.5rem' }}>
+          <p style={{ ...kucuk, marginBottom: '.35rem' }}>robots.txt — taramaya kapalı yollar</p>
+          {bot.seo.engellenenYollar.length === 0 ? (
+            <p style={kucuk}>Hiçbir yol kapatılmamış.</p>
+          ) : (
+            <ul style={{ ...metin, paddingLeft: '1.25rem' }}>
+              {bot.seo.engellenenYollar.map((yol) => (
+                <li key={yol}>
+                  <code>{yol}</code>
+                </li>
+              ))}
+            </ul>
+          )}
+          <p style={kucuk}>
+            Bildirilen site haritası:{' '}
+            {bot.seo.haritaAdresi === null ? (
+              <strong>yok</strong>
+            ) : (
+              <code>{bot.seo.haritaAdresi}</code>
+            )}
+          </p>
+        </div>
+      </Kutu>
+    </>
   )
 }
 

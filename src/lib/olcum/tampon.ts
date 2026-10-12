@@ -38,6 +38,7 @@
 
 import 'server-only'
 
+import { botAnahtari, type BotKimligi } from './bot'
 import type { CihazSinifi, Niyet } from './tipler'
 
 /**
@@ -134,6 +135,40 @@ export interface TamponIcerigi {
    * (`ASGARI_SEHIR`), eşiğin altındakiler "diğer"e toplanıyor.
    */
   sehir: Map<string, number>
+
+  /* ── Bot trafiği — İNSAN SAYAÇLARINDAN TAMAMEN AYRI ────────────────────
+   *
+   * ⚠️ AYRI DB YAZMASI YOK. Bot istekleri aynı tamponda, aynı gün satırına,
+   * aynı boşaltmada yazılıyor; eklenen şey yeni bir yazma yolu değil yeni
+   * bir BOYUT. (Şartnamenin açık şartı.)
+   *
+   * ⚠️ HİÇBİRİ `toplamIstek`E, `sayfaGoruntuleme`YE, `cihaz`A, `tarayici`YA
+   * ya da `sehir`E DOKUNMUYOR. Bot bir ziyaretçi değil; aynı kovaya
+   * girdiği sürece iki sayı da yanlış olur.
+   * ─────────────────────────────────────────────────────────────────────── */
+
+  /** `sinif|ad` → adet. */
+  botIstek: Map<string, number>
+  /** Rota → tarama özeti (adet, ilk ve son tarama anı). */
+  botSayfa: Map<string, BotSayfaOzeti>
+  /** Gözlenebilen yanıt kodları: `404` ve `5xx`. */
+  botDurum: Map<string, number>
+  /** Bot isteklerinin toplamı — oran hesaplarının paydası. */
+  botToplam: number
+}
+
+/**
+ * Bir rotanın tarama özeti.
+ *
+ * ⚠️ ZAMANLAR EPOCH MİLİSANİYE OLARAK SAKLANIYOR, ISO DİZGE DEĞİL.
+ * Gün satırları beş dakikada bir birleştiriliyor ve birleştirme sayısal
+ * alanlarda `min`/`max` alabiliyor; dizge karşılaştırmasıyla "ilk" ve
+ * "son" bulmak, biçim değiştiği gün sessizce yanlış sonuç verirdi.
+ */
+export interface BotSayfaOzeti {
+  adet: number
+  ilkMs: number
+  sonMs: number
 }
 
 function bosIcerik(gun: string): TamponIcerigi {
@@ -155,6 +190,10 @@ function bosIcerik(gun: string): TamponIcerigi {
     saat: new Map(),
     tarayici: new Map(),
     sehir: new Map(),
+    botIstek: new Map(),
+    botSayfa: new Map(),
+    botDurum: new Map(),
+    botToplam: 0,
   }
 }
 
@@ -268,6 +307,61 @@ export function olaySay(ad: string, ayrinti: string | null, niyet: Niyet, adet =
   t.niyet.set(niyet, (t.niyet.get(niyet) ?? 0) + adet)
 }
 
+/* ── Bot sayaçları ─────────────────────────────────────────────────────── */
+
+export interface BotKaydi {
+  rota: string
+  kimlik: BotKimligi
+  /** İsteğin anı — ilk/son tarama zamanı için. */
+  an?: number
+}
+
+/**
+ * Katman A — bot isteği. Çerezsiz, IP'siz, onaysız; bot kişi değil.
+ *
+ * ⚠️ `sayfaSay()` İLE AYNI ANDA ÇAĞRILMIYOR. `proxy.ts` ikisinden
+ * YALNIZCA BİRİNİ çağırıyor; ikisini birden çağırmak bot trafiğini insan
+ * sayılarına geri karıştırmak olurdu — düzeltilen hatanın ta kendisi.
+ */
+export function botSay({ rota, kimlik, an = Date.now() }: BotKaydi): void {
+  const t = tampon()
+
+  t.botToplam += 1
+  artir(t.botIstek, botAnahtari(kimlik))
+
+  const once = t.botSayfa.get(rota)
+  if (once === undefined) {
+    if (t.botSayfa.size < AZAMI_ANAHTAR) {
+      t.botSayfa.set(rota, { adet: 1, ilkMs: an, sonMs: an })
+    }
+    return
+  }
+  once.adet += 1
+  once.ilkMs = Math.min(once.ilkMs, an)
+  once.sonMs = Math.max(once.sonMs, an)
+}
+
+/**
+ * Bot isteğinin yanıt kodu.
+ *
+ * ─────────────────────────────────────────────────────────────────────────
+ * ⚠️ YALNIZCA `404` VE `5xx` GÖZLENEBİLİYOR — VE PANELDE BÖYLE YAZIYOR.
+ *
+ * Vekil katmanı yanıtı GÖRMÜYOR: `NextResponse.next()` isteği aşağıya
+ * geçiriyor ve durum kodu orada üretiliyor. Dolayısıyla "200" diye bir
+ * sayaç yok; 200 sayısı TÜRETİLİYOR (toplam − 404 − 5xx). Ara durumlar
+ * (301, 304) bu türetmede 200 tarafında kalıyor ve bu bir yaklaşıklık;
+ * gizlemek yerine ekranda yazıyor.
+ *
+ * `404` → `(site)/not-found.tsx`, `5xx` → `instrumentation.onRequestError`.
+ * ─────────────────────────────────────────────────────────────────────────
+ */
+export type BotDurumKodu = '404' | '5xx'
+
+export function botDurumSay(kod: BotDurumKodu): void {
+  artir(tampon().botDurum, kod)
+}
+
 /**
  * Hata sayacı — `instrumentation.ts` içindeki `onRequestError`'dan gelir.
  *
@@ -319,7 +413,13 @@ export function onayliIstekSay(): void {
 export function bosalt(): TamponIcerigi | null {
   const eski = KUTU.__gozlemTamponu
   if (eski === undefined) return null
-  if (eski.toplamIstek === 0 && eski.olay.size === 0) return null
+  /**
+   * ⚠️ BOT TOPLAMI DA KOŞULA GİRİYOR. Girmeseydi, yalnızca bot gelen bir
+   * günde (yeni site, gece saatleri) tampon hiç boşalmaz ve tarama verisi
+   * bellekte birikip yeniden başlatmada giderdi — hem de hatasız
+   * görünerek.
+   */
+  if (eski.toplamIstek === 0 && eski.olay.size === 0 && eski.botToplam === 0) return null
 
   KUTU.__gozlemTamponu = bosIcerik(gunAnahtari())
   return eski

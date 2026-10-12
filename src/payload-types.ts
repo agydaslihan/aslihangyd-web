@@ -300,6 +300,48 @@ export interface GozlemGunluk {
         id?: string | null;
       }[]
     | null;
+  /**
+   * ⚠️ `toplamIstek` İÇİNDE DEĞİL, ONUN YANINDA. İkisini toplamak "ziyaretçi" sayısını bot taramalarıyla şişirmek olurdu.
+   */
+  botToplamIstek?: number | null;
+  /**
+   * Tür, `User-Agent` dizesinden türetilmiş bir KOVA; ham dize hiçbir yere kaydedilmiyor. `diger` türündeki satırlar botun adıyla duruyor — adsız bir "diğer" toplamı, yeni bir botun trafiğini fark etmemizi engellerdi.
+   */
+  botIstekleri?:
+    | {
+        tur: string;
+        ad?: string | null;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * ⚠️ `ilkMs` / `sonMs` EPOCH MİLİSANİYE. Gün satırları beş dakikada bir birleştiriliyor ve birleştirme ilk tarama için en KÜÇÜK, son tarama için en BÜYÜK değeri alıyor; dizge karşılaştırmasıyla bu, biçim değiştiği gün sessizce yanlış sonuç verirdi.
+   */
+  botSayfalari?:
+    | {
+        rota: string;
+        adet?: number | null;
+        ilkMs?: number | null;
+        sonMs?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  /**
+   * ⚠️ YALNIZCA `404` ve `5xx` GÖZLENEBİLİYOR. Vekil katmanı yanıtı görmüyor; 200 sayısı türetiliyor (toplam − 404 − 5xx) ve ara durumlar (301, 304) o tarafta kalıyor. Yaklaşıklık panelde yazılı.
+   */
+  botDurumlari?:
+    | {
+        kod: string;
+        adet?: number | null;
+        id?: string | null;
+      }[]
+    | null;
+  botAyrimi?: boolean | null;
+  /**
+   * Bot verisi kişisel veri değil; sınır KVKK değil DİSK için. Sayfa ve tür kırılımı temizlenir, toplam istek sayısı kalır.
+   */
+  botTemizlendi?: boolean | null;
   ayrintiTemizlendi?: boolean | null;
   updatedAt: string;
   createdAt: string;
@@ -1476,6 +1518,33 @@ export interface GozlemGunlukSelect<T extends boolean = true> {
         adet?: T;
         id?: T;
       };
+  botToplamIstek?: T;
+  botIstekleri?:
+    | T
+    | {
+        tur?: T;
+        ad?: T;
+        adet?: T;
+        id?: T;
+      };
+  botSayfalari?:
+    | T
+    | {
+        rota?: T;
+        adet?: T;
+        ilkMs?: T;
+        sonMs?: T;
+        id?: T;
+      };
+  botDurumlari?:
+    | T
+    | {
+        kod?: T;
+        adet?: T;
+        id?: T;
+      };
+  botAyrimi?: T;
+  botTemizlendi?: T;
   ayrintiTemizlendi?: T;
   updatedAt?: T;
   createdAt?: T;

@@ -79,15 +79,40 @@ export async function register(): Promise<void> {
  * ya da mesaj saklamak, kullanıcı girdisi içeren bir hatayı sessizce
  * veritabanına taşıyabilirdi.
  */
-export async function onRequestError(_hata: unknown, istek: { path?: string }): Promise<void> {
+export async function onRequestError(
+  _hata: unknown,
+  istek: { path?: string; headers?: NodeJS.Dict<string | string[]> },
+): Promise<void> {
   if (process.env.NEXT_RUNTIME !== 'nodejs') return
 
   try {
-    const { hataSay } = await import('@/lib/olcum/tampon')
+    const { botDurumSay, hataSay } = await import('@/lib/olcum/tampon')
     const { rotaAnahtari, sayilirMi } = await import('@/lib/olcum/kimliksizlestirme')
+    const { botKimligi } = await import('@/lib/olcum/bot')
 
     const yol = typeof istek.path === 'string' ? istek.path : ''
     if (yol === '' || !sayilirMi(yol)) return
+
+    /**
+     * ⚠️ BOT HATASI İNSAN HATA ORANINA GİRMİYOR.
+     *
+     * "Hata oranı %4" cümlesi bir müdahale kararı doğuruyor ve o kararın
+     * dayandığı payda ziyaretçi olmalı. Botun aldığı 500, aynı sorunun
+     * başka bir göstergesi — ama ziyaretçi deneyimi değil ve tarama
+     * bütçesiyle birlikte okunması gerekiyor. Bu yüzden ayrı kovada.
+     *
+     * ⚠️ `onRequestError` YALNIZCA SUNUCU HATALARINDA ÇAĞRILIYOR; 404 bir
+     * istisna değil, normal bir yanıt. Bot 404'leri bu yüzden burada
+     * değil, 404 sayfasının kendisinde sayılıyor
+     * (`components/olcum/BotDurumu.tsx`).
+     */
+    const ham = istek.headers?.['user-agent']
+    const userAgent = Array.isArray(ham) ? ham[0] : ham
+    if (botKimligi(userAgent) !== null) {
+      botDurumSay('5xx')
+      return
+    }
+
     hataSay(rotaAnahtari(yol))
   } catch {
     // Hata sayacı, hatanın kendisini gölgelemesin.
