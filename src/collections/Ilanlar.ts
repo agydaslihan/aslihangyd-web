@@ -635,6 +635,24 @@ export const Ilanlar: CollectionConfig = {
               labels: { singular: 'Fotoğraf', plural: 'Fotoğraflar' },
               admin: {
                 description: 'İlk fotoğraf kapak olarak kullanılır.',
+                /**
+                 * ⚠️ PAYLOAD'IN DİZİ ARAYÜZÜ DEĞİŞTİRİLDİ — VERİ MODELİ DEĞİL.
+                 *
+                 * Varsayılan arayüzde her fotoğraf için "Satır ekle → çekmece
+                 * aç → dosya seç → çekmece kapat" gerekiyordu; yirmi
+                 * fotoğraflı bir ilan için bu yol yirmi kez yürünüyordu ve
+                 * sürükle-bırak, çoklu seçim, toplu silme, görünür kapak
+                 * işareti yoktu. Sihirbazda (yeni ilan) bunların hepsi vardı.
+                 *
+                 * Yerine konan bileşen sihirbazın TA KENDİSİ
+                 * (`components/medya/GorselYukleyici.tsx`); köprü
+                 * `GorselAlani` yalnızca onu Payload'ın form durumuna
+                 * bağlıyor. İkinci bir yükleme yolu YOK.
+                 *
+                 * ⚠️ Satırların şekli (`{ gorsel: medya }`) aynı kaldı: göç
+                 * gerekmedi, site tarafı aynen okuyor.
+                 */
+                components: { Field: '@/components/medya/GorselAlani#default' },
               },
               fields: [
                 {

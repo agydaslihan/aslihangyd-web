@@ -98,8 +98,9 @@ const PANEL_ARKASI: Record<string, string> = {
   'lib/veri/olcekEylemleri.ts':
     'Toplu ölçek düzeltme — yalnızca YÖNETİCİ (tek çağrıda 26 mahallenin rakamını ' +
     'bin katına çıkarabiliyor).',
-  'lib/sihirbaz/gorselEylemleri.ts':
-    'Sihirbazın görsel yüklemesi — yalnızca panel kullanıcısı; medya koleksiyonuna yazıyor.',
+  'lib/medya/eylemler.ts':
+    'Görsel yükleme ve alt metin — yalnızca panel kullanıcısı; medya koleksiyonuna ' +
+    'yazıyor. Sihirbaz ve ilan düzenleme ekranı AYNI dosyayı çağırıyor.',
   'lib/sihirbaz/oneriEylemleri.ts':
     'Benzer ilan önerileri — yalnızca panel kullanıcısı; hiçbir şey YAZMIYOR, okuyor.',
   'lib/gozlem/eylemler.ts': 'Gözlem girişi ve CSV içe aktarma — yalnızca panel kullanıcısı.',

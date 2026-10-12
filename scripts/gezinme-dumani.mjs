@@ -1299,7 +1299,74 @@ async function davranisTuru(wsAdresi, cerez) {
       }
     })
 
-    // ── 3. Liste rozeti ─────────────────────────────────────────────────
+    // ── 3. Fotoğraf yükleyici — MEVCUT ilanın düzenleme ekranında ───────
+    /**
+     * ⚠️ NEDEN BU TUR VAR.
+     *
+     * Toplu fotoğraf yükleme 31 Ağustos 2026'da yalnızca SİHİRBAZA eklendi;
+     * mevcut bir ilanı düzenlerken tek yol Payload'ın dizi alanıydı (her
+     * fotoğraf için satır ekle → çekmece aç → dosya seç → kapat). 11 Ekim
+     * 2026'da yükleyici çıkarıldı ve ilan düzenleme ekranına da bağlandı.
+     *
+     * Bağlantı bir YAPILANDIRMA zinciri: koleksiyonun `admin.components.Field`
+     * değeri → Payload'ın içe aktarma haritası → sunucu kabuğu → istemci
+     * köprüsü. Zincirin herhangi bir halkası kopsa birim testleri yeşil
+     * kalır: hepsi kaynağa bakıyor, hiçbiri ÇİZİLEN ekrana bakmıyor. İçe
+     * aktarma haritası yenilenmemişse Payload alanı sessizce BOŞ çiziyor.
+     *
+     * ⚠️ Dosya YÜKLENMİYOR: duman testi bir yükleme testi değil. Bakılan
+     * şey, yükleyicinin gerçekten çizildiği ve Payload'ın kendi dizi
+     * arayüzünün yerini aldığı — yani ikinci bir yükleme yolunun geri
+     * gelmediği.
+     */
+    await sekmeyleCalis(async (sekme) => {
+      const hazir = await git(
+        sekme,
+        `/admin/collections/ilanlar/${ilanId}`,
+        `document.querySelector('[class*="tabs-field__tab-button"]') !== null`,
+      )
+      if (!hazir) return void sorunlar.push('fotoğraf: kayıtlı ilan formu açılmadı')
+      if (
+        !(await sekmeyeGec(sekme, 'Medya', `document.querySelector('.gorsel-yukleyici') !== null`))
+      ) {
+        return void sorunlar.push(
+          'fotoğraf: toplu yükleyici çizilmedi (Medya sekmesi, 3 deneme) — ' +
+            'içe aktarma haritası yenilenmemiş olabilir: pnpm payload generate:importmap',
+        )
+      }
+
+      const yukleyici = await sekme.deger(`(() => {
+        const kok = document.querySelector('.gorsel-yukleyici')
+        if (!kok) return null
+        const girdi = kok.querySelector('input[type="file"]')
+        return {
+          birakmaAlani: kok.querySelector('.gorsel-birakma') !== null,
+          cokluDosya: girdi?.multiple === true,
+          kabul: girdi?.getAttribute('accept') ?? null,
+          // ⚠️ Payload'ın kendi dizi arayüzü yerini bıraktı mı?
+          payloadDizisi: document.querySelectorAll('.array-field__add-row').length,
+        }
+      })()`)
+
+      if (!yukleyici?.birakmaAlani) sorunlar.push('fotoğraf: sürükle-bırak alanı yok')
+      if (!yukleyici?.cokluDosya) sorunlar.push('fotoğraf: dosya seçici `multiple` taşımıyor')
+      if (!String(yukleyici?.kabul ?? '').startsWith('image/')) {
+        sorunlar.push(`fotoğraf: accept değeri "${yukleyici?.kabul}" — "image/*" beklenirdi`)
+      }
+      if ((yukleyici?.payloadDizisi ?? 0) > 0) {
+        sorunlar.push(
+          `fotoğraf: Payload'ın "Satır ekle" arayüzü hâlâ çizili (${yukleyici?.payloadDizisi}) — ` +
+            'iki yükleme yolu bir arada duruyor',
+        )
+      }
+
+      kontrastDenetle(
+        'fotoğraf/ipucu',
+        await temadaOlc(sekme, `o.metin('.gorsel-yukleyici .gorsel-ipucu')`),
+      )
+    })
+
+    // ── 4. Liste rozeti ─────────────────────────────────────────────────
     const rozetOku = (sekme) =>
       sekme.deger(
         `(() => { const s = [...document.querySelectorAll('tr')].find((t) => t.textContent.includes(${JSON.stringify(DAVRANIS_ONEKI)})); const h = s?.querySelector('.ilan-durum-hucre'); return h ? { hucre: h.textContent.replace(/\\s+/g, ' ').trim(), rozet: h.querySelector('.ilan-durum-rozet')?.textContent.trim() ?? null } : null })()`,
@@ -1348,7 +1415,7 @@ async function davranisTuru(wsAdresi, cerez) {
         bilgi.push('yayında ilan yok — "yayında rozet yok" iddiası denenemedi')
     })
 
-    // ── 4. EİDS sayacı, iyelik eki, sihirbaz kontrastı ───────────────────
+    // ── 5. EİDS sayacı, iyelik eki, sihirbaz kontrastı ───────────────────
     await sekmeyleCalis(async (sekme) => {
       const hazir = await git(
         sekme,

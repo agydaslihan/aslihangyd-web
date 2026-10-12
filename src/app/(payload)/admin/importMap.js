@@ -25,6 +25,7 @@ import { ItalicFeatureClient as ItalicFeatureClient_e70f5e05f09f93e00b997edb1ef0
 import { default as default_2e3ab14467551c2cced9513a1cff0922 } from '@/components/panel/KonumAlani'
 import { default as default_b534c54dd8a96115a0d2de28ce3c7a79 } from '@/components/panel/OlcekUyarisi'
 import { default as default_0f4febca8f6c4c5c827a2af593fe0366 } from '@/components/panel/TurkceSayiAlani'
+import { default as default_d7bc7b5aa446d2dcd1eb316ee2961f09 } from '@/components/medya/GorselAlani'
 import { VideoDurumu as VideoDurumu_1e58a0690421ccebdda95f319e7a0509 } from '@/components/medya/VideoDurumu'
 import { default as default_0a37aa859b51d6fa563ad0cab51c8541 } from '@/components/panel/IlanEslesmeleri'
 import { default as default_6704e182342f943521fbcf8d2da4b1d0 } from '@/components/panel/NitelikDurumu'
@@ -92,6 +93,7 @@ export const importMap = {
   "@/components/panel/KonumAlani#default": default_2e3ab14467551c2cced9513a1cff0922,
   "@/components/panel/OlcekUyarisi#default": default_b534c54dd8a96115a0d2de28ce3c7a79,
   "@/components/panel/TurkceSayiAlani#default": default_0f4febca8f6c4c5c827a2af593fe0366,
+  "@/components/medya/GorselAlani#default": default_d7bc7b5aa446d2dcd1eb316ee2961f09,
   "@/components/medya/VideoDurumu#VideoDurumu": VideoDurumu_1e58a0690421ccebdda95f319e7a0509,
   "@/components/panel/IlanEslesmeleri#default": default_0a37aa859b51d6fa563ad0cab51c8541,
   "@/components/panel/NitelikDurumu#default": default_6704e182342f943521fbcf8d2da4b1d0,
